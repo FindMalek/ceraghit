@@ -11,6 +11,7 @@ import {
 import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
+import { syncVariants } from "../../lib/variants"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -64,7 +65,7 @@ export const productsRouter = {
     .input(productInputSchema)
     .output(productSchema)
     .handler(async ({ context, input }) => {
-      const { images, priceTnd, priceEur, ...rest } = input
+      const { images, variants, priceTnd, priceEur, stock, ...rest } = input
       const taken = await context.db.query.products.findFirst({
         where: eq(products.ref, input.ref),
         columns: { id: true },
@@ -81,6 +82,7 @@ export const productsRouter = {
             technique: rest.technique ?? null,
             priceTnd,
             priceEur,
+            stock,
             slug,
           })
           .returning({ id: products.id })
@@ -89,6 +91,8 @@ export const productsRouter = {
             .insert(productImages)
             .values(images.map((img, position) => ({ ...img, productId: row!.id, position })))
         }
+        const aggregate = await syncVariants(tx, row!.id, variants)
+        if (aggregate) await tx.update(products).set(aggregate).where(eq(products.id, row!.id))
         return row!.id
       })
       const [created] = await findProducts(context.db, { where: eq(products.id, id), limit: 1 })
@@ -100,7 +104,7 @@ export const productsRouter = {
     .input(productInputSchema.extend({ id: z.string() }))
     .output(productSchema)
     .handler(async ({ context, input }) => {
-      const { id, images, ...rest } = input
+      const { id, images, variants, ...rest } = input
       const clash = await context.db.query.products.findFirst({
         where: eq(products.ref, input.ref),
         columns: { id: true },
@@ -123,6 +127,8 @@ export const productsRouter = {
         await tx.delete(productImages).where(eq(productImages.productId, id))
         if (images.length)
           await tx.insert(productImages).values(images.map((img, position) => ({ ...img, productId: id, position })))
+        const aggregate = await syncVariants(tx, id, variants)
+        if (aggregate) await tx.update(products).set(aggregate).where(eq(products.id, id))
       })
       const [row] = await findProducts(context.db, { where: eq(products.id, id), limit: 1 })
       return toProduct(row!)

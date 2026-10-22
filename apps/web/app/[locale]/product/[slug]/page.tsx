@@ -86,7 +86,9 @@ export default async function ProductPage({ params }: Params) {
             </dl>
           )}
 
-          <PriceBox minor={product.prices[currency]} currency={currency} locale={locale} className="text-2xl" />
+          {product.variants.length === 0 && (
+            <PriceBox minor={product.prices[currency]} currency={currency} locale={locale} className="text-2xl" />
+          )}
 
           {product.quoteOnly ? (
             <div className="space-y-3">

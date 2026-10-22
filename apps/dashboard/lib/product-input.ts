@@ -22,6 +22,13 @@ export function productToInput(product: Product, patch: Partial<ProductInput> = 
     featured: product.featured,
     status: product.status,
     images: product.images.map(({ image, alt }) => ({ image, alt })),
+    variants: product.variants.map((v) => ({
+      id: v.id,
+      label: v.label,
+      priceTnd: v.prices.TND,
+      priceEur: v.prices.EUR,
+      stock: v.stock,
+    })),
     ...patch,
   }
 }

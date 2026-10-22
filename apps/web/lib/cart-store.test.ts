@@ -23,6 +23,7 @@ const piece = (over: Partial<Product>): Product => ({
   featured: false,
   status: "published",
   images: [],
+  variants: [],
   ...over,
 })
 

@@ -25,7 +25,8 @@
     "retry": "Réessayer",
     "close": "Fermer",
     "apiDown": "Le catalogue est momentanément indisponible. Merci de réessayer dans un instant.",
-    "required": "Champ obligatoire"
+    "required": "Champ obligatoire",
+    "from": "From"
   },
   "home": {
     "kicker": "Collection 2027",
@@ -84,7 +85,9 @@
     "previous": "Photo précédente",
     "next": "Photo suivante",
     "related": "Dans la même collection",
-    "notFound": "Cette pièce n'existe pas."
+    "notFound": "Cette pièce n'existe pas.",
+    "option": "Option",
+    "variantSoldOut": "Sold out"
   },
   "cart": {
     "title": "Votre panier",

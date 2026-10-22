@@ -26,6 +26,7 @@ export function ProductCard({
   const t = useTranslations("common")
   const locale = useLocale()
   const soldOut = product.stock <= 0
+  const fromPrice = new Set(product.variants.map((v) => v.prices[currency])).size > 1
   const cover = product.images[0]
   return (
     <article className="group relative flex flex-col gap-3">
@@ -58,7 +59,8 @@ export function ProductCard({
             {pick(product.title, locale)}
           </Link>
         </h3>
-        <div className="mt-auto pt-2">
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+          {fromPrice && <span className="text-muted-foreground text-xs">{t("from")}</span>}
           <PriceBox minor={product.prices[currency]} currency={currency} locale={locale} className="text-base" />
         </div>
       </div>

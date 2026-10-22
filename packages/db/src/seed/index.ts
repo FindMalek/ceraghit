@@ -1,11 +1,27 @@
 import { count } from "drizzle-orm"
 import type { Db } from "../index"
 import { hashPassword } from "../password"
-import { admins, categories, locations, orderItems, orders, productImages, products } from "../schema"
+import { admins, categories, locations, orderItems, orders, productImages, products, productVariants } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
 import { buildScenario } from "./scenario"
 
 export { buildScenario } from "./scenario"
+
+/** Every glazed lampe votive also exists unglazed for 5 EUR less (0210 is already the unglazed one). */
+const UNGLAZED_VARIANT_REFS = new Set([
+  "0200",
+  "0201",
+  "0202",
+  "0203",
+  "0204",
+  "0205",
+  "0206",
+  "0207",
+  "0208",
+  "0209",
+  "0211",
+])
+const UNGLAZED_DISCOUNT_EUR = 500
 
 export interface SeedOptions {
   /** Created, or its password reset, on every start: env is the source of truth for this login. */
@@ -82,6 +98,30 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
           byRef.get(row.ref)!.images.map((image, position) => ({ productId: row.id, image, position })),
         ),
       )
+    await tx.insert(productVariants).values(
+      rows.flatMap((row) => {
+        if (!UNGLAZED_VARIANT_REFS.has(row.ref)) return []
+        const unglazedEur = row.priceEur - UNGLAZED_DISCOUNT_EUR
+        return [
+          {
+            productId: row.id,
+            label: { fr: "Émaillée" },
+            priceTnd: row.priceTnd,
+            priceEur: row.priceEur,
+            stock: 3,
+            position: 0,
+          },
+          {
+            productId: row.id,
+            label: { fr: "Terre cuite non émaillée" },
+            priceTnd: Math.round(((unglazedEur / 100) * 3.4) / 5) * 5 * 1000,
+            priceEur: unglazedEur,
+            stock: 3,
+            position: 1,
+          },
+        ]
+      }),
+    )
     done.catalog = true
 
     if (!opts.demo) return

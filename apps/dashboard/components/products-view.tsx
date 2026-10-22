@@ -40,6 +40,11 @@ function Cover({ product }: { product: Product }) {
   )
 }
 
+/** "dès " in front of the lowest price when the variants are not all priced the same. */
+function fromPrefix(product: Product, currency: "TND" | "EUR"): string {
+  return new Set(product.variants.map((v) => v.prices[currency])).size > 1 ? "dès " : ""
+}
+
 function StockControl({
   product,
   onChange,
@@ -49,6 +54,14 @@ function StockControl({
   onChange: (stock: number) => void
   busy: boolean
 }) {
+  if (product.variants.length > 0) {
+    return (
+      <span className="text-sm tabular-nums">
+        <span className={product.stock === 0 ? "text-destructive" : ""}>{product.stock}</span>
+        <span className="text-muted-foreground"> · {product.variants.length} variantes</span>
+      </span>
+    )
+  }
   return (
     <div className="flex items-center gap-1">
       <Button
@@ -190,7 +203,9 @@ export function ProductsView() {
                         <span className="tabular-nums">{product.ref}</span> · {pick(product.category.name, "fr")}
                       </p>
                       <p className="tabular-nums">
-                        {formatMoney(product.prices.TND, "TND", "fr")} · {formatMoney(product.prices.EUR, "EUR", "fr")}
+                        {fromPrefix(product, "TND")}
+                        {formatMoney(product.prices.TND, "TND", "fr")} · {fromPrefix(product, "EUR")}
+                        {formatMoney(product.prices.EUR, "EUR", "fr")}
                       </p>
                     </div>
                   </Link>
@@ -252,9 +267,11 @@ export function ProductsView() {
                       </TableCell>
                       <TableCell>{pick(product.category.name, "fr")}</TableCell>
                       <TableCell className="text-right tabular-nums">
+                        {fromPrefix(product, "TND")}
                         {formatMoney(product.prices.TND, "TND", "fr")}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
+                        {fromPrefix(product, "EUR")}
                         {formatMoney(product.prices.EUR, "EUR", "fr")}
                       </TableCell>
                       <TableCell>

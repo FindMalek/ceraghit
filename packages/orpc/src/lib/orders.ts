@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { type Db, orderItems, orders, products } from "@workspace/db"
+import { type Db, orderItems, orders, products, productVariants } from "@workspace/db"
 import { type Currency, estimateShipping, type OrderInput, pick } from "@workspace/sdk"
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
@@ -14,11 +14,17 @@ type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0]
 async function restock(tx: Tx, orderId: string): Promise<void> {
   const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId))
   for (const item of items) {
-    if (!item.productId) continue
-    await tx
-      .update(products)
-      .set({ stock: sql`${products.stock} + ${item.quantity}` })
-      .where(eq(products.id, item.productId))
+    if (item.variantId) {
+      await tx
+        .update(productVariants)
+        .set({ stock: sql`${productVariants.stock} + ${item.quantity}` })
+        .where(eq(productVariants.id, item.variantId))
+    } else if (item.productId) {
+      await tx
+        .update(products)
+        .set({ stock: sql`${products.stock} + ${item.quantity}` })
+        .where(eq(products.id, item.productId))
+    }
   }
 }
 
@@ -56,12 +62,22 @@ export async function createOrder(services: Services, input: OrderInput) {
       throw new ORPCError("BAD_REQUEST", { message: `${row.ref} is sold on quote, send a request instead.` })
     if (row.unique && item.quantity > 1)
       throw new ORPCError("BAD_REQUEST", { message: `${row.ref} is a unique piece.` })
-    return { row, quantity: item.quantity }
+    const variant = item.variantId ? row.variants.find((v) => v.id === item.variantId) : undefined
+    if (item.variantId && !variant) {
+      throw new ORPCError("NOT_FOUND", { message: "An option in your cart is no longer available." })
+    }
+    if (!variant && row.variants.length > 0) {
+      throw new ORPCError("BAD_REQUEST", { message: `Choose an option for ${row.ref}.` })
+    }
+    return { row, variant, quantity: item.quantity }
   })
 
   const settings = await getSettings(db)
-  const unit = (row: (typeof lines)[number]["row"]) => (input.currency === "TND" ? row.priceTnd : row.priceEur)
-  const subtotal = lines.reduce((sum, l) => sum + unit(l.row) * l.quantity, 0)
+  const unit = ({ row, variant }: (typeof lines)[number]) => {
+    const priced = variant ?? row
+    return input.currency === "TND" ? priced.priceTnd : priced.priceEur
+  }
+  const subtotal = lines.reduce((sum, l) => sum + unit(l) * l.quantity, 0)
   const quote = estimateShipping(
     settings.shippingRates,
     lines.map(({ row, quantity }) => ({ ...row, quantity })),
@@ -77,12 +93,18 @@ export async function createOrder(services: Services, input: OrderInput) {
   const total = subtotal + shipping
 
   const created = await db.transaction(async (tx) => {
-    for (const { row, quantity } of lines) {
-      const updated = await tx
-        .update(products)
-        .set({ stock: sql`${products.stock} - ${quantity}` })
-        .where(and(eq(products.id, row.id), sql`${products.stock} >= ${quantity}`))
-        .returning({ id: products.id })
+    for (const { row, variant, quantity } of lines) {
+      const updated = variant
+        ? await tx
+            .update(productVariants)
+            .set({ stock: sql`${productVariants.stock} - ${quantity}` })
+            .where(and(eq(productVariants.id, variant.id), sql`${productVariants.stock} >= ${quantity}`))
+            .returning({ id: productVariants.id })
+        : await tx
+            .update(products)
+            .set({ stock: sql`${products.stock} - ${quantity}` })
+            .where(and(eq(products.id, row.id), sql`${products.stock} >= ${quantity}`))
+            .returning({ id: products.id })
       if (!updated.length) {
         throw new ORPCError("CONFLICT", { message: `${pick(row.title, input.locale)} is no longer in stock.` })
       }
@@ -112,13 +134,16 @@ export async function createOrder(services: Services, input: OrderInput) {
         .returning()
       if (!order) continue
       await tx.insert(orderItems).values(
-        lines.map(({ row, quantity }) => ({
+        lines.map((line) => ({
           orderId: order.id,
-          productId: row.id,
-          ref: row.ref,
-          title: pick(row.title, "fr"),
-          unitMinor: unit(row),
-          quantity,
+          productId: line.row.id,
+          variantId: line.variant?.id ?? null,
+          ref: line.row.ref,
+          title: line.variant
+            ? `${pick(line.row.title, "fr")} (${pick(line.variant.label, "fr").toLocaleLowerCase("fr")})`
+            : pick(line.row.title, "fr"),
+          unitMinor: unit(line),
+          quantity: line.quantity,
         })),
       )
       return order
