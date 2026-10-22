@@ -203,6 +203,8 @@ export const customRequests = pgTable(
     dimensions: text("dimensions"),
     budget: text("budget"),
     references: text("references"),
+    /** `s3:<key>` of the photos the customer attached, at most 3. */
+    images: jsonb("images").$type<string[]>().notNull().default([]),
     status: requestStatus("status").notNull().default("new"),
     adminNote: text("admin_note"),
     locale: text("locale").notNull().default("fr"),

@@ -1,0 +1,1 @@
+ALTER TABLE "custom_requests" ADD COLUMN "images" jsonb DEFAULT '[]'::jsonb NOT NULL;

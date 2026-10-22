@@ -4,6 +4,7 @@ import { CopyIcon, EnvelopeSimpleIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
+import { imageSrc } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
 import { Field, FieldLabel } from "@workspace/ui/components/field"
 import {
@@ -111,6 +112,30 @@ function RequestSheet({ request, onClose }: { request: Request | null; onClose: 
                 <Row label="Budget" value={request.budget} />
                 <Row label="Références" value={request.references} />
               </dl>
+              {request.images.length > 0 && (
+                <div className="space-y-2">
+                  <p className="font-heading text-muted-foreground text-sm">Photos jointes</p>
+                  <ul className="grid grid-cols-3 gap-3">
+                    {request.images.map((image) => (
+                      <li key={image}>
+                        <a
+                          href={imageSrc(image)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="frame block aspect-square overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          {/* biome-ignore lint/performance/noImgElement: customer photos from the bucket, any size */}
+                          <img
+                            src={imageSrc(image)}
+                            alt="Référence jointe par le client"
+                            className="size-full object-cover"
+                          />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <Field>
                 <FieldLabel htmlFor="request-status">Statut</FieldLabel>
                 <SimpleSelect id="request-status" value={status} onChange={setStatus} options={STATUS_OPTIONS} />

@@ -15,6 +15,13 @@
       "when": 1792707266172,
       "tag": "0001_quick_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792708538700,
+      "tag": "0002_keen_ezekiel",
+      "breakpoints": true
     }
   ]
 }
