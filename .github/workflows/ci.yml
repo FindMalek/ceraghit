@@ -21,7 +21,7 @@ env:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, the-keep]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
           git diff --exit-code -- packages/db/drizzle || { echo "::error::schema changed without a migration, run pnpm db:generate"; exit 1; }
 
   types:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, the-keep]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
       - run: pnpm check-types
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, the-keep]
     timeout-minutes: 15
     services:
       postgres:
@@ -81,7 +81,7 @@ jobs:
       - run: pnpm test
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, the-keep]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
