@@ -2,10 +2,16 @@ import { Logo } from "@workspace/ui/brand/logo"
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { getSettings } from "@/lib/api"
+import { LEGAL_DOCS } from "@/lib/legal"
 import { NAV_LINKS } from "./nav-links"
 
 export async function SiteFooter() {
-  const [t, nav, settings] = await Promise.all([getTranslations("footer"), getTranslations("nav"), getSettings()])
+  const [t, nav, legal, settings] = await Promise.all([
+    getTranslations("footer"),
+    getTranslations("nav"),
+    getTranslations("legal"),
+    getSettings(),
+  ])
   return (
     <footer className="mt-24 border-border border-t bg-background/80 pb-24 md:pb-0">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-3">
@@ -61,6 +67,17 @@ export async function SiteFooter() {
           )}
         </address>
       </div>
+      <nav aria-label={t("legal")} className="border-border border-t">
+        <ul className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-6 px-4">
+          {LEGAL_DOCS.map((doc) => (
+            <li key={doc}>
+              <Link href={`/legal/${doc}`} className="flex min-h-11 items-center text-sm hover:text-foreground">
+                {legal(`nav.${doc}`)}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
       <p className="border-border border-t py-4 text-center text-muted-foreground text-xs">
         © {new Date().getFullYear()} Ceraghit Creation. {t("rights")}
       </p>

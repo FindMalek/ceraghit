@@ -1,16 +1,30 @@
 import { imageSrc, pick } from "@workspace/sdk"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
+import type { Metadata } from "next"
 import Image from "next/image"
 import { getLocale, getTranslations } from "next-intl/server"
+import { JsonLd } from "@/components/json-ld"
 import { ProductGrid } from "@/components/product-card"
 import { SectionHeading } from "@/components/section-heading"
 import { Link } from "@/i18n/navigation"
-import { getCategories, getProducts } from "@/lib/api"
+import { getCategories, getProducts, getSettings } from "@/lib/api"
 import { getCurrency } from "@/lib/currency-server"
+import { organizationJsonLd } from "@/lib/json-ld"
+import { pageMetadata } from "@/lib/seo"
 import { STUDIO_PHOTOS } from "@/lib/site"
 
 export const dynamic = "force-dynamic"
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [locale, t] = await Promise.all([getLocale(), getTranslations("meta")])
+  return pageMetadata({
+    locale,
+    path: "",
+    title: { absolute: t("title") },
+    description: t("description"),
+  })
+}
 
 export default async function HomePage() {
   const [t, edito, locale, currency] = await Promise.all([
@@ -19,12 +33,14 @@ export default async function HomePage() {
     getLocale(),
     getCurrency(),
   ])
-  const [categories, featured] = await Promise.all([
+  const [categories, featured, settings] = await Promise.all([
     getCategories(),
     getProducts({ featured: true, sort: "featured", currency, limit: 8 }),
+    getSettings(),
   ])
   return (
     <>
+      <JsonLd data={organizationJsonLd(settings)} />
       <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 md:grid-cols-2 md:py-20">
         <div className="space-y-6 text-center md:text-start">
           <Image

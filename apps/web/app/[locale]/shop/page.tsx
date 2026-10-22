@@ -8,12 +8,14 @@ import { ShopFilters } from "@/components/shop-filters"
 import { Link } from "@/i18n/navigation"
 import { getCategories, getProducts } from "@/lib/api"
 import { getCurrency } from "@/lib/currency-server"
+import { pageMetadata } from "@/lib/seo"
 import { parseSort } from "@/lib/shop"
 
 export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
-  return { title: (await getTranslations("shop"))("title") }
+  const [locale, t, seo] = await Promise.all([getLocale(), getTranslations("shop"), getTranslations("seo")])
+  return pageMetadata({ locale, path: "/shop", title: t("title"), description: seo("shopDescription") })
 }
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<{ q?: string; sort?: string }> }) {
