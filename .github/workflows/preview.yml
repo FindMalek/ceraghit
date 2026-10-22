@@ -1,7 +1,7 @@
 # Vercel-style previews on the-keep (Dokploy): three images per PR, three Dokploy apps + a Postgres, a sticky PR
 # comment with the links, and a GitHub deployment so the PR shows "View deployment". Previews never touch production:
 # own database, own bucket, demo payments or Konnect sandbox keys. Only same-repo PRs get one.
-# Skipped until vars.DEPLOY_ENABLED is "true", see docs/deploy.md.
+# Skipped until vars.PREVIEW_ENABLED is "true", see docs/deploy.md.
 
 name: Preview
 
@@ -30,7 +30,7 @@ env:
 
 jobs:
   build:
-    if: github.event.action != 'closed' && vars.DEPLOY_ENABLED == 'true' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    if: github.event.action != 'closed' && vars.PREVIEW_ENABLED == 'true' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -90,7 +90,7 @@ jobs:
         run: node scripts/deploy/dokploy.mjs comment-failed
 
   cleanup:
-    if: github.event.action == 'closed' && vars.DEPLOY_ENABLED == 'true' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]'
+    if: github.event.action == 'closed' && vars.PREVIEW_ENABLED == 'true' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

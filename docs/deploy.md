@@ -57,7 +57,7 @@ to that bucket, and a CORS rule allowing `PUT` from the dashboard origin (browse
 
 **DNS** (Vercel DNS, `findmalek.engineer`): `ceraghit` and `*.ceraghit` CNAME → `home.findmalek.engineer`.
 
-**GitHub** repo variables: `DEPLOY_ENABLED=true`, `DOKPLOY_PUBLIC_URL`, `PREVIEW_DOMAIN=ceraghit.findmalek.engineer`,
+**GitHub** repo variables: `PREVIEW_ENABLED=true` (previews) and later `DEPLOY_ENABLED=true` (production deploys, only once the `production` environment is complete), `DOKPLOY_PUBLIC_URL`, `PREVIEW_DOMAIN=ceraghit.findmalek.engineer`,
 `PREVIEW_DB_HOST` (the-keep tailnet ip), `S3_ENDPOINT`, `PREVIEW_S3_BUCKET=ceraghit-dev`, `PREVIEW_ADMIN_EMAIL`,
 `TURBO_API=https://turbo.findmalek.engineer`, `TURBO_TEAM=ceraghit`.
 Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_PASSWORD`, `PREVIEW_S3_ACCESS_KEY_ID`,
