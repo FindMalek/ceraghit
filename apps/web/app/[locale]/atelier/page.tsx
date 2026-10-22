@@ -4,12 +4,20 @@ import Image from "next/image"
 import { getLocale, getTranslations } from "next-intl/server"
 import { SectionHeading } from "@/components/section-heading"
 import { getLocations, getSettings } from "@/lib/api"
+import { pageMetadata } from "@/lib/seo"
 import { EDITO_KEYS, PROCESS_PHOTOS, STUDIO_PHOTOS } from "@/lib/site"
 
 export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
-  return { title: (await getTranslations("atelier"))("title") }
+  const [locale, t, seo] = await Promise.all([getLocale(), getTranslations("atelier"), getTranslations("seo")])
+  return pageMetadata({
+    locale,
+    path: "/atelier",
+    title: t("title"),
+    description: seo("atelierDescription"),
+    image: STUDIO_PHOTOS[0]?.src,
+  })
 }
 
 export default async function AtelierPage() {

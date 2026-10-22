@@ -1,10 +1,11 @@
-import { imageSrc, pick } from "@workspace/sdk"
+import { pick } from "@workspace/sdk"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
 import { AddToCart } from "@/components/add-to-cart"
+import { JsonLd } from "@/components/json-ld"
 import { PriceBox } from "@/components/price-box"
 import { ProductGrid } from "@/components/product-card"
 import { ProductGallery } from "@/components/product-gallery"
@@ -13,6 +14,8 @@ import { ShippingEstimate } from "@/components/shipping-estimate"
 import { Link } from "@/i18n/navigation"
 import { getProduct, getProducts } from "@/lib/api"
 import { getCurrency } from "@/lib/currency-server"
+import { breadcrumbJsonLd, productJsonLd } from "@/lib/json-ld"
+import { pageMetadata } from "@/lib/seo"
 
 export const dynamic = "force-dynamic"
 
@@ -22,21 +25,27 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const [{ slug }, locale] = await Promise.all([params, getLocale()])
   const product = await getProduct(slug)
   if (!product) return {}
-  const cover = product.images[0]
-  return {
-    title: pick(product.title, locale),
-    description: pick(product.description, locale) || undefined,
-    openGraph: cover ? { images: [imageSrc(cover.image)] } : undefined,
-  }
+  const title = pick(product.title, locale)
+  const description =
+    pick(product.description, locale) ||
+    [pick(product.material, locale), pick(product.technique, locale), product.dimensions].filter(Boolean).join(", ")
+  return pageMetadata({
+    locale,
+    path: `/product/${slug}`,
+    title,
+    description: description || title,
+    image: product.images[0]?.image,
+  })
 }
 
 export default async function ProductPage({ params }: Params) {
-  const [{ slug }, locale, currency, t, common] = await Promise.all([
+  const [{ slug }, locale, currency, t, common, seo] = await Promise.all([
     params,
     getLocale(),
     getCurrency(),
     getTranslations("product"),
     getTranslations("common"),
+    getTranslations("seo"),
   ])
   const product = await getProduct(slug)
   if (!product) notFound()
@@ -54,6 +63,17 @@ export default async function ProductPage({ params }: Params) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:py-12">
+      <JsonLd data={productJsonLd(product, currency, locale)} />
+      <JsonLd
+        data={breadcrumbJsonLd(
+          [
+            { name: seo("crumbHome"), path: "/" },
+            { name: pick(product.category.name, locale), path: `/shop/${product.category.slug}` },
+            { name: title, path: `/product/${product.slug}` },
+          ],
+          locale,
+        )}
+      />
       <div className="grid gap-8 md:grid-cols-2 md:gap-14">
         <ProductGallery images={product.images} title={title} />
         <div className="space-y-6 md:pt-4">
