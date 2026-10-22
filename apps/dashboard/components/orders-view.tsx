@@ -19,6 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { ExportOrdersDialog } from "@/components/export-orders-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
@@ -222,7 +223,11 @@ export function OrdersView() {
 
   return (
     <>
-      <PageHeader title="Commandes" description="Chaque commande est payée dans sa devise, dinars ou euros." />
+      <PageHeader
+        title="Commandes"
+        description="Chaque commande est payée dans sa devise, dinars ou euros."
+        actions={<ExportOrdersDialog />}
+      />
       <PageBody>
         <div className="flex flex-col gap-3 md:flex-row">
           <InputGroup className="h-11 md:max-w-sm">

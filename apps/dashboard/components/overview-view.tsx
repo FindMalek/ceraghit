@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@work
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import Link from "next/link"
 import { useState } from "react"
+import { ExportSalesButton } from "@/components/export-sales-button"
 import { type DayPoint, RevenueChart } from "@/components/overview-charts"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { ErrorState } from "@/components/query-state"
@@ -58,7 +59,12 @@ export function OverviewView() {
       <PageHeader
         title="Vue d'ensemble"
         description="Les ventes de la boutique."
-        actions={<SimpleSelect value={days} onChange={setDays} options={RANGES} className="h-11 w-56" />}
+        actions={
+          <>
+            <SimpleSelect value={days} onChange={setDays} options={RANGES} className="h-11 w-56" />
+            <ExportSalesButton days={Number(days)} />
+          </>
+        }
       />
       <PageBody>
         {stats.isError && <ErrorState error={stats.error} onRetry={() => stats.refetch()} />}
