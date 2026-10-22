@@ -30,3 +30,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 - Delivery is priced per cart and country by the api (`public.catalog.shippingQuote`, rate card in dashboard settings); checkout and the product page only display the quote and the order recomputes it.
+- SEO: pages build metadata with `pageMetadata` (`lib/seo.ts`), structured data comes from `lib/json-ld.ts` through `components/json-ld.tsx`; the sitemap is empty outside production.

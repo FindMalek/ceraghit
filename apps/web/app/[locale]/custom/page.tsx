@@ -2,11 +2,13 @@ import { pick } from "@workspace/sdk"
 import { getLocale, getTranslations } from "next-intl/server"
 import { CustomForm } from "@/components/custom-form"
 import { getProducts } from "@/lib/api"
+import { pageMetadata } from "@/lib/seo"
 
 export const dynamic = "force-dynamic"
 
 export async function generateMetadata() {
-  return { title: (await getTranslations("custom"))("title") }
+  const [locale, t, seo] = await Promise.all([getLocale(), getTranslations("custom"), getTranslations("seo")])
+  return pageMetadata({ locale, path: "/custom", title: t("title"), description: seo("customDescription") })
 }
 
 export default async function CustomPage({ searchParams }: { searchParams: Promise<{ ref?: string }> }) {

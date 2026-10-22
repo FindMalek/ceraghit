@@ -456,5 +456,13 @@
         ]
       }
     }
+  },
+  "seo": {
+    "shopDescription": "Toutes les pièces de l'atelier Ceraghit : curda seca, lampes votives, bas-reliefs et pièces uniques, modelées à la main.",
+    "categoryDescription": "{name} : pièces en céramique modelées à la main par Sabri Ghit, livrées en Tunisie et à l'international.",
+    "atelierDescription": "L'atelier Ceraghit Creation : la matière, les gestes et l'histoire de Sabri Ghit, avec les adresses des ateliers.",
+    "customDescription": "Créez une pièce unique avec l'atelier Ceraghit : décrivez votre idée et recevez un devis par e-mail.",
+    "crumbHome": "Accueil",
+    "crumbShop": "Boutique"
   }
 }
