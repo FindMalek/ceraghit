@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
 import { getCategories, getProducts } from "@/lib/api"
+import { LEGAL_DOCS } from "@/lib/legal"
 import { ENABLED_LOCALES } from "@/lib/locales"
 import { absoluteUrl, localizedPath } from "@/lib/seo"
 import { SITE } from "@/lib/site"
@@ -7,6 +8,7 @@ import { SITE } from "@/lib/site"
 export const dynamic = "force-dynamic"
 
 const STATIC_PATHS = ["/shop", "/atelier", "/custom"]
+const LEGAL_PATHS = LEGAL_DOCS.map((doc) => `/legal/${doc}`)
 
 function entry(path: string, priority: number): MetadataRoute.Sitemap[number] {
   return {
@@ -33,5 +35,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...STATIC_PATHS.map((path) => entry(path, 0.8)),
     ...categories.map((c) => entry(`/shop/${c.slug}`, 0.8)),
     ...products.map((p) => entry(`/product/${p.slug}`, 0.6)),
+    ...LEGAL_PATHS.map((path) => entry(path, 0.3)),
   ]
 }

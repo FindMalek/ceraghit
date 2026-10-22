@@ -3,11 +3,12 @@ import { customRequests, orders } from "@workspace/db"
 import {
   adminOrderSchema,
   customRequestSchema,
+  orderExportInputSchema,
   orderListQuerySchema,
   orderStatusSchema,
   requestStatusSchema,
 } from "@workspace/sdk"
-import { and, desc, eq, ilike, or } from "drizzle-orm"
+import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
 import { z } from "zod"
 import { cancelOrder, releaseExpiredHolds } from "../../lib/orders"
 import { adminProcedure } from "../../procedures"
@@ -44,6 +45,9 @@ function toAdminOrder(o: OrderRow) {
   }
 }
 
+/** A studio day in Africa/Tunis (UTC+1, no daylight saving) as a UTC instant. */
+const tunisDayStart = (day: string, plus = 0) => new Date(new Date(`${day}T00:00:00+01:00`).getTime() + plus * 864e5)
+
 export const ordersRouter = {
   list: adminProcedure
     .route({ method: "GET", path: "/admin/orders", summary: "Orders, newest first", tags: TAG })
@@ -62,6 +66,30 @@ export const ordersRouter = {
         with: { items: true },
         orderBy: [desc(orders.createdAt)],
         limit: input.limit,
+      })
+      return rows.map(toAdminOrder)
+    }),
+
+  /** Every paid or shipped order paid in the range, in one currency, oldest first. Not capped: it feeds the accountant's CSV. */
+  export: adminProcedure
+    .route({
+      method: "GET",
+      path: "/admin/orders/export",
+      summary: "Paid orders of a period, for the CSV export",
+      tags: TAG,
+    })
+    .input(orderExportInputSchema)
+    .output(z.array(adminOrderSchema))
+    .handler(async ({ context, input }) => {
+      const rows = await context.db.query.orders.findMany({
+        where: and(
+          eq(orders.currency, input.currency),
+          input.status ? eq(orders.status, input.status) : inArray(orders.status, ["paid", "fulfilled"]),
+          gte(orders.paidAt, tunisDayStart(input.from)),
+          lt(orders.paidAt, tunisDayStart(input.to, 1)),
+        ),
+        with: { items: true },
+        orderBy: [asc(orders.paidAt)],
       })
       return rows.map(toAdminOrder)
     }),

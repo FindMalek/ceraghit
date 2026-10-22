@@ -9,6 +9,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
+import { Link } from "@/i18n/navigation"
 import { FormField } from "./form-field"
 
 const FIELDS = ["name", "email", "phone", "country", "description", "dimensions", "budget", "references"] as const
@@ -105,6 +106,15 @@ export function CustomForm({ initialDescription }: { initialDescription?: string
           t("submit")
         )}
       </Button>
+      <p className="text-center text-muted-foreground text-xs">
+        {t.rich("privacy", {
+          link: (chunks) => (
+            <Link href="/legal/privacy" className="underline underline-offset-4 hover:text-foreground">
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
     </form>
   )
 }

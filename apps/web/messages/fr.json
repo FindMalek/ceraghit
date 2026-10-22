@@ -129,10 +129,12 @@
       "country": "Indiquez votre pays.",
       "city": "Indiquez votre ville.",
       "address": "Indiquez votre adresse.",
-      "items": "Votre panier est vide."
+      "items": "Votre panier est vide.",
+      "terms": "Vous devez accepter les conditions générales de vente pour payer."
     },
     "failed": "La commande n'a pas pu être créée.",
-    "backToShop": "Voir la boutique"
+    "backToShop": "Voir la boutique",
+    "termsLabel": "J'accepte les <link>conditions générales de vente</link>."
   },
   "order": {
     "title": "Commande {number}",
@@ -193,7 +195,8 @@
       "email": "Indiquez une adresse e-mail valide.",
       "description": "Décrivez votre projet en quelques phrases (10 caractères minimum)."
     },
-    "failed": "La demande n'a pas pu être envoyée."
+    "failed": "La demande n'a pas pu être envoyée.",
+    "privacy": "Vos informations servent uniquement à répondre à votre demande. <link>Confidentialité</link>"
   },
   "atelier": {
     "title": "L'atelier",
@@ -212,7 +215,8 @@
     "explore": "Explorer",
     "rights": "Tous droits réservés.",
     "instagram": "Instagram",
-    "whatsapp": "WhatsApp"
+    "whatsapp": "WhatsApp",
+    "legal": "Informations"
   },
   "currency": {
     "TND": "Dinar tunisien",
@@ -232,6 +236,226 @@
     "onQuote": "Sur devis",
     "tooBig": "Cette commande est trop volumineuse pour une livraison en ligne. Écrivez-nous pour un devis de transport.",
     "contact": "Demander un devis"
+  },
+  "legal": {
+    "draft": "Projet à faire valider par l'atelier",
+    "draftNote": "Ce texte est un brouillon. Les passages entre crochets sont à compléter ou à confirmer avant la mise en ligne.",
+    "navLabel": "Informations légales",
+    "nav": {
+      "terms": "Conditions générales de vente",
+      "shipping": "Livraison",
+      "notice": "Mentions légales",
+      "privacy": "Confidentialité"
+    },
+    "docs": {
+      "terms": {
+        "title": "Conditions générales de vente",
+        "intro": "Les règles qui s'appliquent à vos commandes.",
+        "sections": [
+          {
+            "title": "1. Objet",
+            "body": [
+              "Les présentes conditions générales de vente régissent toute commande passée sur ce site auprès de Ceraghit Creation (« l'atelier »). Passer commande implique d'avoir lu et accepté ces conditions."
+            ]
+          },
+          {
+            "title": "2. Commande",
+            "body": [
+              "Vous choisissez vos pièces, les ajoutez au panier, renseignez vos coordonnées et votre adresse de livraison, puis réglez en ligne. La commande est confirmée lorsque le paiement est validé : la page de suivi de commande affiche alors « Payée ».",
+              "Les pièces sont réservées pendant 45 minutes à partir de la création de la commande. Sans paiement dans ce délai, la commande est annulée et les pièces sont remises en vente.",
+              "Une pièce unique n'existe qu'en un exemplaire : elle ne peut être commandée qu'une fois. Les pièces marquées « Sur devis » ne s'achètent pas depuis le panier : envoyez une demande à l'atelier."
+            ]
+          },
+          {
+            "title": "3. Prix",
+            "body": [
+              "Chaque pièce est proposée à la fois en dinars tunisiens (TND) et en euros (EUR). Vous choisissez la devise avant de commander et payez dans cette devise : aucun prix n'est converti automatiquement d'une devise à l'autre.",
+              "Les prix affichés s'entendent hors frais de livraison. Les frais de livraison sont calculés au moment du paiement, selon le contenu du panier et le pays de destination. [Régime de TVA / taxes applicables : à préciser par l'atelier.]"
+            ]
+          },
+          {
+            "title": "4. Paiement",
+            "body": [
+              "Le paiement s'effectue par carte bancaire (cartes tunisiennes et internationales) via notre prestataire de paiement Konnect. L'atelier ne voit et ne conserve jamais vos données de carte.",
+              "Si le paiement échoue ou est abandonné, la commande est annulée et les pièces sont remises en stock."
+            ]
+          },
+          {
+            "title": "5. Pièces faites main",
+            "body": [
+              "Toutes les pièces sont modelées à la main. De légères variations de forme, de couleur, d'émail et de texture sont normales : elles font partie de l'œuvre. Les photographies sont indicatives, en particulier pour les pièces émaillées dont la teinte varie selon la lumière."
+            ]
+          },
+          {
+            "title": "6. Livraison",
+            "body": [
+              "Les modalités de calcul des frais, les pays desservis et les délais sont décrits dans la page Livraison. Délai de préparation indicatif avant expédition : [à confirmer par l'atelier]."
+            ]
+          },
+          {
+            "title": "7. Dommages pendant le transport",
+            "body": [
+              "Les pièces sont emballées avec soin. Si une pièce arrive endommagée, signalez-le à l'atelier dans les [48 heures : à confirmer] suivant la réception, avec des photographies de la pièce et de l'emballage. L'atelier propose alors un remplacement ou un remboursement."
+            ]
+          },
+          {
+            "title": "8. Rétractation et retours",
+            "body": [
+              "Les pièces uniques, les pièces réalisées sur demande ou personnalisées ne peuvent être ni reprises ni échangées, sauf défaut avéré.",
+              "Pour les autres pièces, un retour est possible dans un délai de [à confirmer, par exemple 14 jours] après réception, après accord préalable de l'atelier, la pièce étant renvoyée intacte et dans son emballage d'origine. Les frais de retour sont à la charge de l'acheteur. Le remboursement est effectué dans la devise du paiement.",
+              "Ces règles s'appliquent sous réserve des droits impératifs dont vous pouvez bénéficier selon votre pays de résidence."
+            ]
+          },
+          {
+            "title": "9. Pièces sur devis et créations",
+            "body": [
+              "Pour une pièce sur devis ou une création personnalisée, envoyez une demande depuis la page « Pièce unique ». L'atelier vous répond par e-mail avec un devis. Les conditions de paiement (acompte, délais de réalisation) sont précisées dans le devis."
+            ]
+          },
+          {
+            "title": "10. Responsabilité",
+            "body": [
+              "L'atelier ne peut être tenu responsable des retards ou des dommages dus au transporteur ou à des événements indépendants de sa volonté, ni des droits de douane et taxes locales d'importation, qui sont à la charge de l'acheteur."
+            ]
+          },
+          {
+            "title": "11. Droit applicable",
+            "body": [
+              "Les présentes conditions sont soumises au droit [tunisien : à confirmer]. En cas de litige, les parties recherchent d'abord une solution amiable ; à défaut, les tribunaux de [ville : à préciser] sont compétents."
+            ]
+          },
+          {
+            "title": "12. Contact",
+            "body": [
+              "Pour toute question sur une commande, écrivez à l'atelier ou appelez-le aux coordonnées indiquées en bas de chaque page, en rappelant le numéro de commande (CER-12345)."
+            ]
+          }
+        ]
+      },
+      "shipping": {
+        "title": "Livraison",
+        "intro": "Comment la livraison est calculée et ce qu'elle comprend.",
+        "sections": [
+          {
+            "title": "Comment le prix est calculé",
+            "body": [
+              "Le prix de la livraison dépend du poids et de la taille de la boîte, pas de la valeur de la commande. Pour chaque pièce, l'atelier renseigne son poids emballé et les dimensions de sa boîte.",
+              "Le transporteur facture le plus élevé de deux poids : le poids réel (pièces, plus emballage de protection) ou le poids volumétrique (longueur × largeur × hauteur en cm, divisé par 5 000). Le poids facturé est arrondi par tranche de 0,5 kg.",
+              "À ce poids s'applique le tarif de la zone de destination (Tunisie, Europe ou reste du monde), plus une surcharge carburant pour les envois express et des frais de manutention pour l'emballage protecteur des pièces fragiles."
+            ]
+          },
+          {
+            "title": "Montants",
+            "body": [
+              "Les montants ne sont pas fixes : ils sont calculés au paiement, une fois votre pays choisi, et affichés avant que vous ne payiez. Vous voyez la zone de livraison et le poids facturé. [Barème : à confirmer par l'atelier.]"
+            ]
+          },
+          {
+            "title": "Transporteurs et délais",
+            "body": [
+              "Les envois sont confiés à un transporteur express (DHL Express ou équivalent) ou à un coursier local pour la Tunisie. [Transporteurs et délais de livraison indicatifs par zone : à confirmer par l'atelier.]",
+              "Un numéro de suivi est transmis par l'atelier dès l'expédition, lorsque le transporteur en fournit un."
+            ]
+          },
+          {
+            "title": "Pays desservis",
+            "body": [
+              "La liste des pays desservis est proposée dans le formulaire de commande. Une commande trop lourde ou trop volumineuse pour une livraison en ligne n'obtient pas de prix : l'atelier établit alors un devis de transport sur demande."
+            ]
+          },
+          {
+            "title": "Droits de douane et taxes",
+            "body": [
+              "Pour les envois hors de Tunisie, les droits de douane, taxes d'importation et frais de dédouanement éventuels sont à la charge de l'acheteur, selon la réglementation du pays de destination. Ils ne sont pas inclus dans le prix payé en ligne."
+            ]
+          },
+          {
+            "title": "Réception",
+            "body": [
+              "Vérifiez l'état du colis à la livraison et signalez toute anomalie à l'atelier selon les conditions générales de vente."
+            ]
+          }
+        ]
+      },
+      "notice": {
+        "title": "Mentions légales",
+        "intro": "Qui édite et héberge ce site.",
+        "sections": [
+          {
+            "title": "Éditeur du site",
+            "body": [
+              "Ceraghit Creation · [raison sociale]",
+              "Forme juridique : [à renseigner]",
+              "Adresse : [adresse de l'atelier]",
+              "Patente : [numéro de patente] · Matricule fiscal : [matricule fiscal]",
+              "Directeur de la publication : Sabri Ghit",
+              "Contact : coordonnées indiquées en bas de chaque page."
+            ]
+          },
+          {
+            "title": "Hébergement et services techniques",
+            "body": [
+              "Site hébergé par Vercel Inc. (vercel.com).",
+              "Base de données : Neon. Stockage et diffusion des images : Cloudflare. Paiement par carte : Konnect."
+            ]
+          },
+          {
+            "title": "Propriété intellectuelle",
+            "body": [
+              "Les œuvres, photographies, textes et éléments graphiques de ce site sont la propriété de Ceraghit Creation et de Sabri Ghit. Toute reproduction ou réutilisation sans autorisation écrite préalable est interdite."
+            ]
+          },
+          {
+            "title": "Données personnelles",
+            "body": ["Le traitement de vos données est décrit dans la politique de confidentialité."]
+          }
+        ]
+      },
+      "privacy": {
+        "title": "Confidentialité",
+        "intro": "Les données que nous collectons et ce que nous en faisons.",
+        "sections": [
+          {
+            "title": "Qui est responsable",
+            "body": [
+              "Ceraghit Creation, [raison sociale], est responsable du traitement des données collectées sur ce site. Contact : coordonnées indiquées en bas de chaque page."
+            ]
+          },
+          {
+            "title": "Ce que nous collectons",
+            "body": [
+              "Lors d'une commande : nom, e-mail, téléphone, adresse de livraison, pays, note éventuelle, contenu et montant de la commande.",
+              "Lors d'une demande de pièce unique : nom, e-mail, téléphone et pays (facultatifs), description du projet, dimensions, budget et liens d'inspiration.",
+              "Dans votre navigateur : votre devise, votre langue et le contenu de votre panier, conservés en local pour le fonctionnement du site. Aucun traceur publicitaire n'est utilisé."
+            ]
+          },
+          {
+            "title": "Pourquoi",
+            "body": [
+              "Pour traiter et livrer votre commande, répondre à vos demandes, tenir la comptabilité de l'atelier et respecter nos obligations légales."
+            ]
+          },
+          {
+            "title": "Avec qui nous les partageons",
+            "body": [
+              "Konnect (paiement par carte), Vercel (hébergement), Neon (base de données), Cloudflare (images) et le transporteur chargé de la livraison (nom, adresse, téléphone). Ces prestataires ne les utilisent que pour fournir leur service."
+            ]
+          },
+          {
+            "title": "Durée de conservation",
+            "body": [
+              "Commandes : [durée à confirmer, par exemple 10 ans pour les pièces comptables]. Demandes de pièce unique : [durée à confirmer, par exemple 24 mois]."
+            ]
+          },
+          {
+            "title": "Vos droits",
+            "body": [
+              "Vous pouvez demander l'accès à vos données, leur rectification ou leur suppression, dans la limite de nos obligations légales de conservation, en écrivant à l'atelier."
+            ]
+          }
+        ]
+      }
+    }
   },
   "seo": {
     "shopDescription": "Toutes les pièces de l'atelier Ceraghit : curda seca, lampes votives, bas-reliefs et pièces uniques, modelées à la main.",
