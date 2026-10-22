@@ -101,6 +101,26 @@ export const productImages = pgTable(
   (t) => [index("product_images_product_idx").on(t.productId)],
 )
 
+/**
+ * Options of one product (glazed or not, ...). A product with variants takes its price and stock from the chosen
+ * variant; the product's own prices stay as the "from" price shown on cards.
+ */
+export const productVariants = pgTable(
+  "product_variants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    label: jsonb("label").$type<Localized>().notNull(),
+    priceTnd: integer("price_tnd").notNull(),
+    priceEur: integer("price_eur").notNull(),
+    stock: integer("stock").notNull().default(1),
+    position: integer("position").notNull().default(0),
+  },
+  (t) => [index("product_variants_product_idx").on(t.productId)],
+)
+
 /** Workshop and studio addresses, edited in the dashboard. */
 export const locations = pgTable("locations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -161,6 +181,7 @@ export const orderItems = pgTable(
       .notNull()
       .references(() => orders.id, { onDelete: "cascade" }),
     productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+    variantId: uuid("variant_id").references(() => productVariants.id, { onDelete: "set null" }),
     ref: text("ref").notNull(),
     title: text("title").notNull(),
     unitMinor: integer("unit_minor").notNull(),
@@ -200,6 +221,10 @@ export const categoriesRelations = relations(categories, ({ many }) => ({ produc
 export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, { fields: [products.categoryId], references: [categories.id] }),
   images: many(productImages),
+  variants: many(productVariants),
+}))
+export const productVariantsRelations = relations(productVariants, ({ one }) => ({
+  product: one(products, { fields: [productVariants.productId], references: [products.id] }),
 }))
 export const productImagesRelations = relations(productImages, ({ one }) => ({
   product: one(products, { fields: [productImages.productId], references: [products.id] }),

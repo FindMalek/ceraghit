@@ -11,7 +11,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import { toast } from "sonner"
 import { Link } from "@/i18n/navigation"
-import { useCartStore } from "@/lib/cart-store"
+import { lineKey, useCartStore } from "@/lib/cart-store"
 import { rememberOrderToken } from "@/lib/order-tokens"
 import { useHydrated } from "@/lib/use-hydrated"
 import { useShippingQuote } from "@/lib/use-shipping-quote"
@@ -36,7 +36,7 @@ export function CheckoutForm() {
   const totals = useCartTotals(lines)
   const [country, setCountry] = useState<(typeof SHIPPING_COUNTRIES)[number]>("TN")
   const quote = useShippingQuote(
-    lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
+    lines.map((l) => ({ productId: l.productId, variantId: l.variantId ?? undefined, quantity: l.quantity })),
     country,
     currency,
   )
@@ -73,7 +73,7 @@ export function CheckoutForm() {
     const data = new FormData(event.currentTarget)
     const value = (key: Field): string => String(data.get(key) ?? "")
     const parsed = orderInputSchema.safeParse({
-      items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
+      items: lines.map((l) => ({ productId: l.productId, variantId: l.variantId ?? undefined, quantity: l.quantity })),
       currency,
       locale: localeSchema.catch("fr").parse(locale),
       customerName: value("customerName"),
@@ -150,9 +150,13 @@ export function CheckoutForm() {
         <h2 className="font-display text-3xl text-gold">{t("summary")}</h2>
         <ul className="space-y-2 text-sm">
           {lines.map((line) => (
-            <li key={line.productId} className="flex justify-between gap-3">
+            <li key={lineKey(line)} className="flex justify-between gap-3">
               <span>
-                {pick(line.title, locale)} <span className="text-muted-foreground">× {line.quantity}</span>
+                {pick(line.title, locale)}
+                {line.variantLabel && (
+                  <span className="text-muted-foreground"> ({pick(line.variantLabel, locale)})</span>
+                )}{" "}
+                <span className="text-muted-foreground">× {line.quantity}</span>
               </span>
               <span className="tabular-nums">
                 {formatMoney(line.prices[currency] * line.quantity, currency, locale)}

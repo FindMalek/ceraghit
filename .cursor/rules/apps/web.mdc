@@ -11,3 +11,4 @@ globs: apps/web/**
 - Only `/api/rpc/public/*` and `/api/files/*` are proxied (`WEB_ALLOWED`). Never call `admin` from here.
 - Cart is a persisted zustand store; unique pieces cap at quantity 1; `quoteOnly` pieces link to `/custom?ref=`.
 - noindex and a disallow-all robots unless `APP_ENV=production`.
+- Cart lines are keyed by piece and variant (`lineKey` in `lib/cart-store.ts`); pieces with options need a chosen variant to be added.

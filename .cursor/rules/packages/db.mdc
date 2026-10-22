@@ -10,3 +10,4 @@ globs: packages/db/**
 - `src/seed/catalogue.ts` is the PDF catalogue (30 products; TND prices are placeholders = EUR x 3.4 rounded to 5 DT, stock
   is a placeholder). `scenario.ts` builds deterministic demo orders. `seed()` never overwrites a non-empty database.
 - `password.ts` is node:crypto scrypt (runs on Bun, Node and Vercel).
+- Product variants (`product_variants`): a product with variants takes price and stock from the chosen variant; its own price and stock become the lowest price and total stock (set on every admin save by `lib/variants.ts`). Order items keep `variantId` and the label in the title. Admin saves upsert variants by id so held stock never loses its link.

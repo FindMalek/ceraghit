@@ -23,6 +23,7 @@ const product: Product = {
   featured: false,
   status: "published",
   images: [{ id: "i1", image: "/catalogue/0200-1.webp", alt: null }],
+  variants: [],
 }
 
 test("offers carry the price in major units of the visitor's currency", () => {
@@ -35,4 +36,21 @@ test("a sold out piece is OutOfStock and images are absolute", () => {
   expect(data.offers).toMatchObject({ availability: "https://schema.org/OutOfStock" })
   expect(data.sku).toBe("0200")
   expect((data.image as string[])[0]).toStartWith("http")
+})
+
+test("a piece with variants publishes the price range and one offer per variant", () => {
+  const withVariants: Product = {
+    ...product,
+    variants: [
+      { id: "v1", label: { fr: "Émaillée" }, prices: { TND: 100_000, EUR: 3_000 }, stock: 2 },
+      { id: "v2", label: { fr: "Non émaillée" }, prices: { TND: 85_000, EUR: 2_500 }, stock: 0 },
+    ],
+  }
+  const offers = productJsonLd(withVariants, "EUR", "fr").offers as {
+    lowPrice: number
+    highPrice: number
+    offers: { availability: string }[]
+  }
+  expect(offers).toMatchObject({ "@type": "AggregateOffer", lowPrice: 25, highPrice: 30, offerCount: 2 })
+  expect(offers.offers[1]?.availability).toBe("https://schema.org/OutOfStock")
 })

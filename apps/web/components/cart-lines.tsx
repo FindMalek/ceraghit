@@ -6,7 +6,7 @@ import { Button } from "@workspace/ui/components/button"
 import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
-import { type CartLine, maxQuantity, useCartStore } from "@/lib/cart-store"
+import { type CartLine, lineKey, maxQuantity, useCartStore } from "@/lib/cart-store"
 import { useCurrency } from "./currency-provider"
 
 export function CartLines({ lines, onNavigate }: { lines: CartLine[]; onNavigate?: () => void }) {
@@ -19,7 +19,7 @@ export function CartLines({ lines, onNavigate }: { lines: CartLine[]; onNavigate
       {lines.map((line) => {
         const title = pick(line.title, locale)
         return (
-          <li key={line.productId} className="flex gap-4 py-4">
+          <li key={lineKey(line)} className="flex gap-4 py-4">
             <Link
               href={`/product/${line.slug}`}
               onClick={onNavigate}
@@ -32,6 +32,9 @@ export function CartLines({ lines, onNavigate }: { lines: CartLine[]; onNavigate
                 {t("common.reference")} {line.ref}
               </p>
               <p className="font-display text-gold text-xl leading-tight">{title}</p>
+              {line.variantLabel && (
+                <p className="font-heading text-muted-foreground text-sm">{pick(line.variantLabel, locale)}</p>
+              )}
               <p className="font-heading text-sm">{formatMoney(line.prices[currency], currency, locale)}</p>
               <div className="mt-auto flex items-center justify-between gap-2">
                 {line.unique ? (
@@ -44,7 +47,7 @@ export function CartLines({ lines, onNavigate }: { lines: CartLine[]; onNavigate
                       className="size-11 md:size-9"
                       aria-label={t("product.decrease")}
                       disabled={line.quantity <= 1}
-                      onClick={() => setQuantity(line.productId, line.quantity - 1)}
+                      onClick={() => setQuantity(lineKey(line), line.quantity - 1)}
                     >
                       <MinusIcon />
                     </Button>
@@ -57,7 +60,7 @@ export function CartLines({ lines, onNavigate }: { lines: CartLine[]; onNavigate
                       className="size-11 md:size-9"
                       aria-label={t("product.increase")}
                       disabled={line.quantity >= maxQuantity(line)}
-                      onClick={() => setQuantity(line.productId, line.quantity + 1)}
+                      onClick={() => setQuantity(lineKey(line), line.quantity + 1)}
                     >
                       <PlusIcon />
                     </Button>
@@ -68,7 +71,7 @@ export function CartLines({ lines, onNavigate }: { lines: CartLine[]; onNavigate
                   size="icon"
                   className="size-11 md:size-9"
                   aria-label={t("cart.remove", { title })}
-                  onClick={() => remove(line.productId)}
+                  onClick={() => remove(lineKey(line))}
                 >
                   <TrashIcon />
                 </Button>

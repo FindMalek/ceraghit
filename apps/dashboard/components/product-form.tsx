@@ -17,6 +17,7 @@ import { LocalizedField } from "@/components/localized-field"
 import { MoneyInput } from "@/components/money-input"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
+import { emptyVariant, type VariantDraft, VariantsField } from "@/components/variants-field"
 import { PRODUCT_STATUS } from "@/lib/copy"
 import { emptyLocalized, fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 import { inputToMinor, minorToInput } from "@/lib/money"
@@ -41,6 +42,7 @@ interface Draft {
   featured: boolean
   status: ProductInput["status"]
   images: { image: string; alt?: string | null }[]
+  variants: VariantDraft[]
 }
 
 const EMPTY: Draft = {
@@ -63,6 +65,7 @@ const EMPTY: Draft = {
   featured: false,
   status: "draft",
   images: [],
+  variants: [],
 }
 
 const toDraft = (product: Product): Draft => ({
@@ -85,6 +88,13 @@ const toDraft = (product: Product): Draft => ({
   featured: product.featured,
   status: product.status,
   images: product.images.map(({ image, alt }) => ({ image, alt })),
+  variants: product.variants.map((v) => ({
+    id: v.id,
+    label: toLocalizedDraft(v.label),
+    priceTnd: minorToInput(v.prices.TND, "TND"),
+    priceEur: minorToInput(v.prices.EUR, "EUR"),
+    stock: String(v.stock),
+  })),
 })
 
 type Errors = Record<string, string>
@@ -137,10 +147,26 @@ function ProductFormBody({ product }: { product: Product | null }) {
     const found: Errors = {}
     const priceTnd = inputToMinor(draft.priceTnd, "TND")
     const priceEur = inputToMinor(draft.priceEur, "EUR")
-    if (priceTnd === null) found.priceTnd = "Entrez un prix en dinars (3 décimales maximum)."
-    if (priceEur === null) found.priceEur = "Entrez un prix en euros (2 décimales maximum)."
+    const hasVariants = draft.variants.length > 0
+    if (!hasVariants && priceTnd === null) found.priceTnd = "Entrez un prix en dinars (3 décimales maximum)."
+    if (!hasVariants && priceEur === null) found.priceEur = "Entrez un prix en euros (2 décimales maximum)."
     const stock = Number(draft.stock)
-    if (!Number.isInteger(stock) || stock < 0) found.stock = "Entrez un nombre entier."
+    if (!hasVariants && (!Number.isInteger(stock) || stock < 0)) found.stock = "Entrez un nombre entier."
+    const variants = draft.variants.map((v, i) => {
+      const variantTnd = inputToMinor(v.priceTnd, "TND")
+      const variantEur = inputToMinor(v.priceEur, "EUR")
+      const variantStock = Number(v.stock)
+      if (variantTnd === null) found[`variants.${i}.priceTnd`] = "Entrez un prix en dinars (3 décimales maximum)."
+      if (variantEur === null) found[`variants.${i}.priceEur`] = "Entrez un prix en euros (2 décimales maximum)."
+      if (!Number.isInteger(variantStock) || variantStock < 0) found[`variants.${i}.stock`] = "Entrez un nombre entier."
+      return {
+        id: v.id,
+        label: fromLocalizedDraft(v.label),
+        priceTnd: variantTnd ?? 0,
+        priceEur: variantEur ?? 0,
+        stock: Number.isInteger(variantStock) ? variantStock : 0,
+      }
+    })
     const weightKg = Number(draft.weightKg.trim().replace(",", "."))
     if (!Number.isFinite(weightKg) || weightKg <= 0) found.weightGrams = "Entrez un poids en kilos, par exemple 1,5."
     const box = (key: "lengthCm" | "widthCm" | "heightCm") => {
@@ -164,14 +190,15 @@ function ProductFormBody({ product }: { product: Product | null }) {
       lengthCm,
       widthCm,
       heightCm,
-      priceTnd: priceTnd ?? 0,
-      priceEur: priceEur ?? 0,
-      stock: Number.isInteger(stock) ? stock : 0,
+      priceTnd: hasVariants ? Math.min(...variants.map((v) => v.priceTnd)) : (priceTnd ?? 0),
+      priceEur: hasVariants ? Math.min(...variants.map((v) => v.priceEur)) : (priceEur ?? 0),
+      stock: hasVariants ? variants.reduce((sum, v) => sum + v.stock, 0) : Number.isInteger(stock) ? stock : 0,
       unique: draft.unique,
       quoteOnly: draft.quoteOnly,
       featured: draft.featured,
       status: draft.status,
       images: draft.images,
+      variants,
     })
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
@@ -238,38 +265,53 @@ function ProductFormBody({ product }: { product: Product | null }) {
         </FieldSet>
 
         <FieldSet>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <MoneyInput
-              id="price-tnd"
-              label="Prix TND *"
-              currency="TND"
-              value={draft.priceTnd}
-              onChange={(v) => set("priceTnd", v)}
-              error={errors.priceTnd}
-              hint="Le prix pour la Tunisie, en dinars (ex. 10)."
-            />
-            <MoneyInput
-              id="price-eur"
-              label="Prix EUR *"
-              currency="EUR"
-              value={draft.priceEur}
-              onChange={(v) => set("priceEur", v)}
-              error={errors.priceEur}
-              hint="Le prix à l'international, en euros (ex. 34)."
-            />
-          </div>
-          <Field data-invalid={Boolean(errors.stock)} className="sm:max-w-48">
-            <FieldLabel htmlFor="stock">Stock</FieldLabel>
-            <Input
-              id="stock"
-              className="h-11 tabular-nums"
-              inputMode="numeric"
-              value={draft.stock}
-              onChange={(e) => set("stock", e.target.value)}
-            />
-            {errors.stock && <FieldError>{errors.stock}</FieldError>}
-          </Field>
+          <VariantsField
+            value={draft.variants}
+            onChange={(v) => set("variants", v)}
+            errors={errors}
+            onFirst={() =>
+              set("variants", [
+                { ...emptyVariant(), priceTnd: draft.priceTnd, priceEur: draft.priceEur, stock: draft.stock },
+              ])
+            }
+          />
         </FieldSet>
+
+        {draft.variants.length === 0 && (
+          <FieldSet>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <MoneyInput
+                id="price-tnd"
+                label="Prix TND *"
+                currency="TND"
+                value={draft.priceTnd}
+                onChange={(v) => set("priceTnd", v)}
+                error={errors.priceTnd}
+                hint="Le prix pour la Tunisie, en dinars (ex. 10)."
+              />
+              <MoneyInput
+                id="price-eur"
+                label="Prix EUR *"
+                currency="EUR"
+                value={draft.priceEur}
+                onChange={(v) => set("priceEur", v)}
+                error={errors.priceEur}
+                hint="Le prix à l'international, en euros (ex. 34)."
+              />
+            </div>
+            <Field data-invalid={Boolean(errors.stock)} className="sm:max-w-48">
+              <FieldLabel htmlFor="stock">Stock</FieldLabel>
+              <Input
+                id="stock"
+                className="h-11 tabular-nums"
+                inputMode="numeric"
+                value={draft.stock}
+                onChange={(e) => set("stock", e.target.value)}
+              />
+              {errors.stock && <FieldError>{errors.stock}</FieldError>}
+            </Field>
+          </FieldSet>
+        )}
 
         <FieldSet>
           <LocalizedField

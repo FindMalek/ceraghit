@@ -36,6 +36,14 @@ export const categorySchema = z.object({
 
 export const productImageSchema = z.object({ id: z.string(), image: z.string(), alt: z.string().nullable() })
 
+export const productVariantSchema = z.object({
+  id: z.string(),
+  label: localizedSchema,
+  prices: pricesSchema,
+  stock: z.number().int(),
+})
+export type ProductVariant = z.infer<typeof productVariantSchema>
+
 export const productSchema = z.object({
   id: z.string(),
   ref: z.string(),
@@ -51,6 +59,7 @@ export const productSchema = z.object({
   lengthCm: z.number().int(),
   widthCm: z.number().int(),
   heightCm: z.number().int(),
+  /** With variants: the lowest variant price ("from") and the total stock of all variants. */
   prices: pricesSchema,
   stock: z.number().int(),
   unique: z.boolean(),
@@ -58,6 +67,7 @@ export const productSchema = z.object({
   featured: z.boolean(),
   status: productStatusSchema,
   images: z.array(productImageSchema),
+  variants: z.array(productVariantSchema),
 })
 export type Product = z.infer<typeof productSchema>
 export type Category = z.infer<typeof categorySchema>
@@ -122,11 +132,14 @@ export const studioSettingsSchema = z.object({
 })
 export type StudioSettings = z.infer<typeof studioSettingsSchema>
 
+export const cartItemSchema = z.object({
+  productId: z.string(),
+  variantId: z.string().optional(),
+  quantity: z.number().int().min(1).max(20),
+})
+
 export const orderInputSchema = z.object({
-  items: z
-    .array(z.object({ productId: z.string(), quantity: z.number().int().min(1).max(20) }))
-    .min(1)
-    .max(30),
+  items: z.array(cartItemSchema).min(1).max(30),
   currency: currencySchema,
   locale: localeSchema.default("fr"),
   customerName: z.string().trim().min(2).max(120),
@@ -204,6 +217,15 @@ export const customRequestSchema = customRequestInputSchema.extend({
   createdAt: z.string(),
 })
 
+export const productVariantInputSchema = z.object({
+  /** Set when editing an existing variant, so orders that hold its stock keep pointing at it. */
+  id: z.string().optional(),
+  label: localizedInput(80),
+  priceTnd: z.number().int().nonnegative(),
+  priceEur: z.number().int().nonnegative(),
+  stock: z.number().int().min(0).max(9999),
+})
+
 export const productInputSchema = z.object({
   ref: z.string().trim().min(1).max(20),
   categoryId: z.string(),
@@ -227,6 +249,7 @@ export const productInputSchema = z.object({
     .array(z.object({ image: z.string(), alt: z.string().nullable().optional() }))
     .max(12)
     .default([]),
+  variants: z.array(productVariantInputSchema).max(8).default([]),
 })
 export type ProductInput = z.infer<typeof productInputSchema>
 
@@ -279,10 +302,7 @@ export const uploadSignSchema = z.object({
 export const uploadTargetSchema = z.object({ uploadUrl: z.string(), image: z.string(), publicUrl: z.string() })
 
 export const shippingQuoteInputSchema = z.object({
-  items: z
-    .array(z.object({ productId: z.string(), quantity: z.number().int().min(1).max(20) }))
-    .min(1)
-    .max(30),
+  items: z.array(cartItemSchema).min(1).max(30),
   country: z.enum(SHIPPING_COUNTRIES),
   currency: currencySchema,
 })

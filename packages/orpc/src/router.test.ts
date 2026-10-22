@@ -1,11 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createRouterClient } from "@orpc/server"
-import { categories, createDb, orders, products } from "@workspace/db"
+import { categories, createDb, orders, products, productVariants } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { eq, inArray } from "drizzle-orm"
+import { asc, eq, inArray } from "drizzle-orm"
 import { type Context, createContext, type Services } from "./context"
 import { AdminAuth } from "./lib/auth"
+import { cancelOrder } from "./lib/orders"
 import { DemoProvider, KonnectProvider } from "./lib/payments"
 import { appRouter } from "./routers"
 import { adminRouter } from "./routers/admin"
@@ -157,6 +158,53 @@ describe.skipIf(!url)("router", () => {
     await expect(
       guest.public.orders.create({ ...customer, items: [{ productId: ids.fountain!, quantity: 1 }], locale: "fr" }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+  })
+
+  test("an ordered variant uses its own price and stock, and cancelling gives only that stock back", async () => {
+    const [lamp] = await db
+      .insert(products)
+      .values({
+        ref: `${tag}-lamp`,
+        slug: `${tag}-lamp`,
+        categoryId,
+        title: { fr: "Lampe" },
+        priceTnd: 40_000,
+        priceEur: 1_200,
+        stock: 0,
+        status: "published",
+      })
+      .returning()
+    const [, unglazed] = await db
+      .insert(productVariants)
+      .values([
+        { productId: lamp!.id, label: { fr: "Émaillée" }, priceTnd: 40_000, priceEur: 1_200, stock: 2, position: 0 },
+        { productId: lamp!.id, label: { fr: "Terre cuite" }, priceTnd: 30_000, priceEur: 900, stock: 2, position: 1 },
+      ])
+      .returning()
+    const stocks = async () =>
+      (
+        await db
+          .select()
+          .from(productVariants)
+          .where(eq(productVariants.productId, lamp!.id))
+          .orderBy(asc(productVariants.position))
+      ).map((v) => v.stock)
+
+    await expect(
+      guest.public.orders.create({ ...customer, items: [{ productId: lamp!.id, quantity: 1 }], locale: "fr" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+
+    const created = await guest.public.orders.create({
+      ...customer,
+      items: [{ productId: lamp!.id, variantId: unglazed!.id, quantity: 1 }],
+      locale: "fr",
+    })
+    const [order] = await db.select().from(orders).where(eq(orders.number, created.number))
+    expect(order!.subtotalMinor).toBe(30_000)
+    expect(await stocks()).toEqual([2, 1])
+
+    await cancelOrder(db, order!.id)
+    expect(await stocks()).toEqual([2, 2])
   })
 
   test("an unpaid order gives its pieces back after the hold", async () => {

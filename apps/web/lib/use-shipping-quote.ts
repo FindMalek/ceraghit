@@ -7,7 +7,7 @@ import type { Currency, SHIPPING_COUNTRIES } from "@workspace/sdk"
 type Country = (typeof SHIPPING_COUNTRIES)[number]
 
 export function useShippingQuote(
-  items: { productId: string; quantity: number }[],
+  items: { productId: string; variantId?: string; quantity: number }[],
   country: Country,
   currency: Currency,
 ) {

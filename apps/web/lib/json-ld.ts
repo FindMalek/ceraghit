@@ -9,6 +9,38 @@ export function majorPrice(minor: number, currency: Currency): number {
   return fromMinor(minor, currency)
 }
 
+const IN_STOCK = "https://schema.org/InStock"
+const OUT_OF_STOCK = "https://schema.org/OutOfStock"
+
+/** One offer for a plain piece; for a piece with variants an aggregate (lowest to highest) with an offer per variant. */
+function offersJsonLd(product: Product, currency: Currency, locale: string, url: string): JsonLd {
+  const base = { priceCurrency: currency, itemCondition: "https://schema.org/NewCondition", url }
+  if (product.variants.length < 2) {
+    return {
+      "@type": "Offer",
+      price: majorPrice(product.prices[currency], currency),
+      availability: product.stock > 0 ? IN_STOCK : OUT_OF_STOCK,
+      ...base,
+    }
+  }
+  const prices = product.variants.map((v) => v.prices[currency])
+  return {
+    "@type": "AggregateOffer",
+    lowPrice: majorPrice(Math.min(...prices), currency),
+    highPrice: majorPrice(Math.max(...prices), currency),
+    offerCount: product.variants.length,
+    availability: product.stock > 0 ? IN_STOCK : OUT_OF_STOCK,
+    priceCurrency: currency,
+    offers: product.variants.map((v) => ({
+      "@type": "Offer",
+      name: pick(v.label, locale),
+      price: majorPrice(v.prices[currency], currency),
+      availability: v.stock > 0 ? IN_STOCK : OUT_OF_STOCK,
+      ...base,
+    })),
+  }
+}
+
 export function productJsonLd(product: Product, currency: Currency, locale: string): JsonLd {
   const name = pick(product.title, locale)
   const url = absoluteUrl(localizedPath(locale, `/product/${product.slug}`))
@@ -28,14 +60,7 @@ export function productJsonLd(product: Product, currency: Currency, locale: stri
     brand: { "@type": "Brand", name: SITE.name },
     category: pick(product.category.name, locale),
     url,
-    offers: {
-      "@type": "Offer",
-      price: majorPrice(product.prices[currency], currency),
-      priceCurrency: currency,
-      availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
-      url,
-    },
+    offers: offersJsonLd(product, currency, locale, url),
   }
 }
 
