@@ -20,6 +20,7 @@ import { CountrySelect } from "./country-select"
 import { useCurrency } from "./currency-provider"
 import { FormField } from "./form-field"
 import { ShippingAmount, ShippingDetail, ShippingUnavailable } from "./shipping-quote-note"
+import { TermsCheckbox } from "./terms-checkbox"
 
 const FIELDS = ["customerName", "email", "phone", "city", "address", "postalCode", "note"] as const
 type Field = (typeof FIELDS)[number]
@@ -41,7 +42,8 @@ export function CheckoutForm() {
   )
   const shipping = quote.data?.available ? quote.data.amountMinor : 0
   const canPay = quote.data?.available === true
-  const [errors, setErrors] = useState<Partial<Record<Field | "items", string>>>({})
+  const [accepted, setAccepted] = useState(false)
+  const [errors, setErrors] = useState<Partial<Record<Field | "items" | "terms", string>>>({})
 
   const create = useMutation(
     orpc.public.orders.create.mutationOptions({
@@ -83,14 +85,18 @@ export function CheckoutForm() {
       postalCode: value("postalCode") || undefined,
       note: value("note") || undefined,
     })
-    if (!parsed.success) {
+    if (!parsed.success || !accepted) {
       const next: typeof errors = {}
-      for (const issue of parsed.error.issues) {
+      for (const issue of parsed.success ? [] : parsed.error.issues) {
         const key = String(issue.path[0]) as Field | "items"
         next[key] ??= t.has(`errors.${key}`) ? t(`errors.${key}`) : t("failed")
       }
+      if (!accepted) next.terms = t("errors.terms")
       setErrors(next)
-      document.getElementById(Object.keys(next)[0] ?? "")?.focus()
+      const first = Object.keys(next)[0] ?? ""
+      const target =
+        first === "terms" ? document.querySelector<HTMLElement>('[role="checkbox"]') : document.getElementById(first)
+      target?.focus()
       return
     }
     setErrors({})
@@ -180,6 +186,7 @@ export function CheckoutForm() {
             {errors.items}
           </p>
         )}
+        <TermsCheckbox checked={accepted} onChange={setAccepted} error={errors.terms} />
         <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={create.isPending || !canPay}>
           {create.isPending ? (
             <>
