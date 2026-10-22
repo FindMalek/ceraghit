@@ -175,6 +175,14 @@ export const adminOrderSchema = orderSchema.extend({
   paymentRef: z.string().nullable(),
 })
 
+/** Dates are studio days (Africa/Tunis), `YYYY-MM-DD`, both ends included. Filters on the payment date, like the overview. */
+export const orderExportInputSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  currency: currencySchema,
+  status: z.enum(["paid", "fulfilled"]).optional(),
+})
+
 export const checkoutSchema = z.object({ number: z.string(), token: z.string(), payUrl: z.string() })
 
 export const customRequestInputSchema = z.object({
