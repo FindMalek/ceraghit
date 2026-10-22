@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next"
 import { getCategories, getProducts } from "@/lib/api"
+import { LEGAL_DOCS } from "@/lib/legal"
 import { ENABLED_LOCALES } from "@/lib/locales"
 import { SITE } from "@/lib/site"
 
 export const dynamic = "force-dynamic"
 
-const STATIC_PATHS = ["", "/shop", "/atelier", "/custom"]
+const STATIC_PATHS = ["", "/shop", "/atelier", "/custom", ...LEGAL_DOCS.map((doc) => `/legal/${doc}`)]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [categories, products] = await Promise.all([
