@@ -4,6 +4,7 @@ import { type Currency, estimateShipping, type OrderInput, pick } from "@workspa
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { findProducts } from "./catalog"
+import { unitMinor } from "./pricing"
 import { getSettings } from "./settings"
 
 /** A pending order holds its stock this long, then the pieces go back on sale. */
@@ -73,16 +74,14 @@ export async function createOrder(services: Services, input: OrderInput) {
   })
 
   const settings = await getSettings(db)
-  const unit = ({ row, variant }: (typeof lines)[number]) => {
-    const priced = variant ?? row
-    return input.currency === "TND" ? priced.priceTnd : priced.priceEur
-  }
+  const unit = ({ row, variant }: (typeof lines)[number]) => unitMinor(row, variant, input.currency)
   const subtotal = lines.reduce((sum, l) => sum + unit(l) * l.quantity, 0)
   const quote = estimateShipping(
     settings.shippingRates,
     lines.map(({ row, quantity }) => ({ ...row, quantity })),
     input.country,
     input.currency,
+    subtotal,
   )
   if (!quote.available) {
     throw new ORPCError("BAD_REQUEST", {

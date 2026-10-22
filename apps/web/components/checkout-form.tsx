@@ -19,7 +19,7 @@ import { useCartTotals } from "./cart-summary"
 import { CountrySelect } from "./country-select"
 import { useCurrency } from "./currency-provider"
 import { FormField } from "./form-field"
-import { ShippingAmount, ShippingDetail, ShippingUnavailable } from "./shipping-quote-note"
+import { ShippingAmount, ShippingDetail, ShippingNote, ShippingNudge, ShippingUnavailable } from "./shipping-quote-note"
 import { TermsCheckbox } from "./terms-checkbox"
 
 const FIELDS = ["customerName", "email", "phone", "city", "address", "postalCode", "note"] as const
@@ -181,6 +181,8 @@ export function CheckoutForm() {
           </div>
         </dl>
         <ShippingDetail quote={quote} />
+        <ShippingNudge quote={quote} />
+        <ShippingNote />
         <ShippingUnavailable quote={quote} />
         <p className="text-muted-foreground text-xs">
           {t("payIn", { currency: currency === "TND" ? "TND (DT)" : "EUR (€)" })}

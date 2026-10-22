@@ -222,6 +222,37 @@ function ZoneCard({
           />
         </div>
       ))}
+
+      <div className="flex flex-col gap-3 border-border border-t pt-4">
+        <div className="flex min-h-11 items-center gap-3">
+          <Switch id={id("free")} checked={zone.freeEnabled} onCheckedChange={(on) => onChange({ freeEnabled: on })} />
+          <label htmlFor={id("free")} className="cursor-pointer">
+            Livraison offerte dès un montant de commande
+          </label>
+        </div>
+        {zone.freeEnabled && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MoneyInput
+              id={id("freeTnd")}
+              label="Livraison offerte dès, en dinars"
+              currency="TND"
+              value={zone.freeTnd}
+              onChange={(v) => onChange({ freeTnd: v })}
+              error={err("freeTnd")}
+              hint="Sous-total des pièces, hors livraison."
+            />
+            <MoneyInput
+              id={id("freeEur")}
+              label="Livraison offerte dès, en euros"
+              currency="EUR"
+              value={zone.freeEur}
+              onChange={(v) => onChange({ freeEur: v })}
+              error={err("freeEur")}
+              hint="Le client voit « Plus que X pour la livraison offerte »."
+            />
+          </div>
+        )}
+      </div>
     </section>
   )
 }
@@ -292,7 +323,8 @@ export function ShippingRatesEditor({
         <p>
           Prix = (base + kilos en plus) × (1 + carburant) + manutention, arrondi au demi-dinar ou au demi-euro. Les
           kilos facturés sont le plus grand du poids emballé et du poids volumétrique (L × l × h ÷ diviseur), arrondi au
-          demi-kilo.
+          demi-kilo. Si une zone a un seuil de livraison offerte, le prix tombe à 0 dès que le sous-total des pièces
+          l'atteint (sauf pièce trop lourde ou trop longue).
         </p>
         <p className="mt-2">
           Ces chiffres sont des <strong>estimations</strong> tirées de sources publiques : DHL ne publie pas sa grille

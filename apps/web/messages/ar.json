@@ -238,7 +238,9 @@
     "detail": "{zone}, {kg} kg facturés",
     "onQuote": "Sur devis",
     "tooBig": "Cette commande est trop volumineuse pour une livraison en ligne. Écrivez-nous pour un devis de transport.",
-    "contact": "Demander un devis"
+    "contact": "Demander un devis",
+    "free": "Livraison offerte",
+    "nudge": "Plus que {amount} pour la livraison offerte"
   },
   "legal": {
     "draft": "Projet à faire valider par l'atelier",
@@ -342,7 +344,7 @@
           {
             "title": "Comment le prix est calculé",
             "body": [
-              "Le prix de la livraison dépend du poids et de la taille de la boîte, pas de la valeur de la commande. Pour chaque pièce, l'atelier renseigne son poids emballé et les dimensions de sa boîte.",
+              "Le prix de la livraison dépend du poids et de la taille de la boîte, pas de la valeur de la commande, sauf offre de livraison offerte. Pour chaque pièce, l'atelier renseigne son poids emballé et les dimensions de sa boîte.",
               "Le transporteur facture le plus élevé de deux poids : le poids réel (pièces, plus emballage de protection) ou le poids volumétrique (longueur × largeur × hauteur en cm, divisé par 5 000). Le poids facturé est arrondi par tranche de 0,5 kg.",
               "À ce poids s'applique le tarif de la zone de destination (Tunisie, Europe ou reste du monde), plus une surcharge carburant pour les envois express et des frais de manutention pour l'emballage protecteur des pièces fragiles."
             ]
@@ -350,7 +352,8 @@
           {
             "title": "Montants",
             "body": [
-              "Les montants ne sont pas fixes : ils sont calculés au paiement, une fois votre pays choisi, et affichés avant que vous ne payiez. Vous voyez la zone de livraison et le poids facturé. [Barème : à confirmer par l'atelier.]"
+              "Les montants ne sont pas fixes : ils sont calculés au paiement, une fois votre pays choisi, et affichés avant que vous ne payiez. Vous voyez la zone de livraison et le poids facturé. [Barème : à confirmer par l'atelier.]",
+              "Selon la destination, la livraison peut être offerte à partir d'un certain montant de commande ; le seuil éventuel est indiqué au panier et au paiement."
             ]
           },
           {
