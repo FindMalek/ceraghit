@@ -1,0 +1,35 @@
+{
+  "name": "ceraghit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "turbo dev -F web -F api",
+    "dev:dashboard": "turbo dev -F dashboard -F api",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "test": "turbo test",
+    "lint": "biome ci .",
+    "check": "biome check --write .",
+    "db:up": "docker compose -f docker/docker-compose.yml up -d",
+    "db:down": "docker compose -f docker/docker-compose.yml down",
+    "db:generate": "turbo db:generate -F @workspace/db",
+    "db:migrate": "turbo db:migrate -F @workspace/db",
+    "db:seed": "turbo db:seed -F @workspace/db",
+    "db:seed:catalog": "turbo db:seed:catalog -F @workspace/db",
+    "db:studio": "turbo db:studio -F @workspace/db",
+    "ui:add": "pnpm --filter @workspace/ui exec shadcn add",
+    "rules:check": "node scripts/check-rules.mjs",
+    "start-issue": "scripts/start-issue.sh",
+    "db:shell": "scripts/db-shell.sh"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "turbo": "^2.11.9",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=24"
+  }
+}

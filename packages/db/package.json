@@ -1,0 +1,32 @@
+{
+  "name": "@workspace/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./migrate": "./src/migrate.ts",
+    "./password": "./src/password.ts",
+    "./seed": "./src/seed/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun --env-file=../../.env src/migrate-cli.ts",
+    "db:seed": "bun --env-file=../../.env src/seed-cli.ts",
+    "db:seed:catalog": "bun --env-file=../../.env src/seed-cli.ts --catalog",
+    "db:studio": "drizzle-kit studio",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "postgres": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@workspace/typescript-config": "workspace:*",
+    "drizzle-kit": "0.31.11",
+    "typescript": "catalog:"
+  }
+}

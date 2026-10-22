@@ -1,0 +1,30 @@
+/*
+ * The Ceraghit brand, taken from the "Catalogue Ceraghit, Collection 2027" PDF.
+ * When the studio hands over its final brand style, change the values in this file and nothing else:
+ * globals.css maps these to the shadcn tokens, every component reads the shadcn tokens.
+ */
+:root {
+  /* Surfaces: near-black with a smoke texture, never pure black. */
+  --brand-ink: #0b0b0b;
+  --brand-ink-raised: #131210;
+  --brand-ink-soft: #1c1a17;
+
+  /* The PDF sets every line of text and every rule in this one antique gold. */
+  --brand-gold: #87775e;
+  /* Body copy: the same gold lifted so small text keeps WCAG AA contrast on the ink. */
+  --brand-gold-bright: #a89878;
+  --brand-gold-muted: #928266;
+  /* Display titles use a hairline face, so they get the lifted gold too (8.7:1) or they vanish on the ink. */
+  --brand-gold-title: #b8a886;
+
+  /* Glaze colours seen in the pieces, for charts and status accents. */
+  --brand-jade: #2f7a5c;
+  --brand-terracotta: #b5653c;
+  --brand-ochre: #a8863f;
+  --brand-steel: #4a7396;
+  --brand-danger: #c0564a;
+
+  --brand-radius: 0.125rem;
+  --brand-texture: url("/texture.webp");
+  --brand-texture-opacity: 0.55;
+}

@@ -1,0 +1,13 @@
+---
+description: apps/dashboard owner dashboard conventions
+globs: apps/dashboard/**
+---
+
+# apps/dashboard
+
+- French UI. Cookie session `ceraghit_admin`; `proxy.ts` redirects to `/login`. Server reads go through `admin()` in `lib/api.ts`.
+- Only `/api/rpc/admin/*` and `/api/files/*` are proxied (`DASHBOARD_ALLOWED`).
+- Product form: two price inputs (TND dinars, EUR euros), both required, converted with `toMinor`/`fromMinor`. FR text required, EN/AR optional.
+- Images upload straight to the bucket through `admin.uploads.sign` (presigned PUT), never through the api body.
+- Stats show TND and EUR separately, never summed. Destructive actions confirm and say what happens to stock.
+- Unique-piece requests are answered by the owner by email himself: show email, copy button and `mailto:`, send nothing.

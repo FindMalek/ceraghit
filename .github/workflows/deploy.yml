@@ -1,0 +1,106 @@
+# Production: every merge to main migrates Neon, then ships api, web and dashboard to Vercel from this workflow
+# (`vercel build --prebuilt`, so Turborepo's remote cache applies and Vercel's own git previews stay off).
+# Everything here runs in the `production` GitHub environment: its secrets exist nowhere else.
+# Skipped until vars.DEPLOY_ENABLED is "true", see docs/deploy.md.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  deployments: write
+
+env:
+  TURBO_API: ${{ vars.TURBO_API }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+jobs:
+  migrate:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter @workspace/db...
+      - name: Apply migrations to Neon
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: bun packages/db/src/migrate-cli.ts
+      - name: Create or update the owner login
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: bun packages/db/src/admin-cli.ts
+
+  deploy:
+    needs: migrate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://${{ vars.PRODUCTION_WEB_HOST }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        include:
+          - app: api
+            project: VERCEL_PROJECT_ID_API
+          - app: web
+            project: VERCEL_PROJECT_ID_WEB
+          - app: dashboard
+            project: VERCEL_PROJECT_ID_DASHBOARD
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm add -g vercel@latest
+      - name: Build and deploy ${{ matrix.app }}
+        env:
+          VERCEL_PROJECT_ID: ${{ vars[matrix.project] }}
+        working-directory: apps/${{ matrix.app }}
+        run: |
+          vercel pull --yes --environment=production
+          vercel build --prod
+          vercel deploy --prebuilt --prod
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: api health
+        run: |
+          for i in 1 2 3 4 5 6; do
+            out=$(curl -fsS "https://${{ vars.PRODUCTION_API_HOST }}/health") && { echo "$out"; echo "$out" | grep -q '"payments":"konnect:live"' && exit 0; echo "::error::production is not on live payments"; exit 1; }
+            sleep 10
+          done
+          echo "::error::api did not become healthy"; exit 1
+      - name: storefront and dashboard answer
+        run: |
+          curl -fsS -o /dev/null "https://${{ vars.PRODUCTION_WEB_HOST }}"
+          curl -fsS -o /dev/null -w "%{http_code}\n" "https://${{ vars.PRODUCTION_DASHBOARD_HOST }}/login"

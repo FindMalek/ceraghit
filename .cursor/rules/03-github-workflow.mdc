@@ -1,0 +1,16 @@
+---
+description: Issues, branches, PRs, previews, board
+alwaysApply: true
+---
+
+# GitHub workflow
+
+- Work is a GitHub issue on the Ceraghit project (#19). Labels: `priority: high|medium|low` plus an area label.
+- Start with `pnpm start-issue <n>` (or `gh issue develop <n> --checkout`): branch and PR auto-link to the issue.
+- One issue per PR, PR title short and plain, body says what and why plus `Closes #n`. PR template has a preview check.
+- Every PR gets a Dokploy preview and a sticky "Preview deployments" comment (`scripts/deploy/dokploy.mjs`), plus a
+  GitHub deployment. Test the change on that link. It is deleted when the PR closes.
+- CI (`.github/workflows/ci.yml`): lint (+ rules sync + migration drift), types, tests with Postgres, build; all use the
+  Turborepo remote cache on the-keep.
+- Production deploys on merge to `main` (`deploy.yml`): migrate Neon, deploy three Vercel projects, smoke test `/health`.
+- Agents never commit, push, or post review replies; they show a diff summary and a suggested message.

@@ -1,0 +1,13 @@
+---
+description: packages/orpc routers and services
+globs: packages/orpc/**
+---
+
+# packages/orpc
+
+- `routers/public` (no session) and `routers/admin` (all on `adminProcedure`, cookie + `x-csrf-token: orpc`). Admin
+  procedures stay in `routers/admin`; the router test fails if one answers a visitor.
+- Business rules live in `lib/` (`orders.ts` stock holds and `settleOrder`, `payments.ts` providers, `storage.ts` S3,
+  `settings.ts`), routers stay thin.
+- Stock is decremented when an order is created and returned on cancel/refund/expiry (`releaseExpiredHolds`, lazy, 45 min).
+- Tests: `router.test.ts` runs against a real Postgres (`DATABASE_URL`, skipped without).

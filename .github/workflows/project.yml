@@ -1,0 +1,44 @@
+# Keeps the Ceraghit project (#19) in sync. GitHub's built-in project workflows already do
+# "PR linked to issue" -> In review, "PR merged" -> Done and auto-close. This adds what they can't:
+# new issues land on the board, and review results bounce the linked issue between In progress and In review.
+# Needs secret PROJECT_TOKEN (classic PAT with `project` scope); without it every job is skipped.
+
+name: Project
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  add-issue:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add to the board as Backlog
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          URL: ${{ github.event.issue.html_url }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "::notice::PROJECT_TOKEN not set, skipping"; exit 0; fi
+          gh project item-add 16 --owner FindMalek --url "$URL" > /dev/null
+          ./scripts/gh-project-status.sh "$NUMBER" Backlog
+
+  review-status:
+    if: github.event_name == 'pull_request_review' && (github.event.review.state == 'changes_requested' || github.event.review.state == 'approved')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Move the linked issue
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          STATE: ${{ github.event.review.state }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "::notice::PROJECT_TOKEN not set, skipping"; exit 0; fi
+          if [ "$STATE" = "changes_requested" ]; then ./scripts/gh-project-status-for-pr.sh "$PR" "In progress"; else ./scripts/gh-project-status-for-pr.sh "$PR" "In review"; fi

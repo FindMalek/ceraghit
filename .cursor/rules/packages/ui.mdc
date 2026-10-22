@@ -1,0 +1,10 @@
+---
+description: packages/ui components and brand
+globs: packages/ui/**
+---
+
+# packages/ui
+
+- shadcn `base-maia` components in `src/components`, added with `pnpm ui:add`; edit only to fit the brand.
+- `src/styles/brand.css` holds every brand value; `globals.css` maps them to shadcn tokens, adds `frame` and `ornament`.
+- Fonts are loaded by each app with next/font into `--font-display-face`, `--font-serif-face`, `--font-body-face`, `--font-script-face`.

@@ -1,0 +1,15 @@
+---
+description: Naming, style and testing conventions
+alwaysApply: true
+---
+
+# Conventions
+
+- Files kebab-case (`order-summary.tsx`), components PascalCase, functions/hooks camelCase, constants UPPER_SNAKE_CASE.
+- Explicit types, short functions, issue-scoped diffs, no drive-by refactors. No secrets in code or comments.
+- No comments that restate the code. Keep only non-obvious constraints, footguns and product decisions.
+- Biome formats and lints (`pnpm check`). No `any` without a reason in a comment.
+- Money is always integer minor units (TND millimes, EUR cents). Format with `formatMoney` from `@workspace/sdk`.
+- Tests: `bun test` next to the code, one test per behavior, real Postgres for api tests (`DATABASE_URL`), mock only
+  network and time. Run only touched packages while iterating.
+- Accessibility: labelled controls, 44px touch targets, AA contrast, visible focus. Mobile first, then desktop.

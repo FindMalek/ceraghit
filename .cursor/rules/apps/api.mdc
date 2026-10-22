@@ -1,0 +1,12 @@
+---
+description: apps/api conventions
+globs: apps/api/**
+---
+
+# apps/api
+
+- `src/index.ts` builds services and default-exports `{ port, hostname, fetch }`: Bun serves it (Docker, previews, local)
+  and `api/index.ts` re-exports it as the Vercel function. Keep it runtime-agnostic (no `Bun.*` APIs).
+- `src/server.ts` routes: `/rpc/*`, `/v1/*` (+ `/v1/docs`), `/webhooks/konnect`, `/files/*`, `/health`.
+- `src/env.ts` is the environment guard (see 02-environments-and-payments). Add a test in `env.test.ts` for any new rule.
+- Don't log secrets or full payment payloads.

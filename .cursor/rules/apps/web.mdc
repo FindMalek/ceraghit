@@ -1,0 +1,13 @@
+---
+description: apps/web storefront conventions
+globs: apps/web/**
+---
+
+# apps/web
+
+- next-intl, `fr` default; `lib/locales.ts` `ENABLED_LOCALES` controls what is shown (en/ar are plumbed, translations are a later add-on).
+- Currency (TND/EUR) is a cookie, default TND. Show one currency at a time.
+- Pages are server components; islands only for cart, gallery, forms. Data pages are dynamic (the api isn't needed at build).
+- Only `/api/rpc/public/*` and `/api/files/*` are proxied (`WEB_ALLOWED`). Never call `admin` from here.
+- Cart is a persisted zustand store; unique pieces cap at quantity 1; `quoteOnly` pieces link to `/custom?ref=`.
+- noindex and a disallow-all robots unless `APP_ENV=production`.

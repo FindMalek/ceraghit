@@ -1,0 +1,20 @@
+---
+description: What lives where in the ceraghit monorepo
+alwaysApply: true
+---
+
+# Overview
+
+| Path | What |
+| :-- | :-- |
+| `apps/web` | storefront: catalogue, cart, checkout, order status, "create a unique piece", atelier. fr/en/ar via next-intl |
+| `apps/dashboard` | owner dashboard: stats, products, categories, orders, requests, locations, settings |
+| `apps/api` | Bun/fetch api: oRPC (`/rpc`), REST + docs (`/v1`), Konnect webhook, `/files`, `/health` |
+| `packages/db` | Drizzle schema, migrations, seed (real catalogue from the PDF + demo orders) |
+| `packages/orpc` | routers (`public`, `admin`), services (orders, payments, storage, settings), auth |
+| `packages/sdk` | zod schemas shared by api and apps, money/format helpers, per-app api proxy allowlists |
+| `packages/ui` | shadcn components and the brand (`brand.css`) |
+| `packages/typescript-config` | tsconfig presets |
+
+Data flow: browser → app's own `/api/*` (proxy, allowlisted) → `apps/api` → Postgres. Servers call the api directly via `API_URL`.
+Production: three Vercel projects (api, web, dashboard) + Neon + Cloudflare R2. Previews: Dokploy on the homelab.

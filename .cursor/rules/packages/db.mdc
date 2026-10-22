@@ -1,0 +1,12 @@
+---
+description: packages/db schema, migrations, seed
+globs: packages/db/**
+---
+
+# packages/db
+
+- Schema in `src/schema.ts`; `pnpm db:generate` for migrations, never by hand. CI fails on drift.
+- Localized text columns are `jsonb` `Localized` (`fr` required). Prices are integer minor units.
+- `src/seed/catalogue.ts` is the PDF catalogue (30 products; TND prices are placeholders = EUR x 3.4 rounded to 5 DT, stock
+  is a placeholder). `scenario.ts` builds deterministic demo orders. `seed()` never overwrites a non-empty database.
+- `password.ts` is node:crypto scrypt (runs on Bun, Node and Vercel).

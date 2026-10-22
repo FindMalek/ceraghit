@@ -1,0 +1,37 @@
+{
+  "name": "dashboard",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3002",
+    "build": "next build",
+    "start": "next start --port 3002",
+    "check-types": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@orpc/client": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tanstack/react-query": "catalog:",
+    "@workspace/orpc": "workspace:*",
+    "@workspace/sdk": "workspace:*",
+    "@workspace/ui": "workspace:*",
+    "next": "catalog:",
+    "next-themes": "^0.4.6",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "recharts": "3.8.0",
+    "server-only": "0.0.1",
+    "sonner": "^2.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

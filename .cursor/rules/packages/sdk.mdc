@@ -1,0 +1,11 @@
+---
+description: packages/sdk shared schemas and helpers
+globs: packages/sdk/**
+---
+
+# packages/sdk
+
+- Zod schemas used by both the api and the apps. `formatMoney`, `toMinor`, `fromMinor`, `pick`, `imageSrc`, `slugify`.
+- `proxy.ts`: `createProxy(allowed)` and the `WEB_ALLOWED` / `DASHBOARD_ALLOWED` lists. Adding a path here widens what a
+  browser origin can reach: think before you do.
+- REST GET query strings are text, so numeric GET inputs only work over RPC (the apps use RPC).

@@ -1,0 +1,32 @@
+---
+description: Environment separation and the payment flow, read before touching env, deploy, orders or payments
+alwaysApply: true
+---
+
+# Environments
+
+| | local | preview (per PR) | production |
+| :-- | :-- | :-- | :-- |
+| host | your machine | Dokploy on the-keep | Vercel (api, web, dashboard) |
+| database | `pnpm db:up` Postgres :5435 | Postgres per PR on the homelab | Neon |
+| files | optional Garage | Garage bucket `ceraghit-dev`, prefix `pr-<n>/` | Cloudflare R2 + public CDN url |
+| payments | demo gateway | demo gateway, or Konnect **sandbox** | Konnect **live** |
+| data | `pnpm db:seed` | seeded on start (catalogue + demo orders) | real catalogue via `pnpm db:seed:catalog`, never demo |
+| `APP_ENV` | local | preview | production |
+
+- `apps/api/src/env.ts` enforces this: production requires live Konnect + R2 + `DEPLOY_ENV=production` and forbids demo
+  seed; every other env forbids `KONNECT_MODE=live`. `env.test.ts` covers it.
+- Secrets are scoped by GitHub Environment (`preview`, `production`). Production secrets (`DATABASE_URL`, Konnect live,
+  R2, Vercel token) must not be readable from preview workflows.
+- Production migrations run in `.github/workflows/deploy.yml` before the deploy. `BOOTSTRAP` (migrate + seed on boot) is
+  on for local/preview and off in production.
+
+# Payments (Konnect)
+
+- Flow: `orders.create` holds stock (45 min), calls `payments.init`, returns `payUrl`; the customer pays at Konnect, comes
+  back to `/order/<number>?t=<token>`; `orders.get` and the webhook both call `settleOrder`.
+- `settleOrder` re-fetches `GET /payments/{ref}` and only marks paid when status is completed **and** amount, currency and
+  order number match. Webhook is unsigned: never trust its payload.
+- Konnect: `POST /api/v2/payments/init-payment`, header `X-Api-Key`, sandbox host `api.preprod.konnect.network`. Amount in
+  minor units, currency in `token`. Keep new gateways behind `PaymentProvider`.
+- Pieces are `quoteOnly` (no cart, "ask for a quote") when they are commissions or too expensive for card checkout.

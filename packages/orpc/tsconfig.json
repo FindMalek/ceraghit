@@ -1,0 +1,12 @@
+{
+  "extends": "@workspace/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "types": ["bun"],
+    "jsx": "react-jsx",
+    "lib": ["es2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"]
+}

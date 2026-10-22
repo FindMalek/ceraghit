@@ -1,0 +1,18 @@
+---
+description: Brand rules from the 2027 catalogue, read before any UI work
+alwaysApply: true
+---
+
+# Brand
+
+Source: `Catalogue Ceraghit, Collection 2027` PDF. Everything lives in `packages/ui/src/styles/brand.css`; change a brand
+value there only. The final brand style may replace these values later, so never hardcode a colour or font in a component.
+
+- Dark only: near-black `--brand-ink` with the smoke texture (`/texture.webp`, fixed behind the page).
+- One antique gold `--brand-gold` (#87775e) for rules, headings and decoration; body copy uses `--brand-gold-bright` so
+  small text passes AA. Glaze accents (jade, terracotta, ochre) only for charts and status.
+- Fonts: display = Almendra Display (stand-in for the PDF's BlackGothics demo font), headings = Baskervville (Baskerville
+  Old Face), body = EB Garamond (Minion Pro), script = Mrs Saint Delafield (Brittany Signature), Arabic = Amiri.
+- Shapes: sharp corners (`--brand-radius` 2px), thin gold `frame` borders, `ornament` divider, gold-bordered price box,
+  small "Référence: 0010" line above the title, numbered sections 01-04.
+- Photos are dark-backed; keep their aspect ratio and frame them, never crop faces of the sculptures.
