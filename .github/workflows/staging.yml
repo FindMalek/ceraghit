@@ -47,8 +47,8 @@ jobs:
             TURBO_TEAM=${{ vars.TURBO_TEAM }}
           secrets: |
             turbo_token=${{ secrets.TURBO_TOKEN }}
-          cache-from: type=gha,scope=${{ matrix.app }}
-          cache-to: type=gha,scope=${{ matrix.app }},mode=max,ignore-error=true
+          cache-from: type=local,src=/opt/buildx-cache/${{ matrix.app }}
+          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }},mode=max,ignore-error=true
 
   deploy:
     needs: build
