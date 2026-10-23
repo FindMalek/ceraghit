@@ -109,6 +109,8 @@ export const shippingZoneSchema = z.object({
   handling: pricesSchema,
   /** Carrier fuel surcharge on base + extra kilos, e.g. 12 for DHL Express, 0 for a domestic courier. */
   fuelPct: z.number().min(0).max(100),
+  /** Cart subtotal from which delivery is free in this zone, per currency. null = never free. */
+  freeOver: pricesSchema.nullable().default(null),
 })
 
 export const shippingRatesSchema = z.object({
@@ -322,4 +324,8 @@ export const shippingQuoteSchema = z.object({
   zoneName: z.string().nullable(),
   chargeableKg: z.number(),
   amountMinor: z.number().int(),
+  freeApplied: z.boolean(),
+  /** The zone's free-delivery threshold in the quote currency, null when the zone has none. */
+  freeOverMinor: z.number().int().nullable(),
+  subtotalMinor: z.number().int(),
 })

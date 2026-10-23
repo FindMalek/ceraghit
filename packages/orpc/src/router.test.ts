@@ -192,7 +192,19 @@ describe.skipIf(!url)("router", () => {
   })
 
   test("a unique piece sells once, a quote-only piece never goes through the cart", async () => {
-    await guest.public.orders.create({ ...customer, items: [{ productId: ids.vase!, quantity: 1 }], locale: "fr" })
+    const quote = await guest.public.catalog.shippingQuote({
+      items: [{ productId: ids.vase!, quantity: 1 }],
+      country: "TN",
+      currency: "TND",
+    })
+    expect(quote).toMatchObject({ freeApplied: true, amountMinor: 0, freeOverMinor: 300_000, subtotalMinor: 500_000 })
+    const big = await guest.public.orders.create({
+      ...customer,
+      items: [{ productId: ids.vase!, quantity: 1 }],
+      locale: "fr",
+    })
+    const [bigOrder] = await db.select().from(orders).where(eq(orders.number, big.number))
+    expect(bigOrder!.shippingMinor).toBe(0)
     await expect(
       guest.public.orders.create({ ...customer, items: [{ productId: ids.vase!, quantity: 1 }], locale: "fr" }),
     ).rejects.toMatchObject({ code: "CONFLICT" })

@@ -60,13 +60,34 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-function Result({ estimate, currency }: { estimate: ShippingEstimate; currency: Currency }) {
+function Result({
+  estimate,
+  currency,
+  subtotalMinor,
+}: {
+  estimate: ShippingEstimate
+  currency: Currency
+  subtotalMinor: number
+}) {
+  const missing = estimate.freeOverMinor === null ? null : Math.max(0, estimate.freeOverMinor - subtotalMinor)
   return (
     <section className="frame flex flex-col gap-3 bg-card/60 p-4" aria-live="polite">
       <h2 className="font-heading text-2xl">Résultat</h2>
       <p className="font-heading text-4xl text-gold tabular-nums">
-        {estimate.available ? formatMoney(estimate.amountMinor, currency, "fr") : "Sur devis"}
+        {estimate.freeApplied
+          ? "Offerte"
+          : estimate.available
+            ? formatMoney(estimate.amountMinor, currency, "fr")
+            : "Sur devis"}
       </p>
+      {estimate.available && !estimate.freeApplied && missing !== null && (
+        <p className="text-gold">Plus que {formatMoney(missing, currency, "fr")} pour la livraison offerte.</p>
+      )}
+      {estimate.freeApplied && estimate.freeOverMinor !== null && (
+        <p className="text-jade">
+          Seuil atteint : livraison offerte dès {formatMoney(estimate.freeOverMinor, currency, "fr")}.
+        </p>
+      )}
       {!estimate.available && estimate.reason && <p className="text-muted-foreground">{REASON[estimate.reason]}</p>}
       <dl>
         <Row label="Zone" value={estimate.zoneName ?? "Aucune"} />
@@ -97,7 +118,8 @@ function Estimator({ products, rates }: { products: Product[]; rates: ShippingRa
     const product = byId.get(line.productId)
     return product ? [{ ...product, quantity: line.quantity }] : []
   })
-  const estimate = items.length ? estimateShipping(rates, items, country, currency) : null
+  const subtotalMinor = items.reduce((sum, item) => sum + item.prices[currency] * item.quantity, 0)
+  const estimate = items.length ? estimateShipping(rates, items, country, currency, subtotalMinor) : null
   const setQuantity = (productId: string, quantity: number) =>
     setLines((list) =>
       list.map((l) => (l.productId === productId ? { ...l, quantity: Math.min(20, Math.max(1, quantity)) } : l)),
@@ -208,7 +230,7 @@ function Estimator({ products, rates }: { products: Product[]; rates: ShippingRa
       <aside className="flex flex-col gap-6">
         {estimate ? (
           <>
-            <Result estimate={estimate} currency={currency} />
+            <Result estimate={estimate} currency={currency} subtotalMinor={subtotalMinor} />
             <section className="flex flex-col gap-2">
               <h2 className="font-heading text-2xl">Le même colis, partout</h2>
               <Table>
@@ -222,13 +244,15 @@ function Estimator({ products, rates }: { products: Product[]; rates: ShippingRa
                 <TableBody>
                   {rates.zones.map((zone, index) => {
                     const sample = sampleCountry(rates, index)
-                    const row = estimateShipping(rates, items, sample, currency)
+                    const row = estimateShipping(rates, items, sample, currency, subtotalMinor)
                     return (
                       <TableRow key={zone.id}>
                         <TableCell>{zone.name}</TableCell>
                         <TableCell className="text-muted-foreground">{countryName(sample, "fr")}</TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {row.available ? (
+                          {row.freeApplied ? (
+                            <Badge>Offerte</Badge>
+                          ) : row.available ? (
                             formatMoney(row.amountMinor, currency, "fr")
                           ) : (
                             <Badge variant="outline">Devis</Badge>
