@@ -21,14 +21,23 @@ running; to confirm: whether it covers only those or also any usage above the fr
 
 ## scope (included in the 800 TND)
 
-1. Web shop for mobile and desktop: catalogue by category, product pages, cart, checkout, order tracking page.
+1. Web shop for mobile and desktop: catalogue by category, product pages (photo gallery, variants such as glazed and
+   unglazed), cart, checkout, order tracking page, search and sorting.
 2. Prices in TND and EUR: the owner sets both for every product, customers choose their currency.
 3. Online payment by card through Konnect (Tunisian and international cards).
-4. "Create a unique piece" request form; requests appear in the dashboard and the owner answers by email himself.
-5. Dashboard: sales statistics, products (create, edit, stock, photos), categories (the menu), orders, requests,
-   workshop locations, contact details and delivery fees.
-6. The 30 pieces of the 2027 catalogue loaded with their photos and descriptions, in the catalogue's visual identity.
-7. Production hosting set up and handed over (domain, hosting, database, image storage).
+4. Delivery price computed from each piece's weight and box size, per zone (Tunisia, Europe, rest of the world), with a
+   free-delivery threshold, a rate card the owner edits and an estimator page. The rates start as estimates and are
+   replaced by the studio's real carrier price list.
+5. "Create a unique piece" request form with up to 3 photos; requests appear in the dashboard and the owner answers by
+   email himself.
+6. Dashboard (French): sales statistics in TND and EUR, products (create, edit, stock, variants, photos), categories (the
+   menu), orders (with CSV export for the accountant), requests, workshop locations, contact details and delivery rates.
+7. The 30 pieces of the 2027 catalogue loaded with their photos and descriptions, in the catalogue's visual identity.
+8. French, English and Arabic (right-to-left) storefront. Draft legal pages (terms, delivery, legal notice, privacy) for
+   the studio to complete and validate.
+9. Search-engine basics: sitemap, page titles and descriptions, structured product data.
+10. Production hosting set up and handed over (domain, hosting, database, image storage), plus a permanent staging copy
+    to review changes before they go live.
 
 ## to settle before signing
 
@@ -37,5 +46,6 @@ running; to confirm: whether it covers only those or also any usage above the fr
 - [ ] how many revision rounds are included after delivery
 - [ ] delivery fees and which countries the studio ships to (settings in the dashboard)
 - [ ] final TND prices and real stock per piece (the seed uses placeholders: euro price x 3.4)
-- [ ] translations: who supplies or reviews the Arabic and English texts
+- [ ] translations: Arabic and English are written, the studio (or a native speaker) reviews them, product names included
+- [ ] legal pages: the studio completes the drafts (legal entity, patente and tax id, return policy) before launch
 - [ ] ownership: source code and content are handed over after payment, brand assets stay the studio's
