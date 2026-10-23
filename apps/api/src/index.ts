@@ -28,7 +28,7 @@ const fetch = createServer({
     accessKeyId: env.S3_ACCESS_KEY_ID,
     secretAccessKey: env.S3_SECRET_ACCESS_KEY,
     publicUrl: env.S3_PUBLIC_URL,
-    prefix: env.DEPLOY_ENV.startsWith("pr-") ? `${env.DEPLOY_ENV}/` : "",
+    prefix: env.DEPLOY_ENV.startsWith("pr-") || env.DEPLOY_ENV === "staging" ? `${env.DEPLOY_ENV}/` : "",
   }),
   auth: new AdminAuth(db),
   now: () => new Date(),

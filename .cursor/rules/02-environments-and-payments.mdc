@@ -21,6 +21,10 @@ alwaysApply: true
 - Production migrations run in `.github/workflows/deploy.yml` before the deploy. `BOOTSTRAP` (migrate + seed on boot) is
   on for local/preview and off in production.
 
+Staging is a fifth case: `main` redeployed on every merge on the-keep at fixed hosts (`staging.yml`), preview-grade
+(`APP_ENV=preview`, `DEPLOY_ENV=staging`, demo payments, bucket prefix `staging/`). It is not production and never
+holds live keys.
+
 # Payments (Konnect)
 
 - Flow: `orders.create` holds stock (45 min), calls `payments.init`, returns `payUrl`; the customer pays at Konnect, comes

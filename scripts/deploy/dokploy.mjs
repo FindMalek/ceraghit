@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Per-PR preview deploys on the-keep through the Dokploy API, see docs/deploy.md. Production is Vercel, not here.
+// Per-PR previews and the permanent staging on the-keep through the Dokploy API, see docs/deploy.md. Production is Vercel, not here.
 import { randomBytes } from "node:crypto"
 
 const MODE = process.argv[2]
 const COMMENT_MARKER = "<!-- ceraghit-preview -->"
 const PREVIEW_PROJECT = "ceraghit-previews"
+const STAGING_PROJECT = "ceraghit-staging"
 const POLL_INTERVAL_MS = 5_000
 const POLL_TIMEOUT_MS = 15 * 60_000
 const COMMENT_TITLE =
@@ -407,7 +408,32 @@ async function commentFailed() {
   await upsertComment(renderComment(["web", "dashboard", "api"].map((label) => ({ label, status: "failed" }))))
 }
 
-const MODES = { "preview-up": previewUp, "preview-down": previewDown, "comment-failed": commentFailed }
+/** Permanent staging: `main` on fixed hosts with its own database. Same guards as a preview, never live payments. */
+async function staging() {
+  const tag = requireEnv("IMAGE_TAG")
+  const hosts = {
+    web: requireEnv("STAGING_WEB_HOST"),
+    dashboard: requireEnv("STAGING_DASHBOARD_HOST"),
+    api: requireEnv("STAGING_API_HOST"),
+  }
+  const environment = await ensureEnvironment(STAGING_PROJECT)
+  const pg = await ensurePostgres(environment, "ceraghit-db", "ceraghit-api")
+  const deployed = await deployAll(environment, {
+    tag,
+    hosts,
+    apiEnv: {
+      ...previewApiEnv(),
+      DATABASE_URL: postgresUrl(pg),
+      CERAGHIT_DB_POSTGRES_ID: pg.postgresId,
+      DEPLOY_ENV: "staging",
+    },
+  })
+  const ok = await waitForApps(deployed, async () => {})
+  for (const d of deployed) console.info(`${d.label}: ${d.status} https://${d.host}`)
+  if (!ok) process.exitCode = 1
+}
+
+const MODES = { "preview-up": previewUp, "preview-down": previewDown, "comment-failed": commentFailed, staging }
 const run = MODES[MODE]
 if (!run) {
   console.error(`unknown mode "${MODE}", expected ${Object.keys(MODES).join(" | ")}`)
