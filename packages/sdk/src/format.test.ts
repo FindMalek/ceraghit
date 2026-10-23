@@ -5,6 +5,8 @@ test("the same product shows its TND and EUR price", () => {
   expect(formatMoney(60_000, "TND", "en")).toBe("60 DT")
   expect(formatMoney(42_500, "TND", "en")).toBe("42.5 DT")
   expect(formatMoney(3_400, "EUR", "en")).toBe("34 €")
+  expect(formatMoney(3_400, "EUR", "ar")).toBe("\u206634 €\u2069")
+  expect(formatMoney(60_000, "TND", "ar")).toBe("\u206660 د.ت\u2069")
   expect(toMinor(10, "TND")).toBe(10_000)
   expect(toMinor(34.5, "EUR")).toBe(3_450)
 })

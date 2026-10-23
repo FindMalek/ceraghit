@@ -63,10 +63,7 @@ export default async function LocaleLayout({
       className={cn(display.variable, serif.variable, body.variable, script.variable, arabic.variable)}
       suppressHydrationWarning
     >
-      <body
-        className="min-h-dvh text-[1.0625rem] leading-relaxed"
-        style={rtl ? { fontFamily: "var(--font-arabic-face), serif" } : undefined}
-      >
+      <body className="min-h-dvh text-[1.0625rem] leading-relaxed">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers currency={currency}>
             <a

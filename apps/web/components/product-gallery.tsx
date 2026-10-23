@@ -5,7 +5,7 @@ import { imageSrc } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import Image from "next/image"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react"
 
 interface GalleryImage {
@@ -16,6 +16,8 @@ interface GalleryImage {
 
 export function ProductGallery({ images, title }: { images: GalleryImage[]; title: string }) {
   const t = useTranslations("product")
+  /** In right-to-left languages "next" is on the left: arrows and swipes flip. */
+  const step = useLocale() === "ar" ? -1 : 1
   const [index, setIndex] = useState(0)
   const touchStart = useRef<number | null>(null)
   const count = images.length
@@ -24,15 +26,15 @@ export function ProductGallery({ images, title }: { images: GalleryImage[]; titl
   if (count === 0) return <div className="frame aspect-square bg-card" />
 
   const onKey = (event: KeyboardEvent) => {
-    if (event.key === "ArrowLeft") go(index - 1)
-    if (event.key === "ArrowRight") go(index + 1)
+    if (event.key === "ArrowLeft") go(index - step)
+    if (event.key === "ArrowRight") go(index + step)
   }
   const onTouchEnd = (event: TouchEvent) => {
     const start = touchStart.current
     touchStart.current = null
     if (start === null) return
     const delta = (event.changedTouches[0]?.clientX ?? start) - start
-    if (Math.abs(delta) > 40) go(index + (delta < 0 ? 1 : -1))
+    if (Math.abs(delta) > 40) go(index + step * (delta < 0 ? 1 : -1))
   }
 
   return (

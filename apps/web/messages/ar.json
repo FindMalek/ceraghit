@@ -1,472 +1,468 @@
 {
   "meta": {
     "title": "Ceraghit Creation",
-    "description": "Céramiques modelées à la main par Sabri Ghit : curda seca, lampes votives, bas-reliefs et pièces uniques."
+    "description": "سيراميك مشكّل يدويًا بيد صبري غيث: كوردا سيكا، مصابيح نذرية، نحت بارز وقطع فريدة."
   },
   "nav": {
-    "shop": "Boutique",
-    "atelier": "L'atelier",
-    "custom": "Pièce unique",
-    "cart": "Panier",
-    "menu": "Menu",
-    "home": "Accueil",
-    "skip": "Aller au contenu",
-    "language": "Langue",
-    "currency": "Devise"
+    "shop": "المتجر",
+    "atelier": "الورشة",
+    "custom": "قطعة فريدة",
+    "cart": "السلة",
+    "menu": "القائمة",
+    "home": "الرئيسية",
+    "skip": "انتقل إلى المحتوى",
+    "language": "اللغة",
+    "currency": "العملة"
   },
   "common": {
-    "reference": "Référence",
-    "material": "Matière",
-    "technique": "Technique",
-    "dimensions": "Dimensions",
-    "uniquePiece": "Pièce unique",
-    "soldOut": "Épuisé",
-    "quoteOnly": "Sur devis",
-    "retry": "Réessayer",
-    "close": "Fermer",
-    "apiDown": "Le catalogue est momentanément indisponible. Merci de réessayer dans un instant.",
-    "required": "Champ obligatoire",
+    "reference": "المرجع",
+    "material": "الخامة",
+    "technique": "التقنية",
+    "dimensions": "الأبعاد",
+    "uniquePiece": "قطعة فريدة",
+    "soldOut": "نفدت الكمية",
+    "quoteOnly": "بعرض سعر",
+    "retry": "إعادة المحاولة",
+    "close": "إغلاق",
+    "apiDown": "الكتالوج غير متاح مؤقتًا. يُرجى إعادة المحاولة بعد قليل.",
+    "required": "حقل إلزامي",
     "from": "ابتداءً من"
   },
   "home": {
-    "kicker": "Collection 2027",
-    "subtitle": "Des sculptures et des objets en terre cuite, modelés à la main par Sabri Ghit.",
-    "ctaShop": "Découvrir la boutique",
-    "ctaCustom": "Créer une pièce unique",
-    "featured": "Pièces à la une",
-    "categories": "Les collections",
-    "editoTitle": "Édito",
-    "editoMore": "L'atelier et son histoire",
-    "studio": "Dans l'atelier",
-    "customTitle": "Une pièce rien que pour vous",
-    "customText": "Un thème, des dimensions, une idée : décrivez votre projet et l'atelier vous répond par e-mail avec un devis.",
-    "customCta": "Faire une demande"
+    "kicker": "مجموعة 2027",
+    "subtitle": "منحوتات وأغراض من الطين المشوي، مشكّلة يدويًا بيد صبري غيث.",
+    "ctaShop": "اكتشف المتجر",
+    "ctaCustom": "اصنع قطعة فريدة",
+    "featured": "قطع مميزة",
+    "categories": "المجموعات",
+    "editoTitle": "كلمة الورشة",
+    "editoMore": "الورشة وحكايتها",
+    "studio": "داخل الورشة",
+    "customTitle": "قطعة صُنعت لأجلك وحدك",
+    "customText": "فكرة، أبعاد، موضوع: صِف مشروعك وسترد عليك الورشة بالبريد الإلكتروني مع عرض سعر.",
+    "customCta": "أرسل طلبًا"
   },
   "edito": {
-    "p1": "Ceraghit Creation est avant tout une histoire de matière, de gestes et de passion.",
-    "p2": "La terre est une matière vivante. Elle se transforme sous les mains, résiste, surprend, puis révèle peu à peu une forme. C'est dans ce dialogue avec la matière que naissent les sculptures de Sabri Ghit.",
-    "p3": "Chaque pièce est façonnée avec le temps, la patience et la liberté de laisser une part de hasard intervenir. Les textures, les irrégularités et les traces du geste ne sont pas effacées : elles font partie de l'œuvre et de son histoire.",
-    "p4": "À travers Ceraghit Creation, Sabri Ghit cherche moins à reproduire le réel qu'à lui donner une autre présence. La céramique devient alors un langage, un moyen d'exprimer une émotion, une idée ou simplement une sensation.",
-    "p5": "Ce site présente quelques-unes de ces rencontres entre la terre et la main. Des œuvres uniques, façonnées avec passion, qui invitent chacun à regarder la matière autrement."
+    "p1": "Ceraghit Creation هي قبل كل شيء حكاية خامة وحركة وشغف.",
+    "p2": "الطين مادة حيّة. يتحوّل بين اليدين، ويقاوم، ويفاجئ، ثم يكشف شيئًا فشيئًا عن شكله. في هذا الحوار مع الخامة تولد منحوتات صبري غيث.",
+    "p3": "تُصاغ كل قطعة بالوقت والصبر وحرية ترك مساحة للصدفة. الملمس والعيوب وآثار اليد لا تُمحى: إنها جزء من العمل ومن حكايته.",
+    "p4": "من خلال Ceraghit Creation، لا يسعى صبري غيث إلى نسخ الواقع بقدر ما يسعى إلى منحه حضورًا آخر. فيصير السيراميك لغة، وسيلة للتعبير عن شعور أو فكرة أو إحساس بسيط.",
+    "p5": "يعرض هذا الموقع بعضًا من هذه اللقاءات بين الطين واليد. أعمال فريدة صيغت بشغف، تدعو كل واحد منا إلى النظر إلى الخامة بطريقة مختلفة."
   },
   "shop": {
-    "title": "Boutique",
-    "intro": "Toutes les pièces sont modelées à la main, une par une.",
-    "all": "Tout",
-    "searchLabel": "Rechercher une pièce",
-    "searchPlaceholder": "Nom ou référence",
-    "search": "Rechercher",
-    "sortLabel": "Trier par",
-    "sortFeatured": "Sélection",
-    "sortPriceAsc": "Prix croissant",
-    "sortPriceDesc": "Prix décroissant",
-    "sortNewest": "Nouveautés",
-    "categories": "Catégories",
-    "results": "{count, plural, =0 {Aucune pièce} one {# pièce} other {# pièces}}",
-    "empty": "Aucune pièce ne correspond à votre recherche.",
-    "emptyCta": "Voir toute la boutique",
-    "seeAll": "Tout voir"
+    "title": "المتجر",
+    "intro": "كل القطع مشكّلة يدويًا، قطعة تلو الأخرى.",
+    "all": "الكل",
+    "searchLabel": "ابحث عن قطعة",
+    "searchPlaceholder": "الاسم أو المرجع",
+    "search": "بحث",
+    "sortLabel": "ترتيب حسب",
+    "sortFeatured": "الأبرز",
+    "sortPriceAsc": "السعر: من الأقل إلى الأعلى",
+    "sortPriceDesc": "السعر: من الأعلى إلى الأقل",
+    "sortNewest": "الأحدث",
+    "categories": "الفئات",
+    "results": "{count, plural, =0 {لا توجد قطع} one {قطعة واحدة} two {قطعتان} few {# قطع} many {# قطعة} other {# قطعة}}",
+    "empty": "لا توجد قطعة تطابق بحثك.",
+    "emptyCta": "عرض كل المتجر",
+    "seeAll": "عرض الكل"
   },
   "product": {
-    "add": "Ajouter au panier",
-    "added": "Ajouté au panier",
-    "quantity": "Quantité",
-    "decrease": "Diminuer la quantité",
-    "increase": "Augmenter la quantité",
-    "lastOne": "Dernière pièce disponible",
-    "fewLeft": "Plus que {count} en stock",
-    "uniqueNote": "Pièce unique : une seule existe, elle quitte la boutique une fois vendue.",
-    "quoteText": "Cette pièce est réalisée sur commande. Demandez un devis et l'atelier vous répond par e-mail.",
-    "quoteCta": "Demander un devis",
-    "soldOutText": "Cette pièce n'est plus disponible. Vous pouvez demander une pièce similaire.",
-    "similarCta": "Demander une pièce similaire",
-    "gallery": "Photos de la pièce",
-    "photo": "Photo {n} sur {total}",
-    "previous": "Photo précédente",
-    "next": "Photo suivante",
-    "related": "Dans la même collection",
-    "notFound": "Cette pièce n'existe pas.",
+    "add": "أضف إلى السلة",
+    "added": "أُضيفت إلى السلة",
+    "quantity": "الكمية",
+    "decrease": "إنقاص الكمية",
+    "increase": "زيادة الكمية",
+    "lastOne": "آخر قطعة متاحة",
+    "fewLeft": "بقي {count} فقط في المخزون",
+    "uniqueNote": "قطعة فريدة: توجد نسخة واحدة فقط، وتغادر المتجر بعد بيعها.",
+    "quoteText": "تُصنع هذه القطعة عند الطلب. اطلب عرض سعر وسترد عليك الورشة بالبريد الإلكتروني.",
+    "quoteCta": "اطلب عرض سعر",
+    "soldOutText": "هذه القطعة لم تعد متاحة. يمكنك طلب قطعة مشابهة.",
+    "similarCta": "اطلب قطعة مشابهة",
+    "gallery": "صور القطعة",
+    "photo": "الصورة {n} من {total}",
+    "previous": "الصورة السابقة",
+    "next": "الصورة التالية",
+    "related": "من المجموعة نفسها",
+    "notFound": "هذه القطعة غير موجودة.",
     "option": "الخيار",
-    "variantSoldOut": "نفد"
+    "variantSoldOut": "نفدت الكمية"
   },
   "cart": {
-    "title": "Votre panier",
-    "empty": "Votre panier est vide.",
-    "emptyCta": "Parcourir la boutique",
-    "items": "{count, plural, one {# article} other {# articles}}",
-    "subtotal": "Sous-total",
-    "shipping": "Livraison",
-    "total": "Total",
-    "checkout": "Passer commande",
-    "viewCart": "Voir le panier",
-    "continue": "Continuer mes achats",
-    "remove": "Retirer {title} du panier",
-    "uniqueNote": "Pièce unique",
-    "open": "Ouvrir le panier ({count})",
-    "priceNote": "Le prix final est confirmé à la commande.",
-    "shippingNext": "Livraison calculée à l'étape suivante"
+    "title": "سلتك",
+    "empty": "سلتك فارغة.",
+    "emptyCta": "تصفّح المتجر",
+    "items": "{count, plural, =0 {لا توجد منتجات} one {منتج واحد} two {منتجان} few {# منتجات} many {# منتجًا} other {# منتج}}",
+    "subtotal": "المجموع الفرعي",
+    "shipping": "التوصيل",
+    "total": "المجموع",
+    "checkout": "إتمام الطلب",
+    "viewCart": "عرض السلة",
+    "continue": "متابعة التسوق",
+    "remove": "إزالة {title} من السلة",
+    "uniqueNote": "قطعة فريدة",
+    "open": "فتح السلة ({count})",
+    "priceNote": "يُؤكَّد السعر النهائي عند إتمام الطلب.",
+    "shippingNext": "يُحتسب التوصيل في الخطوة التالية"
   },
   "checkout": {
-    "title": "Commande",
-    "summary": "Récapitulatif",
-    "contact": "Vos coordonnées",
-    "name": "Nom complet",
-    "email": "E-mail",
-    "phone": "Téléphone",
-    "delivery": "Adresse de livraison",
-    "country": "Pays",
-    "city": "Ville",
-    "address": "Adresse",
-    "postalCode": "Code postal",
-    "note": "Note pour l'atelier",
-    "notePlaceholder": "Précision de livraison, message, etc. (facultatif)",
-    "pay": "Payer {total}",
-    "paying": "Redirection vers le paiement…",
-    "secure": "Paiement sécurisé par carte bancaire. Vous êtes redirigé vers la page de paiement.",
-    "emptyCart": "Votre panier est vide, il n'y a rien à commander.",
-    "payIn": "Vous payez en {currency}",
+    "title": "إتمام الطلب",
+    "summary": "ملخّص الطلب",
+    "contact": "بياناتك",
+    "name": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "delivery": "عنوان التوصيل",
+    "country": "البلد",
+    "city": "المدينة",
+    "address": "العنوان",
+    "postalCode": "الرمز البريدي",
+    "note": "ملاحظة للورشة",
+    "notePlaceholder": "تفاصيل التوصيل، رسالة، إلخ. (اختياري)",
+    "pay": "ادفع {total}",
+    "paying": "جارٍ التحويل إلى صفحة الدفع…",
+    "secure": "دفع آمن بالبطاقة المصرفية. سيتم تحويلك إلى صفحة الدفع.",
+    "emptyCart": "سلتك فارغة، لا يوجد ما يمكن طلبه.",
+    "payIn": "ستدفع بعملة \u2068{currency}\u2069",
     "errors": {
-      "customerName": "Indiquez votre nom complet.",
-      "email": "Indiquez une adresse e-mail valide.",
-      "phone": "Indiquez un numéro de téléphone.",
-      "country": "Indiquez votre pays.",
-      "city": "Indiquez votre ville.",
-      "address": "Indiquez votre adresse.",
-      "items": "Votre panier est vide.",
-      "terms": "Vous devez accepter les conditions générales de vente pour payer."
+      "customerName": "أدخل اسمك الكامل.",
+      "email": "أدخل بريدًا إلكترونيًا صحيحًا.",
+      "phone": "أدخل رقم هاتف.",
+      "country": "أدخل بلدك.",
+      "city": "أدخل مدينتك.",
+      "address": "أدخل عنوانك.",
+      "items": "سلتك فارغة.",
+      "terms": "يجب قبول شروط البيع العامة لإتمام الدفع."
     },
-    "failed": "La commande n'a pas pu être créée.",
-    "backToShop": "Voir la boutique",
-    "termsLabel": "J'accepte les <link>conditions générales de vente</link>."
+    "failed": "تعذّر إنشاء الطلب.",
+    "backToShop": "العودة إلى المتجر",
+    "termsLabel": "أوافق على <link>شروط البيع العامة</link>."
   },
   "order": {
-    "title": "Commande {number}",
+    "title": "الطلب {number}",
     "status": {
-      "pending_payment": "En attente de paiement",
-      "paid": "Payée",
-      "fulfilled": "Expédiée",
-      "cancelled": "Annulée",
-      "refunded": "Remboursée"
+      "pending_payment": "في انتظار الدفع",
+      "paid": "مدفوع",
+      "fulfilled": "تم الشحن",
+      "cancelled": "ملغى",
+      "refunded": "تم استرداد المبلغ"
     },
     "text": {
-      "pending_payment": "Nous attendons la confirmation de votre paiement. Cette page se met à jour toute seule.",
-      "paid": "Merci, votre paiement est confirmé. L'atelier prépare votre commande et vous contactera pour la livraison.",
-      "fulfilled": "Votre commande a été expédiée.",
-      "cancelled": "Cette commande a été annulée, aucun montant n'a été débité. Les pièces sont de nouveau en vente.",
-      "refunded": "Cette commande a été remboursée."
+      "pending_payment": "ننتظر تأكيد دفعتك. تتحدّث هذه الصفحة تلقائيًا.",
+      "paid": "شكرًا لك، تم تأكيد دفعتك. تجهّز الورشة طلبك وستتصل بك بخصوص التوصيل.",
+      "fulfilled": "تم شحن طلبك.",
+      "cancelled": "أُلغي هذا الطلب ولم يُخصم أي مبلغ. عادت القطع إلى البيع.",
+      "refunded": "تم استرداد مبلغ هذا الطلب."
     },
-    "items": "Articles",
-    "quantity": "Qté {count}",
-    "subtotal": "Sous-total",
-    "shipping": "Livraison",
-    "total": "Total",
-    "notFound": "Commande introuvable. Vérifiez le lien reçu après votre commande.",
-    "keepLink": "Conservez cette page : elle permet de suivre votre commande.",
-    "retryOrder": "Refaire une commande",
-    "stillPending": "Le paiement n'est pas encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes : revenez sur cette page."
+    "items": "المنتجات",
+    "quantity": "الكمية {count}",
+    "subtotal": "المجموع الفرعي",
+    "shipping": "التوصيل",
+    "total": "المجموع",
+    "notFound": "الطلب غير موجود. تحقّق من الرابط الذي وصلك بعد الطلب.",
+    "keepLink": "احتفظ بهذه الصفحة: فهي تتيح لك متابعة طلبك.",
+    "retryOrder": "إعادة الطلب",
+    "stillPending": "لم يتم تأكيد الدفع بعد. إذا كنت قد دفعت، فقد يستغرق التأكيد بضع دقائق: عُد إلى هذه الصفحة."
   },
   "demo": {
-    "title": "Paiement de démonstration",
-    "text": "Ceci est une passerelle de test, aucun argent n'est débité. Choisissez le résultat du paiement pour la commande {order}.",
-    "pay": "Simuler un paiement réussi",
-    "fail": "Simuler un échec",
-    "noOrder": "Lien de paiement incomplet.",
-    "failedToResolve": "La passerelle de démonstration n'est pas disponible sur cet environnement.",
-    "noToken": "Impossible de retrouver cette commande sur cet appareil."
+    "title": "دفع تجريبي",
+    "text": "هذه بوابة اختبار، ولا يُخصم أي مبلغ. اختر نتيجة الدفع للطلب {order}.",
+    "pay": "محاكاة دفع ناجح",
+    "fail": "محاكاة فشل الدفع",
+    "noOrder": "رابط الدفع غير مكتمل.",
+    "failedToResolve": "بوابة الدفع التجريبية غير متاحة في هذه البيئة.",
+    "noToken": "تعذّر العثور على هذا الطلب على هذا الجهاز."
   },
   "custom": {
-    "title": "Créer une pièce unique",
-    "intro": "Racontez-nous votre idée : un thème, des dimensions, une inspiration. L'atelier étudie votre demande et vous répond par e-mail avec un devis.",
-    "name": "Nom complet",
-    "email": "E-mail",
-    "phone": "Téléphone (facultatif)",
-    "country": "Pays (facultatif)",
-    "description": "Votre projet",
-    "descriptionPlaceholder": "Décrivez la pièce que vous imaginez : sujet, style, usage…",
-    "dimensions": "Dimensions souhaitées (facultatif)",
-    "budget": "Budget (facultatif)",
-    "references": "Liens d'inspiration (facultatif)",
-    "referencesHint": "Liens vers des photos ou des pages qui vous inspirent.",
-    "submit": "Envoyer ma demande",
-    "sending": "Envoi…",
-    "successTitle": "Demande envoyée",
-    "successText": "Merci. L'atelier vous répond par e-mail dès que possible.",
-    "another": "Faire une autre demande",
-    "prefill": "Je souhaite un devis pour la pièce {ref} ({title}).",
+    "title": "اصنع قطعة فريدة",
+    "intro": "حدّثنا عن فكرتك: موضوع، أبعاد، مصدر إلهام. تدرس الورشة طلبك وترد عليك بالبريد الإلكتروني مع عرض سعر.",
+    "name": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف (اختياري)",
+    "country": "البلد (اختياري)",
+    "description": "مشروعك",
+    "descriptionPlaceholder": "صِف القطعة التي تتخيلها: الموضوع، الأسلوب، الاستعمال…",
+    "dimensions": "الأبعاد المطلوبة (اختياري)",
+    "budget": "الميزانية (اختياري)",
+    "references": "روابط إلهام (اختياري)",
+    "referencesHint": "روابط إلى صور أو صفحات تلهمك.",
+    "submit": "إرسال طلبي",
+    "sending": "جارٍ الإرسال…",
+    "successTitle": "تم إرسال الطلب",
+    "successText": "شكرًا لك. سترد عليك الورشة بالبريد الإلكتروني في أقرب وقت ممكن.",
+    "another": "إرسال طلب آخر",
+    "prefill": "أرغب في الحصول على عرض سعر للقطعة {ref} ({title}).",
     "errors": {
-      "name": "Indiquez votre nom.",
-      "email": "Indiquez une adresse e-mail valide.",
-      "description": "Décrivez votre projet en quelques phrases (10 caractères minimum)."
+      "name": "أدخل اسمك.",
+      "email": "أدخل بريدًا إلكترونيًا صحيحًا.",
+      "description": "صِف مشروعك في بضع جمل (10 أحرف على الأقل)."
     },
-    "failed": "La demande n'a pas pu être envoyée.",
-    "privacy": "Vos informations servent uniquement à répondre à votre demande. <link>Confidentialité</link>",
-    "photos": "Photos de référence (facultatif)",
-    "photosHint": "Jusqu'à 3 photos : une inspiration, un lieu, une pièce existante. Elles sont réduites avant l'envoi.",
-    "addPhotos": "Ajouter des photos",
-    "removePhoto": "Retirer la photo",
-    "photoUploading": "Envoi de la photo en cours",
+    "failed": "تعذّر إرسال الطلب.",
+    "privacy": "تُستخدم معلوماتك فقط للرد على طلبك. <link>الخصوصية</link>",
+    "photos": "صور مرجعية (اختياري)",
+    "photosHint": "حتى 3 صور: مصدر إلهام، مكان، قطعة موجودة. يتم تصغيرها قبل الإرسال.",
+    "addPhotos": "إضافة صور",
+    "removePhoto": "إزالة الصورة",
+    "photoUploading": "جارٍ رفع الصورة",
     "photoErrors": {
-      "failed": "L'envoi a échoué, réessayez.",
-      "type": "Format non pris en charge (JPEG, PNG ou WebP).",
-      "tooLarge": "Photo trop lourde (5 Mo maximum)."
+      "failed": "فشل الرفع، أعد المحاولة.",
+      "type": "صيغة غير مدعومة (JPEG أو PNG أو WebP).",
+      "tooLarge": "الصورة كبيرة جدًا (الحد الأقصى 5 ميغابايت)."
     }
   },
   "atelier": {
-    "title": "L'atelier",
-    "lead": "Ceraghit Creation, l'atelier de Sabri Ghit.",
-    "process": "Le geste",
-    "locations": "Nous trouver",
-    "noLocations": "Les adresses de l'atelier seront bientôt disponibles.",
-    "phone": "Téléphone",
-    "hours": "Horaires",
-    "map": "Voir sur la carte",
-    "contact": "Nous contacter"
+    "title": "الورشة",
+    "lead": "Ceraghit Creation، ورشة صبري غيث.",
+    "process": "الحركة",
+    "locations": "أين تجدنا",
+    "noLocations": "ستتوفر عناوين الورشة قريبًا.",
+    "phone": "الهاتف",
+    "hours": "ساعات العمل",
+    "map": "عرض على الخريطة",
+    "contact": "تواصل معنا"
   },
   "footer": {
-    "tagline": "Céramiques modelées à la main.",
-    "contact": "Contact",
-    "explore": "Explorer",
-    "rights": "Tous droits réservés.",
+    "tagline": "سيراميك مشكّل يدويًا.",
+    "contact": "اتصال",
+    "explore": "استكشف",
+    "rights": "جميع الحقوق محفوظة.",
     "instagram": "Instagram",
     "whatsapp": "WhatsApp",
-    "legal": "Informations"
+    "legal": "معلومات"
   },
   "currency": {
-    "TND": "Dinar tunisien",
-    "EUR": "Euro",
-    "switch": "Changer de devise"
+    "TND": "دينار تونسي",
+    "EUR": "يورو",
+    "switch": "تغيير العملة"
   },
   "notFound": {
-    "title": "Page introuvable",
-    "text": "Cette page n'existe pas ou n'existe plus.",
-    "home": "Retour à l'accueil"
+    "title": "الصفحة غير موجودة",
+    "text": "هذه الصفحة غير موجودة أو لم تعد موجودة.",
+    "home": "العودة إلى الرئيسية"
   },
   "shipping": {
-    "estimate": "Estimer la livraison",
-    "to": "Pays de livraison",
-    "label": "Livraison",
-    "detail": "{zone}, {kg} kg facturés",
-    "onQuote": "Sur devis",
-    "tooBig": "Cette commande est trop volumineuse pour une livraison en ligne. Écrivez-nous pour un devis de transport.",
-    "contact": "Demander un devis",
-    "free": "Livraison offerte",
-    "nudge": "Plus que {amount} pour la livraison offerte"
+    "estimate": "تقدير التوصيل",
+    "to": "بلد التوصيل",
+    "label": "التوصيل",
+    "detail": "\u2068{zone}\u2069، \u2068{kg}\u2069 كغ محتسبة",
+    "onQuote": "بعرض سعر",
+    "tooBig": "هذا الطلب كبير جدًا للتوصيل عبر الإنترنت. راسلنا للحصول على عرض سعر للنقل.",
+    "contact": "اطلب عرض سعر",
+    "free": "توصيل مجاني",
+    "nudge": "بقي {amount} فقط للحصول على التوصيل المجاني"
   },
   "legal": {
-    "draft": "Projet à faire valider par l'atelier",
-    "draftNote": "Ce texte est un brouillon. Les passages entre crochets sont à compléter ou à confirmer avant la mise en ligne.",
-    "navLabel": "Informations légales",
+    "draft": "مسودة تنتظر مصادقة الورشة",
+    "draftNote": "هذا النص مسودة. يجب استكمال أو تأكيد الفقرات الواردة بين معقوفتين قبل النشر.",
+    "navLabel": "المعلومات القانونية",
     "nav": {
-      "terms": "Conditions générales de vente",
-      "shipping": "Livraison",
-      "notice": "Mentions légales",
-      "privacy": "Confidentialité"
+      "terms": "شروط البيع العامة",
+      "shipping": "التوصيل",
+      "notice": "الإشعار القانوني",
+      "privacy": "الخصوصية"
     },
     "docs": {
       "terms": {
-        "title": "Conditions générales de vente",
-        "intro": "Les règles qui s'appliquent à vos commandes.",
+        "title": "شروط البيع العامة",
+        "intro": "القواعد التي تسري على طلباتك.",
         "sections": [
           {
-            "title": "1. Objet",
+            "title": "1. الموضوع",
             "body": [
-              "Les présentes conditions générales de vente régissent toute commande passée sur ce site auprès de Ceraghit Creation (« l'atelier »). Passer commande implique d'avoir lu et accepté ces conditions."
+              "تنظّم شروط البيع العامة هذه كل طلب يُقدَّم عبر هذا الموقع لدى Ceraghit Creation («الورشة»). تقديم الطلب يعني أنك قرأت هذه الشروط ووافقت عليها."
             ]
           },
           {
-            "title": "2. Commande",
+            "title": "2. الطلب",
             "body": [
-              "Vous choisissez vos pièces, les ajoutez au panier, renseignez vos coordonnées et votre adresse de livraison, puis réglez en ligne. La commande est confirmée lorsque le paiement est validé : la page de suivi de commande affiche alors « Payée ».",
-              "Les pièces sont réservées pendant 45 minutes à partir de la création de la commande. Sans paiement dans ce délai, la commande est annulée et les pièces sont remises en vente.",
-              "Une pièce unique n'existe qu'en un exemplaire : elle ne peut être commandée qu'une fois. Les pièces marquées « Sur devis » ne s'achètent pas depuis le panier : envoyez une demande à l'atelier."
+              "تختار قطعك، وتضيفها إلى السلة، وتدخل بياناتك وعنوان التوصيل، ثم تدفع عبر الإنترنت. يُؤكَّد الطلب عند اعتماد الدفع: تعرض صفحة متابعة الطلب حينها «مدفوع».",
+              "تُحجز القطع لمدة 45 دقيقة من لحظة إنشاء الطلب. وإن لم يتم الدفع خلال هذه المدة يُلغى الطلب وتعود القطع إلى البيع.",
+              "القطعة الفريدة موجودة بنسخة واحدة: لا يمكن طلبها إلا مرة واحدة. أما القطع المعلَّمة «بعرض سعر» فلا تُشترى من السلة: أرسل طلبًا إلى الورشة."
             ]
           },
           {
-            "title": "3. Prix",
+            "title": "3. الأسعار",
             "body": [
-              "Chaque pièce est proposée à la fois en dinars tunisiens (TND) et en euros (EUR). Vous choisissez la devise avant de commander et payez dans cette devise : aucun prix n'est converti automatiquement d'une devise à l'autre.",
-              "Les prix affichés s'entendent hors frais de livraison. Les frais de livraison sont calculés au moment du paiement, selon le contenu du panier et le pays de destination. [Régime de TVA / taxes applicables : à préciser par l'atelier.]"
+              "تُعرض كل قطعة بالدينار التونسي (TND) وباليورو (EUR) معًا. تختار العملة قبل الطلب وتدفع بها: لا يُحوَّل أي سعر تلقائيًا من عملة إلى أخرى.",
+              "الأسعار المعروضة لا تشمل مصاريف التوصيل. وتُحتسب مصاريف التوصيل عند الدفع بحسب محتوى السلة وبلد الوجهة. [نظام الأداء على القيمة المضافة / الرسوم المطبّقة: تحدّدها الورشة.]"
             ]
           },
           {
-            "title": "4. Paiement",
+            "title": "4. الدفع",
             "body": [
-              "Le paiement s'effectue par carte bancaire (cartes tunisiennes et internationales) via notre prestataire de paiement Konnect. L'atelier ne voit et ne conserve jamais vos données de carte.",
-              "Si le paiement échoue ou est abandonné, la commande est annulée et les pièces sont remises en stock."
+              "يتم الدفع بالبطاقة المصرفية (البطاقات التونسية والدولية) عبر مزوّد الدفع Konnect. لا ترى الورشة بيانات بطاقتك ولا تحتفظ بها أبدًا.",
+              "إذا فشل الدفع أو تم التخلي عنه، يُلغى الطلب وتعود القطع إلى المخزون."
             ]
           },
           {
-            "title": "5. Pièces faites main",
+            "title": "5. القطع اليدوية",
             "body": [
-              "Toutes les pièces sont modelées à la main. De légères variations de forme, de couleur, d'émail et de texture sont normales : elles font partie de l'œuvre. Les photographies sont indicatives, en particulier pour les pièces émaillées dont la teinte varie selon la lumière."
+              "كل القطع مشكّلة يدويًا. فروق طفيفة في الشكل واللون والطلاء والملمس أمر طبيعي: إنها جزء من العمل. الصور إرشادية، خاصة للقطع المطلية التي يتغيّر لونها بحسب الإضاءة."
             ]
           },
           {
-            "title": "6. Livraison",
+            "title": "6. التوصيل",
             "body": [
-              "Les modalités de calcul des frais, les pays desservis et les délais sont décrits dans la page Livraison. Délai de préparation indicatif avant expédition : [à confirmer par l'atelier]."
+              "تُشرح طريقة احتساب المصاريف والبلدان المخدومة والآجال في صفحة التوصيل. مدة التحضير التقريبية قبل الشحن: [تؤكدها الورشة]."
             ]
           },
           {
-            "title": "7. Dommages pendant le transport",
+            "title": "7. الأضرار أثناء النقل",
             "body": [
-              "Les pièces sont emballées avec soin. Si une pièce arrive endommagée, signalez-le à l'atelier dans les [48 heures : à confirmer] suivant la réception, avec des photographies de la pièce et de l'emballage. L'atelier propose alors un remplacement ou un remboursement."
+              "تُغلَّف القطع بعناية. إذا وصلت قطعة متضررة، أبلغ الورشة خلال [48 ساعة: للتأكيد] من الاستلام، مع صور للقطعة والتغليف. ثم تقترح الورشة استبدالًا أو استرداد المبلغ."
             ]
           },
           {
-            "title": "8. Rétractation et retours",
+            "title": "8. العدول والإرجاع",
             "body": [
-              "Les pièces uniques, les pièces réalisées sur demande ou personnalisées ne peuvent être ni reprises ni échangées, sauf défaut avéré.",
-              "Pour les autres pièces, un retour est possible dans un délai de [à confirmer, par exemple 14 jours] après réception, après accord préalable de l'atelier, la pièce étant renvoyée intacte et dans son emballage d'origine. Les frais de retour sont à la charge de l'acheteur. Le remboursement est effectué dans la devise du paiement.",
-              "Ces règles s'appliquent sous réserve des droits impératifs dont vous pouvez bénéficier selon votre pays de résidence."
+              "لا تُسترجع ولا تُستبدل القطع الفريدة ولا القطع المصنوعة عند الطلب أو المخصّصة، إلا في حال وجود عيب ثابت.",
+              "بالنسبة إلى القطع الأخرى، يمكن الإرجاع خلال [المدة للتأكيد، مثلًا 14 يومًا] من الاستلام، بعد موافقة مسبقة من الورشة، على أن تُعاد القطعة سليمة وفي تغليفها الأصلي. تكاليف الإرجاع على عاتق المشتري. ويتم الاسترداد بعملة الدفع.",
+              "تُطبَّق هذه القواعد مع مراعاة الحقوق الإلزامية التي قد تستفيد منها بحسب بلد إقامتك."
             ]
           },
           {
-            "title": "9. Pièces sur devis et créations",
+            "title": "9. القطع بعرض سعر والأعمال المخصّصة",
             "body": [
-              "Pour une pièce sur devis ou une création personnalisée, envoyez une demande depuis la page « Pièce unique ». L'atelier vous répond par e-mail avec un devis. Les conditions de paiement (acompte, délais de réalisation) sont précisées dans le devis."
+              "للحصول على قطعة بعرض سعر أو عمل مخصّص، أرسل طلبًا من صفحة «قطعة فريدة». ترد عليك الورشة بالبريد الإلكتروني مع عرض سعر. وتُحدَّد شروط الدفع (العربون، آجال الإنجاز) في عرض السعر."
             ]
           },
           {
-            "title": "10. Responsabilité",
+            "title": "10. المسؤولية",
             "body": [
-              "L'atelier ne peut être tenu responsable des retards ou des dommages dus au transporteur ou à des événements indépendants de sa volonté, ni des droits de douane et taxes locales d'importation, qui sont à la charge de l'acheteur."
+              "لا تتحمل الورشة مسؤولية التأخير أو الأضرار الناجمة عن الناقل أو عن أحداث خارجة عن إرادتها، ولا الرسوم الجمركية وضرائب الاستيراد المحلية، فهي على عاتق المشتري."
             ]
           },
           {
-            "title": "11. Droit applicable",
+            "title": "11. القانون المطبّق",
             "body": [
-              "Les présentes conditions sont soumises au droit [tunisien : à confirmer]. En cas de litige, les parties recherchent d'abord une solution amiable ; à défaut, les tribunaux de [ville : à préciser] sont compétents."
+              "تخضع هذه الشروط للقانون [التونسي: للتأكيد]. وعند النزاع يسعى الطرفان أولًا إلى حل ودّي؛ وإلا فمحاكم [المدينة: للتحديد] هي المختصة."
             ]
           },
           {
-            "title": "12. Contact",
+            "title": "12. الاتصال",
             "body": [
-              "Pour toute question sur une commande, écrivez à l'atelier ou appelez-le aux coordonnées indiquées en bas de chaque page, en rappelant le numéro de commande (CER-12345)."
+              "لأي سؤال حول طلب، راسل الورشة أو اتصل بها على البيانات الموجودة أسفل كل صفحة، مع ذكر رقم الطلب (CER-12345)."
             ]
           }
         ]
       },
       "shipping": {
-        "title": "Livraison",
-        "intro": "Comment la livraison est calculée et ce qu'elle comprend.",
+        "title": "التوصيل",
+        "intro": "كيف يُحتسب التوصيل وما الذي يشمله.",
         "sections": [
           {
-            "title": "Comment le prix est calculé",
+            "title": "كيف يُحتسب السعر",
             "body": [
-              "Le prix de la livraison dépend du poids et de la taille de la boîte, pas de la valeur de la commande, sauf offre de livraison offerte. Pour chaque pièce, l'atelier renseigne son poids emballé et les dimensions de sa boîte.",
-              "Le transporteur facture le plus élevé de deux poids : le poids réel (pièces, plus emballage de protection) ou le poids volumétrique (longueur × largeur × hauteur en cm, divisé par 5 000). Le poids facturé est arrondi par tranche de 0,5 kg.",
-              "À ce poids s'applique le tarif de la zone de destination (Tunisie, Europe ou reste du monde), plus une surcharge carburant pour les envois express et des frais de manutention pour l'emballage protecteur des pièces fragiles."
+              "يعتمد سعر التوصيل على وزن العلبة وحجمها لا على قيمة الطلب، ما لم يوجد عرض توصيل مجاني. تسجّل الورشة لكل قطعة وزنها بعد التغليف وأبعاد علبتها.",
+              "يحتسب الناقل الأعلى من وزنين: الوزن الفعلي (القطع مع التغليف الواقي) أو الوزن الحجمي (الطول × العرض × الارتفاع بالسنتيمتر، مقسومًا على 5000). ويُقرَّب الوزن المحتسب إلى أعلى بخطوات قدرها 0.5 كغ.",
+              "يُطبَّق على هذا الوزن تعريف منطقة الوجهة (تونس أو أوروبا أو بقية العالم)، مع رسم إضافي للوقود في الشحنات السريعة ومصاريف مناولة للتغليف الواقي للقطع الهشة."
             ]
           },
           {
-            "title": "Montants",
+            "title": "المبالغ",
             "body": [
-              "Les montants ne sont pas fixes : ils sont calculés au paiement, une fois votre pays choisi, et affichés avant que vous ne payiez. Vous voyez la zone de livraison et le poids facturé. [Barème : à confirmer par l'atelier.]",
-              "Selon la destination, la livraison peut être offerte à partir d'un certain montant de commande ; le seuil éventuel est indiqué au panier et au paiement."
+              "المبالغ ليست ثابتة: تُحتسب عند الدفع بعد اختيار بلدك، وتُعرض قبل أن تدفع. ترى منطقة التوصيل والوزن المحتسب. [جدول التعريفات: تؤكده الورشة.]",
+              "بحسب الوجهة، قد يكون التوصيل مجانيًا ابتداءً من مبلغ معيّن للطلب؛ ويظهر الحد، إن وُجد، في السلة وعند الدفع."
             ]
           },
           {
-            "title": "Transporteurs et délais",
+            "title": "الناقلون والآجال",
             "body": [
-              "Les envois sont confiés à un transporteur express (DHL Express ou équivalent) ou à un coursier local pour la Tunisie. [Transporteurs et délais de livraison indicatifs par zone : à confirmer par l'atelier.]",
-              "Un numéro de suivi est transmis par l'atelier dès l'expédition, lorsque le transporteur en fournit un."
+              "تُسلَّم الشحنات إلى ناقل سريع (DHL Express أو ما يعادله) أو إلى ساعٍ محلي بالنسبة إلى تونس. [الناقلون وآجال التوصيل التقريبية بحسب المنطقة: تؤكدها الورشة.]",
+              "ترسل الورشة رقم التتبع بمجرد الشحن، عندما يوفّره الناقل."
             ]
           },
           {
-            "title": "Pays desservis",
+            "title": "البلدان المخدومة",
             "body": [
-              "La liste des pays desservis est proposée dans le formulaire de commande. Une commande trop lourde ou trop volumineuse pour une livraison en ligne n'obtient pas de prix : l'atelier établit alors un devis de transport sur demande."
+              "تُعرض قائمة البلدان المخدومة في نموذج الطلب. الطلب الثقيل أو الكبير جدًا للتوصيل عبر الإنترنت لا يحصل على سعر: تعدّ الورشة حينها عرض سعر للنقل عند الطلب."
             ]
           },
           {
-            "title": "Droits de douane et taxes",
+            "title": "الرسوم الجمركية والضرائب",
             "body": [
-              "Pour les envois hors de Tunisie, les droits de douane, taxes d'importation et frais de dédouanement éventuels sont à la charge de l'acheteur, selon la réglementation du pays de destination. Ils ne sont pas inclus dans le prix payé en ligne."
+              "بالنسبة إلى الشحنات خارج تونس، تقع الرسوم الجمركية وضرائب الاستيراد ومصاريف التخليص الجمركي، إن وُجدت، على عاتق المشتري بحسب تشريع بلد الوجهة. وهي غير مشمولة في السعر المدفوع عبر الإنترنت."
             ]
           },
           {
-            "title": "Réception",
-            "body": [
-              "Vérifiez l'état du colis à la livraison et signalez toute anomalie à l'atelier selon les conditions générales de vente."
-            ]
+            "title": "الاستلام",
+            "body": ["تحقّق من حالة الطرد عند التسليم وأبلغ الورشة بأي خلل وفق شروط البيع العامة."]
           }
         ]
       },
       "notice": {
-        "title": "Mentions légales",
-        "intro": "Qui édite et héberge ce site.",
+        "title": "الإشعار القانوني",
+        "intro": "من ينشر هذا الموقع ويستضيفه.",
         "sections": [
           {
-            "title": "Éditeur du site",
+            "title": "ناشر الموقع",
             "body": [
-              "Ceraghit Creation · [raison sociale]",
-              "Forme juridique : [à renseigner]",
-              "Adresse : [adresse de l'atelier]",
-              "Patente : [numéro de patente] · Matricule fiscal : [matricule fiscal]",
-              "Directeur de la publication : Sabri Ghit",
-              "Contact : coordonnées indiquées en bas de chaque page."
+              "Ceraghit Creation · [الاسم التجاري]",
+              "الشكل القانوني: [للتعبئة]",
+              "العنوان: [عنوان الورشة]",
+              "الباتيندة: [رقم الباتيندة] · المعرّف الجبائي: [المعرّف الجبائي]",
+              "مدير النشر: صبري غيث",
+              "الاتصال: البيانات الموجودة أسفل كل صفحة."
             ]
           },
           {
-            "title": "Hébergement et services techniques",
+            "title": "الاستضافة والخدمات التقنية",
             "body": [
-              "Site hébergé par Vercel Inc. (vercel.com).",
-              "Base de données : Neon. Stockage et diffusion des images : Cloudflare. Paiement par carte : Konnect."
+              "يستضيف الموقع Vercel Inc. (vercel.com).",
+              "قاعدة البيانات: Neon. تخزين الصور وتوزيعها: Cloudflare. الدفع بالبطاقة: Konnect."
             ]
           },
           {
-            "title": "Propriété intellectuelle",
+            "title": "الملكية الفكرية",
             "body": [
-              "Les œuvres, photographies, textes et éléments graphiques de ce site sont la propriété de Ceraghit Creation et de Sabri Ghit. Toute reproduction ou réutilisation sans autorisation écrite préalable est interdite."
+              "الأعمال والصور والنصوص والعناصر الغرافيكية في هذا الموقع ملك لـ Ceraghit Creation ولصبري غيث. يُمنع أي نسخ أو إعادة استخدام دون إذن كتابي مسبق."
             ]
           },
           {
-            "title": "Données personnelles",
-            "body": ["Le traitement de vos données est décrit dans la politique de confidentialité."]
+            "title": "المعطيات الشخصية",
+            "body": ["تُوصَف معالجة معطياتك في سياسة الخصوصية."]
           }
         ]
       },
       "privacy": {
-        "title": "Confidentialité",
-        "intro": "Les données que nous collectons et ce que nous en faisons.",
+        "title": "الخصوصية",
+        "intro": "المعطيات التي نجمعها وما نفعله بها.",
         "sections": [
           {
-            "title": "Qui est responsable",
+            "title": "من المسؤول",
             "body": [
-              "Ceraghit Creation, [raison sociale], est responsable du traitement des données collectées sur ce site. Contact : coordonnées indiquées en bas de chaque page."
+              "Ceraghit Creation، [الاسم التجاري]، مسؤولة عن معالجة المعطيات المجمَّعة في هذا الموقع. الاتصال: البيانات الموجودة أسفل كل صفحة."
             ]
           },
           {
-            "title": "Ce que nous collectons",
+            "title": "ما الذي نجمعه",
             "body": [
-              "Lors d'une commande : nom, e-mail, téléphone, adresse de livraison, pays, note éventuelle, contenu et montant de la commande.",
-              "Lors d'une demande de pièce unique : nom, e-mail, téléphone et pays (facultatifs), description du projet, dimensions, budget et liens d'inspiration.",
-              "Dans votre navigateur : votre devise, votre langue et le contenu de votre panier, conservés en local pour le fonctionnement du site. Aucun traceur publicitaire n'est utilisé."
+              "عند الطلب: الاسم والبريد الإلكتروني والهاتف وعنوان التوصيل والبلد وأي ملاحظة ومحتوى الطلب ومبلغه.",
+              "عند طلب قطعة فريدة: الاسم والبريد الإلكتروني والهاتف والبلد (اختيارية)، ووصف المشروع والأبعاد والميزانية وروابط الإلهام.",
+              "في متصفحك: عملتك ولغتك ومحتوى سلتك، محفوظة محليًا لعمل الموقع. لا تُستخدم أي أدوات تتبّع إعلانية."
             ]
           },
           {
-            "title": "Pourquoi",
+            "title": "لماذا",
+            "body": ["لمعالجة طلبك وتوصيله، والرد على طلباتك، ومسك محاسبة الورشة، والوفاء بالتزاماتنا القانونية."]
+          },
+          {
+            "title": "مع من نتقاسمها",
             "body": [
-              "Pour traiter et livrer votre commande, répondre à vos demandes, tenir la comptabilité de l'atelier et respecter nos obligations légales."
+              "Konnect (الدفع بالبطاقة)، Vercel (الاستضافة)، Neon (قاعدة البيانات)، Cloudflare (الصور) والناقل المكلّف بالتوصيل (الاسم والعنوان والهاتف). لا يستعمل هؤلاء المزوّدون هذه المعطيات إلا لتقديم خدمتهم."
             ]
           },
           {
-            "title": "Avec qui nous les partageons",
+            "title": "مدة الاحتفاظ",
             "body": [
-              "Konnect (paiement par carte), Vercel (hébergement), Neon (base de données), Cloudflare (images) et le transporteur chargé de la livraison (nom, adresse, téléphone). Ces prestataires ne les utilisent que pour fournir leur service."
+              "الطلبات: [المدة للتأكيد، مثلًا 10 سنوات للوثائق المحاسبية]. طلبات القطع الفريدة: [المدة للتأكيد، مثلًا 24 شهرًا]."
             ]
           },
           {
-            "title": "Durée de conservation",
+            "title": "حقوقك",
             "body": [
-              "Commandes : [durée à confirmer, par exemple 10 ans pour les pièces comptables]. Demandes de pièce unique : [durée à confirmer, par exemple 24 mois]."
-            ]
-          },
-          {
-            "title": "Vos droits",
-            "body": [
-              "Vous pouvez demander l'accès à vos données, leur rectification ou leur suppression, dans la limite de nos obligations légales de conservation, en écrivant à l'atelier."
+              "يمكنك طلب الاطلاع على معطياتك أو تصحيحها أو حذفها، في حدود التزاماتنا القانونية بالاحتفاظ، بمراسلة الورشة."
             ]
           }
         ]
@@ -474,11 +470,11 @@
     }
   },
   "seo": {
-    "shopDescription": "Toutes les pièces de l'atelier Ceraghit : curda seca, lampes votives, bas-reliefs et pièces uniques, modelées à la main.",
-    "categoryDescription": "{name} : pièces en céramique modelées à la main par Sabri Ghit, livrées en Tunisie et à l'international.",
-    "atelierDescription": "L'atelier Ceraghit Creation : la matière, les gestes et l'histoire de Sabri Ghit, avec les adresses des ateliers.",
-    "customDescription": "Créez une pièce unique avec l'atelier Ceraghit : décrivez votre idée et recevez un devis par e-mail.",
-    "crumbHome": "Accueil",
-    "crumbShop": "Boutique"
+    "shopDescription": "كل قطع ورشة Ceraghit: كوردا سيكا، مصابيح نذرية، نحت بارز وقطع فريدة، مشكّلة يدويًا.",
+    "categoryDescription": "{name}: قطع سيراميك مشكّلة يدويًا بيد صبري غيث، تُوصَّل داخل تونس وإلى العالم.",
+    "atelierDescription": "ورشة Ceraghit Creation: الخامة والحركة وحكاية صبري غيث، مع عناوين الورش.",
+    "customDescription": "اصنع قطعة فريدة مع ورشة Ceraghit: صِف فكرتك واحصل على عرض سعر بالبريد الإلكتروني.",
+    "crumbHome": "الرئيسية",
+    "crumbShop": "المتجر"
   }
 }

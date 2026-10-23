@@ -79,7 +79,7 @@ export default async function ProductPage({ params }: Params) {
         <div className="space-y-6 md:pt-4">
           <div className="space-y-3">
             <p className="font-heading text-muted-foreground text-sm">
-              {common("reference")}: {product.ref}
+              {common("reference")}: <bdi>{product.ref}</bdi>
             </p>
             <div className="ornament max-w-48" aria-hidden>
               <span>◆</span>
