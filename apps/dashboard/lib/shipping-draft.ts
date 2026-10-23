@@ -14,6 +14,9 @@ export interface ZoneDraft {
   extraEur: string
   handlingTnd: string
   handlingEur: string
+  freeEnabled: boolean
+  freeTnd: string
+  freeEur: string
 }
 
 export interface RatesDraft {
@@ -42,6 +45,9 @@ export function ratesToDraft(rates: ShippingRates): RatesDraft {
       extraEur: minorToInput(zone.extraPerKg.EUR, "EUR"),
       handlingTnd: minorToInput(zone.handling.TND, "TND"),
       handlingEur: minorToInput(zone.handling.EUR, "EUR"),
+      freeEnabled: zone.freeOver !== null,
+      freeTnd: minorToInput(zone.freeOver?.TND ?? 0, "TND"),
+      freeEur: minorToInput(zone.freeOver?.EUR ?? 0, "EUR"),
     })),
     volumetricDivisor: String(rates.volumetricDivisor),
     packagingPct: String(rates.packagingPct),
@@ -67,6 +73,9 @@ export function emptyZone(id: string): ZoneDraft {
     extraEur: "0",
     handlingTnd: "0",
     handlingEur: "0",
+    freeEnabled: false,
+    freeTnd: "0",
+    freeEur: "0",
   }
 }
 
@@ -107,6 +116,9 @@ export function draftToRates(draft: RatesDraft): { rates: ShippingRates | null; 
         TND: money(at("handlingTnd"), zone.handlingTnd, "TND"),
         EUR: money(at("handlingEur"), zone.handlingEur, "EUR"),
       },
+      freeOver: zone.freeEnabled
+        ? { TND: money(at("freeTnd"), zone.freeTnd, "TND"), EUR: money(at("freeEur"), zone.freeEur, "EUR") }
+        : null,
     }
   })
   const integer = (key: string, text: string, min: number, message: string): number => {

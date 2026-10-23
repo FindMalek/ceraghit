@@ -13,6 +13,7 @@ import {
 import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
+import { unitMinor } from "../../lib/pricing"
 import { getSettings } from "../../lib/settings"
 import { publicProcedure } from "../../procedures"
 
@@ -119,17 +120,21 @@ export const catalogRouter = {
       const byId = new Map(rows.map((r) => [r.id, r]))
       const lines = input.items.flatMap((item) => {
         const row = byId.get(item.productId)
-        return row ? [{ ...row, quantity: item.quantity }] : []
+        if (!row) return []
+        const variant = item.variantId ? row.variants.find((v) => v.id === item.variantId) : undefined
+        return [{ ...row, variant, quantity: item.quantity }]
       })
       if (lines.length !== input.items.length)
         throw new ORPCError("NOT_FOUND", { message: "A piece in your cart is no longer available." })
+      const subtotalMinor = lines.reduce((sum, l) => sum + unitMinor(l, l.variant, input.currency) * l.quantity, 0)
       const settings = await getSettings(context.db)
-      const { available, reason, zoneName, chargeableKg, amountMinor } = estimateShipping(
+      const { available, reason, zoneName, chargeableKg, amountMinor, freeApplied, freeOverMinor } = estimateShipping(
         settings.shippingRates,
         lines,
         input.country,
         input.currency,
+        subtotalMinor,
       )
-      return { available, reason, zoneName, chargeableKg, amountMinor }
+      return { available, reason, zoneName, chargeableKg, amountMinor, freeApplied, freeOverMinor, subtotalMinor }
     }),
 }

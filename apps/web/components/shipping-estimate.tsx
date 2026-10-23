@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useShippingQuote } from "@/lib/use-shipping-quote"
 import { CountrySelect } from "./country-select"
 import { useCurrency } from "./currency-provider"
-import { ShippingAmount, ShippingDetail, ShippingUnavailable } from "./shipping-quote-note"
+import { ShippingAmount, ShippingDetail, ShippingNote, ShippingUnavailable } from "./shipping-quote-note"
 
 export function ShippingEstimate({ productId }: { productId: string }) {
   const t = useTranslations("shipping")
@@ -26,6 +26,7 @@ export function ShippingEstimate({ productId }: { productId: string }) {
           <ShippingAmount quote={quote} />
         </div>
         <ShippingDetail quote={quote} />
+        <ShippingNote />
         <ShippingUnavailable quote={quote} />
       </div>
     </details>
