@@ -18,7 +18,10 @@ export function formatMoney(minor: number, currency: Currency, locale = "fr"): s
     minimumFractionDigits: 0,
     maximumFractionDigits: currency === "TND" ? 3 : 2,
   }).format(value)
-  return currency === "TND" ? `${number} DT` : `${number} €`
+  const symbol = currency === "EUR" ? "€" : locale === "ar" ? "د.ت" : "DT"
+  const text = `${number} ${symbol}`
+  // In right-to-left text the amount and its symbol must stay one left-to-right unit: isolate it (LRI ... PDI).
+  return locale === "ar" ? `\u2066${text}\u2069` : text
 }
 
 /** Picks the requested language, falling back to French which is always present. */

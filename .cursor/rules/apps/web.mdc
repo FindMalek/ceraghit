@@ -5,7 +5,15 @@ globs: apps/web/**
 
 # apps/web
 
-- next-intl, `fr` default; `lib/locales.ts` `ENABLED_LOCALES` controls what is shown (en/ar are plumbed, translations are a later add-on).
+- next-intl, `fr` default (no URL prefix), `en` and `ar` (RTL) are live: `lib/locales.ts` `ENABLED_LOCALES` drives the
+  switcher, hreflang alternates and the sitemap. Every key in `messages/fr.json` exists in `en.json` and `ar.json` with the
+  same ICU arguments and `<tags>`: `lib/messages.test.ts` fails otherwise, so add a string in all three.
+- Arabic is right-to-left: logical utilities only (`ms-`, `ps-`, `start-`, `text-start`, never `ml-`/`left-`/`text-left`),
+  `rtl:rotate-180` on directional icons, `useLocale() === "ar"` where behaviour flips (gallery keys and swipes). Amounts,
+  refs, phones and emails stay left-to-right: `formatMoney(..., "ar")` isolates amounts, wrap refs/phones/emails in `<bdi>`.
+  Arabic text uses Amiri, set for every font utility by `[lang="ar"]` in `packages/ui/src/styles/globals.css` (no
+  letter-spacing, no uppercase, no hairline stroke).
+- New catalogue text in `packages/db/src/seed/catalogue.ts` needs its entry in `seed/translations.ts` (a test enforces it).
 - Currency (TND/EUR) is a cookie, default TND. Show one currency at a time.
 - Pages are server components; islands only for cart, gallery, forms. Data pages are dynamic (the api isn't needed at build).
 - Only `/api/rpc/public/*` and `/api/files/*` are proxied (`WEB_ALLOWED`). Never call `admin` from here.

@@ -49,7 +49,7 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col gap-1">
         <p className="font-heading text-muted-foreground text-xs">
-          {t("reference")}: {product.ref}
+          {t("reference")}: <bdi>{product.ref}</bdi>
         </p>
         <h3 className="text-2xl leading-tight">
           <Link

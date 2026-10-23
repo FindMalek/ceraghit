@@ -1,472 +1,472 @@
 {
   "meta": {
     "title": "Ceraghit Creation",
-    "description": "Céramiques modelées à la main par Sabri Ghit : curda seca, lampes votives, bas-reliefs et pièces uniques."
+    "description": "Ceramics modelled by hand by Sabri Ghit: curda seca, votive lamps, bas-reliefs and unique pieces."
   },
   "nav": {
-    "shop": "Boutique",
-    "atelier": "L'atelier",
-    "custom": "Pièce unique",
-    "cart": "Panier",
+    "shop": "Shop",
+    "atelier": "The studio",
+    "custom": "Unique piece",
+    "cart": "Cart",
     "menu": "Menu",
-    "home": "Accueil",
-    "skip": "Aller au contenu",
-    "language": "Langue",
-    "currency": "Devise"
+    "home": "Home",
+    "skip": "Skip to content",
+    "language": "Language",
+    "currency": "Currency"
   },
   "common": {
-    "reference": "Référence",
-    "material": "Matière",
+    "reference": "Reference",
+    "material": "Material",
     "technique": "Technique",
     "dimensions": "Dimensions",
-    "uniquePiece": "Pièce unique",
-    "soldOut": "Épuisé",
-    "quoteOnly": "Sur devis",
-    "retry": "Réessayer",
-    "close": "Fermer",
-    "apiDown": "Le catalogue est momentanément indisponible. Merci de réessayer dans un instant.",
-    "required": "Champ obligatoire",
+    "uniquePiece": "Unique piece",
+    "soldOut": "Sold out",
+    "quoteOnly": "On quote",
+    "retry": "Try again",
+    "close": "Close",
+    "apiDown": "The catalogue is temporarily unavailable. Please try again in a moment.",
+    "required": "Required field",
     "from": "From"
   },
   "home": {
     "kicker": "Collection 2027",
-    "subtitle": "Des sculptures et des objets en terre cuite, modelés à la main par Sabri Ghit.",
-    "ctaShop": "Découvrir la boutique",
-    "ctaCustom": "Créer une pièce unique",
-    "featured": "Pièces à la une",
-    "categories": "Les collections",
-    "editoTitle": "Édito",
-    "editoMore": "L'atelier et son histoire",
-    "studio": "Dans l'atelier",
-    "customTitle": "Une pièce rien que pour vous",
-    "customText": "Un thème, des dimensions, une idée : décrivez votre projet et l'atelier vous répond par e-mail avec un devis.",
-    "customCta": "Faire une demande"
+    "subtitle": "Terracotta sculptures and objects, modelled by hand by Sabri Ghit.",
+    "ctaShop": "Discover the shop",
+    "ctaCustom": "Create a unique piece",
+    "featured": "Featured pieces",
+    "categories": "The collections",
+    "editoTitle": "Editorial",
+    "editoMore": "The studio and its story",
+    "studio": "In the studio",
+    "customTitle": "A piece made just for you",
+    "customText": "A theme, dimensions, an idea: describe your project and the studio replies by email with a quote.",
+    "customCta": "Make a request"
   },
   "edito": {
-    "p1": "Ceraghit Creation est avant tout une histoire de matière, de gestes et de passion.",
-    "p2": "La terre est une matière vivante. Elle se transforme sous les mains, résiste, surprend, puis révèle peu à peu une forme. C'est dans ce dialogue avec la matière que naissent les sculptures de Sabri Ghit.",
-    "p3": "Chaque pièce est façonnée avec le temps, la patience et la liberté de laisser une part de hasard intervenir. Les textures, les irrégularités et les traces du geste ne sont pas effacées : elles font partie de l'œuvre et de son histoire.",
-    "p4": "À travers Ceraghit Creation, Sabri Ghit cherche moins à reproduire le réel qu'à lui donner une autre présence. La céramique devient alors un langage, un moyen d'exprimer une émotion, une idée ou simplement une sensation.",
-    "p5": "Ce site présente quelques-unes de ces rencontres entre la terre et la main. Des œuvres uniques, façonnées avec passion, qui invitent chacun à regarder la matière autrement."
+    "p1": "Ceraghit Creation is above all a story of material, gesture and passion.",
+    "p2": "Earth is a living material. It changes under the hands, resists, surprises, then slowly reveals a form. It is in this dialogue with the material that Sabri Ghit's sculptures are born.",
+    "p3": "Each piece is shaped with time, patience and the freedom to let a little chance step in. The textures, the irregularities and the traces of the gesture are not erased: they are part of the work and of its story.",
+    "p4": "Through Ceraghit Creation, Sabri Ghit seeks less to reproduce reality than to give it another presence. Ceramics then becomes a language, a way of expressing an emotion, an idea or simply a sensation.",
+    "p5": "This site presents a few of these encounters between earth and hand. Unique works, shaped with passion, that invite everyone to look at the material differently."
   },
   "shop": {
-    "title": "Boutique",
-    "intro": "Toutes les pièces sont modelées à la main, une par une.",
-    "all": "Tout",
-    "searchLabel": "Rechercher une pièce",
-    "searchPlaceholder": "Nom ou référence",
-    "search": "Rechercher",
-    "sortLabel": "Trier par",
-    "sortFeatured": "Sélection",
-    "sortPriceAsc": "Prix croissant",
-    "sortPriceDesc": "Prix décroissant",
-    "sortNewest": "Nouveautés",
-    "categories": "Catégories",
-    "results": "{count, plural, =0 {Aucune pièce} one {# pièce} other {# pièces}}",
-    "empty": "Aucune pièce ne correspond à votre recherche.",
-    "emptyCta": "Voir toute la boutique",
-    "seeAll": "Tout voir"
+    "title": "Shop",
+    "intro": "Every piece is modelled by hand, one at a time.",
+    "all": "All",
+    "searchLabel": "Search for a piece",
+    "searchPlaceholder": "Name or reference",
+    "search": "Search",
+    "sortLabel": "Sort by",
+    "sortFeatured": "Featured",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortNewest": "Newest",
+    "categories": "Categories",
+    "results": "{count, plural, =0 {No pieces} one {# piece} other {# pieces}}",
+    "empty": "No piece matches your search.",
+    "emptyCta": "See the whole shop",
+    "seeAll": "See all"
   },
   "product": {
-    "add": "Ajouter au panier",
-    "added": "Ajouté au panier",
-    "quantity": "Quantité",
-    "decrease": "Diminuer la quantité",
-    "increase": "Augmenter la quantité",
-    "lastOne": "Dernière pièce disponible",
-    "fewLeft": "Plus que {count} en stock",
-    "uniqueNote": "Pièce unique : une seule existe, elle quitte la boutique une fois vendue.",
-    "quoteText": "Cette pièce est réalisée sur commande. Demandez un devis et l'atelier vous répond par e-mail.",
-    "quoteCta": "Demander un devis",
-    "soldOutText": "Cette pièce n'est plus disponible. Vous pouvez demander une pièce similaire.",
-    "similarCta": "Demander une pièce similaire",
-    "gallery": "Photos de la pièce",
-    "photo": "Photo {n} sur {total}",
-    "previous": "Photo précédente",
-    "next": "Photo suivante",
-    "related": "Dans la même collection",
-    "notFound": "Cette pièce n'existe pas.",
+    "add": "Add to cart",
+    "added": "Added to cart",
+    "quantity": "Quantity",
+    "decrease": "Decrease quantity",
+    "increase": "Increase quantity",
+    "lastOne": "Last piece available",
+    "fewLeft": "Only {count} left in stock",
+    "uniqueNote": "Unique piece: only one exists, and it leaves the shop once sold.",
+    "quoteText": "This piece is made to order. Ask for a quote and the studio replies by email.",
+    "quoteCta": "Ask for a quote",
+    "soldOutText": "This piece is no longer available. You can ask for a similar one.",
+    "similarCta": "Ask for a similar piece",
+    "gallery": "Photos of the piece",
+    "photo": "Photo {n} of {total}",
+    "previous": "Previous photo",
+    "next": "Next photo",
+    "related": "From the same collection",
+    "notFound": "This piece does not exist.",
     "option": "Option",
     "variantSoldOut": "Sold out"
   },
   "cart": {
-    "title": "Votre panier",
-    "empty": "Votre panier est vide.",
-    "emptyCta": "Parcourir la boutique",
-    "items": "{count, plural, one {# article} other {# articles}}",
-    "subtotal": "Sous-total",
-    "shipping": "Livraison",
+    "title": "Your cart",
+    "empty": "Your cart is empty.",
+    "emptyCta": "Browse the shop",
+    "items": "{count, plural, one {# item} other {# items}}",
+    "subtotal": "Subtotal",
+    "shipping": "Delivery",
     "total": "Total",
-    "checkout": "Passer commande",
-    "viewCart": "Voir le panier",
-    "continue": "Continuer mes achats",
-    "remove": "Retirer {title} du panier",
-    "uniqueNote": "Pièce unique",
-    "open": "Ouvrir le panier ({count})",
-    "priceNote": "Le prix final est confirmé à la commande.",
-    "shippingNext": "Livraison calculée à l'étape suivante"
+    "checkout": "Checkout",
+    "viewCart": "View cart",
+    "continue": "Continue shopping",
+    "remove": "Remove {title} from the cart",
+    "uniqueNote": "Unique piece",
+    "open": "Open the cart ({count})",
+    "priceNote": "The final price is confirmed at checkout.",
+    "shippingNext": "Delivery is calculated at the next step"
   },
   "checkout": {
-    "title": "Commande",
-    "summary": "Récapitulatif",
-    "contact": "Vos coordonnées",
-    "name": "Nom complet",
-    "email": "E-mail",
-    "phone": "Téléphone",
-    "delivery": "Adresse de livraison",
-    "country": "Pays",
-    "city": "Ville",
-    "address": "Adresse",
-    "postalCode": "Code postal",
-    "note": "Note pour l'atelier",
-    "notePlaceholder": "Précision de livraison, message, etc. (facultatif)",
-    "pay": "Payer {total}",
-    "paying": "Redirection vers le paiement…",
-    "secure": "Paiement sécurisé par carte bancaire. Vous êtes redirigé vers la page de paiement.",
-    "emptyCart": "Votre panier est vide, il n'y a rien à commander.",
-    "payIn": "Vous payez en {currency}",
+    "title": "Checkout",
+    "summary": "Summary",
+    "contact": "Your details",
+    "name": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "delivery": "Delivery address",
+    "country": "Country",
+    "city": "City",
+    "address": "Address",
+    "postalCode": "Postal code",
+    "note": "Note for the studio",
+    "notePlaceholder": "Delivery instructions, a message, etc. (optional)",
+    "pay": "Pay {total}",
+    "paying": "Redirecting to payment…",
+    "secure": "Secure card payment. You are redirected to the payment page.",
+    "emptyCart": "Your cart is empty, there is nothing to order.",
+    "payIn": "You pay in {currency}",
     "errors": {
-      "customerName": "Indiquez votre nom complet.",
-      "email": "Indiquez une adresse e-mail valide.",
-      "phone": "Indiquez un numéro de téléphone.",
-      "country": "Indiquez votre pays.",
-      "city": "Indiquez votre ville.",
-      "address": "Indiquez votre adresse.",
-      "items": "Votre panier est vide.",
-      "terms": "Vous devez accepter les conditions générales de vente pour payer."
+      "customerName": "Enter your full name.",
+      "email": "Enter a valid email address.",
+      "phone": "Enter a phone number.",
+      "country": "Enter your country.",
+      "city": "Enter your city.",
+      "address": "Enter your address.",
+      "items": "Your cart is empty.",
+      "terms": "You must accept the terms and conditions of sale to pay."
     },
-    "failed": "La commande n'a pas pu être créée.",
-    "backToShop": "Voir la boutique",
-    "termsLabel": "J'accepte les <link>conditions générales de vente</link>."
+    "failed": "The order could not be created.",
+    "backToShop": "Back to the shop",
+    "termsLabel": "I accept the <link>terms and conditions of sale</link>."
   },
   "order": {
-    "title": "Commande {number}",
+    "title": "Order {number}",
     "status": {
-      "pending_payment": "En attente de paiement",
-      "paid": "Payée",
-      "fulfilled": "Expédiée",
-      "cancelled": "Annulée",
-      "refunded": "Remboursée"
+      "pending_payment": "Awaiting payment",
+      "paid": "Paid",
+      "fulfilled": "Shipped",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
     },
     "text": {
-      "pending_payment": "Nous attendons la confirmation de votre paiement. Cette page se met à jour toute seule.",
-      "paid": "Merci, votre paiement est confirmé. L'atelier prépare votre commande et vous contactera pour la livraison.",
-      "fulfilled": "Votre commande a été expédiée.",
-      "cancelled": "Cette commande a été annulée, aucun montant n'a été débité. Les pièces sont de nouveau en vente.",
-      "refunded": "Cette commande a été remboursée."
+      "pending_payment": "We are waiting for confirmation of your payment. This page updates by itself.",
+      "paid": "Thank you, your payment is confirmed. The studio is preparing your order and will contact you about delivery.",
+      "fulfilled": "Your order has been shipped.",
+      "cancelled": "This order was cancelled and nothing was charged. The pieces are back on sale.",
+      "refunded": "This order has been refunded."
     },
-    "items": "Articles",
-    "quantity": "Qté {count}",
-    "subtotal": "Sous-total",
-    "shipping": "Livraison",
+    "items": "Items",
+    "quantity": "Qty {count}",
+    "subtotal": "Subtotal",
+    "shipping": "Delivery",
     "total": "Total",
-    "notFound": "Commande introuvable. Vérifiez le lien reçu après votre commande.",
-    "keepLink": "Conservez cette page : elle permet de suivre votre commande.",
-    "retryOrder": "Refaire une commande",
-    "stillPending": "Le paiement n'est pas encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes : revenez sur cette page."
+    "notFound": "Order not found. Check the link you received after ordering.",
+    "keepLink": "Keep this page: it lets you follow your order.",
+    "retryOrder": "Place the order again",
+    "stillPending": "The payment is not confirmed yet. If you have paid, confirmation can take a few minutes: come back to this page."
   },
   "demo": {
-    "title": "Paiement de démonstration",
-    "text": "Ceci est une passerelle de test, aucun argent n'est débité. Choisissez le résultat du paiement pour la commande {order}.",
-    "pay": "Simuler un paiement réussi",
-    "fail": "Simuler un échec",
-    "noOrder": "Lien de paiement incomplet.",
-    "failedToResolve": "La passerelle de démonstration n'est pas disponible sur cet environnement.",
-    "noToken": "Impossible de retrouver cette commande sur cet appareil."
+    "title": "Demo payment",
+    "text": "This is a test gateway, no money is charged. Choose the payment outcome for order {order}.",
+    "pay": "Simulate a successful payment",
+    "fail": "Simulate a failure",
+    "noOrder": "Incomplete payment link.",
+    "failedToResolve": "The demo gateway is not available in this environment.",
+    "noToken": "This order cannot be found on this device."
   },
   "custom": {
-    "title": "Créer une pièce unique",
-    "intro": "Racontez-nous votre idée : un thème, des dimensions, une inspiration. L'atelier étudie votre demande et vous répond par e-mail avec un devis.",
-    "name": "Nom complet",
-    "email": "E-mail",
-    "phone": "Téléphone (facultatif)",
-    "country": "Pays (facultatif)",
-    "description": "Votre projet",
-    "descriptionPlaceholder": "Décrivez la pièce que vous imaginez : sujet, style, usage…",
-    "dimensions": "Dimensions souhaitées (facultatif)",
-    "budget": "Budget (facultatif)",
-    "references": "Liens d'inspiration (facultatif)",
-    "referencesHint": "Liens vers des photos ou des pages qui vous inspirent.",
-    "submit": "Envoyer ma demande",
-    "sending": "Envoi…",
-    "successTitle": "Demande envoyée",
-    "successText": "Merci. L'atelier vous répond par e-mail dès que possible.",
-    "another": "Faire une autre demande",
-    "prefill": "Je souhaite un devis pour la pièce {ref} ({title}).",
+    "title": "Create a unique piece",
+    "intro": "Tell us your idea: a theme, dimensions, an inspiration. The studio reviews your request and replies by email with a quote.",
+    "name": "Full name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "country": "Country (optional)",
+    "description": "Your project",
+    "descriptionPlaceholder": "Describe the piece you imagine: subject, style, use…",
+    "dimensions": "Desired dimensions (optional)",
+    "budget": "Budget (optional)",
+    "references": "Inspiration links (optional)",
+    "referencesHint": "Links to photos or pages that inspire you.",
+    "submit": "Send my request",
+    "sending": "Sending…",
+    "successTitle": "Request sent",
+    "successText": "Thank you. The studio will reply by email as soon as possible.",
+    "another": "Make another request",
+    "prefill": "I would like a quote for piece {ref} ({title}).",
     "errors": {
-      "name": "Indiquez votre nom.",
-      "email": "Indiquez une adresse e-mail valide.",
-      "description": "Décrivez votre projet en quelques phrases (10 caractères minimum)."
+      "name": "Enter your name.",
+      "email": "Enter a valid email address.",
+      "description": "Describe your project in a few sentences (10 characters minimum)."
     },
-    "failed": "La demande n'a pas pu être envoyée.",
-    "privacy": "Vos informations servent uniquement à répondre à votre demande. <link>Confidentialité</link>",
-    "photos": "Photos de référence (facultatif)",
-    "photosHint": "Jusqu'à 3 photos : une inspiration, un lieu, une pièce existante. Elles sont réduites avant l'envoi.",
-    "addPhotos": "Ajouter des photos",
-    "removePhoto": "Retirer la photo",
-    "photoUploading": "Envoi de la photo en cours",
+    "failed": "The request could not be sent.",
+    "privacy": "Your information is only used to answer your request. <link>Privacy</link>",
+    "photos": "Reference photos (optional)",
+    "photosHint": "Up to 3 photos: an inspiration, a place, an existing piece. They are reduced before sending.",
+    "addPhotos": "Add photos",
+    "removePhoto": "Remove the photo",
+    "photoUploading": "Uploading the photo",
     "photoErrors": {
-      "failed": "L'envoi a échoué, réessayez.",
-      "type": "Format non pris en charge (JPEG, PNG ou WebP).",
-      "tooLarge": "Photo trop lourde (5 Mo maximum)."
+      "failed": "The upload failed, try again.",
+      "type": "Unsupported format (JPEG, PNG or WebP).",
+      "tooLarge": "Photo too large (5 MB maximum)."
     }
   },
   "atelier": {
-    "title": "L'atelier",
-    "lead": "Ceraghit Creation, l'atelier de Sabri Ghit.",
-    "process": "Le geste",
-    "locations": "Nous trouver",
-    "noLocations": "Les adresses de l'atelier seront bientôt disponibles.",
-    "phone": "Téléphone",
-    "hours": "Horaires",
-    "map": "Voir sur la carte",
-    "contact": "Nous contacter"
+    "title": "The studio",
+    "lead": "Ceraghit Creation, the studio of Sabri Ghit.",
+    "process": "The gesture",
+    "locations": "Find us",
+    "noLocations": "The studio addresses will be available soon.",
+    "phone": "Phone",
+    "hours": "Opening hours",
+    "map": "View on the map",
+    "contact": "Contact us"
   },
   "footer": {
-    "tagline": "Céramiques modelées à la main.",
+    "tagline": "Ceramics modelled by hand.",
     "contact": "Contact",
-    "explore": "Explorer",
-    "rights": "Tous droits réservés.",
+    "explore": "Explore",
+    "rights": "All rights reserved.",
     "instagram": "Instagram",
     "whatsapp": "WhatsApp",
-    "legal": "Informations"
+    "legal": "Information"
   },
   "currency": {
-    "TND": "Dinar tunisien",
+    "TND": "Tunisian dinar",
     "EUR": "Euro",
-    "switch": "Changer de devise"
+    "switch": "Change currency"
   },
   "notFound": {
-    "title": "Page introuvable",
-    "text": "Cette page n'existe pas ou n'existe plus.",
-    "home": "Retour à l'accueil"
+    "title": "Page not found",
+    "text": "This page does not exist or no longer exists.",
+    "home": "Back to home"
   },
   "shipping": {
-    "estimate": "Estimer la livraison",
-    "to": "Pays de livraison",
-    "label": "Livraison",
-    "detail": "{zone}, {kg} kg facturés",
-    "onQuote": "Sur devis",
-    "tooBig": "Cette commande est trop volumineuse pour une livraison en ligne. Écrivez-nous pour un devis de transport.",
-    "contact": "Demander un devis",
-    "free": "Livraison offerte",
-    "nudge": "Plus que {amount} pour la livraison offerte"
+    "estimate": "Estimate delivery",
+    "to": "Delivery country",
+    "label": "Delivery",
+    "detail": "{zone}, {kg} kg charged",
+    "onQuote": "On quote",
+    "tooBig": "This order is too large for online delivery. Write to us for a transport quote.",
+    "contact": "Ask for a quote",
+    "free": "Free delivery",
+    "nudge": "Only {amount} more for free delivery"
   },
   "legal": {
-    "draft": "Projet à faire valider par l'atelier",
-    "draftNote": "Ce texte est un brouillon. Les passages entre crochets sont à compléter ou à confirmer avant la mise en ligne.",
-    "navLabel": "Informations légales",
+    "draft": "Draft to be validated by the studio",
+    "draftNote": "This text is a draft. The passages in square brackets must be completed or confirmed before going live.",
+    "navLabel": "Legal information",
     "nav": {
-      "terms": "Conditions générales de vente",
-      "shipping": "Livraison",
-      "notice": "Mentions légales",
-      "privacy": "Confidentialité"
+      "terms": "Terms and conditions of sale",
+      "shipping": "Delivery",
+      "notice": "Legal notice",
+      "privacy": "Privacy"
     },
     "docs": {
       "terms": {
-        "title": "Conditions générales de vente",
-        "intro": "Les règles qui s'appliquent à vos commandes.",
+        "title": "Terms and conditions of sale",
+        "intro": "The rules that apply to your orders.",
         "sections": [
           {
-            "title": "1. Objet",
+            "title": "1. Purpose",
             "body": [
-              "Les présentes conditions générales de vente régissent toute commande passée sur ce site auprès de Ceraghit Creation (« l'atelier »). Passer commande implique d'avoir lu et accepté ces conditions."
+              "These terms and conditions of sale govern every order placed on this site with Ceraghit Creation (\"the studio\"). Placing an order means you have read and accepted these terms."
             ]
           },
           {
-            "title": "2. Commande",
+            "title": "2. Ordering",
             "body": [
-              "Vous choisissez vos pièces, les ajoutez au panier, renseignez vos coordonnées et votre adresse de livraison, puis réglez en ligne. La commande est confirmée lorsque le paiement est validé : la page de suivi de commande affiche alors « Payée ».",
-              "Les pièces sont réservées pendant 45 minutes à partir de la création de la commande. Sans paiement dans ce délai, la commande est annulée et les pièces sont remises en vente.",
-              "Une pièce unique n'existe qu'en un exemplaire : elle ne peut être commandée qu'une fois. Les pièces marquées « Sur devis » ne s'achètent pas depuis le panier : envoyez une demande à l'atelier."
+              "You choose your pieces, add them to the cart, enter your details and delivery address, then pay online. The order is confirmed when the payment is validated: the order tracking page then shows \"Paid\".",
+              "Pieces are reserved for 45 minutes from the creation of the order. Without payment within that time, the order is cancelled and the pieces go back on sale.",
+              "A unique piece exists in a single copy: it can only be ordered once. Pieces marked \"On quote\" cannot be bought from the cart: send a request to the studio."
             ]
           },
           {
-            "title": "3. Prix",
+            "title": "3. Prices",
             "body": [
-              "Chaque pièce est proposée à la fois en dinars tunisiens (TND) et en euros (EUR). Vous choisissez la devise avant de commander et payez dans cette devise : aucun prix n'est converti automatiquement d'une devise à l'autre.",
-              "Les prix affichés s'entendent hors frais de livraison. Les frais de livraison sont calculés au moment du paiement, selon le contenu du panier et le pays de destination. [Régime de TVA / taxes applicables : à préciser par l'atelier.]"
+              "Each piece is offered both in Tunisian dinars (TND) and in euros (EUR). You choose the currency before ordering and pay in that currency: no price is automatically converted from one currency to the other.",
+              "Displayed prices exclude delivery costs. Delivery costs are calculated at payment, according to the contents of the cart and the destination country. [VAT / applicable taxes: to be specified by the studio.]"
             ]
           },
           {
-            "title": "4. Paiement",
+            "title": "4. Payment",
             "body": [
-              "Le paiement s'effectue par carte bancaire (cartes tunisiennes et internationales) via notre prestataire de paiement Konnect. L'atelier ne voit et ne conserve jamais vos données de carte.",
-              "Si le paiement échoue ou est abandonné, la commande est annulée et les pièces sont remises en stock."
+              "Payment is made by bank card (Tunisian and international cards) through our payment provider Konnect. The studio never sees or keeps your card details.",
+              "If the payment fails or is abandoned, the order is cancelled and the pieces are returned to stock."
             ]
           },
           {
-            "title": "5. Pièces faites main",
+            "title": "5. Handmade pieces",
             "body": [
-              "Toutes les pièces sont modelées à la main. De légères variations de forme, de couleur, d'émail et de texture sont normales : elles font partie de l'œuvre. Les photographies sont indicatives, en particulier pour les pièces émaillées dont la teinte varie selon la lumière."
+              "All pieces are modelled by hand. Slight variations in shape, colour, glaze and texture are normal: they are part of the work. Photographs are indicative, especially for glazed pieces whose shade changes with the light."
             ]
           },
           {
-            "title": "6. Livraison",
+            "title": "6. Delivery",
             "body": [
-              "Les modalités de calcul des frais, les pays desservis et les délais sont décrits dans la page Livraison. Délai de préparation indicatif avant expédition : [à confirmer par l'atelier]."
+              "How costs are calculated, the countries served and the lead times are described on the Delivery page. Indicative preparation time before shipping: [to be confirmed by the studio]."
             ]
           },
           {
-            "title": "7. Dommages pendant le transport",
+            "title": "7. Damage in transit",
             "body": [
-              "Les pièces sont emballées avec soin. Si une pièce arrive endommagée, signalez-le à l'atelier dans les [48 heures : à confirmer] suivant la réception, avec des photographies de la pièce et de l'emballage. L'atelier propose alors un remplacement ou un remboursement."
+              "Pieces are carefully packed. If a piece arrives damaged, tell the studio within [48 hours: to be confirmed] of receipt, with photographs of the piece and the packaging. The studio will then offer a replacement or a refund."
             ]
           },
           {
-            "title": "8. Rétractation et retours",
+            "title": "8. Withdrawal and returns",
             "body": [
-              "Les pièces uniques, les pièces réalisées sur demande ou personnalisées ne peuvent être ni reprises ni échangées, sauf défaut avéré.",
-              "Pour les autres pièces, un retour est possible dans un délai de [à confirmer, par exemple 14 jours] après réception, après accord préalable de l'atelier, la pièce étant renvoyée intacte et dans son emballage d'origine. Les frais de retour sont à la charge de l'acheteur. Le remboursement est effectué dans la devise du paiement.",
-              "Ces règles s'appliquent sous réserve des droits impératifs dont vous pouvez bénéficier selon votre pays de résidence."
+              "Unique pieces and pieces made to order or personalised cannot be taken back or exchanged, except for a proven defect.",
+              "For other pieces, a return is possible within [to be confirmed, for example 14 days] of receipt, after the studio's prior agreement, with the piece sent back intact and in its original packaging. Return costs are borne by the buyer. The refund is made in the currency of payment.",
+              "These rules apply subject to any mandatory rights you may have under the law of your country of residence."
             ]
           },
           {
-            "title": "9. Pièces sur devis et créations",
+            "title": "9. Quote-only pieces and commissions",
             "body": [
-              "Pour une pièce sur devis ou une création personnalisée, envoyez une demande depuis la page « Pièce unique ». L'atelier vous répond par e-mail avec un devis. Les conditions de paiement (acompte, délais de réalisation) sont précisées dans le devis."
+              "For a quote-only piece or a custom creation, send a request from the \"Unique piece\" page. The studio replies by email with a quote. Payment terms (deposit, production times) are set out in the quote."
             ]
           },
           {
-            "title": "10. Responsabilité",
+            "title": "10. Liability",
             "body": [
-              "L'atelier ne peut être tenu responsable des retards ou des dommages dus au transporteur ou à des événements indépendants de sa volonté, ni des droits de douane et taxes locales d'importation, qui sont à la charge de l'acheteur."
+              "The studio cannot be held liable for delays or damage caused by the carrier or by events beyond its control, nor for customs duties and local import taxes, which are borne by the buyer."
             ]
           },
           {
-            "title": "11. Droit applicable",
+            "title": "11. Governing law",
             "body": [
-              "Les présentes conditions sont soumises au droit [tunisien : à confirmer]. En cas de litige, les parties recherchent d'abord une solution amiable ; à défaut, les tribunaux de [ville : à préciser] sont compétents."
+              "These terms are governed by [Tunisian: to be confirmed] law. In the event of a dispute, the parties first seek an amicable solution; failing that, the courts of [city: to be specified] have jurisdiction."
             ]
           },
           {
             "title": "12. Contact",
             "body": [
-              "Pour toute question sur une commande, écrivez à l'atelier ou appelez-le aux coordonnées indiquées en bas de chaque page, en rappelant le numéro de commande (CER-12345)."
+              "For any question about an order, write to the studio or call it using the details at the bottom of every page, quoting the order number (CER-12345)."
             ]
           }
         ]
       },
       "shipping": {
-        "title": "Livraison",
-        "intro": "Comment la livraison est calculée et ce qu'elle comprend.",
+        "title": "Delivery",
+        "intro": "How delivery is calculated and what it includes.",
         "sections": [
           {
-            "title": "Comment le prix est calculé",
+            "title": "How the price is calculated",
             "body": [
-              "Le prix de la livraison dépend du poids et de la taille de la boîte, pas de la valeur de la commande, sauf offre de livraison offerte. Pour chaque pièce, l'atelier renseigne son poids emballé et les dimensions de sa boîte.",
-              "Le transporteur facture le plus élevé de deux poids : le poids réel (pièces, plus emballage de protection) ou le poids volumétrique (longueur × largeur × hauteur en cm, divisé par 5 000). Le poids facturé est arrondi par tranche de 0,5 kg.",
-              "À ce poids s'applique le tarif de la zone de destination (Tunisie, Europe ou reste du monde), plus une surcharge carburant pour les envois express et des frais de manutention pour l'emballage protecteur des pièces fragiles."
+              "The delivery price depends on the weight and size of the box, not on the value of the order, unless a free delivery offer applies. For each piece, the studio records its packed weight and the dimensions of its box.",
+              "The carrier charges the higher of two weights: the actual weight (pieces plus protective packaging) or the volumetric weight (length × width × height in cm, divided by 5,000). The charged weight is rounded up in steps of 0.5 kg.",
+              "The rate of the destination zone (Tunisia, Europe or rest of the world) applies to that weight, plus a fuel surcharge for express shipments and handling fees for the protective packaging of fragile pieces."
             ]
           },
           {
-            "title": "Montants",
+            "title": "Amounts",
             "body": [
-              "Les montants ne sont pas fixes : ils sont calculés au paiement, une fois votre pays choisi, et affichés avant que vous ne payiez. Vous voyez la zone de livraison et le poids facturé. [Barème : à confirmer par l'atelier.]",
-              "Selon la destination, la livraison peut être offerte à partir d'un certain montant de commande ; le seuil éventuel est indiqué au panier et au paiement."
+              "Amounts are not fixed: they are calculated at payment, once your country is chosen, and shown before you pay. You can see the delivery zone and the charged weight. [Rate card: to be confirmed by the studio.]",
+              "Depending on the destination, delivery may be free above a certain order amount; the threshold, if any, is shown in the cart and at payment."
             ]
           },
           {
-            "title": "Transporteurs et délais",
+            "title": "Carriers and lead times",
             "body": [
-              "Les envois sont confiés à un transporteur express (DHL Express ou équivalent) ou à un coursier local pour la Tunisie. [Transporteurs et délais de livraison indicatifs par zone : à confirmer par l'atelier.]",
-              "Un numéro de suivi est transmis par l'atelier dès l'expédition, lorsque le transporteur en fournit un."
+              "Shipments are handed to an express carrier (DHL Express or equivalent) or to a local courier for Tunisia. [Carriers and indicative delivery times by zone: to be confirmed by the studio.]",
+              "A tracking number is sent by the studio as soon as the parcel ships, when the carrier provides one."
             ]
           },
           {
-            "title": "Pays desservis",
+            "title": "Countries served",
             "body": [
-              "La liste des pays desservis est proposée dans le formulaire de commande. Une commande trop lourde ou trop volumineuse pour une livraison en ligne n'obtient pas de prix : l'atelier établit alors un devis de transport sur demande."
+              "The list of countries served is offered in the order form. An order that is too heavy or too large for online delivery gets no price: the studio then prepares a transport quote on request."
             ]
           },
           {
-            "title": "Droits de douane et taxes",
+            "title": "Customs duties and taxes",
             "body": [
-              "Pour les envois hors de Tunisie, les droits de douane, taxes d'importation et frais de dédouanement éventuels sont à la charge de l'acheteur, selon la réglementation du pays de destination. Ils ne sont pas inclus dans le prix payé en ligne."
+              "For shipments outside Tunisia, any customs duties, import taxes and clearance fees are borne by the buyer, according to the rules of the destination country. They are not included in the price paid online."
             ]
           },
           {
-            "title": "Réception",
+            "title": "Receiving your parcel",
             "body": [
-              "Vérifiez l'état du colis à la livraison et signalez toute anomalie à l'atelier selon les conditions générales de vente."
+              "Check the condition of the parcel on delivery and report any problem to the studio according to the terms and conditions of sale."
             ]
           }
         ]
       },
       "notice": {
-        "title": "Mentions légales",
-        "intro": "Qui édite et héberge ce site.",
+        "title": "Legal notice",
+        "intro": "Who publishes and hosts this site.",
         "sections": [
           {
-            "title": "Éditeur du site",
+            "title": "Site publisher",
             "body": [
-              "Ceraghit Creation · [raison sociale]",
-              "Forme juridique : [à renseigner]",
-              "Adresse : [adresse de l'atelier]",
-              "Patente : [numéro de patente] · Matricule fiscal : [matricule fiscal]",
-              "Directeur de la publication : Sabri Ghit",
-              "Contact : coordonnées indiquées en bas de chaque page."
+              "Ceraghit Creation · [company name]",
+              "Legal form: [to be filled in]",
+              "Address: [studio address]",
+              "Trade licence (patente): [patente number] · Tax ID: [tax identification number]",
+              "Publication director: Sabri Ghit",
+              "Contact: details shown at the bottom of every page."
             ]
           },
           {
-            "title": "Hébergement et services techniques",
+            "title": "Hosting and technical services",
             "body": [
-              "Site hébergé par Vercel Inc. (vercel.com).",
-              "Base de données : Neon. Stockage et diffusion des images : Cloudflare. Paiement par carte : Konnect."
+              "Site hosted by Vercel Inc. (vercel.com).",
+              "Database: Neon. Image storage and delivery: Cloudflare. Card payment: Konnect."
             ]
           },
           {
-            "title": "Propriété intellectuelle",
+            "title": "Intellectual property",
             "body": [
-              "Les œuvres, photographies, textes et éléments graphiques de ce site sont la propriété de Ceraghit Creation et de Sabri Ghit. Toute reproduction ou réutilisation sans autorisation écrite préalable est interdite."
+              "The works, photographs, texts and graphic elements of this site are the property of Ceraghit Creation and Sabri Ghit. Any reproduction or reuse without prior written permission is forbidden."
             ]
           },
           {
-            "title": "Données personnelles",
-            "body": ["Le traitement de vos données est décrit dans la politique de confidentialité."]
+            "title": "Personal data",
+            "body": ["The processing of your data is described in the privacy policy."]
           }
         ]
       },
       "privacy": {
-        "title": "Confidentialité",
-        "intro": "Les données que nous collectons et ce que nous en faisons.",
+        "title": "Privacy",
+        "intro": "The data we collect and what we do with it.",
         "sections": [
           {
-            "title": "Qui est responsable",
+            "title": "Who is responsible",
             "body": [
-              "Ceraghit Creation, [raison sociale], est responsable du traitement des données collectées sur ce site. Contact : coordonnées indiquées en bas de chaque page."
+              "Ceraghit Creation, [company name], is responsible for processing the data collected on this site. Contact: details shown at the bottom of every page."
             ]
           },
           {
-            "title": "Ce que nous collectons",
+            "title": "What we collect",
             "body": [
-              "Lors d'une commande : nom, e-mail, téléphone, adresse de livraison, pays, note éventuelle, contenu et montant de la commande.",
-              "Lors d'une demande de pièce unique : nom, e-mail, téléphone et pays (facultatifs), description du projet, dimensions, budget et liens d'inspiration.",
-              "Dans votre navigateur : votre devise, votre langue et le contenu de votre panier, conservés en local pour le fonctionnement du site. Aucun traceur publicitaire n'est utilisé."
+              "When you order: name, email, phone, delivery address, country, any note, and the contents and amount of the order.",
+              "When you request a unique piece: name, email, phone and country (optional), project description, dimensions, budget and inspiration links.",
+              "In your browser: your currency, your language and the contents of your cart, kept locally so the site works. No advertising trackers are used."
             ]
           },
           {
-            "title": "Pourquoi",
+            "title": "Why",
             "body": [
-              "Pour traiter et livrer votre commande, répondre à vos demandes, tenir la comptabilité de l'atelier et respecter nos obligations légales."
+              "To process and deliver your order, answer your requests, keep the studio's accounts and meet our legal obligations."
             ]
           },
           {
-            "title": "Avec qui nous les partageons",
+            "title": "Who we share it with",
             "body": [
-              "Konnect (paiement par carte), Vercel (hébergement), Neon (base de données), Cloudflare (images) et le transporteur chargé de la livraison (nom, adresse, téléphone). Ces prestataires ne les utilisent que pour fournir leur service."
+              "Konnect (card payment), Vercel (hosting), Neon (database), Cloudflare (images) and the carrier in charge of delivery (name, address, phone). These providers only use it to deliver their service."
             ]
           },
           {
-            "title": "Durée de conservation",
+            "title": "How long we keep it",
             "body": [
-              "Commandes : [durée à confirmer, par exemple 10 ans pour les pièces comptables]. Demandes de pièce unique : [durée à confirmer, par exemple 24 mois]."
+              "Orders: [duration to be confirmed, for example 10 years for accounting records]. Unique piece requests: [duration to be confirmed, for example 24 months]."
             ]
           },
           {
-            "title": "Vos droits",
+            "title": "Your rights",
             "body": [
-              "Vous pouvez demander l'accès à vos données, leur rectification ou leur suppression, dans la limite de nos obligations légales de conservation, en écrivant à l'atelier."
+              "You can ask for access to your data, its correction or its deletion, within the limits of our legal retention obligations, by writing to the studio."
             ]
           }
         ]
@@ -474,11 +474,11 @@
     }
   },
   "seo": {
-    "shopDescription": "Toutes les pièces de l'atelier Ceraghit : curda seca, lampes votives, bas-reliefs et pièces uniques, modelées à la main.",
-    "categoryDescription": "{name} : pièces en céramique modelées à la main par Sabri Ghit, livrées en Tunisie et à l'international.",
-    "atelierDescription": "L'atelier Ceraghit Creation : la matière, les gestes et l'histoire de Sabri Ghit, avec les adresses des ateliers.",
-    "customDescription": "Créez une pièce unique avec l'atelier Ceraghit : décrivez votre idée et recevez un devis par e-mail.",
-    "crumbHome": "Accueil",
-    "crumbShop": "Boutique"
+    "shopDescription": "Every piece from the Ceraghit studio: curda seca, votive lamps, bas-reliefs and unique pieces, modelled by hand.",
+    "categoryDescription": "{name}: ceramic pieces modelled by hand by Sabri Ghit, delivered in Tunisia and worldwide.",
+    "atelierDescription": "The Ceraghit Creation studio: the material, the gestures and the story of Sabri Ghit, with the studio addresses.",
+    "customDescription": "Create a unique piece with the Ceraghit studio: describe your idea and receive a quote by email.",
+    "crumbHome": "Home",
+    "crumbShop": "Shop"
   }
 }

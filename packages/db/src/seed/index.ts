@@ -4,6 +4,7 @@ import { hashPassword } from "../password"
 import { admins, categories, locations, orderItems, orders, productImages, products, productVariants } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
 import { buildScenario } from "./scenario"
+import { localize } from "./translations"
 
 export { buildScenario } from "./scenario"
 
@@ -50,7 +51,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
   await db.transaction(async (tx) => {
     const cats = await tx
       .insert(categories)
-      .values(CATEGORIES.map((c, position) => ({ slug: c.slug, name: c.name, image: c.image, position })))
+      .values(CATEGORIES.map((c, position) => ({ slug: c.slug, name: localize(c.name.fr), image: c.image, position })))
       .returning({ id: categories.id, slug: categories.slug })
     const categoryId = new Map(cats.map((c) => [c.slug, c.id]))
     const rows = await tx
@@ -64,10 +65,10 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-|-$/g, "")}-${p.ref}`,
           categoryId: categoryId.get(p.category)!,
-          title: { fr: p.title },
-          description: p.description ? { fr: p.description } : null,
-          material: { fr: p.material },
-          technique: { fr: p.technique },
+          title: localize(p.title),
+          description: p.description ? localize(p.description) : null,
+          material: localize(p.material),
+          technique: localize(p.technique),
           dimensions: p.dimensions,
           weightGrams: p.weightGrams,
           lengthCm: p.lengthCm,
@@ -105,7 +106,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
         return [
           {
             productId: row.id,
-            label: { fr: "Émaillée" },
+            label: localize("Émaillée"),
             priceTnd: row.priceTnd,
             priceEur: row.priceEur,
             stock: 3,
@@ -113,7 +114,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
           },
           {
             productId: row.id,
-            label: { fr: "Terre cuite non émaillée" },
+            label: localize("Terre cuite non émaillée"),
             priceTnd: Math.round(((unglazedEur / 100) * 3.4) / 5) * 5 * 1000,
             priceEur: unglazedEur,
             stock: 3,

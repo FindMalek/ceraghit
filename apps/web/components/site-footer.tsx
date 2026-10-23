@@ -34,7 +34,7 @@ export async function SiteFooter() {
         <address className="space-y-1 not-italic">
           <h2 className="font-heading text-muted-foreground text-sm uppercase tracking-widest">{t("contact")}</h2>
           <a href={`mailto:${settings.contactEmail}`} className="flex min-h-11 items-center hover:text-foreground">
-            {settings.contactEmail}
+            <bdi>{settings.contactEmail}</bdi>
           </a>
           {settings.phones.map((phone) => (
             <a
@@ -42,7 +42,7 @@ export async function SiteFooter() {
               href={`tel:${phone.replace(/\s/g, "")}`}
               className="flex min-h-11 items-center hover:text-foreground"
             >
-              {phone}
+              <bdi>{phone}</bdi>
             </a>
           ))}
           {settings.whatsapp && (

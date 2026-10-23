@@ -90,7 +90,7 @@ export default async function AtelierPage() {
                         href={`tel:${place.phone.replace(/\s/g, "")}`}
                         className="min-h-6 underline-offset-4 hover:underline"
                       >
-                        {place.phone}
+                        <bdi>{place.phone}</bdi>
                       </a>
                     </p>
                   )}
@@ -120,7 +120,7 @@ export default async function AtelierPage() {
       <section className="space-y-3 text-center">
         <h2 className="text-4xl">{t("contact")}</h2>
         <a href={`mailto:${settings.contactEmail}`} className="block min-h-11 underline underline-offset-4">
-          {settings.contactEmail}
+          <bdi>{settings.contactEmail}</bdi>
         </a>
       </section>
     </div>

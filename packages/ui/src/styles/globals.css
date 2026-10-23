@@ -134,6 +134,29 @@
   }
 }
 
+/*
+ * Arabic: the display, heading and script faces have no Arabic glyphs, so every font utility falls back to Amiri
+ * (loaded by the app as --font-arabic-face). The hairline stroke is for the Latin display face only, and letter-spacing
+ * or uppercase break Arabic joining, so both are switched off.
+ */
+[lang="ar"] body,
+[lang="ar"] h1,
+[lang="ar"] h2,
+[lang="ar"] h3,
+[lang="ar"] .font-display,
+[lang="ar"] .font-heading,
+[lang="ar"] .font-script,
+[lang="ar"] .font-sans {
+  font-family: var(--font-arabic-face), "Amiri", serif;
+}
+[lang="ar"] .font-display {
+  -webkit-text-stroke: 0;
+}
+[lang="ar"] * {
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
 /* PDF details: the thin gold frame around photos and prices, and the ornamental divider. */
 @utility frame {
   border: 1px solid color-mix(in oklab, var(--brand-gold) 55%, transparent);
