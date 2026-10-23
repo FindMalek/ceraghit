@@ -17,7 +17,7 @@ export function MobileNav() {
       <Button
         variant="ghost"
         size="icon"
-        className="size-11 md:hidden"
+        className="size-11 lg:hidden"
         aria-label={t("menu")}
         onClick={() => setOpen(true)}
       >

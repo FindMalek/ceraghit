@@ -25,7 +25,10 @@ export function CartButton() {
       >
         <BasketIcon className="size-6 md:size-5" />
         {shown > 0 && (
-          <span className="absolute -end-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-primary font-heading text-primary-foreground text-xs">
+          <span
+            aria-hidden
+            className="absolute -end-0.5 -top-0.5 flex size-5 items-center justify-center rounded-full bg-primary font-heading text-primary-foreground text-xs"
+          >
             {shown}
           </span>
         )}

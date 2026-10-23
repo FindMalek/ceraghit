@@ -20,3 +20,4 @@ globs: apps/web/**
 - Cart is a persisted zustand store; unique pieces cap at quantity 1; `quoteOnly` pieces link to `/custom?ref=`.
 - noindex and a disallow-all robots unless `APP_ENV=production`.
 - Cart lines are keyed by piece and variant (`lineKey` in `lib/cart-store.ts`); pieces with options need a chosen variant to be added.
+- Layout switches to the desktop header and the two-column hero at `lg` (1024px), not `md`: at tablet width the burger menu stays. Message fallbacks (`i18n/request.ts`) replace arrays whole, covered by `request.test.ts`.

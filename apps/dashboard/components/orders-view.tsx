@@ -236,7 +236,13 @@ export function OrdersView() {
             </InputGroupAddon>
             <InputGroupInput placeholder="Numéro, nom ou email" value={q} onChange={(e) => setQ(e.target.value)} />
           </InputGroup>
-          <SimpleSelect value={status} onChange={setStatus} options={FILTERS} className="h-11 w-full md:w-64" />
+          <SimpleSelect
+            label="Filtrer par statut"
+            value={status}
+            onChange={setStatus}
+            options={FILTERS}
+            className="h-11 w-full md:w-64"
+          />
         </div>
 
         {orders.isPending && <LoadingRows />}
