@@ -32,6 +32,14 @@ keep lint, types, test and build parallel. Node, pnpm and Bun come from the setu
 Postgres is published on port `15000 + <n>` of the-keep (LAN and tailnet only). `pnpm db:shell pr-<n>` opens psql over ssh.
 Closing the PR deletes the apps, database, uploads (`pr-<n>/` in `ceraghit-dev`) and marks the deployment inactive.
 
+## staging (permanent, on the-keep)
+
+`.github/workflows/staging.yml` redeploys `main` on every merge to fixed hosts, in the Dokploy project `ceraghit-staging`
+with its own Postgres: web https://ceraghit.findmalek.engineer, dashboard https://dashboard.ceraghit.findmalek.engineer,
+api https://api.ceraghit.findmalek.engineer (docs at `/v1/docs`). It is a preview-grade environment: demo payments (or
+Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Variables: `STAGING_WEB_HOST`,
+`STAGING_DASHBOARD_HOST`, `STAGING_API_HOST`, `STAGING_ADMIN_EMAIL`; secret `STAGING_ADMIN_PASSWORD`.
+
 ## production (merge to main)
 
 `.github/workflows/deploy.yml`, in the `production` GitHub environment:

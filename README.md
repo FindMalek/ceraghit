@@ -2,11 +2,11 @@
 
 Online shop for Ceraghit Creation's ceramics: storefront, owner dashboard and api in a Turborepo.
 
-| app | what | dev port |
-| :-- | :-- | :-- |
-| `apps/web` | storefront (fr, en, ar), TND and EUR | 3000 |
-| `apps/dashboard` | owner dashboard | 3100 |
-| `apps/api` | oRPC + REST api, Konnect payments | 3001 |
+| app | what | staging | dev port |
+| :-- | :-- | :-- | :-- |
+| `apps/web` | storefront (fr, en, ar), TND and EUR | [ceraghit.findmalek.engineer](https://ceraghit.findmalek.engineer) | 3000 |
+| `apps/dashboard` | owner dashboard | [dashboard.ceraghit.findmalek.engineer](https://dashboard.ceraghit.findmalek.engineer) | 3100 |
+| `apps/api` | oRPC + REST api, Konnect payments | [api.ceraghit.findmalek.engineer](https://api.ceraghit.findmalek.engineer/v1/docs) | 3001 |
 
 ```bash
 cp .env.example .env
