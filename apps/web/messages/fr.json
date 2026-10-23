@@ -102,7 +102,7 @@
     "continue": "Continuer mes achats",
     "remove": "Retirer {title} du panier",
     "uniqueNote": "Pièce unique",
-    "open": "Ouvrir le panier ({count})",
+    "open": "Ouvrir le panier, {count, plural, one {# article} other {# articles}}",
     "priceNote": "Le prix final est confirmé à la commande.",
     "shippingNext": "Livraison calculée à l'étape suivante"
   },

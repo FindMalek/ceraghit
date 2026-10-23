@@ -15,6 +15,7 @@ export function SimpleSelect<T extends string>({
   className,
   id,
   size,
+  label,
 }: {
   value: T | ""
   onChange: (value: T) => void
@@ -23,10 +24,12 @@ export function SimpleSelect<T extends string>({
   className?: string
   id?: string
   size?: "sm" | "default"
+  /** Accessible name when there is no visible <label> pointing at `id`. */
+  label?: string
 }) {
   return (
     <Select<string> value={value} onValueChange={(next) => next && onChange(next as T)} items={options}>
-      <SelectTrigger id={id} size={size} className={className ?? "h-11 w-full"}>
+      <SelectTrigger id={id} size={size} aria-label={label} className={className ?? "h-11 w-full"}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

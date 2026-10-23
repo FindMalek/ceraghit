@@ -167,8 +167,15 @@ export function ProductsView() {
             </InputGroupAddon>
             <InputGroupInput placeholder="Référence ou nom" value={q} onChange={(event) => setQ(event.target.value)} />
           </InputGroup>
-          <SimpleSelect value={status} onChange={setStatus} options={STATUS_OPTIONS} className="h-11 w-full md:w-52" />
           <SimpleSelect
+            label="Filtrer par statut"
+            value={status}
+            onChange={setStatus}
+            options={STATUS_OPTIONS}
+            className="h-11 w-full md:w-52"
+          />
+          <SimpleSelect
+            label="Filtrer par catégorie"
             value={categoryId}
             onChange={setCategoryId}
             options={categoryOptions}

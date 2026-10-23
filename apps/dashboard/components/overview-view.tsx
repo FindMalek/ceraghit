@@ -61,7 +61,7 @@ export function OverviewView() {
         description="Les ventes de la boutique."
         actions={
           <>
-            <SimpleSelect value={days} onChange={setDays} options={RANGES} className="h-11 w-56" />
+            <SimpleSelect label="Période" value={days} onChange={setDays} options={RANGES} className="h-11 w-56" />
             <ExportSalesButton days={Number(days)} />
           </>
         }

@@ -11,12 +11,12 @@ export async function SiteHeader() {
   const t = await getTranslations("nav")
   return (
     <header className="sticky top-0 z-30 border-border border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 md:gap-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 lg:gap-6">
         <MobileNav />
-        <Link href="/" aria-label={t("home")} className="me-auto md:me-0">
+        <Link href="/" className="me-auto lg:me-0">
           <Logo name="Ceraghit" />
         </Link>
-        <nav className="me-auto hidden items-center gap-6 md:flex">
+        <nav className="me-auto hidden items-center gap-6 lg:flex">
           {NAV_LINKS.map(({ href, key }) => (
             <Link
               key={href}
@@ -27,7 +27,7 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <LanguageSwitcher className="hidden md:flex" />
+        <LanguageSwitcher className="hidden lg:flex" />
         <CurrencyToggle />
         <CartButton />
       </div>

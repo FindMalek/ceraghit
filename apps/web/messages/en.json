@@ -102,7 +102,7 @@
     "continue": "Continue shopping",
     "remove": "Remove {title} from the cart",
     "uniqueNote": "Unique piece",
-    "open": "Open the cart ({count})",
+    "open": "Open the cart, {count, plural, one {# item} other {# items}}",
     "priceNote": "The final price is confirmed at checkout.",
     "shippingNext": "Delivery is calculated at the next step"
   },

@@ -16,3 +16,5 @@ value there only. The final brand style may replace these values later, so never
 - Shapes: sharp corners (`--brand-radius` 2px), thin gold `frame` borders, `ornament` divider, gold-bordered price box,
   small "Référence: 0010" line above the title, numbered sections 01-04.
 - Photos are dark-backed; keep their aspect ratio and frame them, never crop faces of the sculptures.
+- The display face is a hairline: use it for page titles and section headings (text-3xl and up, stroke set in globals.css). Card titles, tile labels and anything smaller use the heading face (`font-heading`).
+- Accessibility is checked with axe (wcag2a/aa, 2.1, 2.2 AA, best-practice) on the main pages, zero serious or critical findings is the bar: icon-only controls and file inputs need an `aria-label`; an `aria-label` must contain the visible text, with the number as a word (`Ouvrir le panier, 1 article`, not `(1)`).

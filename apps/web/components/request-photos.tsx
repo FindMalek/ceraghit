@@ -104,6 +104,8 @@ export function RequestPhotos({ onChange }: { onChange: (images: string[], busy:
           <input
             ref={input}
             id="request-photos"
+            aria-label={t("addPhotos")}
+            tabIndex={-1}
             type="file"
             accept="image/jpeg,image/png,image/webp,image/*"
             multiple

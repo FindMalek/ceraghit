@@ -41,20 +41,20 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={organizationJsonLd(settings)} />
-      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 md:grid-cols-2 md:py-20">
-        <div className="space-y-6 text-center md:text-start">
+      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 lg:grid-cols-2 lg:py-20">
+        <div className="space-y-6 text-center lg:text-start">
           <Image
             src="/logo.webp"
             alt=""
             width={96}
             height={96}
             priority
-            className="mx-auto size-24 rounded-full md:mx-0"
+            className="mx-auto size-24 rounded-full lg:mx-0"
           />
           <p className="font-script text-5xl text-gold">{t("kicker")}</p>
-          <h1 className="text-7xl md:text-9xl">Ceraghit</h1>
-          <p className="mx-auto max-w-md text-lg text-muted-foreground md:mx-0">{t("subtitle")}</p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center md:justify-start">
+          <h1 className="text-7xl xl:text-9xl">Ceraghit</h1>
+          <p className="mx-auto max-w-md text-lg text-muted-foreground lg:mx-0">{t("subtitle")}</p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <Link href="/shop" className={cn(buttonVariants({ size: "lg" }), "h-12 px-6 text-base")}>
               {t("ctaShop")}
             </Link>
@@ -88,7 +88,7 @@ export default async function HomePage() {
       {categories.length > 0 && (
         <section className="mx-auto max-w-7xl space-y-8 px-4 py-12">
           <SectionHeading title={t("categories")} />
-          <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {categories.map((category, i) => (
               <li key={category.id}>
                 <Link
@@ -100,16 +100,16 @@ export default async function HomePage() {
                       src={imageSrc(category.image)}
                       alt=""
                       fill
-                      sizes="(min-width: 768px) 25vw, 50vw"
+                      sizes="(min-width: 1024px) 25vw, 50vw"
                       className="object-cover opacity-60 transition duration-500 group-hover:scale-105 group-hover:opacity-80"
                     />
                   )}
-                  <span className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+                  <span className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
                   <span className="absolute inset-x-3 bottom-3 flex items-end gap-2">
-                    <span aria-hidden className="font-display text-5xl text-gold/80">
+                    <span aria-hidden className="font-display text-5xl text-gold">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="font-display text-2xl text-gold leading-tight md:text-3xl">
+                    <span className="font-heading text-xl text-gold leading-tight md:text-2xl">
                       {pick(category.name, locale)}
                     </span>
                   </span>

@@ -12,3 +12,4 @@ globs: apps/dashboard/**
 - Stats show TND and EUR separately, never summed. Destructive actions confirm and say what happens to stock.
 - Unique-piece requests are answered by the owner by email himself: show email, copy button and `mailto:`, send nothing.
 - The product form sends `variants` with their ids; quick actions go through `productToInput`, which must keep them, or a publish toggle would delete them.
+- A `SimpleSelect` without a visible `<FieldLabel htmlFor>` needs a `label` prop (its accessible name).

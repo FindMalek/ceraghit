@@ -44,7 +44,13 @@ export function ExportSalesButton({ days }: { days: number }) {
 
   return (
     <div className="flex gap-2">
-      <SimpleSelect value={currency} onChange={setCurrency} options={CURRENCIES} className="h-11 w-40" />
+      <SimpleSelect
+        label="Devise de l'export"
+        value={currency}
+        onChange={setCurrency}
+        options={CURRENCIES}
+        className="h-11 w-40"
+      />
       <Button variant="outline" className="h-11" onClick={run} disabled={busy}>
         <DownloadSimpleIcon />
         Exporter les ventes

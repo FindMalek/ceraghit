@@ -127,7 +127,7 @@
   }
   /* The display face is a hairline calligraphy: a thin stroke keeps it readable on dark. */
   .font-display {
-    -webkit-text-stroke: 0.5px currentColor;
+    -webkit-text-stroke: 0.8px currentColor;
   }
   p {
     text-wrap: pretty;
