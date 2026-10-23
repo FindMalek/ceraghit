@@ -1,10 +1,17 @@
 import { ORPCError } from "@orpc/server"
 import { customRequests, orders } from "@workspace/db"
-import { checkoutSchema, customRequestInputSchema, orderInputSchema, orderSchema } from "@workspace/sdk"
+import {
+  checkoutSchema,
+  customRequestInputSchema,
+  orderInputSchema,
+  orderSchema,
+  requestUploadInputSchema,
+} from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
+import { clientAddress, RateLimit } from "../../lib/rate-limit"
 import { publicProcedure } from "../../procedures"
 
 const TAG = ["orders"]
@@ -58,12 +65,42 @@ export const ordersRouter = {
     }),
 }
 
+const IMAGE_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const
+const uploadLimit = new RateLimit(12, 10 * 60_000)
+
 export const requestsRouter = {
+  /** A signed PUT for one photo of a request. Its size and type are part of the signature. */
+  uploadUrl: publicProcedure
+    .route({
+      method: "POST",
+      path: "/requests/upload-url",
+      summary: "Signed url to upload a request photo",
+      tags: ["requests"],
+    })
+    .input(requestUploadInputSchema)
+    .output(z.object({ uploadUrl: z.string(), image: z.string() }))
+    .handler(async ({ context, input }) => {
+      const { storage } = context
+      if (!storage) throw new ORPCError("SERVICE_UNAVAILABLE", { message: "Photos are not available right now." })
+      if (!uploadLimit.take(clientAddress(context.headers))) {
+        throw new ORPCError("TOO_MANY_REQUESTS", { message: "Too many uploads, try again in a few minutes." })
+      }
+      const key = `${storage.prefix}requests/${crypto.randomUUID()}.${IMAGE_EXTENSIONS[input.contentType]}`
+      return { uploadUrl: await storage.presignPut(key, input.contentType, input.size), image: `s3:${key}` }
+    }),
+
   create: publicProcedure
     .route({ method: "POST", path: "/requests", summary: "Ask for a unique piece", tags: ["requests"] })
     .input(customRequestInputSchema)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
+      const { storage } = context
+      const required = `s3:${storage?.prefix ?? ""}requests/`
+      for (const image of input.images) {
+        const key = image.slice(3)
+        const valid = storage && image.startsWith(required) && !key.includes("..") && (await storage.head(key))
+        if (!valid) throw new ORPCError("BAD_REQUEST", { message: "A photo was not uploaded, please add it again." })
+      }
       await context.db.insert(customRequests).values({ ...input, email: input.email.toLowerCase() })
       return { ok: true as const }
     }),

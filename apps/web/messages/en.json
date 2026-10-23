@@ -199,7 +199,17 @@
       "description": "Décrivez votre projet en quelques phrases (10 caractères minimum)."
     },
     "failed": "La demande n'a pas pu être envoyée.",
-    "privacy": "Vos informations servent uniquement à répondre à votre demande. <link>Confidentialité</link>"
+    "privacy": "Vos informations servent uniquement à répondre à votre demande. <link>Confidentialité</link>",
+    "photos": "Photos de référence (facultatif)",
+    "photosHint": "Jusqu'à 3 photos : une inspiration, un lieu, une pièce existante. Elles sont réduites avant l'envoi.",
+    "addPhotos": "Ajouter des photos",
+    "removePhoto": "Retirer la photo",
+    "photoUploading": "Envoi de la photo en cours",
+    "photoErrors": {
+      "failed": "L'envoi a échoué, réessayez.",
+      "type": "Format non pris en charge (JPEG, PNG ou WebP).",
+      "tooLarge": "Photo trop lourde (5 Mo maximum)."
+    }
   },
   "atelier": {
     "title": "L'atelier",

@@ -209,7 +209,16 @@ export const customRequestInputSchema = z.object({
   dimensions: z.string().trim().max(200).optional(),
   budget: z.string().trim().max(100).optional(),
   references: z.string().trim().max(1000).optional(),
+  /** `s3:` keys returned by `requests.uploadUrl`, after the browser uploaded them. */
+  images: z.array(z.string().max(300)).max(3).default([]),
   locale: localeSchema.default("fr"),
+})
+
+export const REQUEST_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const
+export const REQUEST_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+export const requestUploadInputSchema = z.object({
+  contentType: z.enum(REQUEST_IMAGE_TYPES),
+  size: z.number().int().min(1).max(REQUEST_IMAGE_MAX_BYTES),
 })
 
 export const customRequestSchema = customRequestInputSchema.extend({

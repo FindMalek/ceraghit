@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createRouterClient } from "@orpc/server"
-import { categories, createDb, orders, products, productVariants } from "@workspace/db"
+import { categories, createDb, customRequests, orders, products, productVariants } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { asc, eq, inArray } from "drizzle-orm"
@@ -8,6 +8,7 @@ import { type Context, createContext, type Services } from "./context"
 import { AdminAuth } from "./lib/auth"
 import { cancelOrder } from "./lib/orders"
 import { DemoProvider, KonnectProvider } from "./lib/payments"
+import { createStorage, type Storage } from "./lib/storage"
 import { appRouter } from "./routers"
 import { adminRouter } from "./routers/admin"
 
@@ -87,9 +88,49 @@ describe.skipIf(!url)("router", () => {
           all.map((o) => o.id),
         ),
       )
+    await db.delete(customRequests).where(eq(customRequests.email, "photos@example.com"))
     await db.delete(products).where(eq(products.categoryId, categoryId))
     await db.delete(categories).where(eq(categories.id, categoryId))
     await db.close()
+  })
+
+  test("a request keeps photos that were really uploaded and rejects the rest", async () => {
+    const stored = new Set<string>()
+    const storage: Storage = {
+      bucket: "b",
+      prefix: "pr-1/",
+      presignPut: async (key, _type, size) => {
+        stored.add(key)
+        return `https://s3.test/${key}?size=${size}`
+      },
+      head: async (key) => stored.has(key),
+      readUrl: async (key) => key,
+      publicUrl: () => null,
+      remove: async () => {},
+    }
+    const client = createRouterClient(appRouter, {
+      context: (): Context => createContext({ ...services, storage }, new Headers()),
+    })
+    const request = {
+      name: `Photo ${tag}`,
+      email: "photos@example.com",
+      description: "Un vase avec des motifs géométriques",
+      locale: "fr" as const,
+    }
+    const { image } = await client.public.requests.uploadUrl({ contentType: "image/jpeg", size: 1000 })
+    expect(image.startsWith("s3:pr-1/requests/")).toBe(true)
+
+    await client.public.requests.create({ ...request, images: [image] })
+    const [saved] = await db.select().from(customRequests).where(eq(customRequests.name, request.name))
+    expect(saved?.images).toEqual([image])
+
+    const foreign = { ...request, images: ["s3:pr-1/products/a.jpg"] }
+    await expect(client.public.requests.create(foreign)).rejects.toMatchObject({ code: "BAD_REQUEST" })
+    const missing = { ...request, images: ["s3:pr-1/requests/never-uploaded.jpg"] }
+    await expect(client.public.requests.create(missing)).rejects.toMatchObject({ code: "BAD_REQUEST" })
+    await expect(guest.public.requests.uploadUrl({ contentType: "image/png", size: 10 })).rejects.toMatchObject({
+      code: "SERVICE_UNAVAILABLE",
+    })
   })
 
   test("no admin procedure answers a visitor", async () => {
@@ -279,4 +320,18 @@ test("konnect: amounts go in minor units with the currency as token, only `compl
     currency: "EUR",
     orderNumber: "CER-1",
   })
+})
+
+test("a request photo upload url binds the exact size and type", async () => {
+  const storage = createStorage({
+    endpoint: "https://s3.test",
+    region: "garage",
+    bucket: "b",
+    accessKeyId: "AK",
+    secretAccessKey: "SK",
+    prefix: "",
+  })
+  const signed = new URL(await storage!.presignPut("requests/a.jpg", "image/jpeg", 1234))
+  expect(signed.searchParams.get("X-Amz-SignedHeaders")).toContain("content-length")
+  expect(signed.searchParams.get("X-Amz-SignedHeaders")).toContain("content-type")
 })

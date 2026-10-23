@@ -69,7 +69,9 @@ Domains: `ceraghit.<tld>` (web), `dashboard.…`, `api.…`.
 **Neon**: one project, production branch; keep the pooled connection string as `DATABASE_URL`.
 
 **Cloudflare R2**: bucket `ceraghit-prod`, a public custom domain (`cdn.<domain>`) for `S3_PUBLIC_URL`, an API token scoped
-to that bucket, and a CORS rule allowing `PUT` from the dashboard origin (browser uploads go straight to the bucket).
+to that bucket, and a CORS rule allowing `PUT` from the dashboard **and the web** origins (product photos are uploaded by
+the dashboard, customer photos on `/custom` by the storefront, both straight to the bucket; the web ones are limited to
+5 MB and signed with their exact size and type).
 
 **Garage** (the-keep): bucket `ceraghit-dev` with key `ceraghit-dev-key` (previews and local), CORS allowing `PUT` from
 `*.ceraghit.findmalek.engineer`.

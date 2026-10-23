@@ -7,10 +7,11 @@ import { customRequestInputSchema, localeSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useLocale, useTranslations } from "next-intl"
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useCallback, useState } from "react"
 import { toast } from "sonner"
 import { Link } from "@/i18n/navigation"
 import { FormField } from "./form-field"
+import { RequestPhotos } from "./request-photos"
 
 const FIELDS = ["name", "email", "phone", "country", "description", "dimensions", "budget", "references"] as const
 type Field = (typeof FIELDS)[number]
@@ -20,6 +21,12 @@ export function CustomForm({ initialDescription }: { initialDescription?: string
   const locale = useLocale()
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({})
   const [sent, setSent] = useState(false)
+  const [images, setImages] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
+  const onPhotos = useCallback((next: string[], busy: boolean) => {
+    setImages(next)
+    setUploading(busy)
+  }, [])
 
   const create = useMutation(
     orpc.public.requests.create.mutationOptions({
@@ -53,6 +60,7 @@ export function CustomForm({ initialDescription }: { initialDescription?: string
       dimensions: value("dimensions"),
       budget: value("budget"),
       references: value("references"),
+      images,
       locale: localeSchema.catch("fr").parse(locale),
     })
     if (!parsed.success) {
@@ -97,7 +105,8 @@ export function CustomForm({ initialDescription }: { initialDescription?: string
         <FormField id="budget" label={t("budget")} />
       </div>
       <FormField id="references" label={t("references")} hint={t("referencesHint")} multiline />
-      <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={create.isPending}>
+      <RequestPhotos onChange={onPhotos} />
+      <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={create.isPending || uploading}>
         {create.isPending ? (
           <>
             <Spinner /> {t("sending")}
