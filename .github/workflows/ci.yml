@@ -29,7 +29,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - name: AI rules are in sync
@@ -48,7 +47,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check-types
 
@@ -76,7 +74,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
 
@@ -89,6 +86,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build

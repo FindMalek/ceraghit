@@ -40,7 +40,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: pnpm
       - run: pnpm install --frozen-lockfile --filter @workspace/db...
       - name: Apply migrations to Neon
         env:
@@ -76,7 +75,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm add -g vercel@latest
       - name: Build and deploy ${{ matrix.app }}

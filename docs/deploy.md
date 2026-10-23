@@ -14,6 +14,9 @@ keep lint, types, test and build parallel. Node, pnpm and Bun come from the setu
 - logs: `ssh the-keep 'journalctl -u actions.runner.FindMalek-ceraghit.the-keep-ceraghit-1 -n 50'`
 - reinstall one: see `the-keep/player/docs/ci/self-hosted-runner.md`, with a fresh token from
   `gh api -X POST repos/FindMalek/ceraghit/actions/runners/registration-token`
+- no GitHub cache: the pnpm store lives in the runner user's home and Docker layers in `/opt/buildx-cache/<app>` on the
+  host (GitHub's cache service times out from the home connection and would only add a round trip). Prune with
+  `docker builder prune -f --filter until=168h` and `rm -rf /opt/buildx-cache/*` if the disk fills
 - the runner user is in the `docker` group (image builds, the Postgres service container): only this repo's own
   workflows should run here, never fork PRs
 
