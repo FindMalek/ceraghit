@@ -1,6 +1,6 @@
 # Lint, types, tests and a full build on every PR and on main, in parallel jobs.
 # Turborepo's remote cache (the-keep, turbo.findmalek.engineer) is used when TURBO_TOKEN is set, so a job whose
-# inputs did not change finishes in seconds. Next's own build cache is restored between runs.
+# inputs did not change finishes in seconds. Runs on the-keep runners (see docs/deploy.md).
 
 name: CI
 
@@ -90,12 +90,5 @@ jobs:
         with:
           node-version: "24"
           cache: pnpm
-      - uses: actions/cache@v4
-        with:
-          path: |
-            apps/web/.next/cache
-            apps/dashboard/.next/cache
-          key: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
-          restore-keys: next-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
