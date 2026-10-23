@@ -3,6 +3,20 @@
 Production is Vercel + Neon + Cloudflare R2. Previews run on the-keep (Dokploy) with their own database and bucket.
 Nothing is shared between the two: see `.cursor/rules/02-environments-and-payments.mdc` for the matrix.
 
+## CI runners
+
+Every workflow runs on self-hosted runners on the-keep (`runs-on: [self-hosted, the-keep]`), so no GitHub-hosted
+minutes are used. Three runners, `the-keep-ceraghit-1..3`, live in `/opt/actions-runner/FindMalek/ceraghit-<n>` as
+systemd services (`actions.runner.FindMalek-ceraghit.the-keep-ceraghit-<n>`); each runs one job at a time, so three
+keep lint, types, test and build parallel. Node, pnpm and Bun come from the setup actions and are cached on the host.
+
+- status: `gh api repos/FindMalek/ceraghit/actions/runners --jq '.runners[] | "\(.name) \(.status)"'`
+- logs: `ssh the-keep 'journalctl -u actions.runner.FindMalek-ceraghit.the-keep-ceraghit-1 -n 50'`
+- reinstall one: see `the-keep/player/docs/ci/self-hosted-runner.md`, with a fresh token from
+  `gh api -X POST repos/FindMalek/ceraghit/actions/runners/registration-token`
+- the runner user is in the `docker` group (image builds, the Postgres service container): only this repo's own
+  workflows should run here, never fork PRs
+
 ## previews (every PR from this repo)
 
 `.github/workflows/preview.yml` on every PR push:

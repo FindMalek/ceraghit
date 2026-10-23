@@ -28,7 +28,7 @@ env:
 jobs:
   migrate:
     if: vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, the-keep]
     timeout-minutes: 10
     environment: production
     steps:
@@ -55,7 +55,7 @@ jobs:
 
   deploy:
     needs: migrate
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, the-keep]
     timeout-minutes: 20
     environment:
       name: production
@@ -90,7 +90,7 @@ jobs:
 
   smoke:
     needs: deploy
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, the-keep]
     timeout-minutes: 5
     steps:
       - name: api health
