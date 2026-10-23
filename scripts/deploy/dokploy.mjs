@@ -168,6 +168,20 @@ async function waitForApps(deployed, onChange) {
   return deployed.every((d) => d.status === "ready")
 }
 
+/** Registry pulls from the home connection time out now and then: an app that failed gets one more deploy. */
+async function waitWithRetry(deployed, onChange) {
+  if (await waitForApps(deployed, onChange)) return true
+  const failed = deployed.filter((d) => d.status === "failed")
+  for (const app of failed) {
+    console.warn(`${app.label} failed, deploying it once more`)
+    app.status = "building"
+    await dokploy("application.deploy", { applicationId: app.applicationId })
+  }
+  await onChange()
+  await waitForApps(failed, onChange)
+  return deployed.every((d) => d.status === "ready")
+}
+
 /** The api goes first: web and dashboard reach it by its swarm service name on dokploy-network. */
 async function deployAll(environment, { tag, hosts, apiEnv }) {
   const suffix = tag.startsWith("pr-") ? `-${tag}` : ""
@@ -378,7 +392,7 @@ async function previewUp() {
     },
   })
   await upsertComment(renderComment(deployed))
-  const ok = await waitForApps(deployed, () =>
+  const ok = await waitWithRetry(deployed, () =>
     upsertComment(renderComment(deployed, deployed.every((d) => d.status === "ready") ? access : undefined)),
   )
   await markDeployment(pr, ok ? "success" : "failure", `https://${hosts.web}`).catch((e) =>
@@ -428,7 +442,7 @@ async function staging() {
       DEPLOY_ENV: "staging",
     },
   })
-  const ok = await waitForApps(deployed, async () => {})
+  const ok = await waitWithRetry(deployed, async () => {})
   for (const d of deployed) console.info(`${d.label}: ${d.status} https://${d.host}`)
   if (!ok) process.exitCode = 1
 }
