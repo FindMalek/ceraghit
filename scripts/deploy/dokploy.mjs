@@ -126,12 +126,15 @@ async function ensureDomain(applicationId, host, port) {
 
 async function deployApp(environment, app) {
   const { applicationId } = await ensureApplication(environment, app.name)
+  // Only a long-lived read token: Dokploy keeps registry logins for the whole box, and a workflow's own token expires
+  // with the run, after which every pull on the-keep (other apps too) gets "denied". Without one, pull anonymously.
+  const token = process.env.GHCR_READ_TOKEN
   await dokploy("application.saveDockerProvider", {
     applicationId,
     dockerImage: app.image,
-    registryUrl: "ghcr.io",
-    username: requireEnv("GHCR_USERNAME"),
-    password: requireEnv("GHCR_READ_TOKEN"),
+    registryUrl: token ? "ghcr.io" : null,
+    username: token ? requireEnv("GHCR_USERNAME") : null,
+    password: token ?? null,
   })
   await dokploy("application.saveEnvironment", {
     applicationId,

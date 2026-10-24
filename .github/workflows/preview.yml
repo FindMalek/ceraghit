@@ -74,7 +74,7 @@ jobs:
       - name: Deploy preview
         env:
           GHCR_USERNAME: ${{ github.actor }}
-          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN || github.token }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
           PREVIEW_DB_HOST: ${{ vars.PREVIEW_DB_HOST }}
           ADMIN_EMAIL: ${{ vars.PREVIEW_ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.PREVIEW_ADMIN_PASSWORD }}

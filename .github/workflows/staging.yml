@@ -65,7 +65,7 @@ jobs:
           DOKPLOY_URL: ${{ vars.DOKPLOY_PUBLIC_URL }}
           DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
           GHCR_USERNAME: ${{ github.actor }}
-          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN || github.token }}
+          GHCR_READ_TOKEN: ${{ secrets.GHCR_READ_TOKEN }}
           STAGING_WEB_HOST: ${{ vars.STAGING_WEB_HOST }}
           STAGING_DASHBOARD_HOST: ${{ vars.STAGING_DASHBOARD_HOST }}
           STAGING_API_HOST: ${{ vars.STAGING_API_HOST }}
