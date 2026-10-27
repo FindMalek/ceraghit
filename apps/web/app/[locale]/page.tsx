@@ -4,6 +4,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { Metadata } from "next"
 import Image from "next/image"
 import { getLocale, getTranslations } from "next-intl/server"
+import { HeroCarousel } from "@/components/hero-carousel"
 import { JsonLd } from "@/components/json-ld"
 import { ProductGrid } from "@/components/product-card"
 import { SectionHeading } from "@/components/section-heading"
@@ -12,7 +13,7 @@ import { getCategories, getProducts, getSettings } from "@/lib/api"
 import { getCurrency } from "@/lib/currency-server"
 import { organizationJsonLd } from "@/lib/json-ld"
 import { pageMetadata } from "@/lib/seo"
-import { STUDIO_PHOTOS } from "@/lib/site"
+import { HERO_PHOTOS, STUDIO_PHOTOS } from "@/lib/site"
 
 export const dynamic = "force-dynamic"
 
@@ -66,16 +67,7 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-        <div className="frame relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden bg-card">
-          <Image
-            src="/catalogue/0200-1.webp"
-            alt=""
-            fill
-            priority
-            sizes="(min-width: 768px) 28rem, 100vw"
-            className="object-cover"
-          />
-        </div>
+        <HeroCarousel images={HERO_PHOTOS} />
       </section>
 
       {featured.length > 0 && (

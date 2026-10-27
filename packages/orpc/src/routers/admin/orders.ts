@@ -23,6 +23,7 @@ function toAdminOrder(o: OrderRow) {
   return {
     id: o.id,
     number: o.number,
+    paymentMethod: o.paymentMethod as "online" | "cod",
     status: o.status,
     currency: o.currency,
     subtotalMinor: o.subtotalMinor,
@@ -68,6 +69,16 @@ export const ordersRouter = {
         limit: input.limit,
       })
       return rows.map(toAdminOrder)
+    }),
+
+  get: adminProcedure
+    .route({ method: "GET", path: "/admin/orders/{id}", summary: "One order, for its invoice", tags: TAG })
+    .input(z.object({ id: z.string() }))
+    .output(adminOrderSchema)
+    .handler(async ({ context, input }) => {
+      const order = await context.db.query.orders.findFirst({ where: eq(orders.id, input.id), with: { items: true } })
+      if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
+      return toAdminOrder(order)
     }),
 
   /** Every paid or shipped order paid in the range, in one currency, oldest first. Not capped: it feeds the accountant's CSV. */

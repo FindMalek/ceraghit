@@ -1,5 +1,6 @@
 export { type AppEnv, type Context, createContext, type Services } from "./context"
 export { AdminAuth } from "./lib/auth"
+export { ConsoleMailer, type Mailer, ResendMailer } from "./lib/mailer"
 export { settleOrder } from "./lib/orders"
 export { DemoProvider, KonnectProvider, type PaymentProvider } from "./lib/payments"
 export { createStorage, type Storage } from "./lib/storage"

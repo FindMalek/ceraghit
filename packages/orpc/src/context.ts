@@ -1,5 +1,6 @@
 import type { Db } from "@workspace/db"
 import type { AdminAuth } from "./lib/auth"
+import type { Mailer } from "./lib/mailer"
 import type { PaymentProvider } from "./lib/payments"
 import type { Storage } from "./lib/storage"
 
@@ -9,6 +10,7 @@ export type AppEnv = "local" | "preview" | "production"
 export interface Services {
   db: Db
   payments: PaymentProvider
+  mailer: Mailer
   storage: Storage | null
   auth: AdminAuth
   now: () => Date

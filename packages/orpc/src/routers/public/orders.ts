@@ -38,6 +38,7 @@ export const ordersRouter = {
         order.status === "pending_payment" && order.paymentRef ? await settleOrder(context, order.paymentRef) : null
       return {
         number: order.number,
+        paymentMethod: order.paymentMethod as "online" | "cod",
         status: (settled?.status ?? order.status) as typeof order.status,
         currency: order.currency,
         subtotalMinor: order.subtotalMinor,

@@ -26,7 +26,9 @@ export function OrderStatus({ number, token }: { number: string; token: string }
       input: { number, token },
       retry: false,
       refetchInterval: (query) =>
-        query.state.data?.status === "pending_payment" && Date.now() - startedAt.current < POLL_FOR_MS
+        query.state.data?.status === "pending_payment" &&
+        query.state.data.paymentMethod === "online" &&
+        Date.now() - startedAt.current < POLL_FOR_MS
           ? POLL_MS
           : false,
     }),
@@ -45,13 +47,16 @@ export function OrderStatus({ number, token }: { number: string; token: string }
   }
 
   const money = (minor: number) => formatMoney(minor, order.currency, locale)
-  const waiting = order.status === "pending_payment"
+  const codPending = order.status === "pending_payment" && order.paymentMethod === "cod"
+  const waiting = order.status === "pending_payment" && !codPending
   const stillWaiting = waiting && Date.now() - startedAt.current >= POLL_FOR_MS
   return (
     <div className="space-y-8">
       <div className="frame space-y-3 bg-card/70 p-6 text-center" role="status" aria-live="polite">
-        <p className="font-display text-3xl text-gold">{t(`status.${order.status}`)}</p>
-        <p className="text-muted-foreground">{stillWaiting ? t("stillPending") : t(`text.${order.status}`)}</p>
+        <p className="font-display text-3xl text-gold">{codPending ? t("codTitle") : t(`status.${order.status}`)}</p>
+        <p className="text-muted-foreground">
+          {codPending ? t("codText") : stillWaiting ? t("stillPending") : t(`text.${order.status}`)}
+        </p>
         {waiting && !stillWaiting && <Spinner className="mx-auto" />}
       </div>
 

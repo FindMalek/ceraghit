@@ -1,8 +1,9 @@
 import "server-only"
 import type { Currency } from "@workspace/sdk"
-import { cookies } from "next/headers"
-import { CURRENCY_COOKIE, parseCurrency } from "./currency"
+import { cookies, headers } from "next/headers"
+import { CURRENCY_COOKIE, detectCurrency, parseCurrency } from "./currency"
 
 export async function getCurrency(): Promise<Currency> {
-  return parseCurrency((await cookies()).get(CURRENCY_COOKIE)?.value)
+  const chosen = (await cookies()).get(CURRENCY_COOKIE)?.value
+  return chosen ? parseCurrency(chosen) : detectCurrency(await headers())
 }

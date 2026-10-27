@@ -16,6 +16,7 @@ export const localizedInput = (max = 200) =>
 
 export const productStatusSchema = z.enum(["draft", "published", "archived"])
 export const orderStatusSchema = z.enum(["pending_payment", "paid", "fulfilled", "cancelled", "refunded"])
+export const paymentMethodSchema = z.enum(["online", "cod"])
 export const requestStatusSchema = z.enum(["new", "contacted", "done", "declined"])
 
 export const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) })
@@ -144,6 +145,7 @@ export const orderInputSchema = z.object({
   items: z.array(cartItemSchema).min(1).max(30),
   currency: currencySchema,
   locale: localeSchema.default("fr"),
+  paymentMethod: paymentMethodSchema.default("online"),
   customerName: z.string().trim().min(2).max(120),
   email: z.email().max(200),
   phone: z.string().trim().min(6).max(30),
@@ -166,6 +168,7 @@ export const orderItemSchema = z.object({
 export const orderSchema = z.object({
   number: z.string(),
   status: orderStatusSchema,
+  paymentMethod: paymentMethodSchema,
   currency: currencySchema,
   subtotalMinor: z.number().int(),
   shippingMinor: z.number().int(),

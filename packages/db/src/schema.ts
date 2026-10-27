@@ -160,6 +160,8 @@ export const orders = pgTable(
     postalCode: text("postal_code"),
     note: text("note"),
     locale: text("locale").notNull().default("fr"),
+    /** "online" (gateway) or "cod" (cash on delivery, Tunisia only). */
+    paymentMethod: text("payment_method").notNull().default("online"),
     paymentProvider: text("payment_provider"),
     paymentRef: text("payment_ref"),
     paidAt: timestamp("paid_at", { withTimezone: true }),

@@ -60,6 +60,7 @@ export function buildScenario(now: Date, products: ScenarioProduct[]): { orders:
           : roll < 0.4
             ? "fulfilled"
             : "paid"
+    const cod = !abroad && n % 4 === 0
     const name = pick(PEOPLE)
     const lines = Array.from({ length: 1 + Math.floor(rand() * 3) }, () => pick(products))
     const unique = [...new Map(lines.map((p) => [p.id, p])).values()]
@@ -81,8 +82,9 @@ export function buildScenario(now: Date, products: ScenarioProduct[]): { orders:
       city: place.city,
       address: "12 rue des Potiers",
       locale: abroad ? "fr" : "fr",
-      paymentProvider: "demo",
-      paymentRef: `demo_seed_${n}`,
+      paymentMethod: cod ? "cod" : "online",
+      paymentProvider: cod ? "cod" : "demo",
+      paymentRef: cod ? null : `demo_seed_${n}`,
       paidAt: status === "paid" || status === "fulfilled" ? new Date(createdAt.getTime() + 5 * 60_000) : null,
       createdAt,
     })

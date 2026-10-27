@@ -23,6 +23,9 @@ const schema = z
     KONNECT_API_KEY: z.string().optional(),
     KONNECT_WALLET_ID: z.string().optional(),
     KONNECT_MODE: z.enum(["test", "live"]).default("test"),
+    /** Order emails go through Resend. Without a key they are only logged (local and previews). */
+    RESEND_API_KEY: z.string().optional(),
+    EMAIL_FROM: z.string().default("Ceraghit <onboarding@resend.dev>"),
     S3_ENDPOINT: z.string().optional(),
     S3_REGION: z.string().default("auto"),
     S3_BUCKET: z.string().optional(),
@@ -38,6 +41,7 @@ const schema = z
       if (!env.S3_ENDPOINT || !env.S3_BUCKET || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
         fail("production needs the R2 S3_* settings")
       }
+      if (!env.RESEND_API_KEY) fail("production needs RESEND_API_KEY")
       if (env.SEED_DEMO && env.BOOTSTRAP) fail("production must not seed demo data")
       if (env.DEPLOY_ENV !== "production") fail("production needs DEPLOY_ENV=production")
     } else {

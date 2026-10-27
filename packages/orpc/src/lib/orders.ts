@@ -4,6 +4,7 @@ import { type Currency, estimateShipping, type OrderInput, pick } from "@workspa
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { findProducts } from "./catalog"
+import { sendOrderEmails } from "./order-emails"
 import { unitMinor } from "./pricing"
 import { getSettings } from "./settings"
 
@@ -36,7 +37,9 @@ export async function releaseExpiredHolds(db: Db, now: Date): Promise<number> {
     const stale = await tx
       .update(orders)
       .set({ status: "cancelled" })
-      .where(and(eq(orders.status, "pending_payment"), lt(orders.createdAt, cutoff)))
+      .where(
+        and(eq(orders.status, "pending_payment"), eq(orders.paymentMethod, "online"), lt(orders.createdAt, cutoff)),
+      )
       .returning({ id: orders.id })
     for (const { id } of stale) await restock(tx, id)
     return stale.length
@@ -49,6 +52,9 @@ function newNumber(): string {
 
 export async function createOrder(services: Services, input: OrderInput) {
   const { db, payments, config, now } = services
+  if (input.paymentMethod === "cod" && input.country !== "TN") {
+    throw new ORPCError("BAD_REQUEST", { message: "Cash on delivery is only available in Tunisia." })
+  }
   await releaseExpiredHolds(db, now())
 
   const ids = [...new Set(input.items.map((i) => i.productId))]
@@ -124,6 +130,7 @@ export async function createOrder(services: Services, input: OrderInput) {
       postalCode: input.postalCode,
       note: input.note,
       locale: input.locale,
+      paymentMethod: input.paymentMethod,
     }
     for (let attempt = 0; attempt < 5; attempt++) {
       const [order] = await tx
@@ -150,6 +157,13 @@ export async function createOrder(services: Services, input: OrderInput) {
     throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Could not create the order." })
   })
 
+  const orderUrl = `${config.webUrl}/${input.locale}/order/${created.number}?t=${created.publicToken}`
+  if (created.paymentMethod === "cod") {
+    await db.update(orders).set({ paymentProvider: "cod" }).where(eq(orders.id, created.id))
+    await sendOrderEmails(services, created.id)
+    return { number: created.number, token: created.publicToken, payUrl: orderUrl }
+  }
+
   try {
     const checkout = await payments.init({
       orderNumber: created.number,
@@ -157,8 +171,8 @@ export async function createOrder(services: Services, input: OrderInput) {
       currency: created.currency,
       customer: { name: created.customerName, email: created.email, phone: created.phone },
       description: `Ceraghit ${created.number}`,
-      successUrl: `${config.webUrl}/${input.locale}/order/${created.number}?t=${created.publicToken}`,
-      failUrl: `${config.webUrl}/${input.locale}/order/${created.number}?t=${created.publicToken}`,
+      successUrl: orderUrl,
+      failUrl: orderUrl,
       webhookUrl: `${config.apiPublicUrl}/webhooks/${payments.name}`,
     })
     await db
@@ -215,6 +229,7 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
       .set({ status: "paid", paidAt: now() })
       .where(and(eq(orders.id, order.id), eq(orders.status, "pending_payment")))
       .returning({ status: orders.status })
+    if (paid) await sendOrderEmails(services, order.id)
     return { number: order.number, status: paid?.status ?? "paid" }
   }
   if (check.status === "failed") {

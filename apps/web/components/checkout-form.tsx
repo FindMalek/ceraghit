@@ -34,6 +34,7 @@ export function CheckoutForm() {
   const lines = useCartStore((s) => s.lines)
   const clear = useCartStore((s) => s.clear)
   const totals = useCartTotals(lines)
+  const [method, setMethod] = useState<"online" | "cod">("online")
   const [country, setCountry] = useState<(typeof SHIPPING_COUNTRIES)[number]>("TN")
   const quote = useShippingQuote(
     lines.map((l) => ({ productId: l.productId, variantId: l.variantId ?? undefined, quantity: l.quantity })),
@@ -42,6 +43,7 @@ export function CheckoutForm() {
   )
   const shipping = quote.data?.available ? quote.data.amountMinor : 0
   const canPay = quote.data?.available === true
+  const cod = method === "cod" && country === "TN"
   const [accepted, setAccepted] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<Field | "items" | "terms", string>>>({})
 
@@ -75,6 +77,7 @@ export function CheckoutForm() {
     const parsed = orderInputSchema.safeParse({
       items: lines.map((l) => ({ productId: l.productId, variantId: l.variantId ?? undefined, quantity: l.quantity })),
       currency,
+      paymentMethod: cod ? "cod" : "online",
       locale: localeSchema.catch("fr").parse(locale),
       customerName: value("customerName"),
       email: value("email"),
@@ -144,6 +147,27 @@ export function CheckoutForm() {
           <FormField id="postalCode" label={t("postalCode")} autoComplete="postal-code" className="sm:max-w-48" />
           <FormField id="note" label={t("note")} multiline placeholder={t("notePlaceholder")} />
         </fieldset>
+        {country === "TN" && (
+          <fieldset className="space-y-3">
+            <legend className="mb-4 font-display text-3xl text-gold">{t("method")}</legend>
+            {(["online", "cod"] as const).map((value) => (
+              <label key={value} className="frame flex min-h-11 cursor-pointer items-start gap-3 bg-card/60 p-4">
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={value}
+                  checked={method === value}
+                  onChange={() => setMethod(value)}
+                  className="mt-1 size-4 accent-primary"
+                />
+                <span>
+                  <span className="block font-heading">{value === "cod" ? t("methodCod") : t("methodOnline")}</span>
+                  {value === "cod" && <span className="text-muted-foreground text-sm">{t("methodCodHint")}</span>}
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
       </div>
 
       <aside className="frame h-fit space-y-5 bg-card/70 p-6 lg:sticky lg:top-24">
@@ -184,9 +208,11 @@ export function CheckoutForm() {
         <ShippingNudge quote={quote} />
         <ShippingNote />
         <ShippingUnavailable quote={quote} />
-        <p className="text-muted-foreground text-xs">
-          {t("payIn", { currency: currency === "TND" ? "TND (DT)" : "EUR (€)" })}
-        </p>
+        {!cod && (
+          <p className="text-muted-foreground text-xs">
+            {t("payIn", { currency: currency === "TND" ? "TND (DT)" : "EUR (€)" })}
+          </p>
+        )}
         {errors.items && (
           <p role="alert" className="text-destructive text-sm">
             {errors.items}
@@ -198,11 +224,13 @@ export function CheckoutForm() {
             <>
               <Spinner /> {t("paying")}
             </>
+          ) : cod ? (
+            t("placeOrder")
           ) : (
             t("pay", { total: formatMoney(totals.subtotal + shipping, currency, locale) })
           )}
         </Button>
-        <p className="text-muted-foreground text-xs">{t("secure")}</p>
+        {!cod && <p className="text-muted-foreground text-xs">{t("secure")}</p>}
       </aside>
     </form>
   )
