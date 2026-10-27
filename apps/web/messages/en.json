@@ -125,6 +125,11 @@
     "secure": "Secure card payment. You are redirected to the payment page.",
     "emptyCart": "Your cart is empty, there is nothing to order.",
     "payIn": "You pay in {currency}",
+    "method": "Payment method",
+    "methodOnline": "Card or e-DINAR",
+    "methodCod": "Cash on delivery",
+    "methodCodHint": "Available in Tunisia. You pay the courier when you receive it.",
+    "placeOrder": "Confirm order",
     "errors": {
       "customerName": "Enter your full name.",
       "email": "Enter a valid email address.",
@@ -163,7 +168,9 @@
     "notFound": "Order not found. Check the link you received after ordering.",
     "keepLink": "Keep this page: it lets you follow your order.",
     "retryOrder": "Place the order again",
-    "stillPending": "The payment is not confirmed yet. If you have paid, confirmation can take a few minutes: come back to this page."
+    "stillPending": "The payment is not confirmed yet. If you have paid, confirmation can take a few minutes: come back to this page.",
+    "codTitle": "Order confirmed",
+    "codText": "Thank you, your order is confirmed. You pay in cash on delivery, the studio will contact you to arrange it."
   },
   "demo": {
     "title": "Demo payment",

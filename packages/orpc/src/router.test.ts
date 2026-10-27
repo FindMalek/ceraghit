@@ -6,7 +6,8 @@ import { seed } from "@workspace/db/seed"
 import { asc, eq, inArray } from "drizzle-orm"
 import { type Context, createContext, type Services } from "./context"
 import { AdminAuth } from "./lib/auth"
-import { cancelOrder } from "./lib/orders"
+import { ConsoleMailer } from "./lib/mailer"
+import { cancelOrder, releaseExpiredHolds } from "./lib/orders"
 import { DemoProvider, KonnectProvider } from "./lib/payments"
 import { createStorage, type Storage } from "./lib/storage"
 import { appRouter } from "./routers"
@@ -21,6 +22,7 @@ describe.skipIf(!url)("router", () => {
   const services: Services = {
     db,
     payments,
+    mailer: new ConsoleMailer(),
     storage: null,
     auth: new AdminAuth(db),
     now: () => clock,
@@ -287,6 +289,34 @@ describe.skipIf(!url)("router", () => {
     const { settleOrder } = await import("./lib/orders")
     await settleOrder({ ...services, payments: wrong }, order!.paymentRef!)
     expect((await db.select().from(orders).where(eq(orders.id, order!.id)))[0]!.status).toBe("pending_payment")
+  })
+
+  test("cash on delivery is Tunisia only, skips the gateway and mails the customer and the studio", async () => {
+    const sent: string[] = []
+    const cod = createRouterClient(appRouter, {
+      context: (): Context =>
+        createContext({ ...services, mailer: { send: async (mail) => void sent.push(mail.to) } }, new Headers()),
+    })
+    const items = [{ productId: ids.mug!, quantity: 1 }]
+    await expect(
+      cod.public.orders.create({ ...customer, country: "BE", paymentMethod: "cod", items }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+
+    const created = await cod.public.orders.create({ ...customer, paymentMethod: "cod", items })
+    const [order] = await db.select().from(orders).where(eq(orders.number, created.number))
+    expect(order).toMatchObject({
+      paymentMethod: "cod",
+      paymentProvider: "cod",
+      paymentRef: null,
+      status: "pending_payment",
+    })
+    expect(created.payUrl).toContain(`/order/${created.number}`)
+    expect(sent.sort()).toEqual([customer.email, "ceraghit@yahoo.fr"].sort())
+
+    clock = new Date(clock.getTime() + 24 * 60 * 60_000)
+    expect((await cod.public.orders.get({ number: created.number, token: created.token })).status).toBe(
+      "pending_payment",
+    )
   })
 })
 

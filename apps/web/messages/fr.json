@@ -125,6 +125,11 @@
     "secure": "Paiement sécurisé par carte bancaire. Vous êtes redirigé vers la page de paiement.",
     "emptyCart": "Votre panier est vide, il n'y a rien à commander.",
     "payIn": "Vous payez en {currency}",
+    "method": "Mode de paiement",
+    "methodOnline": "Carte bancaire ou e-DINAR",
+    "methodCod": "Paiement en espèces à la livraison",
+    "methodCodHint": "Disponible en Tunisie. Vous réglez le livreur à la réception.",
+    "placeOrder": "Confirmer la commande",
     "errors": {
       "customerName": "Indiquez votre nom complet.",
       "email": "Indiquez une adresse e-mail valide.",
@@ -163,7 +168,9 @@
     "notFound": "Commande introuvable. Vérifiez le lien reçu après votre commande.",
     "keepLink": "Conservez cette page : elle permet de suivre votre commande.",
     "retryOrder": "Refaire une commande",
-    "stillPending": "Le paiement n'est pas encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes : revenez sur cette page."
+    "stillPending": "Le paiement n'est pas encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes : revenez sur cette page.",
+    "codTitle": "Commande confirmée",
+    "codText": "Merci, votre commande est confirmée. Vous réglez en espèces à la livraison, l'atelier vous contactera pour l'organiser."
   },
   "demo": {
     "title": "Paiement de démonstration",

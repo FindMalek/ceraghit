@@ -10,6 +10,7 @@ const production = {
   KONNECT_MODE: "live",
   KONNECT_API_KEY: "k",
   KONNECT_WALLET_ID: "w",
+  RESEND_API_KEY: "re_test",
   S3_ENDPOINT: "https://r2",
   S3_BUCKET: "b",
   S3_ACCESS_KEY_ID: "a",

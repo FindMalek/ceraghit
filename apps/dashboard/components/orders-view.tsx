@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { countryName, formatMoney } from "@workspace/sdk"
-import { Button } from "@workspace/ui/components/button"
+import { Button, buttonVariants } from "@workspace/ui/components/button"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group"
 import {
   Sheet,
@@ -16,6 +16,7 @@ import {
   SheetTitle,
 } from "@workspace/ui/components/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
+import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -82,7 +83,7 @@ function actionsFor(status: Status): Action[] {
 }
 
 function useOrders(input: { status?: Status; q?: string }) {
-  return useQuery(orpc.admin.orders.list.queryOptions({ input }))
+  return useQuery(orpc.admin.orders.list.queryOptions({ input: { ...input, limit: 200 } }))
 }
 
 function Line({ label, value }: { label: string; value: React.ReactNode }) {
@@ -166,6 +167,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                 <section>
                   <h2 className="mb-1 font-heading text-2xl">Paiement</h2>
                   <dl>
+                    <Line label="Mode" value={order.paymentMethod === "cod" ? "Espèces à la livraison" : "En ligne"} />
                     <Line label="Passerelle" value={order.paymentProvider ?? "—"} />
                     <Line
                       label="Référence"
@@ -175,20 +177,26 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                   </dl>
                 </section>
               </div>
-              {actionsFor(order.status).length > 0 && (
-                <SheetFooter className="sticky bottom-0 flex-row flex-wrap justify-end border-t bg-background/95 backdrop-blur">
-                  {actionsFor(order.status).map((action) => (
-                    <Button
-                      key={action.to}
-                      variant={action.destructive ? "outline" : "default"}
-                      className="h-11"
-                      onClick={() => setPending(action)}
-                    >
-                      {action.label}
-                    </Button>
-                  ))}
-                </SheetFooter>
-              )}
+              <SheetFooter className="sticky bottom-0 flex-row flex-wrap justify-end border-t bg-background/95 backdrop-blur">
+                <a
+                  href={`/invoice/${order.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(buttonVariants({ variant: "outline" }), "h-11")}
+                >
+                  Facture
+                </a>
+                {actionsFor(order.status).map((action) => (
+                  <Button
+                    key={action.to}
+                    variant={action.destructive ? "outline" : "default"}
+                    className="h-11"
+                    onClick={() => setPending(action)}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </SheetFooter>
             </>
           )}
         </SheetContent>
@@ -286,6 +294,7 @@ export function OrdersView() {
                     <TableHead>Pays</TableHead>
                     <TableHead className="text-right">Pièces</TableHead>
                     <TableHead className="text-right">Total</TableHead>
+                    <TableHead>Paiement</TableHead>
                     <TableHead>Statut</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -302,6 +311,7 @@ export function OrdersView() {
                       <TableCell className="text-right tabular-nums">
                         {formatMoney(order.totalMinor, order.currency, "fr")}
                       </TableCell>
+                      <TableCell>{order.paymentMethod === "cod" ? "Livraison" : "En ligne"}</TableCell>
                       <TableCell>
                         <OrderStatusBadge status={order.status} />
                       </TableCell>

@@ -2,6 +2,7 @@ import { pick } from "@workspace/sdk"
 import { getLocale, getTranslations } from "next-intl/server"
 import { CategoryChips } from "@/components/category-chips"
 import { CategoryHeading } from "@/components/category-heading"
+import { CategoryTiles } from "@/components/category-tiles"
 import { EmptyState } from "@/components/empty-state"
 import { ProductGrid } from "@/components/product-card"
 import { ShopFilters } from "@/components/shop-filters"
@@ -36,6 +37,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         <h1 className="text-5xl md:text-7xl">{t("title")}</h1>
         <p className="text-muted-foreground">{t("intro")}</p>
       </header>
+      {!filtered && categories.length > 0 && <CategoryTiles categories={categories} locale={locale} />}
       <CategoryChips categories={categories} locale={locale} activeLabel={t("all")} />
       <ShopFilters />
       {products.length === 0 ? (

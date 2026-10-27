@@ -13,4 +13,6 @@ export const STUDIO_PHOTOS = [
   { src: "/catalogue/studio-lamps.webp", w: 680, h: 984 },
 ]
 
+export const HERO_PHOTOS = ["0200-1", "0001-1", "0010-1", "0011-1"].map((n) => `/catalogue/${n}.webp`)
+
 export const PROCESS_PHOTOS = [1, 2, 3, 4].map((n) => `/catalogue/process-${n}.webp`)
