@@ -32,7 +32,7 @@ jobs:
     timeout-minutes: 10
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
         with:
           dest: ${{ runner.temp }}/setup-pnpm
@@ -72,7 +72,7 @@ jobs:
           - app: dashboard
             project: VERCEL_PROJECT_ID_DASHBOARD
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
         with:
           dest: ${{ runner.temp }}/setup-pnpm
