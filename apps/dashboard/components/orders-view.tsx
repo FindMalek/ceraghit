@@ -131,13 +131,9 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
         queryClient.invalidateQueries({ queryKey: orpc.admin.overview.key() })
         queryClient.invalidateQueries({ queryKey: orpc.admin.products.key() })
         toast.success("Commande mise à jour.")
-        setPending(null)
         onClose()
       },
-      onError: (error) => {
-        setPending(null)
-        toast.error(errorMessage(error))
-      },
+      onError: (error) => toast.error(errorMessage(error)),
     }),
   )
 
