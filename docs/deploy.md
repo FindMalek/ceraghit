@@ -39,7 +39,7 @@ Closing the PR deletes the apps, database, uploads (`pr-<n>/` in `ceraghit-dev`)
 
 ## staging (permanent, on the-keep)
 
-`.github/workflows/staging.yml` redeploys `main` on every merge to fixed hosts, in the Dokploy project `ceraghit-staging`
+`.github/workflows/staging.yml` redeploys `main` to fixed hosts, **by hand only** (Actions → Staging → Run workflow; a merge to `main` ships to Vercel, not here), in the Dokploy project `ceraghit-staging`
 with its own Postgres: web https://ceraghit.findmalek.engineer, dashboard https://dashboard.ceraghit.findmalek.engineer,
 api https://api.ceraghit.findmalek.engineer (docs at `/v1/docs`). It is a preview-grade environment: demo payments (or
 Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Variables: `STAGING_WEB_HOST`,

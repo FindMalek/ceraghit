@@ -1,12 +1,10 @@
-# Permanent staging on the-keep (Dokploy): every merge to main builds the three images and redeploys them on fixed hosts
-# with their own database. Demo payments, demo data, the dev bucket under `staging/`: never live keys, that is
+# Permanent staging on the-keep (Dokploy), manual runs only: main ships to Vercel (deploy.yml), so a merge no longer
+# redeploys it. Run it by hand to rebuild the three images on fixed hosts with their own database. Demo payments, demo data, the dev bucket under `staging/`: never live keys, that is
 # production on Vercel. Skipped until vars.PREVIEW_ENABLED is "true", see docs/deploy.md.
 
 name: Staging
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
