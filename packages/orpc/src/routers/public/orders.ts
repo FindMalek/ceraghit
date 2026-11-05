@@ -14,6 +14,7 @@ import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { clientAddress, RateLimit } from "../../lib/rate-limit"
 import { getSettings } from "../../lib/settings"
+import { reserveUpload } from "../../lib/uploads"
 import { publicProcedure } from "../../procedures"
 
 const TAG = ["orders"]
@@ -94,6 +95,17 @@ export const requestsRouter = {
         throw new ORPCError("TOO_MANY_REQUESTS", { message: "Too many uploads, try again in a few minutes." })
       }
       const key = `${storage.prefix}requests/${crypto.randomUUID()}.${IMAGE_EXTENSIONS[input.contentType]}`
+      await reserveUpload(context.db, {
+        key,
+        folder: "requests",
+        contentType: input.contentType,
+        bytes: input.size,
+      }).catch((error) => {
+        if (error instanceof ORPCError && error.code === "PAYLOAD_TOO_LARGE") {
+          throw new ORPCError("SERVICE_UNAVAILABLE", { message: "Photos are not available right now." })
+        }
+        throw error
+      })
       return { uploadUrl: await storage.presignPut(key, input.contentType, input.size), image: `s3:${key}` }
     }),
 

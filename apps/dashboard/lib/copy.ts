@@ -33,3 +33,11 @@ export const PAYMENT_TEXT = {
   cod: "Paiement en espèces à la livraison. ",
   transfer: "Paiement par virement bancaire. ",
 } as const
+
+export const PAYMENT_PROVIDER: Record<string, string> = {
+  konnect: "Konnect",
+  demo: "Démo",
+  cod: "Espèces",
+  transfer: "Virement",
+  manual: "Saisie manuelle",
+}

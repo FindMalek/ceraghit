@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { formatMoney, imageSrc, pick, toMinor } from "./format"
+import { fitWithin, formatMoney, imageSrc, pick, toMinor } from "./format"
 
 test("the same product shows its TND and EUR price", () => {
   expect(formatMoney(60_000, "TND", "en")).toBe("60 DT")
@@ -21,4 +21,10 @@ test("uploaded images go through the api, static ones stay on the web app", () =
   expect(imageSrc("/catalogue/0010.jpg", "https://ceraghit.example")).toBe(
     "https://ceraghit.example/catalogue/0010.jpg",
   )
+})
+
+test("a big photo is scaled to the long side, a small one is left alone", () => {
+  expect(fitWithin(4000, 3000, 2400)).toEqual({ width: 2400, height: 1800 })
+  expect(fitWithin(3000, 4000, 2400)).toEqual({ width: 1800, height: 2400 })
+  expect(fitWithin(800, 600, 2400)).toEqual({ width: 800, height: 600 })
 })

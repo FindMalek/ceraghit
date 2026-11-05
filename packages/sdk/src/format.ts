@@ -55,3 +55,9 @@ export function countryName(code: string, locale = "fr"): string {
     return code
   }
 }
+
+/** Size of an image scaled down so its long side is at most `max`, never scaled up. */
+export function fitWithin(width: number, height: number, max: number): { width: number; height: number } {
+  const ratio = Math.min(1, max / Math.max(width, height))
+  return { width: Math.max(1, Math.round(width * ratio)), height: Math.max(1, Math.round(height * ratio)) }
+}

@@ -1,6 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createRouterClient } from "@orpc/server"
-import { categories, createDb, customRequests, orders, products, productVariants } from "@workspace/db"
+import {
+  categories,
+  createDb,
+  customRequests,
+  orders,
+  productImages,
+  products,
+  productVariants,
+  uploads,
+} from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { asc, eq, inArray } from "drizzle-orm"
@@ -10,6 +19,7 @@ import { ConsoleMailer } from "./lib/mailer"
 import { cancelOrder, releaseExpiredHolds } from "./lib/orders"
 import { DemoProvider, KonnectProvider } from "./lib/payments"
 import { createStorage, type Storage } from "./lib/storage"
+import { cleanupUploads } from "./lib/uploads"
 import { appRouter } from "./routers"
 import { adminRouter } from "./routers/admin"
 
@@ -111,6 +121,7 @@ describe.skipIf(!url)("router", () => {
       readUrl: async (key) => key,
       publicUrl: () => null,
       remove: async () => {},
+      list: async () => [],
     }
     const client = createRouterClient(appRouter, {
       context: (): Context => createContext({ ...services, storage }, new Headers()),
@@ -349,6 +360,56 @@ describe.skipIf(!url)("router", () => {
     expect(placed.bank?.iban).toBeTruthy()
     expect(sent.find((m) => m.to === customer.email && m.text.includes(abroad.number))?.text).toContain("IBAN")
     expect(await off.public.catalog.settings()).not.toHaveProperty("bank")
+  })
+
+  test("uploads are counted against the plan, and a file nobody uses is deleted only after a month unused", async () => {
+    const removed: string[] = []
+    const storage: Storage = {
+      bucket: "b",
+      prefix: "pr-1/",
+      presignPut: async (key, _type, size) => `https://s3.test/${key}?size=${size}`,
+      head: async () => true,
+      readUrl: async (key) => key,
+      publicUrl: () => null,
+      remove: async (key) => void removed.push(key),
+      list: async () => [],
+    }
+    const session = await services.auth.login("127.0.0.1", "owner@test.local", "clay-test-pass")
+    const withStorage = { ...services, storage }
+    const owner = createRouterClient(adminRouter, {
+      context: (): Context =>
+        createContext(withStorage, new Headers({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" })),
+    })
+    const before = await owner.uploads.usage()
+    const kept = await owner.uploads.sign({ folder: "products", contentType: "image/webp", size: 1_000 })
+    const lost = await owner.uploads.sign({ folder: "products", contentType: "image/webp", size: 2_000 })
+    expect((await owner.uploads.usage()).usedBytes - before.usedBytes).toBe(3_000)
+    await db.insert(productImages).values({ productId: ids.mug!, image: kept.image, position: 99 })
+
+    const day = 24 * 60 * 60_000
+    const start = new Date("2026-12-01T03:00:00Z")
+    await cleanupUploads(db, storage, start)
+    await cleanupUploads(db, storage, new Date(start.getTime() + 29 * day))
+    expect(removed).not.toContain(lost.image.slice(3))
+    await cleanupUploads(db, storage, new Date(start.getTime() + 31 * day))
+    expect(removed).toContain(lost.image.slice(3))
+    expect(removed).not.toContain(kept.image.slice(3))
+    const left = await db
+      .select({ key: uploads.key })
+      .from(uploads)
+      .where(inArray(uploads.key, [kept.image.slice(3), lost.image.slice(3)]))
+    expect(left.map((r) => r.key)).toEqual([kept.image.slice(3)])
+
+    await db.insert(uploads).values([
+      { key: "full-a", folder: "test", contentType: "image/webp", bytes: 1_245_000_000 },
+      { key: "full-b", folder: "test", contentType: "image/webp", bytes: 1_245_000_000 },
+    ])
+    await expect(
+      owner.uploads.sign({ folder: "products", contentType: "image/webp", size: 12_000_000 }),
+    ).rejects.toMatchObject({ code: "PAYLOAD_TOO_LARGE" })
+    await db.delete(uploads).where(inArray(uploads.key, ["full-a", "full-b"]))
+    await db.delete(productImages).where(eq(productImages.image, kept.image))
+    await db.delete(uploads).where(eq(uploads.key, kept.image.slice(3)))
   })
 
   test("the owner ships a cash on delivery order without marking it paid first, an online one must be paid", async () => {

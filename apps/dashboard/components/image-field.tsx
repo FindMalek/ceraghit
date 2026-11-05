@@ -3,13 +3,14 @@
 import { ORPCError } from "@orpc/client"
 import { ArrowDownIcon, ArrowUpIcon, ImageIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react"
 import { browserClient } from "@workspace/orpc/react"
-import { imageSrc } from "@workspace/sdk"
+import { imageSrc, UPLOAD_MAX_BYTES } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { useAppConfig } from "@/components/app-config"
+import { compressImage } from "@/lib/compress-image"
 import { errorMessage } from "@/lib/errors"
 
 type Folder = "products" | "categories" | "locations"
@@ -18,9 +19,15 @@ type ContentType = "image/jpeg" | "image/png" | "image/webp" | "image/avif"
 const TYPES: ContentType[] = ["image/jpeg", "image/png", "image/webp", "image/avif"]
 
 /** Uploads straight to the bucket with a signed url, so the file never passes through a serverless function. */
-async function uploadFile(file: File, folder: Folder): Promise<string> {
-  if (!TYPES.includes(file.type as ContentType)) throw new Error("Formats acceptés : JPG, PNG, WebP, AVIF.")
-  const target = await browserClient.admin.uploads.sign({ folder, contentType: file.type as ContentType })
+async function uploadFile(original: File, folder: Folder): Promise<string> {
+  if (!TYPES.includes(original.type as ContentType)) throw new Error("Formats acceptés : JPG, PNG, WebP, AVIF.")
+  const file = await compressImage(original)
+  if (file.size > UPLOAD_MAX_BYTES) throw new Error("Cette image est trop lourde, même après compression.")
+  const target = await browserClient.admin.uploads.sign({
+    folder,
+    contentType: file.type as ContentType,
+    size: file.size,
+  })
   const res = await fetch(target.uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file })
   if (!res.ok) throw new Error("L'envoi a échoué (vérifiez le CORS du bucket).")
   return target.image

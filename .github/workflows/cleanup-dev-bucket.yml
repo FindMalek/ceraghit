@@ -1,0 +1,46 @@
+# Daily housekeeping of the homelab bucket (Garage `ceraghit-dev`): files of closed PRs and anything older than two weeks.
+# The production bucket is never touched here, see cleanup-uploads.yml.
+name: Cleanup dev bucket
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only list what would be deleted
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  clean:
+    if: vars.PREVIEW_ENABLED == 'true'
+    runs-on: [self-hosted, the-keep]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - run: pnpm install --frozen-lockfile --filter api...
+      - name: Delete what nothing needs any more
+        env:
+          GH_TOKEN: ${{ github.token }}
+          S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
+          S3_BUCKET: ${{ vars.PREVIEW_S3_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.PREVIEW_S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.PREVIEW_S3_SECRET_ACCESS_KEY }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          export OPEN_PRS=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number --jq 'map(.number) | join(",")')
+          bun apps/api/scripts/cleanup-dev-bucket.ts

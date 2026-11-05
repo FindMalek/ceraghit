@@ -342,9 +342,20 @@ export const statsSchema = z.object({
   lowStock: z.array(z.object({ id: z.string(), ref: z.string(), title: z.string(), stock: z.number().int() })),
 })
 
+/** What the studio's plan stores: dashboard images and customer photos together. */
+export const STORAGE_QUOTA_BYTES = 2_500_000_000
+/** The dashboard shrinks every image first, so anything past this is not a normal photo. */
+export const UPLOAD_MAX_BYTES = 12 * 1024 * 1024
+
 export const uploadSignSchema = z.object({
   folder: z.enum(["products", "categories", "locations"]),
   contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
+  size: z.number().int().min(1).max(UPLOAD_MAX_BYTES),
+})
+export const storageUsageSchema = z.object({
+  usedBytes: z.number().int(),
+  quotaBytes: z.number().int(),
+  files: z.number().int(),
 })
 export const uploadTargetSchema = z.object({ uploadUrl: z.string(), image: z.string(), publicUrl: z.string() })
 

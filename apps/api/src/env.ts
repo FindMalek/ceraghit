@@ -25,6 +25,8 @@ const schema = z
     KONNECT_MODE: z.enum(["test", "live"]).default("test"),
     /** Card payment through the gateway. Off: Tunisia pays cash on delivery, the rest by bank transfer. */
     ONLINE_PAYMENTS: flag.default(false),
+    /** Lets the daily GitHub job delete files nothing uses any more, see .github/workflows/cleanup-uploads.yml. */
+    CRON_SECRET: z.string().min(24).optional(),
     /** Order emails go through Resend. Without a key they are only logged (local and previews). */
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().default("Ceraghit <onboarding@resend.dev>"),

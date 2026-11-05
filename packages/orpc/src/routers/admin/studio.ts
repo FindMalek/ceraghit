@@ -3,6 +3,7 @@ import { locations } from "@workspace/db"
 import {
   locationInputSchema,
   locationSchema,
+  storageUsageSchema,
   studioSettingsSchema,
   uploadSignSchema,
   uploadTargetSchema,
@@ -10,6 +11,7 @@ import {
 import { asc, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { getSettings, saveSettings } from "../../lib/settings"
+import { reserveUpload, storageUsage } from "../../lib/uploads"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -93,10 +95,15 @@ export const uploadsRouter = {
       const { storage } = context
       if (!storage) throw new ORPCError("PRECONDITION_FAILED", { message: "Image storage is not configured here." })
       const key = `${storage.prefix}${input.folder}/${crypto.randomUUID()}.${EXTENSIONS[input.contentType]}`
+      await reserveUpload(context.db, { key, folder: input.folder, contentType: input.contentType, bytes: input.size })
       return {
-        uploadUrl: await storage.presignPut(key, input.contentType),
+        uploadUrl: await storage.presignPut(key, input.contentType, input.size),
         image: `s3:${key}`,
         publicUrl: await storage.readUrl(key),
       }
     }),
+  usage: adminProcedure
+    .route({ method: "GET", path: "/admin/uploads/usage", summary: "Storage used against the plan", tags: TAG })
+    .output(storageUsageSchema)
+    .handler(({ context }) => storageUsage(context.db)),
 }

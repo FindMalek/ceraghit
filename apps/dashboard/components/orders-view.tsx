@@ -24,7 +24,7 @@ import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { OrderStatusBadge } from "@/components/status-badge"
-import { formatDate, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_SHORT } from "@/lib/copy"
+import { formatDate, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
 type Status = "pending_payment" | "paid" | "fulfilled" | "cancelled" | "refunded"
@@ -194,7 +194,12 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                   <h2 className="mb-1 font-heading text-2xl">Paiement</h2>
                   <dl>
                     <Line label="Mode" value={PAYMENT_LABEL[order.paymentMethod]} />
-                    <Line label="Passerelle" value={order.paymentProvider ?? "—"} />
+                    <Line
+                      label="Passerelle"
+                      value={
+                        order.paymentProvider ? (PAYMENT_PROVIDER[order.paymentProvider] ?? order.paymentProvider) : "—"
+                      }
+                    />
                     <Line
                       label="Référence"
                       value={<span className="break-all tabular-nums">{order.paymentRef ?? "—"}</span>}

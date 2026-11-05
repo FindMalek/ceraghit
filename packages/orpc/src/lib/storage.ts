@@ -26,6 +26,8 @@ export interface Storage {
   readUrl(key: string): Promise<string>
   publicUrl(key: string): string | null
   remove(key: string): Promise<void>
+  /** Every object under `prefix` (the bucket root when empty), for the cleanup of the dev bucket. */
+  list(prefix?: string): Promise<{ key: string; size: number; modifiedAt: Date }[]>
 }
 
 /** S3-compatible (Cloudflare R2 in production, Garage on the homelab) through plain signed fetches. */
@@ -67,6 +69,29 @@ export function createStorage(config: StorageConfig): Storage | null {
     publicUrl: (key) => (publicBase ? `${publicBase}/${key}` : null),
     async remove(key) {
       await aws.fetch(urlFor(key), { method: "DELETE" })
+    },
+    async list(listPrefix = "") {
+      const found: { key: string; size: number; modifiedAt: Date }[] = []
+      let token: string | null = null
+      do {
+        const url = new URL(`${endpoint.replace(/\/$/, "")}/${bucket}`)
+        url.searchParams.set("list-type", "2")
+        if (listPrefix) url.searchParams.set("prefix", listPrefix)
+        if (token) url.searchParams.set("continuation-token", token)
+        const res = await aws.fetch(url)
+        if (!res.ok) throw new Error(`bucket listing failed (${res.status})`)
+        const xml = await res.text()
+        for (const [, block] of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+          const key = block?.match(/<Key>([\s\S]*?)<\/Key>/)?.[1]
+          const size = block?.match(/<Size>(\d+)<\/Size>/)?.[1]
+          const modified = block?.match(/<LastModified>([\s\S]*?)<\/LastModified>/)?.[1]
+          if (key && size && modified) found.push({ key, size: Number(size), modifiedAt: new Date(modified) })
+        }
+        token = xml.includes("<IsTruncated>true</IsTruncated>")
+          ? (xml.match(/<NextContinuationToken>([\s\S]*?)<\/NextContinuationToken>/)?.[1] ?? null)
+          : null
+      } while (token)
+      return found
     },
   }
 }

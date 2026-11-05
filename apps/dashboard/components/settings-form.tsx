@@ -14,6 +14,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { LocalizedField } from "@/components/localized-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { ShippingRatesEditor } from "@/components/shipping-rates-editor"
+import { StorageUsage } from "@/components/storage-usage"
 import { errorMessage } from "@/lib/errors"
 import { fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 import { draftToRates, type RatesDraft, type RatesErrors, ratesToDraft } from "@/lib/shipping-draft"
@@ -77,6 +78,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
   return (
     <form onSubmit={submit} className="flex min-h-full flex-col">
       <FieldGroup className="gap-8 px-4 py-6 md:max-w-4xl md:px-6">
+        <StorageUsage />
         <FieldSet>
           <Field>
             <FieldLabel htmlFor="email">Email de contact</FieldLabel>

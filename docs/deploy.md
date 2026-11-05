@@ -57,6 +57,15 @@ Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Va
 The api does not migrate itself in production (`BOOTSTRAP=false`). The first real catalogue is loaded once with
 `DATABASE_URL=<neon> pnpm db:seed:catalog`; after that the owner edits everything in the dashboard.
 
+## photo storage (2.5 GB plan)
+
+Every file sent to the bucket is a row in `uploads` (key, folder, bytes). The dashboard compresses each photo to WebP
+(2400px long side, quality 0.86) before the direct upload, refuses an upload past `STORAGE_QUOTA_BYTES` (2.5 GB, in
+`packages/sdk`) and shows the usage in Réglages. `.github/workflows/cleanup-uploads.yml` calls `POST /cron/cleanup-uploads`
+(bearer `CRON_SECRET`) every day: a photo no product, category, location or request uses is marked unused, and deleted
+from R2 and the counter after 30 days unused. `cleanup-dev-bucket.yml` does the homelab bucket: files of closed PRs and
+anything older than 14 days.
+
 ## one-time setup
 
 **Vercel, the short way**: `cp docs/production.env.example .env.production.local`, fill it in, `vercel login`, then
@@ -99,7 +108,7 @@ Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_P
 `PREVIEW_S3_SECRET_ACCESS_KEY`, optional `KONNECT_TEST_API_KEY` / `KONNECT_TEST_WALLET_ID`, optional `GHCR_READ_TOKEN`
 (classic PAT `read:packages`), `PROJECT_TOKEN` (classic PAT `project`, for `project.yml`).
 `production` environment variables: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API|WEB|DASHBOARD`, `PRODUCTION_WEB_HOST`,
-`PRODUCTION_API_HOST`, `PRODUCTION_DASHBOARD_HOST`, `ADMIN_EMAIL`. `production` environment secrets: `VERCEL_TOKEN`,
+`PRODUCTION_API_HOST`, `PRODUCTION_DASHBOARD_HOST`, `ADMIN_EMAIL`. `production` environment secrets: `VERCEL_TOKEN`, `CRON_SECRET`,
 `DATABASE_URL` (Neon, direct url for migrations), `ADMIN_PASSWORD`.
 
 ## check before the first production deploy

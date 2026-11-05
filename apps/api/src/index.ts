@@ -40,6 +40,7 @@ const fetch = createServer({
     deployEnv: env.DEPLOY_ENV,
     secureCookies: env.APP_ENV !== "local",
     onlinePayments: env.ONLINE_PAYMENTS,
+    cronSecret: env.CRON_SECRET,
   },
 })
 

@@ -22,7 +22,7 @@ push() { # app NAME VALUE
   echo "  $1: $2"
 }
 
-for v in WEB_URL API_PUBLIC_URL API_URL DATABASE_URL RESEND_API_KEY EMAIL_FROM \
+for v in WEB_URL API_PUBLIC_URL API_URL DATABASE_URL RESEND_API_KEY EMAIL_FROM CRON_SECRET \
   S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_PUBLIC_URL; do require "$v"; done
 
 for app in api web dashboard; do
@@ -39,7 +39,7 @@ push api SEED_DEMO false
 push api ONLINE_PAYMENTS false
 push api S3_REGION auto
 push api DB_POOL_MAX 5
-for n in DATABASE_URL WEB_URL API_PUBLIC_URL RESEND_API_KEY EMAIL_FROM S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID \
+for n in DATABASE_URL WEB_URL API_PUBLIC_URL CRON_SECRET RESEND_API_KEY EMAIL_FROM S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID \
   S3_SECRET_ACCESS_KEY S3_PUBLIC_URL; do push api "$n" "$(val "$n")"; done
 # Online payment is off, so Konnect is not needed. To turn it on later: ONLINE_PAYMENTS=true, KONNECT_MODE=live and the two keys.
 if [ -n "$(val KONNECT_API_KEY)" ] && [ -n "$(val KONNECT_WALLET_ID)" ]; then
