@@ -4,11 +4,14 @@
 #
 # Usage:
 #   cp docs/production.env.example .env.production.local   # fill it in
-#   vercel login
+#   npx vercel@latest login      (or vercel login)
 #   scripts/vercel-setup.sh [scope]        # scope = your Vercel team slug, e.g. findmalek-team
 #
 # Safe to re-run: existing vars are replaced. Only the "production" environment is touched.
 set -euo pipefail
+
+# Works without a global install: `npx vercel@latest` after `npx vercel@latest login`.
+if ! command -v vercel >/dev/null 2>&1; then vercel() { npx --yes vercel@latest "$@"; }; fi
 
 SCOPE="${1:-findmalek-team}"
 ENV_FILE=".env.production.local"
