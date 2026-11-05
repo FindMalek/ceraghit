@@ -1,4 +1,4 @@
-import { type Currency, fromMinor, type Product, pick, type StudioSettings } from "@workspace/sdk"
+import { type Currency, fromMinor, type Product, type PublicSettings, pick } from "@workspace/sdk"
 import { absoluteImage, absoluteUrl, localizedPath } from "./seo"
 import { SITE } from "./site"
 
@@ -81,7 +81,7 @@ function instagramUrl(value: string): string {
   return /^https?:\/\//.test(value) ? value : `https://www.instagram.com/${value.replace(/^@/, "")}`
 }
 
-export function organizationJsonLd(settings: StudioSettings): JsonLd {
+export function organizationJsonLd(settings: PublicSettings): JsonLd {
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",

@@ -142,7 +142,9 @@
     },
     "failed": "La commande n'a pas pu être créée.",
     "backToShop": "Voir la boutique",
-    "termsLabel": "J'accepte les <link>conditions générales de vente</link>."
+    "termsLabel": "J'accepte les <link>conditions générales de vente</link>.",
+    "methodTransfer": "Virement bancaire",
+    "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement."
   },
   "order": {
     "title": "Commande {number}",
@@ -170,7 +172,15 @@
     "retryOrder": "Refaire une commande",
     "stillPending": "Le paiement n'est pas encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes : revenez sur cette page.",
     "codTitle": "Commande confirmée",
-    "codText": "Merci, votre commande est confirmée. Vous réglez en espèces à la livraison, l'atelier vous contactera pour l'organiser."
+    "codText": "Merci, votre commande est confirmée. Vous réglez en espèces à la livraison, l'atelier vous contactera pour l'organiser.",
+    "transferTitle": "Commande réservée",
+    "transferText": "Merci. Effectuez le virement avec la référence ci-dessous, nous expédions dès réception. Vous recevrez aussi ces informations par email.",
+    "bankTitle": "Coordonnées bancaires",
+    "holder": "Titulaire",
+    "bank": "Banque",
+    "iban": "IBAN",
+    "bic": "BIC",
+    "reference": "Référence à indiquer"
   },
   "demo": {
     "title": "Paiement de démonstration",

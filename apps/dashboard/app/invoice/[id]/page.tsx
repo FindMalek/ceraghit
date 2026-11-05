@@ -5,7 +5,7 @@ import { orpc } from "@workspace/orpc/react"
 import { countryName, formatMoney } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { use, useEffect } from "react"
-import { formatDate } from "@/lib/copy"
+import { formatDate, PAYMENT_TEXT } from "@/lib/copy"
 import { isUnauthorized } from "@/lib/errors"
 
 export default function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
@@ -78,7 +78,7 @@ export default function InvoicePage({ params }: { params: Promise<{ id: string }
         </div>
       </dl>
       <p className="text-muted-foreground text-sm">
-        {order.paymentMethod === "cod" ? "Paiement en espèces à la livraison. " : "Paiement en ligne. "}
+        {PAYMENT_TEXT[order.paymentMethod]}
         {order.paidAt ? `Payée le ${formatDate(order.paidAt)}.` : "Non encore payée."}
       </p>
       <Button className="h-11 print:hidden" onClick={() => window.print()}>

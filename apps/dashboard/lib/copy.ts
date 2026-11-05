@@ -19,3 +19,17 @@ export const CURRENCY_LABEL: Record<Currency, string> = { TND: "Dinars (DT)", EU
 
 const DATE = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Tunis" })
 export const formatDate = (iso: string): string => DATE.format(new Date(iso))
+
+export const PAYMENT_LABEL = {
+  online: "En ligne",
+  cod: "Espèces à la livraison",
+  transfer: "Virement bancaire",
+} as const
+
+export const PAYMENT_SHORT = { online: "En ligne", cod: "Livraison", transfer: "Virement" } as const
+
+export const PAYMENT_TEXT = {
+  online: "Paiement en ligne. ",
+  cod: "Paiement en espèces à la livraison. ",
+  transfer: "Paiement par virement bancaire. ",
+} as const

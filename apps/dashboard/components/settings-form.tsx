@@ -32,6 +32,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
   const [rateErrors, setRateErrors] = useState<RatesErrors>({})
   const [resetting, setResetting] = useState(false)
   const [note, setNote] = useState<LocalizedDraft>(toLocalizedDraft(settings.shippingNote))
+  const [bank, setBank] = useState(settings.bank)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const save = useMutation(
@@ -61,6 +62,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
       instagram: instagram.trim() || null,
       shippingRates,
       shippingNote: fromLocalizedDraft(note, true),
+      bank,
     })
     if (!parsed.success && shippingRates && !found.email)
       found.note = "Le français est obligatoire si vous écrivez une note."
@@ -150,6 +152,32 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
               />
               {errors.instagram && <FieldError>{errors.instagram}</FieldError>}
             </Field>
+          </div>
+        </FieldSet>
+        <FieldSet>
+          <FieldLabel>Compte bancaire (clients hors Tunisie)</FieldLabel>
+          <FieldDescription>
+            Affiché sur la page de commande et dans l'email envoyé aux clients qui paient par virement.
+          </FieldDescription>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(
+              [
+                ["holder", "Titulaire du compte"],
+                ["bank", "Banque"],
+                ["iban", "IBAN"],
+                ["bic", "BIC / SWIFT"],
+              ] as const
+            ).map(([key, label]) => (
+              <Field key={key}>
+                <FieldLabel htmlFor={`bank-${key}`}>{label}</FieldLabel>
+                <Input
+                  id={`bank-${key}`}
+                  className="h-11"
+                  value={bank[key]}
+                  onChange={(e) => setBank((b) => ({ ...b, [key]: e.target.value }))}
+                />
+              </Field>
+            ))}
           </div>
         </FieldSet>
 

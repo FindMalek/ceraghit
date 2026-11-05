@@ -16,7 +16,14 @@ export const localizedInput = (max = 200) =>
 
 export const productStatusSchema = z.enum(["draft", "published", "archived"])
 export const orderStatusSchema = z.enum(["pending_payment", "paid", "fulfilled", "cancelled", "refunded"])
-export const paymentMethodSchema = z.enum(["online", "cod"])
+export const paymentMethodSchema = z.enum(["online", "cod", "transfer"])
+export type PaymentMethod = z.infer<typeof paymentMethodSchema>
+
+/** Tunisia pays cash on delivery, everywhere else pays by bank transfer. Online card payment only when the api enables it. */
+export function availablePaymentMethods(country: string, onlinePayments: boolean): PaymentMethod[] {
+  const offline: PaymentMethod = country === "TN" ? "cod" : "transfer"
+  return onlinePayments ? ["online", offline] : [offline]
+}
 export const requestStatusSchema = z.enum(["new", "contacted", "done", "declined"])
 
 export const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) })
@@ -124,6 +131,22 @@ export const shippingRatesSchema = z.object({
 })
 export type ShippingRates = z.infer<typeof shippingRatesSchema>
 
+export const bankDetailsSchema = z.object({
+  holder: z.string().trim().max(120),
+  bank: z.string().trim().max(120),
+  iban: z.string().trim().max(60),
+  bic: z.string().trim().max(20),
+})
+export type BankDetails = z.infer<typeof bankDetailsSchema>
+
+/** Placeholder until the owner fills the real account in the dashboard settings. */
+export const PLACEHOLDER_BANK: BankDetails = {
+  holder: "Ceraghit Creation",
+  bank: "À compléter",
+  iban: "À compléter",
+  bic: "",
+}
+
 export const studioSettingsSchema = z.object({
   contactEmail: z.string(),
   phones: z.array(z.string()),
@@ -132,8 +155,14 @@ export const studioSettingsSchema = z.object({
   shippingRates: shippingRatesSchema,
   /** Shown at checkout, e.g. "Pièces uniques expédiées sous 7 jours". */
   shippingNote: localizedSchema.nullable(),
+  /** Account shown to customers outside Tunisia on their order page and in their email. */
+  bank: bankDetailsSchema.default(PLACEHOLDER_BANK),
 })
 export type StudioSettings = z.infer<typeof studioSettingsSchema>
+
+/** What the storefront may read: no bank account, plus whether online payment is on. */
+export const publicSettingsSchema = studioSettingsSchema.omit({ bank: true }).extend({ onlinePayments: z.boolean() })
+export type PublicSettings = z.infer<typeof publicSettingsSchema>
 
 export const cartItemSchema = z.object({
   productId: z.string(),
@@ -145,7 +174,8 @@ export const orderInputSchema = z.object({
   items: z.array(cartItemSchema).min(1).max(30),
   currency: currencySchema,
   locale: localeSchema.default("fr"),
-  paymentMethod: paymentMethodSchema.default("online"),
+  /** Defaults to the first method available for the country. */
+  paymentMethod: paymentMethodSchema.optional(),
   customerName: z.string().trim().min(2).max(120),
   email: z.email().max(200),
   phone: z.string().trim().min(6).max(30),
@@ -177,6 +207,9 @@ export const orderSchema = z.object({
   createdAt: z.string(),
   paidAt: z.string().nullable(),
 })
+
+/** What the customer sees on their order page: the bank account only while a transfer is still expected. */
+export const publicOrderSchema = orderSchema.extend({ bank: bankDetailsSchema.nullable() })
 
 export const adminOrderSchema = orderSchema.extend({
   id: z.string(),

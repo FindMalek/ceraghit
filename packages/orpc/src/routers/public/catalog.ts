@@ -6,9 +6,9 @@ import {
   locationSchema,
   productQuerySchema,
   productSchema,
+  publicSettingsSchema,
   shippingQuoteInputSchema,
   shippingQuoteSchema,
-  studioSettingsSchema,
 } from "@workspace/sdk"
 import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 import { z } from "zod"
@@ -103,8 +103,11 @@ export const catalogRouter = {
 
   settings: publicProcedure
     .route({ method: "GET", path: "/settings", summary: "Contact details and delivery fees", tags: TAG })
-    .output(studioSettingsSchema)
-    .handler(({ context }) => getSettings(context.db)),
+    .output(publicSettingsSchema)
+    .handler(async ({ context }) => {
+      const { bank: _bank, ...settings } = await getSettings(context.db)
+      return { ...settings, onlinePayments: context.config.onlinePayments }
+    }),
 
   shippingQuote: publicProcedure
     .route({ method: "POST", path: "/shipping-quote", summary: "Delivery price for a cart and a country", tags: TAG })

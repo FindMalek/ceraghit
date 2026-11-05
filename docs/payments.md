@@ -29,3 +29,10 @@ open a merchant account; payout is to a Tunisian bank account in TND.
 EUR checkout with foreign Visa/Mastercard and settlement currency; settlement delay and minimum payout; KYB documents beyond
 the patente; final rate for international cards; whether the amount field in `GET /payments/{ref}` is minor units (the
 sandbox test decides, `settleOrder` refuses to mark paid on a mismatch).
+
+## current mode (online payment off)
+
+`ONLINE_PAYMENTS=false` on the api (the default): the storefront offers no card payment. Tunisia pays **cash on
+delivery**, every other country pays by **bank transfer**: the order page and the customer email carry the account from
+the dashboard settings and the order number as the transfer reference; the owner marks the order paid when the money
+arrives, then shipped. Turning card payment back on is `ONLINE_PAYMENTS=true` plus the Konnect keys, nothing else changes.
