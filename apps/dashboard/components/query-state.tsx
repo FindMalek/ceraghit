@@ -1,7 +1,6 @@
 "use client"
 
 import { WarningCircleIcon } from "@phosphor-icons/react"
-import { errorMessage, isUnauthorized } from "@workspace/orpc/errors"
 import { Button } from "@workspace/ui/components/button"
 import {
   Empty,
@@ -13,6 +12,7 @@ import {
 } from "@workspace/ui/components/empty"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { useEffect } from "react"
+import { errorMessage, isUnauthorized } from "@/lib/errors"
 
 export function LoadingRows({ rows = 6 }: { rows?: number }) {
   return (

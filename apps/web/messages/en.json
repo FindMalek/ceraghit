@@ -299,6 +299,7 @@
             "title": "4. Payment",
             "body": [
               "Payment is made by bank card (Tunisian and international cards) through our payment provider Konnect. The studio never sees or keeps your card details.",
+              "You can also choose cash on delivery (Tunisia only): the order is then confirmed when you place it and you pay the courier on receipt.",
               "If the payment fails or is abandoned, the order is cancelled and the pieces are returned to stock."
             ]
           },
@@ -487,5 +488,10 @@
     "customDescription": "Create a unique piece with the Ceraghit studio: describe your idea and receive a quote by email.",
     "crumbHome": "Home",
     "crumbShop": "Shop"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "text": "We had a problem on our side. Please try again in a moment.",
+    "retry": "Try again"
   }
 }

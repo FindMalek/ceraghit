@@ -13,6 +13,7 @@ import {
 import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
+import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
 import { getSettings } from "../../lib/settings"
 import { publicProcedure } from "../../procedures"
@@ -48,6 +49,7 @@ export const catalogRouter = {
     .input(productQuerySchema)
     .output(z.array(productSchema))
     .handler(async ({ context, input }) => {
+      await sweepExpiredHolds(context.db, context.now())
       const [category] = input.category
         ? await context.db
             .select({ id: categories.id })
@@ -83,6 +85,7 @@ export const catalogRouter = {
     .input(z.object({ slug: z.string() }))
     .output(productSchema)
     .handler(async ({ context, input }) => {
+      await sweepExpiredHolds(context.db, context.now())
       const [row] = await findProducts(context.db, {
         where: and(eq(products.slug, input.slug), eq(products.status, "published")),
         limit: 1,

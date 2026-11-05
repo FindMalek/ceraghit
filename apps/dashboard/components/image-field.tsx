@@ -2,7 +2,6 @@
 
 import { ORPCError } from "@orpc/client"
 import { ArrowDownIcon, ArrowUpIcon, ImageIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react"
-import { errorMessage } from "@workspace/orpc/errors"
 import { browserClient } from "@workspace/orpc/react"
 import { imageSrc } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -11,6 +10,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import { useAppConfig } from "@/components/app-config"
+import { errorMessage } from "@/lib/errors"
 
 type Folder = "products" | "categories" | "locations"
 type ContentType = "image/jpeg" | "image/png" | "image/webp" | "image/avif"

@@ -299,6 +299,7 @@
             "title": "4. Paiement",
             "body": [
               "Le paiement s'effectue par carte bancaire (cartes tunisiennes et internationales) via notre prestataire de paiement Konnect. L'atelier ne voit et ne conserve jamais vos données de carte.",
+              "Vous pouvez aussi choisir le paiement en espèces à la livraison (Tunisie uniquement) : dans ce cas la commande est confirmée à sa création et vous réglez le livreur à la réception.",
               "Si le paiement échoue ou est abandonné, la commande est annulée et les pièces sont remises en stock."
             ]
           },
@@ -487,5 +488,10 @@
     "customDescription": "Créez une pièce unique avec l'atelier Ceraghit : décrivez votre idée et recevez un devis par e-mail.",
     "crumbHome": "Accueil",
     "crumbShop": "Boutique"
+  },
+  "error": {
+    "title": "Une erreur est survenue",
+    "text": "Un problème est survenu de notre côté. Réessayez dans un instant.",
+    "retry": "Réessayer"
   }
 }

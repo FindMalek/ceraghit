@@ -70,7 +70,7 @@ export function OverviewView() {
         {stats.isError && <ErrorState error={stats.error} onRetry={() => stats.refetch()} />}
         {stats.isPending && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 8 }, (_, i) => (
+            {Array.from({ length: 7 }, (_, i) => (
               <Skeleton key={`s-${i}`} className="h-28" />
             ))}
           </div>

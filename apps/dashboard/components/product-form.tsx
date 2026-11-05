@@ -1,7 +1,6 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { type Product, type ProductInput, pick, productInputSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -19,6 +18,7 @@ import { ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { emptyVariant, type VariantDraft, VariantsField } from "@/components/variants-field"
 import { PRODUCT_STATUS } from "@/lib/copy"
+import { errorMessage } from "@/lib/errors"
 import { emptyLocalized, fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 import { inputToMinor, minorToInput } from "@/lib/money"
 
@@ -207,6 +207,11 @@ function ProductFormBody({ product }: { product: Product | null }) {
       }
     }
     if (!draft.categoryId) found.categoryId = "Choisissez une catégorie."
+    if (draft.status === "published" && draft.images.length === 0)
+      found.images = "Ajoutez au moins une photo avant de publier."
+    if (!hasVariants && !draft.quoteOnly && ((priceTnd ?? 1) === 0 || (priceEur ?? 1) === 0)) {
+      found[(priceTnd ?? 1) === 0 ? "priceTnd" : "priceEur"] = "Le prix ne peut pas être zéro (sauf pièce sur devis)."
+    }
     setErrors(found)
     if (Object.keys(found).length > 0 || !parsed.success) {
       toast.error("Certains champs sont à corriger.")
@@ -384,6 +389,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
         <FieldSet>
           <FieldLabel>Photos</FieldLabel>
           <ImageListField value={draft.images} onChange={(v) => set("images", v)} />
+          {errors.images && <FieldError>{errors.images}</FieldError>}
         </FieldSet>
 
         <FieldSet>

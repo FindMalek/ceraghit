@@ -318,6 +318,27 @@ describe.skipIf(!url)("router", () => {
       "pending_payment",
     )
   })
+
+  test("the owner ships a cash on delivery order without marking it paid first, an online one must be paid", async () => {
+    const session = await services.auth.login("127.0.0.1", "owner@test.local", "clay-test-pass")
+    const owner = createRouterClient(adminRouter, {
+      context: (): Context =>
+        createContext(services, new Headers({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" })),
+    })
+    const items = [{ productId: ids.mug!, quantity: 1 }]
+    const cod = await guest.public.orders.create({ ...customer, paymentMethod: "cod", items })
+    const [codOrder] = await db.select().from(orders).where(eq(orders.number, cod.number))
+    await owner.orders.setStatus({ id: codOrder!.id, status: "fulfilled" })
+    const [shipped] = await db.select().from(orders).where(eq(orders.id, codOrder!.id))
+    expect(shipped).toMatchObject({ status: "fulfilled" })
+    expect(shipped!.paidAt).not.toBeNull()
+
+    const online = await guest.public.orders.create({ ...customer, items })
+    const [onlineOrder] = await db.select().from(orders).where(eq(orders.number, online.number))
+    await expect(owner.orders.setStatus({ id: onlineOrder!.id, status: "fulfilled" })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    })
+  })
 })
 
 test("konnect: amounts go in minor units with the currency as token, only `completed` is paid", async () => {

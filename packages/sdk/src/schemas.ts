@@ -290,7 +290,7 @@ export const locationInputSchema = z.object({
 export const orderListQuerySchema = z.object({
   status: orderStatusSchema.optional(),
   q: z.string().trim().max(80).optional(),
-  limit: z.number().int().min(1).max(200).default(100),
+  limit: z.number().int().min(1).max(1000).default(100),
 })
 
 export const statsRangeSchema = z.object({ days: z.number().int().min(1).max(365).default(30) })

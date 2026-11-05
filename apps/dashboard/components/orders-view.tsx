@@ -2,7 +2,6 @@
 
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { countryName, formatMoney } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
@@ -26,6 +25,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { OrderStatusBadge } from "@/components/status-badge"
 import { formatDate, ORDER_STATUS } from "@/lib/copy"
+import { errorMessage } from "@/lib/errors"
 
 type Status = "pending_payment" | "paid" | "fulfilled" | "cancelled" | "refunded"
 type Filter = "all" | Status
@@ -45,7 +45,22 @@ interface Action {
 }
 
 /** Only moves the api actually performs: cancelling or refunding returns the pieces to stock. */
-function actionsFor(status: Status): Action[] {
+function actionsFor(status: Status, method: "online" | "cod"): Action[] {
+  if (status === "pending_payment" && method === "cod") {
+    return [
+      {
+        to: "fulfilled",
+        label: "Marquer expédiée",
+        confirm: "La commande est expédiée et comptée dans les ventes. Le client paie en espèces à la livraison.",
+      },
+      {
+        to: "cancelled",
+        label: "Annuler",
+        destructive: true,
+        confirm: "La commande est annulée et les pièces retournent en stock.",
+      },
+    ]
+  }
   if (status === "pending_payment") {
     return [
       {
@@ -79,11 +94,22 @@ function actionsFor(status: Status): Action[] {
       },
     ]
   }
+  if (status === "fulfilled") {
+    return [
+      {
+        to: "refunded",
+        label: "Rembourser",
+        destructive: true,
+        confirm:
+          "La commande est marquée remboursée. Les pièces ne retournent pas en stock puisqu'elles ont été expédiées. Le remboursement lui-même se fait hors du site.",
+      },
+    ]
+  }
   return []
 }
 
-function useOrders(input: { status?: Status; q?: string }) {
-  return useQuery(orpc.admin.orders.list.queryOptions({ input: { ...input, limit: 200 } }))
+function useOrders(input: { status?: Status; q?: string; limit: number }) {
+  return useQuery(orpc.admin.orders.list.queryOptions({ input }))
 }
 
 function Line({ label, value }: { label: string; value: React.ReactNode }) {
@@ -186,7 +212,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                 >
                   Facture
                 </a>
-                {actionsFor(order.status).map((action) => (
+                {actionsFor(order.status, order.paymentMethod).map((action) => (
                   <Button
                     key={action.to}
                     variant={action.destructive ? "outline" : "default"}
@@ -225,7 +251,8 @@ export function OrdersView() {
     return () => clearTimeout(timer)
   }, [q])
 
-  const orders = useOrders({ status: status === "all" ? undefined : status, q: search || undefined })
+  const [limit, setLimit] = useState(200)
+  const orders = useOrders({ status: status === "all" ? undefined : status, q: search || undefined, limit })
   const rows = orders.data ?? []
   const current = rows.find((order) => order.id === selected) ?? null
 
@@ -320,6 +347,11 @@ export function OrdersView() {
                 </TableBody>
               </Table>
             </div>
+            {orders.data && orders.data.length >= limit && limit < 1000 && (
+              <Button variant="outline" className="h-11 w-full sm:w-fit" onClick={() => setLimit((n) => n + 200)}>
+                Afficher plus de commandes
+              </Button>
+            )}
           </>
         )}
       </PageBody>
