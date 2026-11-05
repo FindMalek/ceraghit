@@ -1,0 +1,24 @@
+# Daily, production: the api deletes uploaded photos that nothing has used for 30 days (and frees them from the 2.5 GB
+# counter). Needs CRON_SECRET in the `production` environment and in the api's Vercel env, see docs/deploy.md.
+name: Cleanup uploads
+
+on:
+  schedule:
+    - cron: "15 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  clean:
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - name: Ask the api to clean up
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_HOST: ${{ vars.PRODUCTION_API_HOST }}
+        run: |
+          curl -fsS -X POST -H "authorization: Bearer $CRON_SECRET" "https://$API_HOST/cron/cleanup-uploads"

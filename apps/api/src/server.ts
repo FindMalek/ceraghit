@@ -1,9 +1,10 @@
+import { timingSafeEqual } from "node:crypto"
 import { OpenAPIHandler } from "@orpc/openapi/fetch"
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ResponseHeadersPlugin, SimpleCsrfProtectionHandlerPlugin } from "@orpc/server/plugins"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
-import { appRouter, createContext, type Services, settleOrder } from "@workspace/orpc"
+import { appRouter, cleanupUploads, createContext, type Services, settleOrder } from "@workspace/orpc"
 import { sql } from "drizzle-orm"
 
 /**
@@ -11,6 +12,7 @@ import { sql } from "drizzle-orm"
  *   /rpc/*              oRPC, used by web + dashboard through their /api proxy (needs `x-csrf-token: orpc`)
  *   /v1/*               the same procedures as REST (OpenAPI), docs at /v1/docs, spec at /v1/openapi.json
  *   /webhooks/konnect   payment gateway callback, only a hint: the order is settled by re-asking the gateway
+ *   /cron/cleanup-uploads   daily job (GitHub Actions, bearer CRON_SECRET): deletes files unused for 30 days
  *   /files/<key>        redirect to the CDN or a signed url for an uploaded image
  *   /health             db + payment mode, for Dokploy and uptime checks
  */
@@ -53,6 +55,17 @@ export function createServer(services: Services) {
         },
         { status: db ? 200 : 503 },
       )
+    }
+    if (pathname === "/cron/cleanup-uploads") {
+      const secret = services.config.cronSecret
+      if (!secret || request.method !== "POST") return new Response("Not found", { status: 404 })
+      const given = Buffer.from(request.headers.get("authorization") ?? "")
+      const wanted = Buffer.from(`Bearer ${secret}`)
+      if (given.length !== wanted.length || !timingSafeEqual(given, wanted)) {
+        return new Response("Unauthorized", { status: 401 })
+      }
+      if (!services.storage) return Response.json({ ok: true, skipped: "no storage" })
+      return Response.json({ ok: true, ...(await cleanupUploads(services.db, services.storage, services.now())) })
     }
     if (pathname === "/webhooks/konnect") {
       const ref = url.searchParams.get("payment_ref")

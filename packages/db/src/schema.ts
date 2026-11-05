@@ -215,6 +215,21 @@ export const customRequests = pgTable(
   (t) => [index("custom_requests_status_idx").on(t.status)],
 )
 
+/** Every file sent to the bucket (dashboard images, customer photos): what the owner's storage counter adds up. */
+export const uploads = pgTable(
+  "uploads",
+  {
+    key: text("key").primaryKey(),
+    folder: text("folder").notNull(),
+    contentType: text("content_type").notNull(),
+    bytes: integer("bytes").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Set by the daily cleanup the first time nothing references the file, cleared if it is used again. */
+    unusedSince: timestamp("unused_since", { withTimezone: true }),
+  },
+  (t) => [index("uploads_unused_idx").on(t.unusedSince)],
+)
+
 /** Single-row key/value store for owner-editable settings (contact, shipping fees). */
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),

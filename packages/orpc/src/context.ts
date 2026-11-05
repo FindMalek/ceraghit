@@ -23,6 +23,8 @@ export interface Services {
     secureCookies: boolean
     /** Card payment through the gateway. Off: Tunisia pays cash on delivery, the rest by bank transfer. */
     onlinePayments: boolean
+    /** Bearer token of the daily GitHub job that calls /cron/cleanup-uploads. Unset: the route does not exist. */
+    cronSecret?: string
   }
 }
 
