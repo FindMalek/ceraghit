@@ -2,7 +2,6 @@
 
 import { ImageIcon, MagnifyingGlassIcon, MinusIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { formatMoney, imageSrc, type Product, pick } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
@@ -18,6 +17,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { ProductStatusBadge } from "@/components/status-badge"
 import { PRODUCT_STATUS } from "@/lib/copy"
+import { errorMessage } from "@/lib/errors"
 import { productToInput } from "@/lib/product-input"
 
 type StatusFilter = "all" | keyof typeof PRODUCT_STATUS
@@ -324,7 +324,7 @@ export function ProductsView() {
         open={toDelete !== null}
         onOpenChange={(open) => !open && setToDelete(null)}
         title={`Supprimer ${toDelete ? pick(toDelete.title, "fr") : ""} ?`}
-        description="Si cette pièce a déjà été commandée, elle sera archivée pour garder l'historique des commandes."
+        description="La pièce disparaît du site et son stock avec elle. Si elle a déjà été commandée, elle est archivée pour garder l'historique des commandes."
         confirmLabel="Supprimer"
         destructive
         onConfirm={() => toDelete && remove.mutate({ id: toDelete.id })}

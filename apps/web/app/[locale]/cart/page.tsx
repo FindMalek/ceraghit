@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server"
 import { CartPage } from "@/components/cart-page"
 
 export async function generateMetadata() {
-  return { title: (await getTranslations("cart"))("title") }
+  return { title: (await getTranslations("cart"))("title"), robots: { index: false } }
 }
 
 export default async function Cart() {

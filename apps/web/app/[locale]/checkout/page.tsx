@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server"
 import { CheckoutForm } from "@/components/checkout-form"
 
 export async function generateMetadata() {
-  return { title: (await getTranslations("checkout"))("title") }
+  return { title: (await getTranslations("checkout"))("title"), robots: { index: false } }
 }
 
 export default async function Checkout() {

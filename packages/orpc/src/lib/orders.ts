@@ -46,6 +46,15 @@ export async function releaseExpiredHolds(db: Db, now: Date): Promise<number> {
   })
 }
 
+let lastSweep = 0
+
+/** Catalogue reads free expired holds too (there is no cron), at most once a minute per instance. */
+export async function sweepExpiredHolds(db: Db, now: Date): Promise<void> {
+  if (now.getTime() - lastSweep < 60_000) return
+  lastSweep = now.getTime()
+  await releaseExpiredHolds(db, now).catch((error) => console.error("[holds] sweep failed", error))
+}
+
 function newNumber(): string {
   return `CER-${Math.floor(10_000 + Math.random() * 90_000)}`
 }

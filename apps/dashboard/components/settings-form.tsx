@@ -2,7 +2,6 @@
 
 import { PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { DEFAULT_SHIPPING_RATES, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -15,8 +14,13 @@ import { ConfirmDialog } from "@/components/confirm-dialog"
 import { LocalizedField } from "@/components/localized-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { ShippingRatesEditor } from "@/components/shipping-rates-editor"
+import { errorMessage } from "@/lib/errors"
 import { fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 import { draftToRates, type RatesDraft, type RatesErrors, ratesToDraft } from "@/lib/shipping-draft"
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const PHONE = /^\+?[\d\s().-]{6,20}$/
+const INSTAGRAM = /^@?[A-Za-z0-9._]{1,30}$/
 
 function SettingsFormBody({ settings }: { settings: StudioSettings }) {
   const queryClient = useQueryClient()
@@ -43,6 +47,11 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
   const submit = (event: FormEvent) => {
     event.preventDefault()
     const found: Record<string, string> = {}
+    if (!EMAIL.test(email.trim())) found.email = "Entrez une adresse email valide."
+    if (phones.some((p) => p.trim() && !PHONE.test(p.trim()))) found.phones = "Un numéro de téléphone n'est pas valide."
+    if (whatsapp.trim() && !PHONE.test(whatsapp.trim())) found.whatsapp = "Ce numéro n'est pas valide."
+    if (instagram.trim() && !INSTAGRAM.test(instagram.trim()))
+      found.instagram = "Utilisez seulement lettres, chiffres, points et tirets bas."
     const { rates: shippingRates, errors: ratesFound } = draftToRates(rates)
     setRateErrors(ratesFound)
     const parsed = studioSettingsSchema.safeParse({
@@ -53,7 +62,8 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
       shippingRates,
       shippingNote: fromLocalizedDraft(note, true),
     })
-    if (!parsed.success && shippingRates) found.note = "Le français est obligatoire si vous écrivez une note."
+    if (!parsed.success && shippingRates && !found.email)
+      found.note = "Le français est obligatoire si vous écrivez une note."
     setErrors(found)
     if (Object.keys(found).length > 0 || Object.keys(ratesFound).length > 0 || !parsed.success) {
       toast.error("Certains champs sont à corriger.")
@@ -68,7 +78,15 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
         <FieldSet>
           <Field>
             <FieldLabel htmlFor="email">Email de contact</FieldLabel>
-            <Input id="email" type="email" className="h-11" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              id="email"
+              type="email"
+              className="h-11"
+              aria-invalid={Boolean(errors.email)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {errors.email && <FieldError>{errors.email}</FieldError>}
             <FieldDescription>
               Affiché sur le site. Vous répondez aux demandes depuis votre propre boîte mail.
             </FieldDescription>
@@ -104,6 +122,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
               >
                 <PlusIcon /> Ajouter un numéro
               </Button>
+              {errors.phones && <FieldError>{errors.phones}</FieldError>}
             </div>
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -113,19 +132,23 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
                 id="whatsapp"
                 className="h-11"
                 inputMode="tel"
+                aria-invalid={Boolean(errors.whatsapp)}
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
               />
+              {errors.whatsapp && <FieldError>{errors.whatsapp}</FieldError>}
             </Field>
             <Field>
               <FieldLabel htmlFor="instagram">Instagram</FieldLabel>
               <Input
                 id="instagram"
                 className="h-11"
+                aria-invalid={Boolean(errors.instagram)}
                 value={instagram}
                 onChange={(e) => setInstagram(e.target.value)}
                 placeholder="@ceraghit"
               />
+              {errors.instagram && <FieldError>{errors.instagram}</FieldError>}
             </Field>
           </div>
         </FieldSet>

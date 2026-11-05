@@ -42,6 +42,11 @@ const schema = z
         fail("production needs the R2 S3_* settings")
       }
       if (!env.RESEND_API_KEY) fail("production needs RESEND_API_KEY")
+      if (env.EMAIL_FROM.includes("resend.dev")) fail("production needs EMAIL_FROM on a verified domain")
+      for (const key of ["WEB_URL", "API_PUBLIC_URL"] as const) {
+        const url = new URL(env[key])
+        if (url.protocol !== "https:" || url.hostname === "localhost") fail(`production needs a public https ${key}`)
+      }
       if (env.SEED_DEMO && env.BOOTSTRAP) fail("production must not seed demo data")
       if (env.DEPLOY_ENV !== "production") fail("production needs DEPLOY_ENV=production")
     } else {

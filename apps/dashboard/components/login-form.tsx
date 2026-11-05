@@ -1,7 +1,6 @@
 "use client"
 
 import { useMutation } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { Logo } from "@workspace/ui/brand/logo"
 import { Button } from "@workspace/ui/components/button"
@@ -9,6 +8,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/compone
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import type { FormEvent } from "react"
+import { errorMessage } from "@/lib/errors"
 
 export function LoginForm() {
   const login = useMutation(orpc.admin.auth.login.mutationOptions({ onSuccess: () => window.location.assign("/") }))

@@ -133,6 +133,12 @@ export const ordersRouter = {
           .where(eq(orders.id, order.id))
       } else if (input.status === "fulfilled" && order.status === "paid") {
         await context.db.update(orders).set({ status: "fulfilled" }).where(eq(orders.id, order.id))
+      } else if (input.status === "fulfilled" && order.status === "pending_payment" && order.paymentMethod === "cod") {
+        // cash on delivery: the sale counts once it ships, the cash is collected at the door
+        await context.db
+          .update(orders)
+          .set({ status: "fulfilled", paidAt: context.now(), paymentProvider: order.paymentProvider ?? "cod" })
+          .where(eq(orders.id, order.id))
       } else {
         throw new ORPCError("BAD_REQUEST", {
           message: `An order that is ${order.status} cannot become ${input.status}.`,

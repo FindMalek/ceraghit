@@ -5,8 +5,8 @@ Nothing is shared between the two: see `.cursor/rules/02-environments-and-paymen
 
 ## CI runners
 
-Every workflow runs on self-hosted runners on the-keep (`runs-on: [self-hosted, the-keep]`), so no GitHub-hosted
-minutes are used. Three runners, `the-keep-ceraghit-1..3`, live in `/opt/actions-runner/FindMalek/ceraghit-<n>` as
+The heavy workflows (CI, preview, staging, deploy) run on self-hosted runners on the-keep (`runs-on: [self-hosted, the-keep]`);
+the small bookkeeping ones (commit lint, project board, PR auto-assign) use GitHub-hosted runners. Three runners, `the-keep-ceraghit-1..3`, live in `/opt/actions-runner/FindMalek/ceraghit-<n>` as
 systemd services (`actions.runner.FindMalek-ceraghit.the-keep-ceraghit-<n>`); each runs one job at a time, so three
 keep lint, types, test and build parallel. Node, pnpm and Bun come from the setup actions and are cached on the host.
 
@@ -50,7 +50,7 @@ Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Va
 `.github/workflows/deploy.yml`, in the `production` GitHub environment:
 
 1. `migrate`: applies Drizzle migrations to Neon and creates/updates the owner login (`admin-cli.ts`)
-2. `deploy`: `vercel pull/build/deploy --prebuilt --prod` for `apps/api`, `apps/web`, `apps/dashboard` (Vercel's Git
+2. `deploy`: `vercel pull`, `vercel build --prod` and `vercel deploy --prebuilt --prod` for `apps/api`, `apps/web`, `apps/dashboard` (Vercel's Git
    integration is **disconnected**, so Vercel posts no preview comments; deploys come only from this workflow)
 3. `smoke`: `/health` must report `konnect:live`, storefront and dashboard must answer
 
@@ -64,13 +64,19 @@ The api does not migrate itself in production (`BOOTSTRAP=false`). The first rea
 integration and pushes the production env vars; it prints the project ids to put in GitHub. Then add the domains in each
 project. The long way, by hand:
 
-**Vercel** (team: yours, Pro): create three projects from this repo with root directories `apps/api`, `apps/web`,
-`apps/dashboard`; Settings → Git → disconnect (or set "Ignored Build Step" to `exit 0`); add the env vars below to each.
-Domains: `ceraghit.<tld>` (web), `dashboard.…`, `api.…`.
+**Vercel** (team: yours, Pro): create three projects (`ceraghit-api|web|dashboard`) and leave **Root Directory empty**: `deploy.yml` runs the
+CLI from inside `apps/<app>`, and a Root Directory on top of that doubles the path and breaks `vercel build`. Settings → Git →
+never connect (or set "Ignored Build Step" to `exit 0`); add the env vars below to each.
+Domains: `ceraghit.com` (web, `www` redirects to it), `dashboard.ceraghit.com`, `api.ceraghit.com`.
+
+**DNS for ceraghit.com** (Cloudflare, registrar and nameservers): add each domain in its Vercel project, then create the
+records Vercel shows (apex `A 76.76.21.21`, subdomains `CNAME cname.vercel-dns.com`) as **DNS only** (grey cloud), since
+Vercel terminates TLS. `cdn.ceraghit.com` is attached to the R2 bucket from the R2 dashboard (Custom domains), no record to
+write by hand. Resend needs its SPF/DKIM records on the same zone, and `commandes@ceraghit.com` as `EMAIL_FROM`.
 
 | project | env (Production only) |
 | :-- | :-- |
-| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`, `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL` |
+| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`, `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused) |
 | web | `APP_ENV=production`, `API_URL` (api origin), `WEB_URL` |
 | dashboard | `APP_ENV=production`, `API_URL`, `WEB_URL` |
 

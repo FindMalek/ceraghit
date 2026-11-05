@@ -4,12 +4,18 @@ import { useQuery } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { countryName, formatMoney } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
-import { use } from "react"
+import { use, useEffect } from "react"
 import { formatDate } from "@/lib/copy"
+import { isUnauthorized } from "@/lib/errors"
 
 export default function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { data: order, isError } = useQuery(orpc.admin.orders.get.queryOptions({ input: { id } }))
+  const { data: order, isError, error } = useQuery(orpc.admin.orders.get.queryOptions({ input: { id } }))
+  const expired = isError && isUnauthorized(error)
+  useEffect(() => {
+    if (expired) window.location.assign("/login")
+  }, [expired])
+  if (expired) return null
   if (isError) return <p className="p-8">Facture introuvable.</p>
   if (!order) return <p className="p-8 text-muted-foreground">Chargement…</p>
   const money = (minor: number) => formatMoney(minor, order.currency, "fr")

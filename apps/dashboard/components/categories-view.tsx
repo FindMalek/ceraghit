@@ -2,7 +2,6 @@
 
 import { ArrowDownIcon, ArrowUpIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { type Category, categoryInputSchema, imageSrc, pick } from "@workspace/sdk"
 import { Badge } from "@workspace/ui/components/badge"
@@ -19,6 +18,7 @@ import { ImageField } from "@/components/image-field"
 import { LocalizedField } from "@/components/localized-field"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
+import { errorMessage } from "@/lib/errors"
 import { emptyLocalized, fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 
 interface Draft {

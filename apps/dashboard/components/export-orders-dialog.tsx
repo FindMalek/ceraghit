@@ -1,7 +1,6 @@
 "use client"
 
 import { DownloadSimpleIcon } from "@phosphor-icons/react"
-import { errorMessage } from "@workspace/orpc/errors"
 import { browserClient } from "@workspace/orpc/react"
 import { buildOrdersCsv, type Currency } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -21,6 +20,7 @@ import { toast } from "sonner"
 import { SimpleSelect } from "@/components/simple-select"
 import { CURRENCY_LABEL } from "@/lib/copy"
 import { downloadTextFile, studioDayKey } from "@/lib/download"
+import { errorMessage } from "@/lib/errors"
 
 const CURRENCIES = (Object.keys(CURRENCY_LABEL) as Currency[]).map((value) => ({
   value,

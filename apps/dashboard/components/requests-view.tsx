@@ -2,7 +2,6 @@
 
 import { CopyIcon, EnvelopeSimpleIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { imageSrc } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
@@ -24,6 +23,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { RequestStatusBadge } from "@/components/status-badge"
 import { formatDate, REQUEST_STATUS } from "@/lib/copy"
+import { errorMessage } from "@/lib/errors"
 
 type Status = "new" | "contacted" | "done" | "declined"
 type Filter = "all" | Status

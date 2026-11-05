@@ -1,4 +1,5 @@
 # Local development database: pnpm db:up
+name: ceraghit
 services:
   postgres:
     image: postgres:17-alpine
