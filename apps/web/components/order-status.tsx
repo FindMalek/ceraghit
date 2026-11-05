@@ -48,17 +48,54 @@ export function OrderStatus({ number, token }: { number: string; token: string }
 
   const money = (minor: number) => formatMoney(minor, order.currency, locale)
   const codPending = order.status === "pending_payment" && order.paymentMethod === "cod"
-  const waiting = order.status === "pending_payment" && !codPending
+  const transferPending = order.status === "pending_payment" && order.paymentMethod === "transfer"
+  const waiting = order.status === "pending_payment" && !codPending && !transferPending
   const stillWaiting = waiting && Date.now() - startedAt.current >= POLL_FOR_MS
   return (
     <div className="space-y-8">
       <div className="frame space-y-3 bg-card/70 p-6 text-center" role="status" aria-live="polite">
-        <p className="font-display text-3xl text-gold">{codPending ? t("codTitle") : t(`status.${order.status}`)}</p>
+        <p className="font-display text-3xl text-gold">
+          {codPending ? t("codTitle") : transferPending ? t("transferTitle") : t(`status.${order.status}`)}
+        </p>
         <p className="text-muted-foreground">
-          {codPending ? t("codText") : stillWaiting ? t("stillPending") : t(`text.${order.status}`)}
+          {codPending
+            ? t("codText")
+            : transferPending
+              ? t("transferText")
+              : stillWaiting
+                ? t("stillPending")
+                : t(`text.${order.status}`)}
         </p>
         {waiting && !stillWaiting && <Spinner className="mx-auto" />}
       </div>
+
+      {order.bank && (
+        <section className="frame space-y-3 bg-card/70 p-6">
+          <h2 className="text-3xl">{t("bankTitle")}</h2>
+          <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
+            <dt className="text-muted-foreground">{t("holder")}</dt>
+            <dd>{order.bank.holder}</dd>
+            <dt className="text-muted-foreground">{t("bank")}</dt>
+            <dd>{order.bank.bank}</dd>
+            <dt className="text-muted-foreground">{t("iban")}</dt>
+            <dd className="select-all break-all font-mono" dir="ltr">
+              {order.bank.iban}
+            </dd>
+            {order.bank.bic && (
+              <>
+                <dt className="text-muted-foreground">{t("bic")}</dt>
+                <dd className="select-all font-mono" dir="ltr">
+                  {order.bank.bic}
+                </dd>
+              </>
+            )}
+            <dt className="text-muted-foreground">{t("reference")}</dt>
+            <dd className="select-all font-heading" dir="ltr">
+              {order.number}
+            </dd>
+          </dl>
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-3xl">{t("items")}</h2>

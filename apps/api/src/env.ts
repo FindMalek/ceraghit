@@ -23,6 +23,8 @@ const schema = z
     KONNECT_API_KEY: z.string().optional(),
     KONNECT_WALLET_ID: z.string().optional(),
     KONNECT_MODE: z.enum(["test", "live"]).default("test"),
+    /** Card payment through the gateway. Off: Tunisia pays cash on delivery, the rest by bank transfer. */
+    ONLINE_PAYMENTS: flag.default(false),
     /** Order emails go through Resend. Without a key they are only logged (local and previews). */
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().default("Ceraghit <onboarding@resend.dev>"),
@@ -36,8 +38,11 @@ const schema = z
   .superRefine((env, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message })
     if (env.APP_ENV === "production") {
-      if (env.KONNECT_MODE !== "live") fail("production needs KONNECT_MODE=live")
-      if (!env.KONNECT_API_KEY || !env.KONNECT_WALLET_ID) fail("production needs KONNECT_API_KEY and KONNECT_WALLET_ID")
+      if (env.ONLINE_PAYMENTS) {
+        if (env.KONNECT_MODE !== "live") fail("production needs KONNECT_MODE=live")
+        if (!env.KONNECT_API_KEY || !env.KONNECT_WALLET_ID)
+          fail("production needs KONNECT_API_KEY and KONNECT_WALLET_ID")
+      }
       if (!env.S3_ENDPOINT || !env.S3_BUCKET || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
         fail("production needs the R2 S3_* settings")
       }

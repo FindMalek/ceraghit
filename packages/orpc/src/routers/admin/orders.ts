@@ -6,6 +6,7 @@ import {
   orderExportInputSchema,
   orderListQuerySchema,
   orderStatusSchema,
+  type PaymentMethod,
   requestStatusSchema,
 } from "@workspace/sdk"
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
@@ -23,7 +24,7 @@ function toAdminOrder(o: OrderRow) {
   return {
     id: o.id,
     number: o.number,
-    paymentMethod: o.paymentMethod as "online" | "cod",
+    paymentMethod: o.paymentMethod as PaymentMethod,
     status: o.status,
     currency: o.currency,
     subtotalMinor: o.subtotalMinor,

@@ -21,6 +21,8 @@ export interface Services {
     /** "production", "pr-<n>" or "local". */
     deployEnv: string
     secureCookies: boolean
+    /** Card payment through the gateway. Off: Tunisia pays cash on delivery, the rest by bank transfer. */
+    onlinePayments: boolean
   }
 }
 

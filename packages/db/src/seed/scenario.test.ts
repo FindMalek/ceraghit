@@ -11,6 +11,7 @@ test("the demo shop has both currencies, paid revenue and a pending order", () =
   expect(new Set(orders.map((o) => o.currency))).toEqual(new Set(["TND", "EUR"]))
   expect(orders.some((o) => o.status === "paid")).toBe(true)
   expect(orders.some((o) => o.paymentMethod === "cod" && o.country === "TN")).toBe(true)
+  expect(orders.some((o) => o.paymentMethod === "transfer" && o.country !== "TN")).toBe(true)
   for (const order of orders) {
     const lines = items.filter((i) => i.orderId === order.id)
     expect(lines.reduce((sum, i) => sum + i.unitMinor * i.quantity, 0)).toBe(order.totalMinor)

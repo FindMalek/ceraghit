@@ -1,10 +1,11 @@
-import { DEFAULT_SHIPPING_RATES, type StudioSettings } from "@workspace/sdk"
+import { DEFAULT_SHIPPING_RATES, type PublicSettings } from "@workspace/sdk"
 
-export const FALLBACK_SETTINGS: StudioSettings = {
+export const FALLBACK_SETTINGS: PublicSettings = {
   contactEmail: "ceraghit@yahoo.fr",
   phones: ["+216 98 425 075", "+32 478 27 45 79"],
   whatsapp: null,
   instagram: null,
   shippingRates: DEFAULT_SHIPPING_RATES,
   shippingNote: null,
+  onlinePayments: false,
 }

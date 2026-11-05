@@ -3,7 +3,7 @@
 import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { countryName, formatMoney } from "@workspace/sdk"
+import { countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group"
 import {
@@ -24,7 +24,7 @@ import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { OrderStatusBadge } from "@/components/status-badge"
-import { formatDate, ORDER_STATUS } from "@/lib/copy"
+import { formatDate, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_SHORT } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
 type Status = "pending_payment" | "paid" | "fulfilled" | "cancelled" | "refunded"
@@ -45,7 +45,7 @@ interface Action {
 }
 
 /** Only moves the api actually performs: cancelling or refunding returns the pieces to stock. */
-function actionsFor(status: Status, method: "online" | "cod"): Action[] {
+function actionsFor(status: Status, method: PaymentMethod): Action[] {
   if (status === "pending_payment" && method === "cod") {
     return [
       {
@@ -193,7 +193,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                 <section>
                   <h2 className="mb-1 font-heading text-2xl">Paiement</h2>
                   <dl>
-                    <Line label="Mode" value={order.paymentMethod === "cod" ? "Espèces à la livraison" : "En ligne"} />
+                    <Line label="Mode" value={PAYMENT_LABEL[order.paymentMethod]} />
                     <Line label="Passerelle" value={order.paymentProvider ?? "—"} />
                     <Line
                       label="Référence"
@@ -338,7 +338,7 @@ export function OrdersView() {
                       <TableCell className="text-right tabular-nums">
                         {formatMoney(order.totalMinor, order.currency, "fr")}
                       </TableCell>
-                      <TableCell>{order.paymentMethod === "cod" ? "Livraison" : "En ligne"}</TableCell>
+                      <TableCell>{PAYMENT_SHORT[order.paymentMethod]}</TableCell>
                       <TableCell>
                         <OrderStatusBadge status={order.status} />
                       </TableCell>

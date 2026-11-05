@@ -4,7 +4,8 @@ import {
   checkoutSchema,
   customRequestInputSchema,
   orderInputSchema,
-  orderSchema,
+  type PaymentMethod,
+  publicOrderSchema,
   requestUploadInputSchema,
 } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
@@ -12,6 +13,7 @@ import { z } from "zod"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { clientAddress, RateLimit } from "../../lib/rate-limit"
+import { getSettings } from "../../lib/settings"
 import { publicProcedure } from "../../procedures"
 
 const TAG = ["orders"]
@@ -26,7 +28,7 @@ export const ordersRouter = {
   get: publicProcedure
     .route({ method: "GET", path: "/orders/{number}", summary: "An order, with the token from its link", tags: TAG })
     .input(z.object({ number: z.string(), token: z.string() }))
-    .output(orderSchema)
+    .output(publicOrderSchema)
     .handler(async ({ context, input }) => {
       const order = await context.db.query.orders.findFirst({
         where: and(eq(orders.number, input.number), eq(orders.publicToken, input.token)),
@@ -36,10 +38,15 @@ export const ordersRouter = {
       // The customer lands here right after paying, often before the webhook: ask the gateway now.
       const settled =
         order.status === "pending_payment" && order.paymentRef ? await settleOrder(context, order.paymentRef) : null
+      const status = (settled?.status ?? order.status) as typeof order.status
       return {
         number: order.number,
-        paymentMethod: order.paymentMethod as "online" | "cod",
-        status: (settled?.status ?? order.status) as typeof order.status,
+        paymentMethod: order.paymentMethod as PaymentMethod,
+        status,
+        bank:
+          order.paymentMethod === "transfer" && status === "pending_payment"
+            ? (await getSettings(context.db)).bank
+            : null,
         currency: order.currency,
         subtotalMinor: order.subtotalMinor,
         shippingMinor: order.shippingMinor,

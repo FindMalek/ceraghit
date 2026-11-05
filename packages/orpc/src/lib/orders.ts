@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { type Db, orderItems, orders, products, productVariants } from "@workspace/db"
-import { type Currency, estimateShipping, type OrderInput, pick } from "@workspace/sdk"
+import { availablePaymentMethods, type Currency, estimateShipping, type OrderInput, pick } from "@workspace/sdk"
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { findProducts } from "./catalog"
@@ -61,8 +61,10 @@ function newNumber(): string {
 
 export async function createOrder(services: Services, input: OrderInput) {
   const { db, payments, config, now } = services
-  if (input.paymentMethod === "cod" && input.country !== "TN") {
-    throw new ORPCError("BAD_REQUEST", { message: "Cash on delivery is only available in Tunisia." })
+  const allowed = availablePaymentMethods(input.country, config.onlinePayments)
+  const method = input.paymentMethod ?? allowed[0]!
+  if (!allowed.includes(method)) {
+    throw new ORPCError("BAD_REQUEST", { message: "This payment method is not available for your country." })
   }
   await releaseExpiredHolds(db, now())
 
@@ -139,7 +141,7 @@ export async function createOrder(services: Services, input: OrderInput) {
       postalCode: input.postalCode,
       note: input.note,
       locale: input.locale,
-      paymentMethod: input.paymentMethod,
+      paymentMethod: method,
     }
     for (let attempt = 0; attempt < 5; attempt++) {
       const [order] = await tx
@@ -167,8 +169,8 @@ export async function createOrder(services: Services, input: OrderInput) {
   })
 
   const orderUrl = `${config.webUrl}/${input.locale}/order/${created.number}?t=${created.publicToken}`
-  if (created.paymentMethod === "cod") {
-    await db.update(orders).set({ paymentProvider: "cod" }).where(eq(orders.id, created.id))
+  if (created.paymentMethod === "cod" || created.paymentMethod === "transfer") {
+    await db.update(orders).set({ paymentProvider: created.paymentMethod }).where(eq(orders.id, created.id))
     await sendOrderEmails(services, created.id)
     return { number: created.number, token: created.publicToken, payUrl: orderUrl }
   }

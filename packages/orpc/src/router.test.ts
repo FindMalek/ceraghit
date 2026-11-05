@@ -32,6 +32,7 @@ describe.skipIf(!url)("router", () => {
       appEnv: "local",
       deployEnv: "test",
       secureCookies: false,
+      onlinePayments: true,
     },
   }
   const clientWith = (headers: Record<string, string> = {}) =>
@@ -77,6 +78,7 @@ describe.skipIf(!url)("router", () => {
       ids[key] = p!.id
     }
     await make("mug", {})
+    await make("bowl", {})
     await make("vase", { unique: true, stock: 1, priceTnd: 500_000, priceEur: 15_000 })
     await make("fountain", { quoteOnly: true, stock: 1 })
   })
@@ -317,6 +319,36 @@ describe.skipIf(!url)("router", () => {
     expect((await cod.public.orders.get({ number: created.number, token: created.token })).status).toBe(
       "pending_payment",
     )
+  })
+
+  test("with online payment off Tunisia gets cash on delivery, abroad gets a bank transfer with the account in the order and the email", async () => {
+    const sent: { to: string; text: string }[] = []
+    const off = createRouterClient(appRouter, {
+      context: (): Context =>
+        createContext(
+          {
+            ...services,
+            config: { ...services.config, onlinePayments: false },
+            mailer: { send: async (mail) => void sent.push({ to: mail.to, text: mail.text }) },
+          },
+          new Headers(),
+        ),
+    })
+    const items = [{ productId: ids.bowl!, quantity: 1 }]
+    await expect(off.public.orders.create({ ...customer, paymentMethod: "online", items })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    })
+    expect((await off.public.catalog.settings()).onlinePayments).toBe(false)
+
+    const tn = await off.public.orders.create({ ...customer, items })
+    expect((await off.public.orders.get({ number: tn.number, token: tn.token })).paymentMethod).toBe("cod")
+
+    const abroad = await off.public.orders.create({ ...customer, country: "BE", currency: "EUR", items })
+    const placed = await off.public.orders.get({ number: abroad.number, token: abroad.token })
+    expect(placed).toMatchObject({ paymentMethod: "transfer", status: "pending_payment" })
+    expect(placed.bank?.iban).toBeTruthy()
+    expect(sent.find((m) => m.to === customer.email && m.text.includes(abroad.number))?.text).toContain("IBAN")
+    expect(await off.public.catalog.settings()).not.toHaveProperty("bank")
   })
 
   test("the owner ships a cash on delivery order without marking it paid first, an online one must be paid", async () => {

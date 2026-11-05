@@ -7,9 +7,6 @@ const production = {
   APP_ENV: "production",
   DEPLOY_ENV: "production",
   SEED_DEMO: "false",
-  KONNECT_MODE: "live",
-  KONNECT_API_KEY: "k",
-  KONNECT_WALLET_ID: "w",
   RESEND_API_KEY: "re_test",
   EMAIL_FROM: "Ceraghit <commandes@ceraghit.com>",
   WEB_URL: "https://ceraghit.com",
@@ -25,7 +22,7 @@ test("live payment keys are refused outside production", () => {
 })
 
 test("production refuses test mode, demo seed and a missing bucket", () => {
-  expect(() => loadEnv({ ...production, KONNECT_MODE: "test" })).toThrow(/live/)
+  expect(() => loadEnv({ ...production, ONLINE_PAYMENTS: "true", KONNECT_MODE: "test" })).toThrow(/live/)
   expect(() => loadEnv({ ...production, BOOTSTRAP: "true", SEED_DEMO: "true" })).toThrow(/demo/)
   expect(() => loadEnv({ ...production, S3_BUCKET: "" })).toThrow(/S3_/)
 })
@@ -40,4 +37,9 @@ test("production refuses localhost urls and the test email sender", () => {
 test("a complete production env boots without bootstrapping", () => {
   const env = loadEnv(production)
   expect(env.BOOTSTRAP).toBe(false)
+})
+
+test("production runs without gateway keys while online payment is off, and asks for them once it is on", () => {
+  expect(loadEnv(production).ONLINE_PAYMENTS).toBe(false)
+  expect(() => loadEnv({ ...production, ONLINE_PAYMENTS: "true", KONNECT_MODE: "live" })).toThrow(/KONNECT_API_KEY/)
 })

@@ -98,7 +98,14 @@ jobs:
       - name: api health
         run: |
           for i in 1 2 3 4 5 6; do
-            out=$(curl -fsS "https://${{ vars.PRODUCTION_API_HOST }}/health") && { echo "$out"; echo "$out" | grep -q '"payments":"konnect:live"' && exit 0; echo "::error::production is not on live payments"; exit 1; }
+            out=$(curl -fsS "https://${{ vars.PRODUCTION_API_HOST }}/health") && {
+              echo "$out"
+              echo "$out" | grep -q '"env":"production"' || { echo "::error::api is not the production deploy"; exit 1; }
+              if echo "$out" | grep -q '"onlinePayments":true'; then
+                echo "$out" | grep -q '"payments":"konnect:live"' || { echo "::error::online payments are on without live keys"; exit 1; }
+              fi
+              exit 0
+            }
             sleep 10
           done
           echo "::error::api did not become healthy"; exit 1

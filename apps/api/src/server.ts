@@ -44,7 +44,13 @@ export function createServer(services: Services) {
         .then(() => true)
         .catch(() => false)
       return Response.json(
-        { ok: db, db, payments: `${services.payments.name}:${services.payments.mode}`, env: services.config.deployEnv },
+        {
+          ok: db,
+          db,
+          payments: `${services.payments.name}:${services.payments.mode}`,
+          onlinePayments: services.config.onlinePayments,
+          env: services.config.deployEnv,
+        },
         { status: db ? 200 : 503 },
       )
     }

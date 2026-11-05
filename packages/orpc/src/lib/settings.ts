@@ -1,5 +1,5 @@
 import { type Db, settings } from "@workspace/db"
-import { DEFAULT_SHIPPING_RATES, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
+import { DEFAULT_SHIPPING_RATES, PLACEHOLDER_BANK, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 
 const KEY = "studio"
@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: StudioSettings = {
   instagram: null,
   shippingRates: DEFAULT_SHIPPING_RATES,
   shippingNote: null,
+  bank: PLACEHOLDER_BANK,
 }
 
 export async function getSettings(db: Db): Promise<StudioSettings> {
