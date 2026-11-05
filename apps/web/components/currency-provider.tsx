@@ -1,30 +1,17 @@
 "use client"
 
 import type { Currency } from "@workspace/sdk"
-import { useRouter } from "next/navigation"
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react"
-import { CURRENCY_COOKIE } from "@/lib/currency"
+import { createContext, type ReactNode, useContext, useMemo } from "react"
 
 interface CurrencyContext {
   currency: Currency
-  setCurrency: (currency: Currency) => void
 }
 
 const Context = createContext<CurrencyContext | null>(null)
 
+/** The currency comes from the visitor's country on the server (see lib/currency-server.ts), nobody switches it. */
 export function CurrencyProvider({ initial, children }: { initial: Currency; children: ReactNode }) {
-  const router = useRouter()
-  const [currency, setState] = useState<Currency>(initial)
-  const setCurrency = useCallback(
-    (next: Currency) => {
-      // biome-ignore lint/suspicious/noDocumentCookie: the Cookie Store API is missing from some mobile browsers
-      document.cookie = `${CURRENCY_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
-      setState(next)
-      router.refresh()
-    },
-    [router],
-  )
-  const value = useMemo(() => ({ currency, setCurrency }), [currency, setCurrency])
+  const value = useMemo(() => ({ currency: initial }), [initial])
   return <Context.Provider value={value}>{children}</Context.Provider>
 }
 
