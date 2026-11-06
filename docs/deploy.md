@@ -68,7 +68,7 @@ anything older than 14 days.
 
 ## one-time setup
 
-**Vercel, the short way**: `cp docs/production.env.example .env.production.local`, fill it in, `npx vercel@latest login`, then
+**Vercel, the short way**: `cp docs/production.env.example .env.production.local`, fill it in, `npx vercel@65.9.0 login`, then
 `scripts/vercel-setup.sh <team-slug>`, then `scripts/github-setup.sh` for the GitHub `production` environment. It creates and links `ceraghit-api|web|dashboard`, disconnects their Git
 integration and pushes the production env vars; it prints the project ids to put in GitHub. Then add the domains in each
 project. The long way, by hand:
