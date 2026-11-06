@@ -45,7 +45,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - uses: docker/setup-buildx-action@v4
-      - uses: docker/build-push-action@v6
+      # The homelab buildkit sometimes drops its connection (EOF, graceful_stop): try again once with a fresh builder.
+      - id: build
+        continue-on-error: true
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: true
+          tags: ghcr.io/findmalek/ceraghit-${{ matrix.app }}:pr-${{ env.PR_NUMBER }}
+          build-args: |
+            TURBO_API=${{ vars.TURBO_API }}
+            TURBO_TEAM=${{ vars.TURBO_TEAM }}
+          secrets: |
+            turbo_token=${{ secrets.TURBO_TOKEN }}
+          cache-from: type=local,src=/opt/buildx-cache/${{ matrix.app }}
+          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }},mode=max,ignore-error=true
+      - name: Retry the build
+        if: steps.build.outcome == 'failure'
+        uses: docker/setup-buildx-action@v4
+      - name: Build again
+        if: steps.build.outcome == 'failure'
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
