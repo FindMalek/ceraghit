@@ -34,7 +34,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     path: `/product/${slug}`,
     title,
     description: description || title,
-    image: product.images[0]?.image,
   })
 }
 

@@ -27,7 +27,6 @@ export async function generateMetadata({ params }: Params) {
     path: `/shop/${slug}`,
     title: name,
     description: pick(category.description, locale) || seo("categoryDescription", { name }),
-    image: category.image ?? undefined,
   })
 }
 

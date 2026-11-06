@@ -16,7 +16,6 @@ export async function generateMetadata() {
     path: "/atelier",
     title: t("title"),
     description: seo("atelierDescription"),
-    image: STUDIO_PHOTOS[0]?.src,
   })
 }
 
