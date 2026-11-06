@@ -1,8 +1,8 @@
 "use client"
 
 import { cn } from "@workspace/ui/lib/utils"
-import Image from "next/image"
 import { useEffect, useState } from "react"
+import Image from "@/components/photo"
 
 const INTERVAL_MS = 5000
 

@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   transpilePackages: ["@workspace/ui", "@workspace/sdk"],
-  images: { unoptimized: true },
+  // Static catalogue photos are resized per device, see components/photo.tsx.
+  images: { formats: ["image/webp"], localPatterns: [{ pathname: "/catalogue/**" }, { pathname: "/api/files/**" }] },
   poweredByHeader: false,
   async headers() {
     return [

@@ -1,7 +1,7 @@
 import { MapPinIcon, PhoneIcon } from "@phosphor-icons/react/dist/ssr"
 import { imageSrc, pick } from "@workspace/sdk"
-import Image from "next/image"
 import { getLocale, getTranslations } from "next-intl/server"
+import Image from "@/components/photo"
 import { SectionHeading } from "@/components/section-heading"
 import { getLocations, getSettings } from "@/lib/api"
 import { pageMetadata } from "@/lib/seo"
