@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { getSettings } from "@/lib/api"
 import { LEGAL_DOCS } from "@/lib/legal"
+import { LanguageSwitcher } from "./language-switcher"
 import { NAV_LINKS } from "./nav-links"
 
 export async function SiteFooter() {
@@ -78,6 +79,7 @@ export async function SiteFooter() {
           ))}
         </ul>
       </nav>
+      <LanguageSwitcher className="justify-center border-border border-t py-1" />
       <p className="border-border border-t py-4 text-center text-muted-foreground text-xs">
         © {new Date().getFullYear()} Ceraghit Creation. {t("rights")}
       </p>

@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation"
 /** The shop's collections as large photo tiles. */
 export function CategoryTiles({ categories, locale }: { categories: Category[]; locale: string }) {
   return (
-    <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {categories.map((category, i) => (
         <li key={category.id}>
           <Link
@@ -18,8 +18,8 @@ export function CategoryTiles({ categories, locale }: { categories: Category[]; 
                 src={imageSrc(category.image)}
                 alt=""
                 fill
-                priority={i < 3}
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                priority={i < 4}
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                 className="object-cover transition duration-500 group-hover:scale-105"
               />
             )}

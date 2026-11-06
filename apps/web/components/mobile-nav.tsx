@@ -6,7 +6,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@workspace/ui/comp
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { Link } from "@/i18n/navigation"
-import { LanguageSwitcher } from "./language-switcher"
 import { NAV_LINKS } from "./nav-links"
 
 export function MobileNav() {
@@ -40,7 +39,6 @@ export function MobileNav() {
               </Link>
             ))}
           </nav>
-          <LanguageSwitcher className="px-4" />
         </SheetContent>
       </Sheet>
     </>
