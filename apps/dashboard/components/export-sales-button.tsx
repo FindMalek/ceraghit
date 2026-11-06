@@ -4,8 +4,8 @@ import { DownloadSimpleIcon } from "@phosphor-icons/react"
 import { browserClient } from "@workspace/orpc/react"
 import { buildSalesCsv, type Currency, salesByDay } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { useState } from "react"
-import { toast } from "sonner"
 import { SimpleSelect } from "@/components/simple-select"
 import { CURRENCY_LABEL } from "@/lib/copy"
 import { downloadTextFile, studioDayKey } from "@/lib/download"
@@ -28,7 +28,7 @@ export function ExportSalesButton({ days }: { days: number }) {
       const to = studioDayKey()
       const orders = await browserClient.admin.orders.export({ from, to, currency })
       if (orders.length === 0) {
-        toast.info("Aucune vente dans cette devise sur la période.")
+        showError("Aucune vente dans cette devise sur la période.")
         return
       }
       downloadTextFile(
@@ -36,7 +36,7 @@ export function ExportSalesButton({ days }: { days: number }) {
         buildSalesCsv(salesByDay(orders), currency, { bom: true }),
       )
     } catch (error) {
-      toast.error(errorMessage(error))
+      showError(errorMessage(error))
     } finally {
       setBusy(false)
     }

@@ -4,14 +4,13 @@ import { ArrowDownIcon, ArrowUpIcon, PencilSimpleIcon, PlusIcon, TrashIcon } fro
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { type Category, categoryInputSchema, imageSrc, pick } from "@workspace/sdk"
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useEffect, useState } from "react"
-import { toast } from "sonner"
 import { useAppConfig } from "@/components/app-config"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ImageField } from "@/components/image-field"
@@ -60,10 +59,9 @@ function CategoryDialog({
 
   const done = () => {
     queryClient.invalidateQueries({ queryKey: orpc.admin.categories.key() })
-    toast.success(category ? "Catégorie enregistrée." : "Catégorie créée.")
     onOpenChange(false)
   }
-  const onError = (e: unknown) => toast.error(errorMessage(e))
+  const onError = (e: unknown) => showError(errorMessage(e))
   const create = useMutation(orpc.admin.categories.create.mutationOptions({ onSuccess: done, onError }))
   const update = useMutation(orpc.admin.categories.update.mutationOptions({ onSuccess: done, onError }))
   const busy = create.isPending || update.isPending
@@ -148,12 +146,11 @@ export function CategoriesView() {
   const [toDelete, setToDelete] = useState<Category | null>(null)
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: orpc.admin.categories.key() })
-  const onError = (error: unknown) => toast.error(errorMessage(error))
+  const onError = (error: unknown) => showError(errorMessage(error))
   const reorder = useMutation(orpc.admin.categories.reorder.mutationOptions({ onSuccess: refresh, onError }))
   const remove = useMutation(
     orpc.admin.categories.remove.mutationOptions({
       onSuccess: () => {
-        toast.success("Catégorie supprimée.")
         refresh()
       },
       onError,
@@ -191,25 +188,34 @@ export function CategoriesView() {
         )}
         <ul className="flex flex-col gap-3">
           {rows.map((category, index) => (
-            <li key={category.id} className="frame flex flex-wrap items-center gap-3 bg-card/70 p-3">
-              {category.image ? (
-                // biome-ignore lint/performance/noImgElement: thumbnail of an uploaded or static image
-                <img src={imageSrc(category.image, webUrl)} alt="" className="size-14 shrink-0 border object-cover" />
-              ) : (
-                <div className="size-14 shrink-0 border" />
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xl">{pick(category.name, "fr")}</p>
-                <p className="text-muted-foreground text-sm">
-                  <span className="tabular-nums">{category.productCount}</span> produit
-                  {category.productCount > 1 ? "s" : ""}
-                </p>
-              </div>
-              {!category.visible && <Badge variant="outline">Masquée</Badge>}
-              <div className="flex gap-1">
+            <li key={category.id} className="frame flex flex-col gap-3 bg-card/70 p-3 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => openDialog(category)}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {category.image ? (
+                  // biome-ignore lint/performance/noImgElement: thumbnail of an uploaded or static image
+                  <img src={imageSrc(category.image, webUrl)} alt="" className="size-16 shrink-0 border object-cover" />
+                ) : (
+                  <div className="size-16 shrink-0 border" />
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xl leading-tight">{pick(category.name, "fr")}</span>
+                  <span className="block text-muted-foreground text-sm">
+                    <span className="tabular-nums">{category.productCount}</span> produit
+                    {category.productCount > 1 ? "s" : ""}
+                    {!category.visible && " · Masquée"}
+                  </span>
+                </span>
+              </button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="h-11 flex-1 sm:flex-none" onClick={() => openDialog(category)}>
+                  <PencilSimpleIcon /> Modifier
+                </Button>
                 <Button
-                  size="icon-lg"
-                  variant="ghost"
+                  variant="outline"
+                  className="size-11 p-0"
                   aria-label="Monter"
                   disabled={index === 0 || reorder.isPending}
                   onClick={() => move(index, -1)}
@@ -217,18 +223,20 @@ export function CategoriesView() {
                   <ArrowUpIcon />
                 </Button>
                 <Button
-                  size="icon-lg"
-                  variant="ghost"
+                  variant="outline"
+                  className="size-11 p-0"
                   aria-label="Descendre"
                   disabled={index === rows.length - 1 || reorder.isPending}
                   onClick={() => move(index, 1)}
                 >
                   <ArrowDownIcon />
                 </Button>
-                <Button size="icon-lg" variant="ghost" aria-label="Modifier" onClick={() => openDialog(category)}>
-                  <PencilSimpleIcon />
-                </Button>
-                <Button size="icon-lg" variant="ghost" aria-label="Supprimer" onClick={() => setToDelete(category)}>
+                <Button
+                  variant="ghost"
+                  className="size-11 p-0"
+                  aria-label="Supprimer"
+                  onClick={() => setToDelete(category)}
+                >
                   <TrashIcon />
                 </Button>
               </div>

@@ -4,15 +4,14 @@ import { MapPinIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-ico
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { imageSrc, locationInputSchema } from "@workspace/sdk"
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@workspace/ui/components/sheet"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useEffect, useState } from "react"
-import { toast } from "sonner"
 import { useAppConfig } from "@/components/app-config"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ImageField } from "@/components/image-field"
@@ -99,10 +98,9 @@ function LocationSheet({
 
   const done = () => {
     queryClient.invalidateQueries({ queryKey: orpc.admin.locations.key() })
-    toast.success(location ? "Atelier enregistré." : "Atelier ajouté.")
     onOpenChange(false)
   }
-  const onError = (e: unknown) => toast.error(errorMessage(e))
+  const onError = (e: unknown) => showError(errorMessage(e))
   const create = useMutation(orpc.admin.locations.create.mutationOptions({ onSuccess: done, onError }))
   const update = useMutation(orpc.admin.locations.update.mutationOptions({ onSuccess: done, onError }))
   const busy = create.isPending || update.isPending
@@ -244,10 +242,9 @@ export function LocationsView() {
   const remove = useMutation(
     orpc.admin.locations.remove.mutationOptions({
       onSuccess: () => {
-        toast.success("Atelier supprimé.")
         queryClient.invalidateQueries({ queryKey: orpc.admin.locations.key() })
       },
-      onError: (error) => toast.error(errorMessage(error)),
+      onError: (error) => showError(errorMessage(error)),
     }),
   )
   const rows = locations.data ?? []
@@ -275,32 +272,39 @@ export function LocationsView() {
         )}
         <ul className="grid gap-3 lg:grid-cols-2">
           {rows.map((location) => (
-            <li key={location.id} className="frame flex gap-3 bg-card/70 p-3">
-              {location.image ? (
-                // biome-ignore lint/performance/noImgElement: thumbnail of an uploaded or static image
-                <img src={imageSrc(location.image, webUrl)} alt="" className="size-20 shrink-0 border object-cover" />
-              ) : (
-                <div className="grid size-20 shrink-0 place-items-center border text-muted-foreground">
-                  <MapPinIcon className="size-6" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xl">{location.name}</p>
-                <p className="text-muted-foreground">
-                  {location.address}, {location.city} · {location.country}
-                </p>
-                {location.phone && <p className="tabular-nums">{location.phone}</p>}
-                {!location.visible && (
-                  <Badge variant="outline" className="mt-1">
-                    Masqué
-                  </Badge>
+            <li key={location.id} className="frame flex flex-col gap-3 bg-card/70 p-3">
+              <button
+                type="button"
+                onClick={() => openSheet(location)}
+                className="flex min-w-0 gap-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {location.image ? (
+                  // biome-ignore lint/performance/noImgElement: thumbnail of an uploaded or static image
+                  <img src={imageSrc(location.image, webUrl)} alt="" className="size-20 shrink-0 border object-cover" />
+                ) : (
+                  <div className="grid size-20 shrink-0 place-items-center border text-muted-foreground">
+                    <MapPinIcon className="size-6" />
+                  </div>
                 )}
-              </div>
-              <div className="flex flex-col gap-1">
-                <Button size="icon-lg" variant="ghost" aria-label="Modifier" onClick={() => openSheet(location)}>
-                  <PencilSimpleIcon />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xl leading-tight">{location.name}</span>
+                  <span className="block text-muted-foreground">
+                    {location.address}, {location.city} · {location.country}
+                  </span>
+                  {location.phone && <span className="block tabular-nums">{location.phone}</span>}
+                  {!location.visible && <span className="block text-muted-foreground text-sm">Masqué sur le site</span>}
+                </span>
+              </button>
+              <div className="flex gap-2">
+                <Button variant="outline" className="h-11 flex-1" onClick={() => openSheet(location)}>
+                  <PencilSimpleIcon /> Modifier
                 </Button>
-                <Button size="icon-lg" variant="ghost" aria-label="Supprimer" onClick={() => setToDelete(location)}>
+                <Button
+                  variant="ghost"
+                  className="size-11 p-0"
+                  aria-label="Supprimer"
+                  onClick={() => setToDelete(location)}
+                >
                   <TrashIcon />
                 </Button>
               </div>

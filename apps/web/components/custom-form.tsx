@@ -5,10 +5,10 @@ import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { customRequestInputSchema, localeSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useCallback, useState } from "react"
-import { toast } from "sonner"
 import { Link } from "@/i18n/navigation"
 import { FormField } from "./form-field"
 import { RequestPhotos } from "./request-photos"
@@ -31,7 +31,7 @@ export function CustomForm({ initialDescription }: { initialDescription?: string
   const create = useMutation(
     orpc.public.requests.create.mutationOptions({
       onSuccess: () => setSent(true),
-      onError: (error) => toast.error(errorMessage(error) || t("failed")),
+      onError: (error) => showError(errorMessage(error) || t("failed")),
     }),
   )
 

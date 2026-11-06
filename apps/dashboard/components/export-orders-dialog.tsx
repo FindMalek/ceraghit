@@ -13,10 +13,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { useState } from "react"
-import { toast } from "sonner"
 import { SimpleSelect } from "@/components/simple-select"
 import { CURRENCY_LABEL } from "@/lib/copy"
 import { downloadTextFile, studioDayKey } from "@/lib/download"
@@ -41,14 +41,13 @@ export function ExportOrdersDialog() {
     try {
       const orders = await browserClient.admin.orders.export({ from, to, currency })
       if (orders.length === 0) {
-        toast.info("Aucune commande payée sur cette période dans cette devise.")
+        showError("Aucune commande payée sur cette période dans cette devise.")
         return
       }
       downloadTextFile(`commandes-${currency}-${from}_${to}.csv`, buildOrdersCsv(orders, currency, { bom: true }))
-      toast.success(`${orders.length} commande${orders.length > 1 ? "s" : ""} exportée${orders.length > 1 ? "s" : ""}.`)
       setOpen(false)
     } catch (error) {
-      toast.error(errorMessage(error))
+      showError(errorMessage(error))
     } finally {
       setBusy(false)
     }

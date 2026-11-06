@@ -3,8 +3,8 @@
 import { useMutation } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { Button } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { useTranslations } from "next-intl"
-import { toast } from "sonner"
 import { useRouter } from "@/i18n/navigation"
 import { recallOrderToken } from "@/lib/order-tokens"
 
@@ -15,10 +15,10 @@ export function DemoGateway({ orderNumber, paymentRef }: { orderNumber: string; 
     orpc.public.orders.demoResolve.mutationOptions({
       onSuccess: () => {
         const token = recallOrderToken(orderNumber)
-        if (!token) return toast.error(t("noToken"))
+        if (!token) return showError(t("noToken"))
         router.push(`/order/${orderNumber}?t=${encodeURIComponent(token)}`)
       },
-      onError: () => toast.error(t("failedToResolve")),
+      onError: () => showError(t("failedToResolve")),
     }),
   )
   return (

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { imageSrc } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldLabel } from "@workspace/ui/components/field"
 import {
   Sheet,
@@ -17,7 +18,6 @@ import {
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Textarea } from "@workspace/ui/components/textarea"
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
@@ -65,10 +65,9 @@ function RequestSheet({ request, onClose }: { request: Request | null; onClose: 
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: orpc.admin.requests.key() })
         queryClient.invalidateQueries({ queryKey: orpc.admin.overview.key() })
-        toast.success("Demande enregistrée.")
         onClose()
       },
-      onError: (error) => toast.error(errorMessage(error)),
+      onError: (error) => showError(errorMessage(error)),
     }),
   )
 
@@ -76,9 +75,8 @@ function RequestSheet({ request, onClose }: { request: Request | null; onClose: 
     if (!request) return
     try {
       await navigator.clipboard.writeText(request.email)
-      toast.success("Email copié.")
     } catch {
-      toast.error("Copie impossible, sélectionnez l'adresse à la main.")
+      showError("Copie impossible, sélectionnez l'adresse à la main.")
     }
   }
 

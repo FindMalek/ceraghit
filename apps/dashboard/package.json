@@ -22,8 +22,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "recharts": "3.8.0",
-    "server-only": "0.0.1",
-    "sonner": "^2.0.8"
+    "server-only": "0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

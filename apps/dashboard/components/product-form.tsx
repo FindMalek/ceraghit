@@ -4,13 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { type Product, type ProductInput, pick, productInputSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { useRouter } from "next/navigation"
 import { type FormEvent, useState } from "react"
-import { toast } from "sonner"
 import { ImageListField } from "@/components/image-field"
 import { LocalizedField } from "@/components/localized-field"
 import { MoneyInput } from "@/components/money-input"
@@ -134,10 +134,9 @@ function ProductFormBody({ product }: { product: Product | null }) {
   const done = () => {
     queryClient.invalidateQueries({ queryKey: orpc.admin.products.key() })
     queryClient.invalidateQueries({ queryKey: orpc.admin.overview.key() })
-    toast.success(product ? "Produit enregistré." : "Produit créé.")
     router.push("/products")
   }
-  const onError = (error: unknown) => toast.error(errorMessage(error))
+  const onError = (error: unknown) => showError(errorMessage(error))
   const create = useMutation(orpc.admin.products.create.mutationOptions({ onSuccess: done, onError }))
   const update = useMutation(orpc.admin.products.update.mutationOptions({ onSuccess: done, onError }))
   const busy = create.isPending || update.isPending
@@ -214,7 +213,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
     }
     setErrors(found)
     if (Object.keys(found).length > 0 || !parsed.success) {
-      toast.error("Certains champs sont à corriger.")
+      showError("Certains champs sont à corriger.")
       return
     }
     if (product) update.mutate({ id: product.id, ...parsed.data })

@@ -33,9 +33,9 @@ function fillDays(days: number, rows: DayPoint[]): DayPoint[] {
 function Stat({ label, value, hint, href }: { label: string; value: string; hint?: string; href?: string }) {
   const body = (
     <Card className="frame h-full bg-card/70">
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="font-heading text-3xl tabular-nums">{value}</CardTitle>
+      <CardHeader className="gap-1 px-3 md:px-4">
+        <CardDescription className="leading-snug">{label}</CardDescription>
+        <CardTitle className="font-heading text-2xl tabular-nums md:text-3xl">{value}</CardTitle>
         {hint && <CardDescription>{hint}</CardDescription>}
       </CardHeader>
     </Card>
@@ -61,7 +61,13 @@ export function OverviewView() {
         description="Les ventes de la boutique."
         actions={
           <>
-            <SimpleSelect label="Période" value={days} onChange={setDays} options={RANGES} className="h-11 w-56" />
+            <SimpleSelect
+              label="Période"
+              value={days}
+              onChange={setDays}
+              options={RANGES}
+              className="h-11 w-full sm:w-56"
+            />
             <ExportSalesButton days={Number(days)} />
           </>
         }
@@ -69,7 +75,7 @@ export function OverviewView() {
       <PageBody>
         {stats.isError && <ErrorState error={stats.error} onRetry={() => stats.refetch()} />}
         {stats.isPending && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
             {Array.from({ length: 7 }, (_, i) => (
               <Skeleton key={`s-${i}`} className="h-28" />
             ))}
@@ -77,7 +83,7 @@ export function OverviewView() {
         )}
         {data && (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
               <Stat
                 label="Ventes en dinars"
                 value={formatMoney(data.revenue.TND, "TND", "fr")}

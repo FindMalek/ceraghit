@@ -1,15 +1,15 @@
 "use client"
 
-import { ImageIcon, MagnifyingGlassIcon, MinusIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react"
+import { ImageIcon, MagnifyingGlassIcon, MinusIcon, PencilSimpleIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { formatMoney, imageSrc, type Product, pick } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
 import { useAppConfig } from "@/components/app-config"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
@@ -120,20 +120,18 @@ export function ProductsView() {
   const update = useMutation(
     orpc.admin.products.update.mutationOptions({
       onSuccess: refresh,
-      onError: (error) => toast.error(errorMessage(error)),
+      onError: (error) => showError(errorMessage(error)),
     }),
   )
   const remove = useMutation(
     orpc.admin.products.remove.mutationOptions({
       onSuccess: (result) => {
-        toast.success(
-          result.archived
-            ? "Cette pièce a déjà été commandée : elle est archivée au lieu d'être supprimée."
-            : "Produit supprimé.",
-        )
+        if (result.archived) {
+          showError("Cette pièce a déjà été commandée : elle est archivée au lieu d'être supprimée.")
+        }
         refresh()
       },
-      onError: (error) => toast.error(errorMessage(error)),
+      onError: (error) => showError(errorMessage(error)),
     }),
   )
 
@@ -225,6 +223,12 @@ export function ProductsView() {
                     />
                   </div>
                   <div className="flex gap-2">
+                    <Link
+                      href={`/products/${product.id}`}
+                      className={buttonVariants({ variant: "default", className: "h-11 flex-1" })}
+                    >
+                      <PencilSimpleIcon /> Modifier
+                    </Link>
                     <Button
                       variant="outline"
                       className="h-11 flex-1"
@@ -233,7 +237,12 @@ export function ProductsView() {
                     >
                       {product.status === "published" ? "Dépublier" : "Publier"}
                     </Button>
-                    <Button variant="ghost" size="icon-lg" aria-label="Supprimer" onClick={() => setToDelete(product)}>
+                    <Button
+                      variant="ghost"
+                      className="size-11 p-0"
+                      aria-label="Supprimer"
+                      onClick={() => setToDelete(product)}
+                    >
                       <TrashIcon />
                     </Button>
                   </div>
@@ -253,7 +262,7 @@ export function ProductsView() {
                     <TableHead className="text-right">Prix €</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Statut</TableHead>
-                    <TableHead className="w-48" />
+                    <TableHead className="w-72" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -293,6 +302,12 @@ export function ProductsView() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">
+                          <Link
+                            href={`/products/${product.id}`}
+                            className={buttonVariants({ variant: "default", size: "sm" })}
+                          >
+                            <PencilSimpleIcon /> Modifier
+                          </Link>
                           <Button
                             variant="outline"
                             size="sm"
