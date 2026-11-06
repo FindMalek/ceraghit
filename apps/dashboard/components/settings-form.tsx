@@ -5,11 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { DEFAULT_SHIPPING_RATES, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { type FormEvent, useState } from "react"
-import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { LocalizedField } from "@/components/localized-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
@@ -40,9 +40,8 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
     orpc.admin.settings.update.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: orpc.admin.settings.key() })
-        toast.success("Réglages enregistrés.")
       },
-      onError: (error) => toast.error(errorMessage(error)),
+      onError: (error) => showError(errorMessage(error)),
     }),
   )
 
@@ -69,7 +68,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
       found.note = "Le français est obligatoire si vous écrivez une note."
     setErrors(found)
     if (Object.keys(found).length > 0 || Object.keys(ratesFound).length > 0 || !parsed.success) {
-      toast.error("Certains champs sont à corriger.")
+      showError("Certains champs sont à corriger.")
       return
     }
     save.mutate(parsed.data)

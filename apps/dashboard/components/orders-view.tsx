@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group"
 import {
   Sheet,
@@ -17,7 +18,6 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
-import { toast } from "sonner"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ExportOrdersDialog } from "@/components/export-orders-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
@@ -130,10 +130,9 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
         queryClient.invalidateQueries({ queryKey: orpc.admin.orders.key() })
         queryClient.invalidateQueries({ queryKey: orpc.admin.overview.key() })
         queryClient.invalidateQueries({ queryKey: orpc.admin.products.key() })
-        toast.success("Commande mise à jour.")
         onClose()
       },
-      onError: (error) => toast.error(errorMessage(error)),
+      onError: (error) => showError(errorMessage(error)),
     }),
   )
 

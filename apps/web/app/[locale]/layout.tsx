@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { hasLocale, NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server"
 import type { ReactNode } from "react"
+import { ErrorHost } from "@/components/error-host"
 import { MobileCartBar } from "@/components/mobile-cart-bar"
 import { Providers } from "@/components/providers"
 import { SiteFooter } from "@/components/site-footer"
@@ -73,7 +74,10 @@ export default async function LocaleLayout({
               {t("skip")}
             </a>
             <SiteHeader />
-            <main id="content">{children}</main>
+            <main id="content">
+              <ErrorHost />
+              {children}
+            </main>
             <SiteFooter />
             <MobileCartBar />
           </Providers>

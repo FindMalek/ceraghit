@@ -13,11 +13,11 @@ import {
   type SHIPPING_COUNTRIES,
 } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
-import { toast } from "sonner"
 import { Link } from "@/i18n/navigation"
 import { lineKey, useCartStore } from "@/lib/cart-store"
 import { rememberOrderToken } from "@/lib/order-tokens"
@@ -67,7 +67,7 @@ export function CheckoutForm({ onlinePayments }: { onlinePayments: boolean }) {
         clear()
         window.location.assign(checkout.payUrl)
       },
-      onError: (error) => toast.error(errorMessage(error)),
+      onError: (error) => showError(errorMessage(error)),
     }),
   )
 

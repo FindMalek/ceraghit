@@ -6,7 +6,6 @@ import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
-import { toast } from "sonner"
 import { maxQuantity, useCartStore } from "@/lib/cart-store"
 import { useUiStore } from "@/lib/ui-store"
 import { useCurrency } from "./currency-provider"
@@ -29,7 +28,6 @@ export function AddToCart({ product }: { product: Product }) {
 
   const onAdd = () => {
     add(product, quantity, variant)
-    toast.success(t("added"))
     setCartOpen(true)
   }
 

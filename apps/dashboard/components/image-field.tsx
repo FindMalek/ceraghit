@@ -5,10 +5,10 @@ import { ArrowDownIcon, ArrowUpIcon, ImageIcon, TrashIcon, UploadSimpleIcon } fr
 import { browserClient } from "@workspace/orpc/react"
 import { imageSrc, UPLOAD_MAX_BYTES } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
+import { showError } from "@workspace/ui/components/error-banner"
 import { Input } from "@workspace/ui/components/input"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { useRef, useState } from "react"
-import { toast } from "sonner"
 import { useAppConfig } from "@/components/app-config"
 import { compressImage } from "@/lib/compress-image"
 import { errorMessage } from "@/lib/errors"
@@ -49,7 +49,7 @@ export function useUploader(folder: Folder) {
       try {
         done.push(await uploadFile(file, folder))
       } catch (error) {
-        toast.error(uploadError(error))
+        showError(uploadError(error))
         break
       }
     }
@@ -77,7 +77,7 @@ function PathInput({ onAdd }: { onAdd: (value: string) => void }) {
     const value = text.trim()
     if (!value) return
     if (!value.startsWith("/") && !value.startsWith("http") && !value.startsWith("s3:")) {
-      toast.error("Un chemin commence par /, une URL par https://.")
+      showError("Un chemin commence par /, une URL par https://.")
       return
     }
     onAdd(value)

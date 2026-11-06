@@ -1,6 +1,5 @@
 import "@workspace/ui/globals.css"
 import { QueryProvider } from "@workspace/orpc/react"
-import { Toaster } from "@workspace/ui/components/sonner"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
 import { cn } from "@workspace/ui/lib/utils"
 import type { Metadata } from "next"
@@ -24,7 +23,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <QueryProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </QueryProvider>
-        <Toaster position="top-center" />
       </body>
     </html>
   )
