@@ -2,7 +2,6 @@ import { Logo } from "@workspace/ui/brand/logo"
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { CartButton } from "./cart-button"
-import { LanguageSwitcher } from "./language-switcher"
 import { MobileNav } from "./mobile-nav"
 import { NAV_LINKS } from "./nav-links"
 
@@ -26,7 +25,6 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <LanguageSwitcher className="hidden lg:flex" />
         <CartButton />
       </div>
     </header>
