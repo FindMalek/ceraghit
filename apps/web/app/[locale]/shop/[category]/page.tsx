@@ -1,8 +1,8 @@
 import { pick } from "@workspace/sdk"
 import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
-import { CategoryChips } from "@/components/category-chips"
 import { CategoryHeading } from "@/components/category-heading"
+import { CategoryTiles } from "@/components/category-tiles"
 import { EmptyState } from "@/components/empty-state"
 import { JsonLd } from "@/components/json-ld"
 import { ProductGrid } from "@/components/product-card"
@@ -62,7 +62,7 @@ export default async function CategoryPage({
       />
       <h1 className="sr-only">{pick(category.name, locale)}</h1>
       <CategoryHeading category={category} index={index} />
-      <CategoryChips categories={categories} locale={locale} activeLabel={t("all")} active={slug} />
+      <CategoryTiles categories={categories} locale={locale} active={slug} compact />
       <ShopFilters />
       {products.length === 0 ? (
         <EmptyState message={t("empty")} cta={t("emptyCta")} />
