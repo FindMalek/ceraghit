@@ -25,6 +25,8 @@ export function generateStaticParams(): { locale: string }[] {
   return routing.locales.map((locale) => ({ locale }))
 }
 
+const OG_LOCALES: Record<string, string> = { fr: "fr_FR", en: "en_US", ar: "ar_AR" }
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "meta" })
@@ -36,9 +38,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: {
       title: t("title"),
       description: t("description"),
-      images: ["/catalogue/0200-1.webp"],
       siteName: SITE.name,
+      type: "website",
+      locale: OG_LOCALES[locale] ?? "fr_FR",
     },
+    twitter: { card: "summary_large_image" },
     robots: SITE.isProduction ? undefined : { index: false, follow: false },
   }
 }
