@@ -1,21 +1,35 @@
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr"
 import { Separator } from "@workspace/ui/components/separator"
 import { SidebarTrigger } from "@workspace/ui/components/sidebar"
+import Link from "next/link"
 
 export function PageHeader({
   title,
   description,
   actions,
+  back,
 }: {
   title: string
   description?: string
   actions?: React.ReactNode
+  /** A way out on screens the tab bar is hidden on (forms). */
+  back?: { href: string; label: string }
 }) {
   return (
     <header className="flex flex-col gap-4 border-b px-4 pt-3 pb-5 md:px-6">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1 size-10 md:size-7" />
         <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
-        <span className="text-muted-foreground text-sm">{title}</span>
+        {back ? (
+          <Link
+            href={back.href}
+            className="-my-2 flex min-h-11 items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
+          >
+            <ArrowLeftIcon className="size-4" /> {back.label}
+          </Link>
+        ) : (
+          <span className="text-muted-foreground text-sm">{title}</span>
+        )}
       </div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">

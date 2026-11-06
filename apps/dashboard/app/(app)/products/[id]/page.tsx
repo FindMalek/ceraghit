@@ -8,7 +8,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { id } = await params
   return (
     <>
-      <PageHeader title="Modifier le produit" />
+      <PageHeader title="Modifier le produit" back={{ href: "/products", label: "Produits" }} />
       <EditProductForm id={id} />
     </>
   )
