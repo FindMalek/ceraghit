@@ -1,6 +1,6 @@
 "use client"
 
-import { MagnifyingGlassIcon } from "@phosphor-icons/react"
+import { EnvelopeSimpleIcon, MagnifyingGlassIcon, PhoneIcon, WhatsappLogoIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
@@ -158,6 +158,25 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                     </a>
                   </p>
                   <p className="tabular-nums">{order.phone}</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <a
+                      href={`tel:${order.phone.replace(/\s/g, "")}`}
+                      className={cn(buttonVariants({ variant: "outline" }), "h-11")}
+                    >
+                      <PhoneIcon /> Appeler
+                    </a>
+                    <a
+                      href={`https://wa.me/${order.phone.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(buttonVariants({ variant: "outline" }), "h-11")}
+                    >
+                      <WhatsappLogoIcon /> WhatsApp
+                    </a>
+                    <a href={`mailto:${order.email}`} className={cn(buttonVariants({ variant: "outline" }), "h-11")}>
+                      <EnvelopeSimpleIcon /> Écrire
+                    </a>
+                  </div>
                   <p className="mt-2 text-muted-foreground">
                     {order.address}
                     <br />
@@ -193,16 +212,22 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                   <h2 className="mb-1 font-heading text-2xl">Paiement</h2>
                   <dl>
                     <Line label="Mode" value={PAYMENT_LABEL[order.paymentMethod]} />
-                    <Line
-                      label="Passerelle"
-                      value={
-                        order.paymentProvider ? (PAYMENT_PROVIDER[order.paymentProvider] ?? order.paymentProvider) : "—"
-                      }
-                    />
-                    <Line
-                      label="Référence"
-                      value={<span className="break-all tabular-nums">{order.paymentRef ?? "—"}</span>}
-                    />
+                    {order.paymentMethod === "online" && (
+                      <>
+                        <Line
+                          label="Passerelle"
+                          value={
+                            order.paymentProvider
+                              ? (PAYMENT_PROVIDER[order.paymentProvider] ?? order.paymentProvider)
+                              : "—"
+                          }
+                        />
+                        <Line
+                          label="Référence"
+                          value={<span className="break-all tabular-nums">{order.paymentRef ?? "—"}</span>}
+                        />
+                      </>
+                    )}
                     <Line label="Payée le" value={order.paidAt ? formatDate(order.paidAt) : "—"} />
                   </dl>
                 </section>
@@ -306,7 +331,9 @@ export function OrdersView() {
                     </span>
                     <span>{order.customerName}</span>
                     <span className="flex justify-between text-muted-foreground text-sm">
-                      <span>{formatDate(order.createdAt)}</span>
+                      <span>
+                        {formatDate(order.createdAt)} · {PAYMENT_SHORT[order.paymentMethod]}
+                      </span>
                       <span className="text-foreground tabular-nums">
                         {formatMoney(order.totalMinor, order.currency, "fr")}
                       </span>

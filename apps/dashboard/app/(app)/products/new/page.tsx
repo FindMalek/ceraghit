@@ -7,7 +7,11 @@ export const metadata: Metadata = { title: "Nouveau produit" }
 export default function NewProductPage() {
   return (
     <>
-      <PageHeader title="Nouveau produit" description="Les deux prix sont obligatoires : dinars et euros." />
+      <PageHeader
+        title="Nouveau produit"
+        description="Les deux prix sont obligatoires : dinars et euros."
+        back={{ href: "/products", label: "Produits" }}
+      />
       <NewProductForm />
     </>
   )

@@ -1,6 +1,6 @@
 "use client"
 
-import { CopyIcon, EnvelopeSimpleIcon } from "@phosphor-icons/react"
+import { CopyIcon, EnvelopeSimpleIcon, PhoneIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { imageSrc } from "@workspace/sdk"
@@ -53,6 +53,7 @@ function RequestSheet({ request, onClose }: { request: Request | null; onClose: 
   const queryClient = useQueryClient()
   const [status, setStatus] = useState<Status>("new")
   const [note, setNote] = useState("")
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!request) return
@@ -75,6 +76,8 @@ function RequestSheet({ request, onClose }: { request: Request | null; onClose: 
     if (!request) return
     try {
       await navigator.clipboard.writeText(request.email)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       showError("Copie impossible, sélectionnez l'adresse à la main.")
     }
@@ -98,8 +101,16 @@ function RequestSheet({ request, onClose }: { request: Request | null; onClose: 
                   <EnvelopeSimpleIcon /> Répondre par email
                 </a>
                 <Button type="button" variant="outline" size="lg" onClick={copyEmail}>
-                  <CopyIcon /> Copier l'email
+                  <CopyIcon /> {copied ? "Copié ✓" : "Copier l'email"}
                 </Button>
+                {request.phone && (
+                  <a
+                    className={buttonVariants({ size: "lg", variant: "outline" })}
+                    href={`tel:${request.phone.replace(/\s/g, "")}`}
+                  >
+                    <PhoneIcon /> Appeler
+                  </a>
+                )}
               </div>
               <dl className="divide-y">
                 <Row label="Email" value={<span className="break-all">{request.email}</span>} />

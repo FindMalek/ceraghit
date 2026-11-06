@@ -151,7 +151,10 @@ export function ImageField({
           if (uploaded) onChange(uploaded)
         }}
       />
-      <PathInput onAdd={onChange} />
+      <details className="text-muted-foreground text-sm">
+        <summary className="flex min-h-11 cursor-pointer items-center">Avancé : utiliser une adresse d'image</summary>
+        <PathInput onAdd={onChange} />
+      </details>
     </div>
   )
 }
@@ -239,7 +242,10 @@ export function ImageListField({ value, onChange }: { value: ImageItem[]; onChan
           if (uploaded.length) onChange([...value, ...uploaded.map((image) => ({ image }))])
         }}
       />
-      <PathInput onAdd={(image) => onChange([...value, { image }])} />
+      <details className="text-muted-foreground text-sm">
+        <summary className="flex min-h-11 cursor-pointer items-center">Avancé : ajouter une adresse d'image</summary>
+        <PathInput onAdd={(image) => onChange([...value, { image }])} />
+      </details>
     </div>
   )
 }
