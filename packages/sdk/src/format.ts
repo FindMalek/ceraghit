@@ -40,6 +40,8 @@ export function imageSrc(image: string, webOrigin = ""): string {
 
 export function slugify(text: string): string {
   return text
+    .replace(/œ/gi, "oe")
+    .replace(/æ/gi, "ae")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
