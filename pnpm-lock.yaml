@@ -108,6 +108,9 @@ importers:
       '@workspace/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

@@ -73,8 +73,8 @@ anything older than 14 days.
 integration and pushes the production env vars; it prints the project ids to put in GitHub. Then add the domains in each
 project. The long way, by hand:
 
-**Vercel** (team: yours, Pro): create three projects (`ceraghit-api|web|dashboard`) and leave **Root Directory empty**: `deploy.yml` runs the
-CLI from inside `apps/<app>`, and a Root Directory on top of that doubles the path and breaks `vercel build`. Settings → Git →
+**Vercel** (team: yours, Pro): create three projects (`ceraghit-api|web|dashboard`) and set **Root Directory** to `apps/<app>` (with "include source files outside the root directory" on): `deploy.yml` runs the
+CLI from the repo root, and running it inside `apps/<app>` breaks the monorepo file paths (`File does not exist: apps/api/node_modules/...`). `scripts/vercel-setup.sh` sets this for you. Settings → Git →
 never connect (or set "Ignored Build Step" to `exit 0`); add the env vars below to each.
 Domains: `ceraghit.com` (web, `www` redirects to it), `dashboard.ceraghit.com`, `api.ceraghit.com`.
 
