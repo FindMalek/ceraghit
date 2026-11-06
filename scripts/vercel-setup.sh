@@ -43,6 +43,11 @@ for app in api web dashboard; do
   echo "== ceraghit-$app"
   vercel link --yes --project "ceraghit-$app" --cwd "apps/$app" --scope "$SCOPE" >/dev/null
   vercel git disconnect --yes --cwd "apps/$app" --scope "$SCOPE" >/dev/null 2>&1 || true
+  # deploy.yml runs the CLI from the repo root, so each project needs its Root Directory (monorepo file paths).
+  body=$(mktemp)
+  printf '{"rootDirectory":"apps/%s","sourceFilesOutsideRootDirectory":true}' "$app" > "$body"
+  vercel api "/v9/projects/ceraghit-$app" --method PATCH --input "$body" --scope "$SCOPE" >/dev/null
+  rm -f "$body"
 done
 
 echo "== env vars (production)"

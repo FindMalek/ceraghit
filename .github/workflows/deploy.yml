@@ -85,7 +85,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets[matrix.project] || vars[matrix.project] }}
-        working-directory: apps/${{ matrix.app }}
+        # From the repo root: each Vercel project has its Root Directory set to apps/<app>, so monorepo files resolve.
         run: |
           vercel pull --yes --environment=production
           vercel build --prod
