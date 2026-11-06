@@ -61,7 +61,9 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
           ref: p.ref,
           slug: `${p.title
             .toLowerCase()
+            .replace(/œ/g, "oe")
             .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/^-|-$/g, "")}-${p.ref}`,
           categoryId: categoryId.get(p.category)!,

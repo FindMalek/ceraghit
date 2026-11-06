@@ -108,6 +108,28 @@ describe.skipIf(!url)("router", () => {
     await db.close()
   })
 
+  test("the studio is emailed when a unique-piece request comes in, replying goes to the customer", async () => {
+    const sent: { to: string; replyTo?: string; subject: string; text: string }[] = []
+    const client = createRouterClient(appRouter, {
+      context: (): Context =>
+        createContext({ ...services, mailer: { send: async (mail) => void sent.push(mail) } }, new Headers()),
+    })
+    const name = `Mail ${tag}`
+    await client.public.requests.create({
+      name,
+      email: "mail-request@example.com",
+      description: "Un plat vert émeraude",
+      budget: "300 DT",
+      locale: "fr",
+      images: [],
+    })
+    expect(sent).toHaveLength(1)
+    expect(sent[0]).toMatchObject({ to: "ceraghit@yahoo.fr", replyTo: "mail-request@example.com" })
+    expect(sent[0]!.text).toContain("Un plat vert émeraude")
+    expect(sent[0]!.text).toContain("Budget : 300 DT")
+    await db.delete(customRequests).where(eq(customRequests.name, name))
+  })
+
   test("a request keeps photos that were really uploaded and rejects the rest", async () => {
     const stored = new Set<string>()
     const storage: Storage = {

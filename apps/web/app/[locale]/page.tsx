@@ -27,6 +27,9 @@ export async function generateMetadata(): Promise<Metadata> {
   })
 }
 
+/** Whole rows only: 8 or 4 pieces fill the four-column grid, a lonely 5th and 6th would not. */
+const fullRow = (count: number): number => (count >= 8 ? 8 : count >= 4 ? 4 : count)
+
 export default async function HomePage() {
   const [t, edito, locale, currency] = await Promise.all([
     getTranslations("home"),
@@ -73,7 +76,7 @@ export default async function HomePage() {
       {featured.length > 0 && (
         <section className="mx-auto max-w-7xl space-y-8 px-4 py-12">
           <SectionHeading title={t("featured")} />
-          <ProductGrid products={featured} currency={currency} />
+          <ProductGrid products={featured.slice(0, fullRow(featured.length))} currency={currency} />
         </section>
       )}
 

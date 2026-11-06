@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { fitWithin, formatMoney, imageSrc, pick, toMinor } from "./format"
+import { fitWithin, formatMoney, imageSrc, pick, slugify, toMinor } from "./format"
 
 test("the same product shows its TND and EUR price", () => {
   expect(formatMoney(60_000, "TND", "en")).toBe("60 DT")
@@ -9,6 +9,11 @@ test("the same product shows its TND and EUR price", () => {
   expect(formatMoney(60_000, "TND", "ar")).toBe("\u206660 د.ت\u2069")
   expect(toMinor(10, "TND")).toBe(10_000)
   expect(toMinor(34.5, "EUR")).toBe(3_450)
+})
+
+test("slugs keep accented letters and ligatures readable", () => {
+  expect(slugify("Bas-relief en céramique")).toBe("bas-relief-en-ceramique")
+  expect(slugify("Œuvre à l'unité, Ça va")).toBe("oeuvre-a-l-unite-ca-va")
 })
 
 test("a missing translation falls back to french", () => {

@@ -10,6 +10,7 @@ import {
 } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
 import { z } from "zod"
+import type { Context } from "../../context"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { clientAddress, RateLimit } from "../../lib/rate-limit"
@@ -77,6 +78,35 @@ export const ordersRouter = {
 const IMAGE_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const
 const uploadLimit = new RateLimit(12, 10 * 60_000)
 
+/** The studio answers requests by email, so it gets one the moment a request comes in. Never fails the request. */
+async function notifyStudio(
+  { db, mailer }: Pick<Context, "db" | "mailer">,
+  request: z.infer<typeof customRequestInputSchema>,
+) {
+  try {
+    const studio = (await getSettings(db)).contactEmail
+    await mailer.send({
+      to: studio,
+      replyTo: request.email,
+      subject: `Nouvelle demande de pièce unique : ${request.name}`,
+      text: [
+        `${request.name} <${request.email}>${request.phone ? ` ${request.phone}` : ""}${request.country ? ` (${request.country})` : ""}`,
+        "",
+        request.description,
+        "",
+        ...(request.dimensions ? [`Dimensions : ${request.dimensions}`] : []),
+        ...(request.budget ? [`Budget : ${request.budget}`] : []),
+        ...(request.references ? [`Références : ${request.references}`] : []),
+        ...(request.images.length ? [`${request.images.length} photo(s) à voir dans le dashboard.`] : []),
+        "",
+        "Répondez directement à cet email pour écrire au client.",
+      ].join("\n"),
+    })
+  } catch (error) {
+    console.error("[request mail]", error)
+  }
+}
+
 export const requestsRouter = {
   /** A signed PUT for one photo of a request. Its size and type are part of the signature. */
   uploadUrl: publicProcedure
@@ -122,6 +152,7 @@ export const requestsRouter = {
         if (!valid) throw new ORPCError("BAD_REQUEST", { message: "A photo was not uploaded, please add it again." })
       }
       await context.db.insert(customRequests).values({ ...input, email: input.email.toLowerCase() })
+      await notifyStudio(context, input)
       return { ok: true as const }
     }),
 }
