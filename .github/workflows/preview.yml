@@ -48,7 +48,7 @@ jobs:
       # The homelab buildkit sometimes drops its connection (EOF, graceful_stop): try again once with a fresh builder.
       - id: build
         continue-on-error: true
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
@@ -66,7 +66,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Build again
         if: steps.build.outcome == 'failure'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
