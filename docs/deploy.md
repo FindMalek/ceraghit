@@ -107,8 +107,8 @@ the dashboard, customer photos on `/custom` by the storefront, both straight to 
 Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_PASSWORD`, `PREVIEW_S3_ACCESS_KEY_ID`,
 `PREVIEW_S3_SECRET_ACCESS_KEY`, optional `KONNECT_TEST_API_KEY` / `KONNECT_TEST_WALLET_ID`, optional `GHCR_READ_TOKEN`
 (classic PAT `read:packages`), `PROJECT_TOKEN` (classic PAT `project`, for `project.yml`).
-`production` environment variables: `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API|WEB|DASHBOARD`, `PRODUCTION_WEB_HOST`,
-`PRODUCTION_API_HOST`, `PRODUCTION_DASHBOARD_HOST`, `ADMIN_EMAIL`. `production` environment secrets: `VERCEL_TOKEN`, `CRON_SECRET`,
+`production` environment variables: `PRODUCTION_WEB_HOST`,
+`PRODUCTION_API_HOST`, `PRODUCTION_DASHBOARD_HOST`, `ADMIN_EMAIL`. `production` environment secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API|WEB|DASHBOARD`, `CRON_SECRET`,
 `DATABASE_URL` (Neon, direct url for migrations), `ADMIN_PASSWORD`.
 
 ## check before the first production deploy

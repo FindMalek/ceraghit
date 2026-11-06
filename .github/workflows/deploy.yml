@@ -22,8 +22,6 @@ env:
   TURBO_API: ${{ vars.TURBO_API }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
 jobs:
   migrate:
@@ -80,10 +78,13 @@ jobs:
         with:
           node-version: "24"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm add -g vercel@latest
+      - run: pnpm add -g vercel@65.9.0
       - name: Build and deploy ${{ matrix.app }}
+        # Environment secrets only exist inside a job that uses the environment, so they are read here, not at the top.
         env:
-          VERCEL_PROJECT_ID: ${{ vars[matrix.project] }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets[matrix.project] || vars[matrix.project] }}
         working-directory: apps/${{ matrix.app }}
         run: |
           vercel pull --yes --environment=production
