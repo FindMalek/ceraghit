@@ -79,6 +79,10 @@ jobs:
           node-version: "24"
       - run: pnpm install --frozen-lockfile
       - run: pnpm add -g vercel@65.9.0
+      # Vercel looks for the function in api/ before it runs any build command, so the bundle must exist first.
+      - name: Bundle the api
+        if: matrix.app == 'api'
+        run: pnpm --filter api run build:vercel
       - name: Build and deploy ${{ matrix.app }}
         # Environment secrets only exist inside a job that uses the environment, so they are read here, not at the top.
         env:
@@ -95,6 +99,7 @@ jobs:
     needs: deploy
     runs-on: [self-hosted, the-keep]
     timeout-minutes: 5
+    environment: production
     steps:
       - name: api health
         run: |
