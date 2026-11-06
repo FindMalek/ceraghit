@@ -4,9 +4,9 @@ import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
 import { imageSrc } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
-import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
 import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react"
+import Image from "@/components/photo"
 
 interface GalleryImage {
   id: string

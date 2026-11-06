@@ -1,8 +1,8 @@
 import type { Currency, Product } from "@workspace/sdk"
 import { imageSrc, pick } from "@workspace/sdk"
 import { cn } from "@workspace/ui/lib/utils"
-import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
+import Image from "@/components/photo"
 import { Link } from "@/i18n/navigation"
 import { PriceBox } from "./price-box"
 

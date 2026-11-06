@@ -1,7 +1,7 @@
 import type { Category } from "@workspace/sdk"
 import { imageSrc, pick } from "@workspace/sdk"
 import { cn } from "@workspace/ui/lib/utils"
-import Image from "next/image"
+import Image from "@/components/photo"
 import { Link } from "@/i18n/navigation"
 
 /** The shop's collections as photo tiles. On a collection page the current one is highlighted and the tiles are shorter. */
