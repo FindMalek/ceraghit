@@ -2,6 +2,7 @@ import "@workspace/ui/globals.css"
 import { cn } from "@workspace/ui/lib/utils"
 import type { Metadata, Viewport } from "next"
 import { Amiri, Cinzel, Cormorant_Unicase, EB_Garamond, Mrs_Saint_Delafield } from "next/font/google"
+import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { hasLocale, NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server"
@@ -30,6 +31,9 @@ const serif = Cinzel({
 const body = EB_Garamond({ subsets: ["latin"], variable: "--font-body-face" })
 const script = Mrs_Saint_Delafield({ subsets: ["latin"], weight: "400", variable: "--font-script-face" })
 const arabic = Amiri({ subsets: ["arabic"], weight: ["400", "700"], variable: "--font-arabic-face" })
+
+/** Every page carries the per-request CSP nonce, so none of them can be prerendered. */
+export const dynamic = "force-dynamic"
 
 export function generateStaticParams(): { locale: string }[] {
   return routing.locales.map((locale) => ({ locale }))
@@ -69,7 +73,12 @@ export default async function LocaleLayout({
   const { locale } = await params
   if (!hasLocale(routing.locales, locale)) notFound()
   setRequestLocale(locale)
-  const [messages, currency, t] = await Promise.all([getMessages(), getCurrency(), getTranslations("nav")])
+  const [messages, currency, t, nonce] = await Promise.all([
+    getMessages(),
+    getCurrency(),
+    getTranslations("nav"),
+    headers().then((list) => list.get("x-nonce") ?? undefined),
+  ])
   const rtl = locale === "ar"
   return (
     <html
@@ -80,7 +89,7 @@ export default async function LocaleLayout({
     >
       <body className="min-h-dvh text-[1.0625rem] leading-relaxed">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers currency={currency}>
+          <Providers currency={currency} nonce={nonce}>
             <a
               href="#content"
               className="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50 focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"

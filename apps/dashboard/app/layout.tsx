@@ -21,6 +21,8 @@ const body = EB_Garamond({ subsets: ["latin"], variable: "--font-body-face" })
 const script = Mrs_Saint_Delafield({ subsets: ["latin"], weight: "400", variable: "--font-script-face" })
 const arabic = Amiri({ subsets: ["arabic"], weight: ["400", "700"], variable: "--font-arabic-face" })
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: { default: "Ceraghit · Dashboard", template: "%s · Ceraghit" },
   icons: { icon: "/logo.webp" },

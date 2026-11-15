@@ -12,12 +12,16 @@ import {
   type Services,
   settleOrder,
 } from "@workspace/orpc"
+import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
+
+const DOCS_PATHS = ["/", "/docs", "/v1/docs", "/v1/openapi.json"]
+const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
 
 /**
  * Routes:
  *   /rpc/*              oRPC, used by web + dashboard through their /api proxy (needs `x-csrf-token: orpc`)
- *   /v1/*               the same procedures as REST (OpenAPI), docs at /v1/docs, spec at /v1/openapi.json
+ *   /v1/*               the same procedures as REST (OpenAPI), docs at /v1/docs, spec at /v1/openapi.json (not in production)
  *   /webhooks/konnect   payment gateway callback, only a hint: the order is settled by re-asking the gateway
  *   /cron/cleanup-uploads   daily job (GitHub Actions, bearer CRON_SECRET): deletes files unused for 30 days
  *   /files/<key>        redirect to the CDN or a signed url for an uploaded image
@@ -43,9 +47,27 @@ export function createServer(services: Services) {
     ],
   })
 
-  return async function fetch(request: Request): Promise<Response> {
+  const production = services.config.appEnv === "production"
+
+  /** Every response gets the same hardening, whichever branch built it (redirects have immutable headers, so copy). */
+  function harden(pathname: string, response: Response): Response {
+    const headers = new Headers(response.headers)
+    headers.set("x-content-type-options", "nosniff")
+    headers.set("referrer-policy", "no-referrer")
+    if (production) headers.set("strict-transport-security", HSTS)
+    if (
+      !headers.has("cache-control") &&
+      NO_STORE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+    ) {
+      headers.set("cache-control", "no-store")
+    }
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
+  }
+
+  async function route(request: Request): Promise<Response> {
     const url = new URL(request.url)
     const { pathname } = url
+    if (production && DOCS_PATHS.includes(pathname)) return Response.json({ message: "Not found." }, { status: 404 })
     if (pathname === "/" || pathname === "/docs") return Response.redirect(new URL("/v1/docs", request.url), 302)
     if (pathname === "/health") {
       const db = await services.db
@@ -97,5 +119,9 @@ export function createServer(services: Services) {
     const viaRest = await rest.handle(request, { prefix: "/v1", context })
     if (viaRest.matched) return viaRest.response
     return Response.json({ message: "Not found." }, { status: 404 })
+  }
+
+  return async function fetch(request: Request): Promise<Response> {
+    return harden(new URL(request.url).pathname, await route(request))
   }
 }

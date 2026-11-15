@@ -1,7 +1,16 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalPassThroughEnv": ["DATABASE_URL", "API_URL", "WEB_URL", "APP_ENV", "NODE_ENV"],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "API_URL",
+    "WEB_URL",
+    "APP_ENV",
+    "NODE_ENV",
+    "S3_ENDPOINT",
+    "S3_PUBLIC_URL",
+    "CSP_REPORT_ONLY"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
