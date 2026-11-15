@@ -13,6 +13,6 @@ export const OPTIONAL_STEP_UI: Record<OptionalSetupStepId, { title: string; why:
   emailDomain: {
     title: "Adresse d'envoi des emails",
     why: "Les emails partent de commandes@ceraghit.com.",
-    href: null,
+    href: "/settings",
   },
 }

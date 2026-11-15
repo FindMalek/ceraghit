@@ -6,4 +6,5 @@ test("each open step links to where it is finished", () => {
   expect(setupStepHref("bank")).toBe("/settings/profile#bank")
   expect(setupStepHref("shipping")).toBe("/shipping")
   expect(setupStepHref("konnect")).toBeNull()
+  expect(setupStepHref("emailDomain")).toBe("/settings")
 })

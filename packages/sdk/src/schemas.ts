@@ -545,6 +545,25 @@ export const mailLogItemSchema = z.object({
 })
 export type MailLogItem = z.infer<typeof mailLogItemSchema>
 
+export const emailDomainSchema = z.object({
+  state: z.enum(["verified", "pending", "failed", "not_found", "restricted_key", "not_configured", "unavailable"]),
+  domain: z.string().nullable(),
+  from: z.string(),
+  records: z.array(
+    z.object({
+      purpose: z.string(),
+      type: z.string(),
+      name: z.string(),
+      value: z.string(),
+      priority: z.number().int().nullable(),
+      status: z.string(),
+    }),
+  ),
+  /** Suggested, never required. */
+  dmarc: z.object({ name: z.string(), value: z.string() }).nullable(),
+})
+export type EmailDomain = z.infer<typeof emailDomainSchema>
+
 /** What the studio's plan stores: dashboard images and customer photos together. */
 export const STORAGE_QUOTA_BYTES = 2_500_000_000
 /** The dashboard shrinks every image first, so anything past this is not a normal photo. */

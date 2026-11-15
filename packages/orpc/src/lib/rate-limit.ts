@@ -18,6 +18,8 @@ export const LIMITS = {
   orderCreate: { max: 10, windowMs: 10 * MINUTE },
   orderGet: { max: 60, windowMs: 10 * MINUTE },
   requestCreate: { max: 5, windowMs: 60 * MINUTE },
+  mailDomain: { max: 6, windowMs: 10 * MINUTE },
+  mailTest: { max: 5, windowMs: 10 * MINUTE },
   uploadUrl: { max: 12, windowMs: 10 * MINUTE },
 } as const satisfies Record<string, Limit>
 
