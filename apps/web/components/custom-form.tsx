@@ -1,7 +1,6 @@
 "use client"
 
 import { useMutation } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { customRequestInputSchema, localeSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -10,6 +9,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useCallback, useState } from "react"
 import { Link } from "@/i18n/navigation"
+import { useApiErrorMessage } from "@/lib/errors"
 import { FormField } from "./form-field"
 import { RequestPhotos } from "./request-photos"
 
@@ -18,6 +18,7 @@ type Field = (typeof FIELDS)[number]
 
 export function CustomForm({ initialDescription }: { initialDescription?: string }) {
   const t = useTranslations("custom")
+  const apiError = useApiErrorMessage()
   const locale = useLocale()
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({})
   const [sent, setSent] = useState(false)
@@ -31,7 +32,7 @@ export function CustomForm({ initialDescription }: { initialDescription?: string
   const create = useMutation(
     orpc.public.requests.create.mutationOptions({
       onSuccess: () => setSent(true),
-      onError: (error) => showError(errorMessage(error) || t("failed")),
+      onError: (error) => showError(apiError(error, t("failed"))),
     }),
   )
 
