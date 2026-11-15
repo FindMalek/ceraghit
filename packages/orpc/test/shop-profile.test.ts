@@ -40,7 +40,7 @@ describe.skipIf(!url)("shop profile", () => {
     instagram: null,
     shippingRates: DEFAULT_SHIPPING_RATES,
     shippingNote: null,
-    bank: { holder: "Atelier Test", bank: "Banque Test", iban: "TN5910006035183598478831", bic: "BSTUTNTT" },
+    bank: { holder: "Atelier Test", bank: "Banque Test", iban: "TN5910006035183598478831", rib: "", bic: "BSTUTNTT" },
   }
   let original: unknown
 

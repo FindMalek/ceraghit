@@ -163,17 +163,12 @@ export const bankDetailsSchema = z.object({
   bank: z.string().trim().max(120),
   iban: z.string().trim().max(60),
   bic: z.string().trim().max(20),
-  rib: z.string().trim().max(30).optional(),
+  rib: z.string().trim().max(30),
 })
 export type BankDetails = z.infer<typeof bankDetailsSchema>
 
-/** Placeholder until the owner fills the real account in the dashboard settings. */
-export const PLACEHOLDER_BANK: BankDetails = {
-  holder: "Ceraghit Creation",
-  bank: "À compléter",
-  iban: "À compléter",
-  bic: "",
-}
+/** What the old settings stored while the account was not filled in; it never counts as a real account. */
+export const UNFILLED_BANK_TEXT = "À compléter"
 
 export const shopProfileSchema = z.object({
   legalName: z.string().nullable(),
@@ -261,16 +256,15 @@ type ProfileBank = Pick<ShopProfile, "bankHolder" | "bankName" | "bankIban" | "b
 
 /** The account to show customers, or null while it is incomplete or still the old placeholder. */
 export function bankFromProfile(profile: ProfileBank): BankDetails | null {
-  const [holder, bank, iban, rib, bic] = [
-    profile.bankHolder,
-    profile.bankName,
-    profile.bankIban,
-    profile.bankRib,
-    profile.bankBic,
-  ].map((v) => v?.trim() ?? "")
-  if ([holder, bank, iban, rib, bic].includes(PLACEHOLDER_BANK.bank)) return null
+  const text = (v: string | null) => v?.trim() ?? ""
+  const holder = text(profile.bankHolder)
+  const bank = text(profile.bankName)
+  const iban = text(profile.bankIban)
+  const rib = text(profile.bankRib)
+  const bic = text(profile.bankBic)
+  if ([holder, bank, iban, rib, bic].includes(UNFILLED_BANK_TEXT)) return null
   if (!holder || !bank || !(iban || rib)) return null
-  return { holder, bank, iban: iban ?? "", bic: bic ?? "", ...(rib ? { rib } : {}) }
+  return { holder, bank, iban, rib, bic }
 }
 
 export const studioSettingsSchema = z.object({

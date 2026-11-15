@@ -8,6 +8,7 @@ import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
+import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
 import { appRouter } from "../src/routers"
 
 const url = process.env.DATABASE_URL
@@ -36,6 +37,7 @@ describe.skipIf(!url)("payment settings", () => {
   let productId = ""
   let cookie = ""
   let savedPayments: typeof settings.$inferSelect | undefined
+  let savedProfile: Awaited<ReturnType<typeof getShopProfile>> | undefined
 
   const owner = (over: Partial<Services["config"]> = {}) =>
     createRouterClient(appRouter, {
@@ -50,6 +52,12 @@ describe.skipIf(!url)("payment settings", () => {
     await runMigrations(db)
     await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
     ;[savedPayments] = await db.delete(settings).where(eq(settings.key, "payments")).returning()
+    savedProfile = await getShopProfile(db)
+    await updateShopProfile(db, {
+      bankHolder: "Atelier Test",
+      bankName: "Banque Test",
+      bankIban: "TN5910006035183598478831",
+    })
     const [cat] = await db
       .insert(categories)
       .values({ slug: tag, name: { fr: "Test" } })
@@ -76,6 +84,12 @@ describe.skipIf(!url)("payment settings", () => {
   afterAll(async () => {
     await db.delete(settings).where(eq(settings.key, "payments"))
     if (savedPayments) await db.insert(settings).values(savedPayments)
+    if (savedProfile)
+      await updateShopProfile(db, {
+        bankHolder: savedProfile.bankHolder,
+        bankName: savedProfile.bankName,
+        bankIban: savedProfile.bankIban,
+      })
     await db.delete(orders).where(eq(orders.email, email))
     await db.delete(products).where(eq(products.categoryId, categoryId))
     await db.delete(categories).where(eq(categories.id, categoryId))

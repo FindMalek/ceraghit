@@ -3,7 +3,7 @@
 import { PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { DEFAULT_SHIPPING_RATES, PLACEHOLDER_BANK, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
+import { DEFAULT_SHIPPING_RATES, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from "@workspace/ui/components/field"
@@ -33,7 +33,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
   const [rateErrors, setRateErrors] = useState<RatesErrors>({})
   const [resetting, setResetting] = useState(false)
   const [note, setNote] = useState<LocalizedDraft>(toLocalizedDraft(settings.shippingNote))
-  const [bank, setBank] = useState(settings.bank ?? PLACEHOLDER_BANK)
+  const [bank, setBank] = useState(settings.bank ?? { holder: "", bank: "", rib: "", iban: "", bic: "" })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const save = useMutation(
@@ -158,13 +158,15 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
         <FieldSet>
           <FieldLabel>Compte bancaire (clients hors Tunisie)</FieldLabel>
           <FieldDescription>
-            Affiché sur la page de commande et dans l'email envoyé aux clients qui paient par virement.
+            Affiché sur la page de commande et dans l'email envoyé aux clients qui paient par virement. Tant que le
+            compte est incomplet (titulaire, banque, RIB ou IBAN), le virement n'est pas proposé.
           </FieldDescription>
           <div className="grid gap-4 sm:grid-cols-2">
             {(
               [
                 ["holder", "Titulaire du compte"],
                 ["bank", "Banque"],
+                ["rib", "RIB"],
                 ["iban", "IBAN"],
                 ["bic", "BIC / SWIFT"],
               ] as const

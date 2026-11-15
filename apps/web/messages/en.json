@@ -145,7 +145,8 @@
     "termsLabel": "I accept the <link>terms and conditions of sale</link>.",
     "methodTransfer": "Bank transfer",
     "methodTransferHint": "Outside Tunisia. You get our bank details on the order page and by email, and the order ships once the transfer is received.",
-    "noMethod": "No payment method for this country in this currency. Switch currency or write to us."
+    "noMethod": "No payment method for this country in this currency. Switch currency or write to us.",
+    "unavailableAbroad": "Orders from abroad reopen very soon. Write to us to reserve a piece."
   },
   "order": {
     "title": "Order {number}",
@@ -180,8 +181,10 @@
     "holder": "Account holder",
     "bank": "Bank",
     "iban": "IBAN",
+    "rib": "RIB",
     "bic": "BIC",
-    "reference": "Reference to write"
+    "reference": "Reference to write",
+    "bankMissing": "We will email you our bank details very soon."
   },
   "demo": {
     "title": "Demo payment",
