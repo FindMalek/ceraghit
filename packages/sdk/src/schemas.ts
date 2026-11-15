@@ -206,6 +206,17 @@ const profileCode = (pattern: RegExp, upper = false) =>
     .nullable()
     .optional()
 
+/** ISO 13616 check: move the first four characters to the end, letters become 10..35, the number mod 97 must be 1. */
+export function ibanChecksumOk(iban: string): boolean {
+  const moved = iban.slice(4) + iban.slice(0, 4)
+  let remainder = 0
+  for (const char of moved) {
+    const digits = String(Number.parseInt(char, 36))
+    for (const digit of digits) remainder = (remainder * 10 + Number(digit)) % 97
+  }
+  return remainder === 1
+}
+
 /** Editable fields only, each optional so the onboarding can save one step at a time. */
 export const shopProfileInputSchema = z.object({
   legalName: profileText(120),
@@ -228,7 +239,17 @@ export const shopProfileInputSchema = z.object({
   bankHolder: profileText(120),
   bankName: profileText(120),
   bankRib: profileCode(/^\d{20}$/),
-  bankIban: profileCode(/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/, true),
+  bankIban: z
+    .string()
+    .transform((value) => compact(value).toUpperCase())
+    .pipe(
+      z
+        .string()
+        .regex(/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/)
+        .refine(ibanChecksumOk),
+    )
+    .nullable()
+    .optional(),
   bankBic: profileCode(/^[A-Z0-9]{8}([A-Z0-9]{3})?$/, true),
   invoiceNote: localizedSchema.nullable().optional(),
 })

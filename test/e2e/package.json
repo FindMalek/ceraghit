@@ -12,8 +12,13 @@
   "devDependencies": {
     "@playwright/test": "1.65.1",
     "@types/node": "catalog:",
+    "@workspace/db": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "aws4fetch": "1.0.20",
+    "drizzle-orm": "catalog:",
     "typescript": "catalog:"
+  },
+  "dependencies": {
+    "postgres": "catalog:"
   }
 }

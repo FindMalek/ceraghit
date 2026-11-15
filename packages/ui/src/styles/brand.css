@@ -24,6 +24,11 @@
   --brand-steel: #4a7396;
   --brand-danger: #c0564a;
 
+  /* Invoices are printed: black ink on white paper, on screen too. */
+  --invoice-paper: #ffffff;
+  --invoice-ink: #111111;
+  --invoice-rule: #c9c2b4;
+
   --brand-radius: 0.125rem;
   --brand-texture: url("/texture.webp");
   --brand-texture-opacity: 0.55;
