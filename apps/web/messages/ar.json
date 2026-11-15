@@ -415,7 +415,7 @@
           {
             "title": "الاستضافة والخدمات التقنية",
             "body": [
-              "يستضيف الموقع ⁨Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723⁩، الولايات المتحدة (⁨vercel.com⁩).",
+              "يستضيف الموقع \u2068Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723\u2069، الولايات المتحدة (\u2068vercel.com\u2069).",
               "قاعدة البيانات: Neon. تخزين الصور وتوزيعها: Cloudflare R2. إرسال البريد الإلكتروني: Resend. الدفع بالبطاقة: Konnect."
             ]
           },
