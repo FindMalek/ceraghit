@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { showError } from "@workspace/ui/components/error-banner"
+import { clearError, showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { useState } from "react"
@@ -17,6 +17,7 @@ export function OwnerSection({ initial, onSaved }: { initial: { name: string }; 
   const save = useMutation(
     orpc.admin.profile.updateOwner.mutationOptions({
       onSuccess: () => {
+        clearError()
         setSaved(true)
         onSaved?.()
       },

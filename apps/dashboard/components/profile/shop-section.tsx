@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { countryName, SHIPPING_COUNTRIES, type ShopProfile, shopProfileInputSchema } from "@workspace/sdk"
-import { showError } from "@workspace/ui/components/error-banner"
+import { clearError, showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { type ReactNode, useState } from "react"
@@ -60,6 +60,7 @@ export function ShopSection({ initial, onSaved }: { initial: ShopProfile; onSave
   const save = useMutation(
     orpc.admin.profile.update.mutationOptions({
       onSuccess: () => {
+        clearError()
         setSaved(true)
         onSaved?.()
       },
