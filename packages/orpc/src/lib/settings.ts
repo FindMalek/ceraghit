@@ -1,5 +1,6 @@
 import { type Db, settings } from "@workspace/db"
 import {
+  bankFromProfile,
   DEFAULT_SHIPPING_RATES,
   EMPTY_TUTORIAL_LINKS,
   type PaymentMethodFlags,
@@ -13,6 +14,7 @@ import {
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
 import { gatewayReady } from "./payments"
+import { getShopProfile } from "./shop-profile"
 
 export const SETTINGS_KEY = "studio"
 
@@ -66,14 +68,19 @@ export async function savePaymentSettings(db: Db, value: PaymentSettings): Promi
 /**
  * The switches as they apply right now: card is off whatever was saved when the gateway is not ready. If card was the
  * only method saved for Tunisia or abroad, cod or transfer comes back so the shop never silently stops taking orders.
+ * Last, transfer goes off while the shop profile has no complete bank account, in every environment.
  */
 export async function effectivePaymentMethods(
   services: Pick<Services, "db" | "payments" | "config">,
 ): Promise<PaymentMethodFlags> {
   const { methods } = await getPaymentSettings(services.db, services.config)
   const online = methods.online && gatewayReady(services)
-  if (online) return methods
-  return { online, cod: methods.cod || methods.online, transfer: methods.transfer || methods.online }
+  const effective = online
+    ? methods
+    : { online, cod: methods.cod || methods.online, transfer: methods.transfer || methods.online }
+  if (!effective.transfer) return effective
+  const hasBank = bankFromProfile(await getShopProfile(services.db)) !== null
+  return { ...effective, transfer: hasBank }
 }
 
 const TUTORIALS_KEY = "tutorials"

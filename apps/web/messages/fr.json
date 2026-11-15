@@ -145,7 +145,8 @@
     "termsLabel": "J'accepte les <terms>conditions générales de vente</terms> et la <privacy>politique de confidentialité</privacy>.",
     "methodTransfer": "Virement bancaire",
     "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement.",
-    "noMethod": "Aucun moyen de paiement pour ce pays dans cette devise. Changez de devise ou écrivez-nous."
+    "noMethod": "Aucun moyen de paiement pour ce pays dans cette devise. Changez de devise ou écrivez-nous.",
+    "unavailableAbroad": "Les commandes depuis l'étranger rouvrent très bientôt. Écrivez-nous pour réserver une pièce."
   },
   "invoice": {
     "print": "Imprimer ou enregistrer en PDF"
@@ -184,8 +185,10 @@
     "holder": "Titulaire",
     "bank": "Banque",
     "iban": "IBAN",
+    "rib": "RIB",
     "bic": "BIC",
-    "reference": "Référence à indiquer"
+    "reference": "Référence à indiquer",
+    "bankMissing": "Nous vous envoyons nos coordonnées bancaires par email très vite."
   },
   "demo": {
     "title": "Paiement de test",
@@ -531,6 +534,7 @@
   "errors": {
     "api": {
       "payment_method_unavailable": "Ce mode de paiement n'est pas disponible pour votre pays.",
+      "country_unavailable": "Les commandes depuis votre pays ne sont pas disponibles pour le moment. Écrivez-nous.",
       "piece_not_found": "Cette pièce n'existe pas.",
       "piece_unavailable": "Une pièce de votre panier n'est plus disponible.",
       "piece_quote_only": "Cette pièce est vendue sur devis, envoyez-nous une demande.",

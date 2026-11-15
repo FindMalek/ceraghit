@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { paymentMethodsFor, validatePaymentSettings } from "../src/schemas"
+import { bankFromProfile, paymentMethodsFor, validatePaymentSettings } from "../src/schemas"
 
 const all = { online: true, cod: true, transfer: true }
 
@@ -31,5 +31,22 @@ describe("validatePaymentSettings", () => {
       /Tunisie/,
     )
     expect(validatePaymentSettings({ methods: { online: true, cod: false, transfer: false } }, true)).toBeNull()
+  })
+})
+
+describe("bankFromProfile", () => {
+  const profile = { bankHolder: "Atelier", bankName: "Banque", bankIban: null, bankRib: null, bankBic: null }
+
+  test("needs holder, bank and an IBAN or a RIB", () => {
+    expect(bankFromProfile(profile)).toBeNull()
+    expect(bankFromProfile({ ...profile, bankRib: "10006035183598478831" })).toMatchObject({
+      iban: "",
+      rib: "10006035183598478831",
+    })
+    expect(bankFromProfile({ ...profile, bankIban: "TN59", bankHolder: " " })).toBeNull()
+  })
+
+  test("the old placeholder is not an account", () => {
+    expect(bankFromProfile({ ...profile, bankIban: "À compléter" })).toBeNull()
   })
 })

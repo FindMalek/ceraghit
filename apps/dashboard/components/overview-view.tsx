@@ -11,6 +11,7 @@ import { ExportSalesButton } from "@/components/export-sales-button"
 import { type DayPoint, RevenueChart } from "@/components/overview-charts"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { ErrorState } from "@/components/query-state"
+import { SetupProgressCard } from "@/components/setup-progress-card"
 import { SimpleSelect } from "@/components/simple-select"
 
 const RANGES = [
@@ -73,6 +74,7 @@ export function OverviewView() {
         }
       />
       <PageBody>
+        <SetupProgressCard />
         {stats.isError && <ErrorState error={stats.error} onRetry={() => stats.refetch()} />}
         {stats.isPending && (
           <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">

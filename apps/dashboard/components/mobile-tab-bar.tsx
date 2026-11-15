@@ -7,6 +7,7 @@ import { useSidebar } from "@workspace/ui/components/sidebar"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSetupStatus } from "@/lib/use-setup-status"
 
 const TABS = [
   { href: "/", label: "Aperçu", icon: ChartLineUpIcon },
@@ -24,6 +25,15 @@ export function MobileTabBar() {
   const { setOpenMobile } = useSidebar()
   // What is waiting for the owner: orders to deal with and new requests, refreshed every minute.
   const stats = useQuery(orpc.admin.overview.queryOptions({ input: { days: 30 }, refetchInterval: 60_000 }))
+  const remaining = useSetupStatus().data?.remaining ?? 0
+  const failedMails = stats.data?.failedMails ?? 0
+  const menuCount = remaining + failedMails
+  const menuLabel = [
+    remaining > 0 && `${remaining} ${remaining > 1 ? "étapes" : "étape"} à terminer`,
+    failedMails > 0 && `${failedMails} ${failedMails > 1 ? "emails échoués" : "email échoué"}`,
+  ]
+    .filter(Boolean)
+    .join(", ")
   const waiting: Record<string, number> = {
     "/orders": stats.data?.pendingOrders ?? 0,
     "/requests": stats.data?.newRequests ?? 0,
@@ -46,7 +56,7 @@ export function MobileTabBar() {
           <span className="relative">
             <Icon className="size-6" weight={active(href) ? "fill" : "regular"} />
             {(waiting[href] ?? 0) > 0 && (
-              <span className="-top-1.5 -right-2.5 absolute grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground tabular-nums leading-4">
+              <span className="-top-1.5 -right-2.5 absolute grid min-w-5 place-items-center rounded-full bg-primary px-1 text-primary-foreground text-xs tabular-nums leading-5">
                 {waiting[href]}
               </span>
             )}
@@ -57,9 +67,10 @@ export function MobileTabBar() {
       <button type="button" onClick={() => setOpenMobile(true)} className={cn(item, "text-muted-foreground")}>
         <span className="relative">
           <ListIcon className="size-6" />
-          {stats.data && stats.data.failedMails > 0 && (
-            <span className="-top-1.5 -right-2.5 absolute grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground tabular-nums leading-4">
-              {stats.data.failedMails}
+          {menuCount > 0 && (
+            <span className="-top-1.5 -right-2.5 absolute grid min-w-5 place-items-center rounded-full bg-primary px-1 text-primary-foreground text-xs tabular-nums leading-5">
+              <span aria-hidden="true">{menuCount}</span>
+              <span className="sr-only">{menuLabel}</span>
             </span>
           )}
         </span>

@@ -1,5 +1,6 @@
 export const PUBLIC_ERROR_REASONS = [
   "payment_method_unavailable",
+  "country_unavailable",
   "piece_not_found",
   "piece_unavailable",
   "piece_quote_only",

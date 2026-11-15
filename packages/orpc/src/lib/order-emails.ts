@@ -1,9 +1,8 @@
 import { orders } from "@workspace/db"
-import { type Currency, formatMoney, PLACEHOLDER_BANK } from "@workspace/sdk"
+import { type BankDetails, bankFromProfile, type Currency, formatMoney } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
 import { deliverMail } from "./mail-log"
-import { getSettings } from "./settings"
 import { getShopProfile, studioInbox } from "./shop-profile"
 
 const COPY = {
@@ -17,6 +16,7 @@ const COPY = {
     holder: "Titulaire",
     bank: "Banque",
     reference: "Référence à indiquer",
+    bankMissing: (email: string) => `Nos coordonnées bancaires suivent très vite, ou écrivez-nous : ${email}`,
     subtotal: "Sous-total",
     shipping: "Livraison",
     total: "Total",
@@ -33,6 +33,7 @@ const COPY = {
     holder: "Account holder",
     bank: "Bank",
     reference: "Reference to write",
+    bankMissing: (email: string) => `Our bank details follow very soon, or write to us: ${email}`,
     subtotal: "Subtotal",
     shipping: "Shipping",
     total: "Total",
@@ -49,6 +50,7 @@ const COPY = {
     holder: "صاحب الحساب",
     bank: "البنك",
     reference: "المرجع المطلوب كتابته",
+    bankMissing: (email: string) => `ستصلك بياناتنا البنكية قريبا، أو راسلنا: ${email}`,
     subtotal: "المجموع الفرعي",
     shipping: "التوصيل",
     total: "المجموع",
@@ -56,6 +58,28 @@ const COPY = {
     bye: "Ceraghit Creation",
   },
 } as const
+
+type BankCopy = (typeof COPY)[keyof typeof COPY]
+
+/** The transfer block of the customer mail: the account from the shop profile, or a contact line while it is missing. */
+export function bankLines(
+  bank: BankDetails | null,
+  copy: BankCopy,
+  orderNumber: string,
+  contactEmail: string,
+): string[] {
+  if (!bank) return ["", copy.bankMissing(contactEmail)]
+  return [
+    "",
+    `${copy.bankTitle}:`,
+    `${copy.holder}: ${bank.holder}`,
+    `${copy.bank}: ${bank.bank}`,
+    ...(bank.rib ? [`RIB: ${bank.rib}`] : []),
+    ...(bank.iban ? [`IBAN: ${bank.iban}`] : []),
+    ...(bank.bic ? [`BIC: ${bank.bic}`] : []),
+    `${copy.reference}: ${orderNumber}`,
+  ]
+}
 
 /** Customer and studio each get one mail when an order is confirmed (paid online, or placed as cash on delivery or bank transfer). */
 export async function sendOrderEmails(services: Services, orderId: string): Promise<void> {
@@ -74,22 +98,12 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
       `${k.total}: ${money(order.totalMinor, lang)}`,
     ]
     const url = `${config.webUrl}/${locale}/order/${order.number}?t=${order.publicToken}`
-    const settings = await getSettings(db)
     const profile = await getShopProfile(db)
     const studio = studioInbox(profile)
-    const bank = settings.bank ?? PLACEHOLDER_BANK
     const cod = order.paymentMethod === "cod"
     const transfer = order.paymentMethod === "transfer"
-    const bankLines = transfer
-      ? [
-          "",
-          `${c.bankTitle}:`,
-          `${c.holder}: ${bank.holder}`,
-          `${c.bank}: ${bank.bank}`,
-          `IBAN: ${bank.iban}`,
-          ...(bank.bic ? [`BIC: ${bank.bic}`] : []),
-          `${c.reference}: ${order.number}`,
-        ]
+    const bankBlock = transfer
+      ? bankLines(bankFromProfile(profile), c, order.number, profile.email ?? studio ?? "")
       : []
 
     const toCustomer = {
@@ -104,7 +118,7 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
         ...lines(locale),
         "",
         ...totals(locale, c),
-        ...bankLines,
+        ...bankBlock,
         "",
         `${c.link} ${url}`,
         "",

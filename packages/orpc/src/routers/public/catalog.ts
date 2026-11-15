@@ -106,7 +106,7 @@ export const catalogRouter = {
     .route({ method: "GET", path: "/settings", summary: "Contact details and delivery fees", tags: TAG })
     .output(publicSettingsSchema)
     .handler(async ({ context }) => {
-      const { bank: _bank, contactEmail: _email, phones: _phones, ...settings } = await getSettings(context.db)
+      const { contactEmail: _email, phones: _phones, ...settings } = await getSettings(context.db)
       const [profile, paymentMethods] = await Promise.all([
         getShopProfile(context.db),
         effectivePaymentMethods(context),

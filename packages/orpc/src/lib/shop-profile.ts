@@ -1,5 +1,5 @@
 import { type Db, settings, shopProfile } from "@workspace/db"
-import { PLACEHOLDER_BANK, type PublicShopProfile, type ShopProfile } from "@workspace/sdk"
+import { type PublicShopProfile, type ShopProfile, UNFILLED_BANK_TEXT } from "@workspace/sdk"
 import { eq, sql } from "drizzle-orm"
 import { DEFAULT_CONTACT, SETTINGS_KEY } from "./settings"
 
@@ -10,7 +10,7 @@ export type ShopProfileRow = typeof shopProfile.$inferSelect
 type LegacyStudio = { contactEmail?: unknown; phones?: unknown; bank?: Record<string, unknown> }
 
 const legacyText = (value: unknown): string | null =>
-  typeof value === "string" && value.trim() && value.trim() !== PLACEHOLDER_BANK.bank ? value.trim() : null
+  typeof value === "string" && value.trim() && value.trim() !== UNFILLED_BANK_TEXT ? value.trim() : null
 
 /** Creates the profile from the legacy `studio` settings once. Never overwrites an existing row. */
 export async function ensureShopProfile(db: Db): Promise<void> {
