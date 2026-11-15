@@ -118,16 +118,12 @@
   h2 {
     @apply font-display text-gold;
     text-wrap: balance;
-    font-weight: 400;
+    font-weight: 500;
   }
   h3 {
     @apply font-heading text-gold;
     text-wrap: balance;
     font-weight: 400;
-  }
-  /* The display face is a hairline calligraphy: a thin stroke keeps it readable on dark. */
-  .font-display {
-    -webkit-text-stroke: 0.8px currentColor;
   }
   p {
     text-wrap: pretty;
@@ -136,8 +132,7 @@
 
 /*
  * Arabic: the display, heading and script faces have no Arabic glyphs, so every font utility falls back to Amiri
- * (loaded by the app as --font-arabic-face). The hairline stroke is for the Latin display face only, and letter-spacing
- * or uppercase break Arabic joining, so both are switched off.
+ * (loaded by both apps as --font-arabic-face). Letter-spacing or uppercase break Arabic joining, so both are switched off.
  */
 [lang="ar"] body,
 [lang="ar"] h1,
@@ -148,9 +143,6 @@
 [lang="ar"] .font-script,
 [lang="ar"] .font-sans {
   font-family: var(--font-arabic-face), "Amiri", serif;
-}
-[lang="ar"] .font-display {
-  -webkit-text-stroke: 0;
 }
 [lang="ar"] * {
   letter-spacing: normal !important;

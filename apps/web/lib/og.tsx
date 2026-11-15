@@ -23,7 +23,7 @@ const font = (file: string) => readFile(join(process.cwd(), "assets/fonts", file
 
 async function loadFonts() {
   const [display, latin, latinBold, arabic, arabicBold, script] = await Promise.all([
-    font("AlmendraDisplay-Regular.ttf"),
+    font("CormorantUnicase-Medium.ttf"),
     font("Amiri-Regular.ttf"),
     font("Amiri-Bold.ttf"),
     font("Tajawal-Regular.ttf"),
