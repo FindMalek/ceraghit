@@ -1,6 +1,7 @@
 # Vercel-style previews on the-keep (Dokploy): three images per PR, three Dokploy apps + a Postgres, a sticky PR
 # comment with the links, and a GitHub deployment so the PR shows "View deployment". Previews never touch production:
 # own database, own bucket, demo payments or Konnect sandbox keys. Only same-repo PRs get one.
+# Apps a PR does not change reuse the `main` image (images-main.yml keeps it fresh), retagged to `pr-<n>`.
 # Skipped until vars.PREVIEW_ENABLED is "true", see docs/deploy.md.
 
 name: Preview
@@ -29,7 +30,33 @@ env:
   GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
+  changes:
+    if: github.event.action != 'closed' && vars.PREVIEW_ENABLED == 'true' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      apps: ${{ steps.affected.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Any failure here builds all three apps, so a broken diff never ships a stale image.
+      - id: affected
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          all='["api","web","dashboard"]'
+          base=$(git merge-base "origin/$BASE_REF" "$HEAD_SHA") || { echo "apps=$all" >> "$GITHUB_OUTPUT"; exit 0; }
+          if git diff --name-only "$base" "$HEAD_SHA" | grep -Eq '^(pnpm-lock\.yaml|turbo\.json|package\.json|apps/[^/]+/Dockerfile|\.github/workflows/preview\.yml)$'; then
+            echo "apps=$all" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          out=$(TURBO_SCM_BASE="$base" TURBO_SCM_HEAD="$HEAD_SHA" npx --yes turbo@2.11.9 ls --affected --output=json) || { echo "apps=$all" >> "$GITHUB_OUTPUT"; exit 0; }
+          apps=$(printf '%s\n' "$out" | sed -n '/^{/,$p' | jq -c '[.packages.items[].name | select(. == "api" or . == "web" or . == "dashboard")]') || apps=$all
+          echo "apps=$apps" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: changes
     if: github.event.action != 'closed' && vars.PREVIEW_ENABLED == 'true' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
     runs-on: [self-hosted, the-keep]
     timeout-minutes: 30
@@ -45,8 +72,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - uses: docker/setup-buildx-action@v4
+      - id: reuse
+        env:
+          APP: ${{ matrix.app }}
+          APPS: ${{ needs.changes.outputs.apps }}
+        run: |
+          image="ghcr.io/findmalek/ceraghit-$APP"
+          if printf '%s' "$APPS" | jq -e --arg a "$APP" 'index($a)' >/dev/null; then
+            echo "- $APP: built (changed by this PR)" >> "$GITHUB_STEP_SUMMARY"
+          elif docker buildx imagetools inspect "$image:main" >/dev/null 2>&1; then
+            docker buildx imagetools create -t "$image:pr-$PR_NUMBER" "$image:main"
+            echo "reused=true" >> "$GITHUB_OUTPUT"
+            echo "- $APP: reused \`:main\` as \`pr-$PR_NUMBER\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- $APP: built (no \`:main\` image yet)" >> "$GITHUB_STEP_SUMMARY"
+          fi
       # The homelab buildkit sometimes drops its connection (EOF, graceful_stop): try again once with a fresh builder.
       - id: build
+        if: steps.reuse.outputs.reused != 'true'
         continue-on-error: true
         uses: docker/build-push-action@v6
         with:
@@ -62,10 +105,10 @@ jobs:
           cache-from: type=local,src=/opt/buildx-cache/${{ matrix.app }}
           cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }},mode=max,ignore-error=true
       - name: Retry the build
-        if: steps.build.outcome == 'failure'
+        if: steps.reuse.outputs.reused != 'true' && steps.build.outcome == 'failure'
         uses: docker/setup-buildx-action@v4
       - name: Build again
-        if: steps.build.outcome == 'failure'
+        if: steps.reuse.outputs.reused != 'true' && steps.build.outcome == 'failure'
         uses: docker/build-push-action@v6
         with:
           context: .

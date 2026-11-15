@@ -26,7 +26,12 @@ keep lint, types, test and build parallel. Node, pnpm and Bun come from the setu
 
 `.github/workflows/preview.yml` on every PR push:
 
-1. builds `ghcr.io/findmalek/ceraghit-{api,web,dashboard}:pr-<n>` (Turborepo remote cache + buildx cache)
+1. builds `ghcr.io/findmalek/ceraghit-{api,web,dashboard}:pr-<n>` (Turborepo remote cache + buildx cache), but only
+   for the apps the PR affects (`turbo ls --affected`, dependents included). The others are retagged from `:main`
+   (`docker buildx imagetools create`), which `.github/workflows/images-main.yml` rebuilds on every push to `main`.
+   A change to `pnpm-lock.yaml`, `turbo.json`, root `package.json`, an app `Dockerfile` or `preview.yml` builds all
+   three, and so does a missing `:main` image. The job summary lists which apps were built or reused. A new push to
+   the same PR cancels the run in progress
 2. Dokploy project `ceraghit-previews`: Postgres `ceraghit-db-pr-<n>` and the three apps on
    `pr-<n>.ceraghit.findmalek.engineer`, `pr-<n>-dashboard.…`, `pr-<n>-api.…`, `BOOTSTRAP=true` so the api migrates and
    seeds the catalogue and demo orders
