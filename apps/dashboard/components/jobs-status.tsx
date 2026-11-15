@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { JOB_COUNT_LABELS, type JobRunState, type JobStatus, jobRunState } from "@workspace/sdk"
+import { formatJobCount, type JobRunState, type JobStatus, jobRunState } from "@workspace/sdk"
 import { Tone } from "@/components/status-badge"
 
 const RELATIVE = new Intl.RelativeTimeFormat("fr", { numeric: "auto" })
@@ -28,10 +28,10 @@ function Badge({ state }: { state: JobRunState }) {
 }
 
 function counts(job: JobStatus): string | null {
-  const entries = Object.entries(job.lastRun?.counts ?? {}).filter(
-    ([key, value]) => typeof value === "number" && JOB_COUNT_LABELS[key],
+  const parts = Object.entries(job.lastRun?.counts ?? {}).flatMap(([key, value]) =>
+    typeof value === "number" ? (formatJobCount(key, value) ?? []) : [],
   )
-  return entries.length ? entries.map(([key, value]) => `${value} ${JOB_COUNT_LABELS[key]}`).join(", ") : null
+  return parts.length ? parts.join(", ") : null
 }
 
 /** The last run of each scheduled job, with a warning when one has not run for longer than it should. */

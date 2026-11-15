@@ -58,15 +58,20 @@ export const JOBS: JobSpec[] = [
 ]
 
 /** French names for the counts a job reports; a count without a label here is not shown to the owner. */
-export const JOB_COUNT_LABELS: Record<string, string> = {
-  released: "commandes libérées",
-  deleted: "photos supprimées",
-  marked: "photos marquées inutilisées",
-  restored: "photos restaurées",
-  rateLimits: "limites purgées",
-  mailsPurged: "emails purgés",
-  updated: "colis mis à jour",
-  sent: "emails renvoyés",
+export const JOB_COUNT_LABELS: Record<string, [one: string, other: string]> = {
+  released: ["commande libérée", "commandes libérées"],
+  deleted: ["photo supprimée", "photos supprimées"],
+  marked: ["photo marquée inutilisée", "photos marquées inutilisées"],
+  restored: ["photo restaurée", "photos restaurées"],
+  rateLimits: ["limite purgée", "limites purgées"],
+  mailsPurged: ["email purgé", "emails purgés"],
+  updated: ["colis mis à jour", "colis mis à jour"],
+  sent: ["email renvoyé", "emails renvoyés"],
+}
+
+export function formatJobCount(key: string, value: number): string | null {
+  const label = JOB_COUNT_LABELS[key]
+  return label ? `${value} ${label[value > 1 ? 1 : 0]}` : null
 }
 
 /** A run that started this long ago without finishing was cut off (the function was killed), not still running. */

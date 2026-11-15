@@ -7,7 +7,7 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
 import { appRouter, createContext, effectivePaymentMethods, runJob, type Services, settleOrder } from "@workspace/orpc"
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
-import { CRON_JOBS } from "./cron"
+import { CRON_JOBS, type CronJob } from "./cron"
 
 const DOCS_REDIRECTS = ["/", "/docs"]
 const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
@@ -23,7 +23,7 @@ const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
  */
 const PAYMENT_REF = /^[A-Za-z0-9_-]{1,100}$/
 
-export function createServer(services: Services) {
+export function createServer(services: Services, jobs: Record<string, CronJob> = CRON_JOBS) {
   const rpc = new RPCHandler(appRouter, {
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
   })
@@ -91,16 +91,15 @@ export function createServer(services: Services) {
     }
     if (pathname.startsWith("/cron/")) {
       const secret = services.config.cronSecret
-      const job = Object.hasOwn(CRON_JOBS, pathname.slice("/cron/".length))
-        ? CRON_JOBS[pathname.slice("/cron/".length)]
-        : undefined
+      const name = pathname.slice("/cron/".length)
+      const job = Object.hasOwn(jobs, name) ? jobs[name] : undefined
       if (!secret || request.method !== "POST" || !job) return Response.json({ message: "Not found." }, { status: 404 })
       const given = Buffer.from(request.headers.get("authorization") ?? "")
       const wanted = Buffer.from(`Bearer ${secret}`)
       if (given.length !== wanted.length || !timingSafeEqual(given, wanted)) {
         return new Response("Unauthorized", { status: 401 })
       }
-      const outcome = await runJob(services, pathname.slice("/cron/".length), (now) => job.run(services, now))
+      const outcome = await runJob(services, name, (now) => job.run(services, now))
       return Response.json(outcome, { status: outcome.ok ? 200 : 500 })
     }
     if (pathname === "/webhooks/konnect") {

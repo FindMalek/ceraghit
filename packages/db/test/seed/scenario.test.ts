@@ -81,13 +81,17 @@ test("the demo has one sent and one failed mail on real orders, so the failures 
   expect(orders.find((o) => o.id === failed.orderId)?.email).toBe(failed.to)
 })
 
-test("demo job runs show a healthy job, a failed run behind a good one, and jobs that never ran", () => {
-  const { jobRuns } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
-  const byName = (name: string) => jobRuns.filter((r) => r.name === name)
-  expect(byName("cleanup-uploads")).toHaveLength(1)
-  const holds = byName("release-holds").sort((a, b) => a.startedAt!.getTime() - b.startedAt!.getTime())
-  expect(holds.map((r) => r.ok)).toEqual([false, true])
-  expect(holds[0]!.error).toBe("Délai dépassé")
-  expect(byName("track-shipments")).toMatchObject([{ ok: null, finishedAt: null }])
-  expect(byName("retry-mail")).toHaveLength(0)
+test("demo job runs cover stale, failed, interrupted, healthy and never run", () => {
+  const now = new Date("2026-10-22T12:00:00Z")
+  const { jobRuns } = buildScenario(now, products)
+  const latest = (name: string) =>
+    jobRuns.filter((r) => r.name === name).sort((a, b) => b.startedAt!.getTime() - a.startedAt!.getTime())[0]
+  const hours = (name: string) => (now.getTime() - latest(name)!.startedAt!.getTime()) / 3_600_000
+  expect(latest("cleanup-uploads")).toMatchObject({ ok: true })
+  expect(hours("cleanup-uploads")).toBeGreaterThan(26)
+  expect(latest("release-holds")).toMatchObject({ ok: false, error: "Délai dépassé" })
+  expect(jobRuns.filter((r) => r.name === "release-holds").some((r) => r.ok)).toBe(true)
+  expect(latest("track-shipments")).toMatchObject({ ok: null, finishedAt: null })
+  expect(latest("retry-mail")).toMatchObject({ ok: true })
+  expect(latest("ai-usage-rollover")).toBeUndefined()
 })

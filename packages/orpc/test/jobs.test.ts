@@ -3,6 +3,8 @@ import { createRouterClient } from "@orpc/server"
 import { createDb, jobRuns } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
+import { JOBS } from "@workspace/sdk"
+import { inArray } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { runJob } from "../src/lib/jobs"
@@ -11,6 +13,8 @@ import { DemoProvider } from "../src/lib/payments"
 import { appRouter } from "../src/routers"
 
 const url = process.env.DATABASE_URL
+
+const NAMES = JOBS.map((j) => j.name)
 
 describe.skipIf(!url)("jobs", () => {
   const db = createDb(url!)
@@ -41,12 +45,12 @@ describe.skipIf(!url)("jobs", () => {
   beforeAll(async () => {
     await runMigrations(db)
     await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
-    await db.delete(jobRuns)
+    await db.delete(jobRuns).where(inArray(jobRuns.name, NAMES))
     const session = await services.auth.login("127.0.0.1", "owner@test.local", "clay-test-pass")
     owner = client(new Headers({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" }))
   })
   afterAll(async () => {
-    await db.delete(jobRuns)
+    await db.delete(jobRuns).where(inArray(jobRuns.name, NAMES))
   })
 
   test("a visitor cannot read the job status", async () => {
@@ -86,9 +90,9 @@ describe.skipIf(!url)("jobs", () => {
   })
 
   test("runs older than 90 days are deleted at the end of a run", async () => {
-    await db.delete(jobRuns)
+    await db.delete(jobRuns).where(inArray(jobRuns.name, NAMES))
     await db.insert(jobRuns).values({ name: "release-holds", startedAt: new Date(clock.getTime() - 91 * 864e5) })
     await runJob(services, "release-holds", async () => ({}))
-    expect(await db.select().from(jobRuns)).toHaveLength(1)
+    expect(await db.select().from(jobRuns).where(inArray(jobRuns.name, NAMES))).toHaveLength(1)
   })
 })
