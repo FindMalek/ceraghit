@@ -1,6 +1,6 @@
 # Lint, types, tests and a full build on every PR and on main, in parallel jobs.
 # Turborepo's remote cache (the-keep, turbo.findmalek.engineer) is used when TURBO_TOKEN is set, so a job whose
-# inputs did not change finishes in seconds. Runs on the-keep runners (see docs/deploy.md).
+# inputs did not change finishes in seconds. Runs on GitHub-hosted ubuntu-latest runners (previews use the-keep, see docs/deploy.md).
 
 name: CI
 
@@ -37,8 +37,6 @@ jobs:
         run: node --test "scripts/test/*.test.mjs"
       - name: AI rules are in sync
         run: pnpm rules:check
-      - name: Script tests
-        run: node --test 'scripts/test/*.test.mjs'
       - name: Schema changes have a migration
         run: |
           pnpm db:generate
