@@ -1,3 +1,4 @@
+import { demoRef } from "../demo-ref"
 import type { Localized, locations, mailLog, orderAudit, orderItems, orders, shopProfile } from "../schema"
 
 type NewOrder = typeof orders.$inferInsert
@@ -233,8 +234,9 @@ export function buildScenario(
             : "paid"
     const locale = abroad ? ORDER_LOCALES[abroadCount++ % ORDER_LOCALES.length]! : n % 9 === 5 ? "ar" : "fr"
     const streets = STREETS[place.city]!
-    const cod = !abroad && n % 4 === 0
-    const transfer = abroad && n % 3 === 0
+    const pending = status === "pending_payment"
+    const cod = !abroad && (pending || n % 4 === 0)
+    const transfer = abroad && (pending || n % 3 === 0)
     const offline = cod || transfer
     const name = pick(PEOPLE)
     const lines = Array.from({ length: 1 + Math.floor(rand() * 3) }, () => pick(products))
@@ -259,7 +261,15 @@ export function buildScenario(
       locale,
       paymentMethod: cod ? "cod" : transfer ? "transfer" : "online",
       paymentProvider: cod ? "cod" : transfer ? "transfer" : "demo",
-      paymentRef: offline ? null : `demo_seed_${n}`,
+      paymentRef: offline
+        ? null
+        : demoRef({
+            outcome: status === "cancelled" ? "failed" : "paid",
+            orderNumber: `CER-${10_000 + n}`,
+            amountMinor: subtotal,
+            currency,
+            nonce: n.toString(16).padStart(32, "0"),
+          }),
       paidAt: status === "paid" || status === "fulfilled" ? new Date(createdAt.getTime() + 5 * 60_000) : null,
       createdAt,
     })
