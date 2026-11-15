@@ -1,7 +1,11 @@
+import { mailColors } from "../emails/brand"
+
 export interface Mail {
   to: string
   subject: string
   text: string
+  /** Optional rich version sent beside `text`; the text part is always complete on its own. */
+  html?: string
   replyTo?: string
   /** Same value across the retries of one mail, so a retry after an accepted send cannot deliver twice. */
   idempotencyKey?: string
@@ -58,7 +62,7 @@ export class MailpitMailer implements Mailer {
     private http: typeof fetch = fetch,
   ) {}
 
-  async send({ to, subject, text, replyTo }: Mail) {
+  async send({ to, subject, text, html, replyTo }: Mail) {
     const res = await this.http(`${this.baseUrl.replace(/\/$/, "")}/api/v1/send`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -68,6 +72,7 @@ export class MailpitMailer implements Mailer {
         ReplyTo: replyTo ? [{ Email: replyTo }] : undefined,
         Subject: subject,
         Text: text,
+        HTML: html,
       }),
     })
     if (!res.ok) throw new MailError(`mailpit ${res.status}: ${await bodyOf(res)}`, res.status >= 500, res.status)
@@ -84,7 +89,7 @@ export class ResendMailer implements Mailer {
     private http: typeof fetch = fetch,
   ) {}
 
-  async send({ to, subject, text, replyTo, idempotencyKey }: Mail) {
+  async send({ to, subject, text, html, replyTo, idempotencyKey }: Mail) {
     let res: Response
     try {
       res = await this.http("https://api.resend.com/emails", {
@@ -94,7 +99,7 @@ export class ResendMailer implements Mailer {
           "content-type": "application/json",
           ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
         },
-        body: JSON.stringify({ from: this.from, to, subject, text, reply_to: replyTo }),
+        body: JSON.stringify({ from: this.from, to, subject, text, html, reply_to: replyTo }),
         signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
       })
     } catch {
@@ -114,6 +119,8 @@ export class ResendMailer implements Mailer {
   }
 }
 
+const escapeHtml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
 /**
  * Outside production every mail goes to one inbox. replyTo is dropped so a reply from that inbox never reaches a real
  * customer; the original recipient and replyTo are shown in the subject and body instead.
@@ -125,12 +132,20 @@ export class RedirectMailer implements Mailer {
     private label: string,
   ) {}
 
-  async send({ to, subject, text, replyTo, idempotencyKey }: Mail) {
+  async send({ to, subject, text, html, replyTo, idempotencyKey }: Mail) {
     const header = [`Destinataire d'origine : ${to}`, ...(replyTo ? [`Répondre à : ${replyTo}`] : [])]
     return this.inner.send({
       to: this.redirectTo,
       subject: `[${this.label} → ${to}] ${subject}`,
       text: `${header.join("\n")}\n\n${text}`,
+      ...(html
+        ? {
+            html: html.replace(
+              /<body[^>]*>/,
+              (open) => `${open}<p style="color:${mailColors.goldBright}">${header.map(escapeHtml).join("<br>")}</p>`,
+            ),
+          }
+        : {}),
       idempotencyKey,
     })
   }

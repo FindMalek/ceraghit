@@ -120,7 +120,9 @@ async function notifyStudio(services: Context, request: z.infer<typeof customReq
   try {
     const studio = studioInbox(await getShopProfile(services.db))
     if (!studio) return
-    await deliverMail(services, "request_studio", renderStudioRequest(request, studio), { inline: true })
+    await deliverMail(services, "request_studio", await renderStudioRequest(request, studio, services.config.webUrl), {
+      inline: true,
+    })
   } catch (error) {
     console.error("[request mail]", error)
   }
