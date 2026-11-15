@@ -9,6 +9,7 @@ import { AdminAuth } from "../src/lib/auth"
 import { DemoProvider } from "../src/lib/payments"
 import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
 import { appRouter } from "../src/routers"
+import { clearVisitorLimits, visitorHeaders } from "./fixtures/visitor"
 
 const url = process.env.DATABASE_URL
 
@@ -31,7 +32,7 @@ describe.skipIf(!url)("transfer needs a real bank account", () => {
       onlinePayments: false,
     },
   }
-  const guest = createRouterClient(appRouter, { context: (): Context => createContext(services, new Headers()) })
+  const guest = createRouterClient(appRouter, { context: (): Context => createContext(services, visitorHeaders()) })
   const tag = `tr${Date.now()}`
   const email = "transfer-buyer@example.com"
   const buyer = {
@@ -79,6 +80,7 @@ describe.skipIf(!url)("transfer needs a real bank account", () => {
   })
 
   afterAll(async () => {
+    await clearVisitorLimits(db)
     if (savedPayments) await db.insert(settings).values(savedPayments).onConflictDoNothing()
     await updateShopProfile(db, {
       bankHolder: saved.bankHolder,
