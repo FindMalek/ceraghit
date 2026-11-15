@@ -30,10 +30,12 @@ before the visitor accepts), and updating the cookie section of the privacy page
 | custom requests and their photos | 12 months after the last exchange | delete the request, below |
 | uploads no row uses | 30 days unused | the daily `cleanup-uploads` cron deletes the file |
 
-The 12 months are applied by hand for now: once a month, list requests whose last exchange is older than a year.
+Nothing deletes requests automatically: the 12 months are applied by hand, once a month. `custom_requests` has no
+last-exchange column, so `created_at` is the closest date; before deleting, check in the shop mailbox that the
+conversation really ended more than 12 months ago (a request still being discussed is kept).
 
 ```sql
-select id, name, created_at from custom_requests where status in ('done', 'declined') and created_at < now() - interval '12 months';
+select id, name, status, created_at from custom_requests where created_at < now() - interval '12 months' order by created_at;
 ```
 
 ## erasure request (GDPR art. 17)
