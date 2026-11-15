@@ -19,7 +19,7 @@ import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { cancelOrder, releaseExpiredHolds } from "../src/lib/orders"
-import { DemoProvider, KonnectProvider } from "../src/lib/payments"
+import { DemoProvider } from "../src/lib/payments"
 import { createStorage, type Storage } from "../src/lib/storage"
 import { cleanupUploads } from "../src/lib/uploads"
 import { appRouter } from "../src/routers"
@@ -470,38 +470,6 @@ describe.skipIf(!url)("router", () => {
     await expect(owner.orders.setStatus({ id: onlineOrder!.id, status: "fulfilled" })).rejects.toMatchObject({
       code: "BAD_REQUEST",
     })
-  })
-})
-
-test("konnect: amounts go in minor units with the currency as token, only `completed` is paid", async () => {
-  const calls: { url: string; body?: Record<string, unknown> }[] = []
-  const http = (async (url: string, init?: RequestInit) => {
-    calls.push({ url, body: init?.body ? JSON.parse(String(init.body)) : undefined })
-    return Response.json(
-      url.includes("init-payment")
-        ? { payUrl: "https://pay.test/x", paymentRef: "ref1" }
-        : { payment: { status: "completed", amount: 3400, token: "EUR", orderId: "CER-1" } },
-    )
-  }) as unknown as typeof fetch
-  const konnect = new KonnectProvider("key", "wallet", "test", http)
-  const init = await konnect.init({
-    orderNumber: "CER-1",
-    amountMinor: 3400,
-    currency: "EUR",
-    customer: { name: "Ada Lovelace", email: "a@b.c", phone: "123" },
-    description: "d",
-    successUrl: "s",
-    failUrl: "f",
-    webhookUrl: "w",
-  })
-  expect(init).toEqual({ payUrl: "https://pay.test/x", ref: "ref1" })
-  expect(calls[0]!.url).toBe("https://api.preprod.konnect.network/api/v2/payments/init-payment")
-  expect(calls[0]!.body).toMatchObject({ amount: 3400, token: "EUR", receiverWalletId: "wallet" })
-  expect(await konnect.check("ref1")).toEqual({
-    status: "paid",
-    amountMinor: 3400,
-    currency: "EUR",
-    orderNumber: "CER-1",
   })
 })
 

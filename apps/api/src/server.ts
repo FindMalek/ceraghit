@@ -28,6 +28,8 @@ const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
  *   /files/<key>        redirect to the CDN or a signed url for an uploaded image
  *   /health             db + payment mode, for Dokploy and uptime checks
  */
+const PAYMENT_REF = /^[A-Za-z0-9_-]{1,100}$/
+
 export function createServer(services: Services) {
   const rpc = new RPCHandler(appRouter, {
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
@@ -112,7 +114,10 @@ export function createServer(services: Services) {
     }
     if (pathname === "/webhooks/konnect") {
       const ref = url.searchParams.get("payment_ref")
-      if (ref) await settleOrder(services, ref).catch((error) => console.error("[webhook]", error))
+      if (ref && PAYMENT_REF.test(ref))
+        await settleOrder(services, ref).catch((error) =>
+          console.error("[webhook]", error instanceof Error ? error.message : "settle failed"),
+        )
       return Response.json({ ok: true })
     }
     if (pathname.startsWith("/files/")) {
