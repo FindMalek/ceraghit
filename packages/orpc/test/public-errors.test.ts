@@ -7,6 +7,7 @@ import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
 import { appRouter } from "../src/routers"
+import { clearVisitorLimits, visitorHeaders } from "./fixtures/visitor"
 
 const url = process.env.DATABASE_URL
 
@@ -29,7 +30,7 @@ test.skipIf(!url)("a visitor refused a payment method gets a reason to translate
     },
   }
   await runMigrations(db)
-  const guest = createRouterClient(appRouter, { context: (): Context => createContext(services, new Headers()) })
+  const guest = createRouterClient(appRouter, { context: (): Context => createContext(services, visitorHeaders()) })
   await expect(
     guest.public.orders.create({
       currency: "EUR",
@@ -43,5 +44,6 @@ test.skipIf(!url)("a visitor refused a payment method gets a reason to translate
       items: [{ productId: crypto.randomUUID(), quantity: 1 }],
     }),
   ).rejects.toMatchObject({ code: "BAD_REQUEST", data: { reason: "payment_method_unavailable" } })
+  await clearVisitorLimits(db)
   await db.close()
 })
