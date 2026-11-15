@@ -1,5 +1,5 @@
 # Build context is the repo root: docker build -f apps/dashboard/Dockerfile .
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 RUN corepack enable && npm install -g turbo@2.11.9
 
 FROM base AS pruner
@@ -17,7 +17,7 @@ ARG TURBO_TEAM
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN --mount=type=secret,id=turbo_token,env=TURBO_TOKEN pnpm turbo build --filter=dashboard
 
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3002
 COPY --from=builder --chown=node:node /app/apps/dashboard/.next/standalone ./
