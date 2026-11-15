@@ -1,0 +1,14 @@
+{
+  "packages": [
+    {
+      "name": "@img/sharp-libvips-*",
+      "license": "LGPL-3.0-or-later",
+      "reason": "prebuilt libvips shared library loaded dynamically by sharp (next/image), not modified or statically linked into our code"
+    },
+    {
+      "name": "caniuse-lite",
+      "license": "CC-BY-4.0",
+      "reason": "browser support data read by the build tooling (browserslist), attribution only, not a copyleft license"
+    }
+  ]
+}
