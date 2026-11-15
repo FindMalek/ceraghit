@@ -25,7 +25,7 @@ export default defineConfig<E2EOptions>({
     ["html", { outputFolder: "artifacts/report", open: "never" }],
     ["json", { outputFile: "artifacts/results.json" }],
   ],
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   workers: process.env.CI ? 2 : undefined,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

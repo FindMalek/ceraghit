@@ -16,8 +16,8 @@ interface ApiPiece extends CataloguePiece {
 }
 
 /**
- * A plain piece (no options, not unique, not on quote) picked from the test name, so parallel tests rarely share one,
- * with its stock reset so every test starts from a known count.
+ * A plain piece owned by the worker running the test (`parallelIndex`), so two parallel tests never share a piece and
+ * its stock; tests of one worker run one after the other. Its stock is reset so every test starts from a known count.
  */
 export async function pieceFor(request: APIRequestContext, testInfo: TestInfo, stock = 50): Promise<CataloguePiece> {
   const res = await request.get(`${E2E.apiUrl}/v1/products`)
@@ -25,10 +25,8 @@ export async function pieceFor(request: APIRequestContext, testInfo: TestInfo, s
   const list = ((await res.json()) as ApiPiece[])
     .filter((p) => !p.unique && !p.quoteOnly && p.variants.length === 0 && p.prices.TND > 0)
     .sort((a, b) => a.slug.localeCompare(b.slug))
-  const key = `${testInfo.project.name}:${testInfo.title}`
-  let hash = 0
-  for (const ch of key) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
-  const found = list[hash % list.length]
+  if (testInfo.parallelIndex >= list.length) throw new Error("more workers than plain pieces in the demo seed")
+  const found = list[testInfo.parallelIndex]
   if (!found) throw new Error("no plain piece in the demo seed")
   await setStock(found.id, stock)
   return { id: found.id, slug: found.slug, stock, prices: found.prices }
