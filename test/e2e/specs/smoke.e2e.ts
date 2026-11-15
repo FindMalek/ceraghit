@@ -9,7 +9,7 @@ test("storefront home loads in the project locale", async ({ page, home, step, a
     await page.goto(home())
     await expect(page.locator("html")).toHaveAttribute("lang", appLocale)
     await expect(page.locator("html")).toHaveAttribute("dir", appLocale === "ar" ? "rtl" : "ltr")
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("deliberate failure")
   })
 })
 
