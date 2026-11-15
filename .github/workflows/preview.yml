@@ -90,7 +90,7 @@ jobs:
       - id: build
         if: steps.reuse.outputs.reused != 'true'
         continue-on-error: true
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
@@ -108,7 +108,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Build again
         if: steps.reuse.outputs.reused != 'true' && steps.build.outcome == 'failure'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
