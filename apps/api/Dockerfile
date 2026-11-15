@@ -6,7 +6,7 @@ COPY . .
 RUN turbo prune api --docker
 
 FROM node:26-alpine AS deps
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 WORKDIR /app
 COPY --from=pruner /app/out/json/ .
 RUN pnpm install --frozen-lockfile --prod

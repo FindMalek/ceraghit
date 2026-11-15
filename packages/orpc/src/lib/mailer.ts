@@ -9,10 +9,46 @@ export interface Mailer {
   send(mail: Mail): Promise<void>
 }
 
-/** Local and preview: nothing leaves the machine, the mail is only logged. */
+/** Local without a mail catcher: nothing leaves the machine, the whole mail is logged. */
 export class ConsoleMailer implements Mailer {
   async send(mail: Mail) {
-    console.info(`[mail] to ${mail.to}: ${mail.subject}`)
+    const body = mail.text
+      .split("\n")
+      .map((line) => (line ? `  ${line}` : line))
+      .join("\n")
+    console.info(`[mail] to ${mail.to}: ${mail.subject}\n${body}`)
+  }
+}
+
+/** "Name <addr>" or a bare address. */
+export function parseAddress(value: string): { Email: string; Name?: string } {
+  const match = value.match(/^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/)
+  if (!match?.[2]) return { Email: value.trim() }
+  const name = match[1]?.trim()
+  return name ? { Email: match[2].trim(), Name: name } : { Email: match[2].trim() }
+}
+
+/** Local and previews: Mailpit keeps every mail so its body can be read in the UI or through its api. */
+export class MailpitMailer implements Mailer {
+  constructor(
+    private baseUrl: string,
+    private from: string,
+    private http: typeof fetch = fetch,
+  ) {}
+
+  async send({ to, subject, text, replyTo }: Mail) {
+    const res = await this.http(`${this.baseUrl.replace(/\/$/, "")}/api/v1/send`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        From: parseAddress(this.from),
+        To: [{ Email: to }],
+        ReplyTo: replyTo ? [{ Email: replyTo }] : undefined,
+        Subject: subject,
+        Text: text,
+      }),
+    })
+    if (!res.ok) throw new Error(`mailpit ${res.status}: ${await res.text().catch(() => "")}`)
   }
 }
 
