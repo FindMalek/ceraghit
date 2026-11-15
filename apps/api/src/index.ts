@@ -48,6 +48,7 @@ const fetch = createServer({
     cronJobs: Object.keys(CRON_JOBS),
     proxySecret: env.PROXY_SECRET,
     emailFrom: env.EMAIL_FROM,
+    resendApiKey: env.RESEND_API_KEY,
   },
 })
 
