@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm"
+import { relations, sql } from "drizzle-orm"
 import {
   boolean,
   index,
@@ -20,6 +20,7 @@ export const productStatus = pgEnum("product_status", ["draft", "published", "ar
 export const orderStatus = pgEnum("order_status", ["pending_payment", "paid", "fulfilled", "cancelled", "refunded"])
 export const mailStatus = pgEnum("mail_status", ["sent", "failed", "resent"])
 export const requestStatus = pgEnum("request_status", ["new", "contacted", "done", "declined"])
+export const mediaSource = pgEnum("media_source", ["bucket", "bundled", "external"])
 
 export const admins = pgTable("admins", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -38,6 +39,40 @@ export const adminSessions = pgTable("admin_sessions", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 })
 
+/**
+ * One row per picture of the site. `key` is the bucket key without `s3:` (bucket), the path shipped with the web app
+ * (bundled) or a full URL (external).
+ */
+export const media = pgTable(
+  "media",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    key: text("key").notNull().unique(),
+    source: mediaSource("source").notNull().default("bucket"),
+    filename: text("filename").notNull(),
+    originalName: text("original_name"),
+    mime: text("mime").notNull().default("image/webp"),
+    bytes: integer("bytes").notNull().default(0),
+    width: integer("width"),
+    height: integer("height"),
+    /** sha-256 hex of the stored bytes, null for legacy rows. */
+    hash: text("hash"),
+    alt: jsonb("alt").$type<Localized>(),
+    tags: text("tags").array().notNull().default(sql`'{}'::text[]`),
+    /** Pinned by the owner: cleanup never deletes it. */
+    keep: boolean("keep").notNull().default(false),
+    /** Null while the upload is signed but not verified. */
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    unusedSince: timestamp("unused_since", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("media_hash_idx").on(t.hash),
+    index("media_created_idx").on(t.createdAt),
+    index("media_filename_idx").on(t.filename),
+  ],
+)
+
 export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   slug: text("slug").notNull().unique(),
@@ -45,6 +80,7 @@ export const categories = pgTable("categories", {
   description: jsonb("description").$type<Localized>(),
   /** `s3:<key>` for an upload, `/path` for a file shipped with the web app. */
   image: text("image"),
+  imageMediaId: uuid("image_media_id").references(() => media.id, { onDelete: "set null" }),
   visible: boolean("visible").notNull().default(true),
   position: integer("position").notNull().default(0),
 })
@@ -98,9 +134,16 @@ export const productImages = pgTable(
       .references(() => products.id, { onDelete: "cascade" }),
     image: text("image").notNull(),
     alt: text("alt"),
+    mediaId: uuid("media_id").references(() => media.id, { onDelete: "restrict" }),
+    isMain: boolean("is_main").notNull().default(false),
+    /** Per-image override, falls back to `media.alt`. */
+    altText: jsonb("alt_text").$type<Localized>(),
     position: integer("position").notNull().default(0),
   },
-  (t) => [index("product_images_product_idx").on(t.productId)],
+  (t) => [
+    index("product_images_product_idx").on(t.productId),
+    uniqueIndex("product_images_main_idx").on(t.productId).where(sql`${t.isMain}`),
+  ],
 )
 
 /**
@@ -135,6 +178,7 @@ export const locations = pgTable("locations", {
   hours: jsonb("hours").$type<Localized>(),
   mapUrl: text("map_url"),
   image: text("image"),
+  imageMediaId: uuid("image_media_id").references(() => media.id, { onDelete: "set null" }),
   visible: boolean("visible").notNull().default(true),
   position: integer("position").notNull().default(0),
 })
@@ -376,7 +420,14 @@ export const invoices = pgTable(
   (t) => [uniqueIndex("invoices_year_seq_idx").on(t.year, t.seq)],
 )
 
-export const categoriesRelations = relations(categories, ({ many }) => ({ products: many(products) }))
+export const mediaRelations = relations(media, ({ many }) => ({ productImages: many(productImages) }))
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
+  products: many(products),
+  imageMedia: one(media, { fields: [categories.imageMediaId], references: [media.id] }),
+}))
+export const locationsRelations = relations(locations, ({ one }) => ({
+  imageMedia: one(media, { fields: [locations.imageMediaId], references: [media.id] }),
+}))
 export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, { fields: [products.categoryId], references: [categories.id] }),
   images: many(productImages),
@@ -387,6 +438,7 @@ export const productVariantsRelations = relations(productVariants, ({ one }) => 
 }))
 export const productImagesRelations = relations(productImages, ({ one }) => ({
   product: one(products, { fields: [productImages.productId], references: [products.id] }),
+  media: one(media, { fields: [productImages.mediaId], references: [media.id] }),
 }))
 export const ordersRelations = relations(orders, ({ many }) => ({ items: many(orderItems), audit: many(orderAudit) }))
 export const orderAuditRelations = relations(orderAudit, ({ one }) => ({
