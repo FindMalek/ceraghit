@@ -1,0 +1,44 @@
+import type { APIRequestContext, TestInfo } from "@playwright/test"
+import { E2E } from "../env"
+import { setStock } from "./db"
+
+export interface CataloguePiece {
+  id: string
+  slug: string
+  stock: number
+  prices: { TND: number; EUR: number }
+}
+
+interface ApiPiece extends CataloguePiece {
+  unique: boolean
+  quoteOnly: boolean
+  variants: unknown[]
+}
+
+/**
+ * A plain piece owned by the worker running the test (`parallelIndex`), so two parallel tests never share a piece and
+ * its stock; tests of one worker run one after the other. Its stock is reset so every test starts from a known count.
+ */
+export async function pieceFor(request: APIRequestContext, testInfo: TestInfo, stock = 50): Promise<CataloguePiece> {
+  const res = await request.get(`${E2E.apiUrl}/v1/products`)
+  if (!res.ok()) throw new Error(`products ${res.status()}`)
+  const list = ((await res.json()) as ApiPiece[])
+    .filter((p) => !p.unique && !p.quoteOnly && p.variants.length === 0 && p.prices.TND > 0)
+    .sort((a, b) => a.slug.localeCompare(b.slug))
+  if (testInfo.parallelIndex >= list.length) throw new Error("more workers than plain pieces in the demo seed")
+  const found = list[testInfo.parallelIndex]
+  if (!found) throw new Error("no plain piece in the demo seed")
+  await setStock(found.id, stock)
+  return { id: found.id, slug: found.slug, stock, prices: found.prices }
+}
+
+/** The cheapest unique piece: the big ones are too bulky to ship online. */
+export async function uniquePiece(request: APIRequestContext): Promise<CataloguePiece> {
+  const res = await request.get(`${E2E.apiUrl}/v1/products`)
+  const list = (await res.json()) as ApiPiece[]
+  const found = list
+    .filter((p) => p.unique && !p.quoteOnly && p.variants.length === 0)
+    .sort((a, b) => a.prices.TND - b.prices.TND)[0]
+  if (!found) throw new Error("no unique piece in the demo seed")
+  return { id: found.id, slug: found.slug, stock: found.stock, prices: found.prices }
+}
