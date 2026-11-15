@@ -10,6 +10,7 @@ import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
 import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
 import { appRouter } from "../src/routers"
+import { clearVisitorLimits, visitorHeaders } from "./fixtures/visitor"
 
 const url = process.env.DATABASE_URL
 
@@ -44,7 +45,7 @@ describe.skipIf(!url)("payment settings", () => {
       context: (): Context =>
         createContext(
           { ...services, config: { ...services.config, ...over } },
-          new Headers({ cookie, "x-csrf-token": "orpc" }),
+          visitorHeaders({ cookie, "x-csrf-token": "orpc" }),
         ),
     })
 
@@ -82,6 +83,7 @@ describe.skipIf(!url)("payment settings", () => {
   })
 
   afterAll(async () => {
+    await clearVisitorLimits(db)
     await db.delete(settings).where(eq(settings.key, "payments"))
     if (savedPayments) await db.insert(settings).values(savedPayments)
     if (savedProfile)

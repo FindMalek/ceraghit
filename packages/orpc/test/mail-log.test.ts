@@ -11,6 +11,7 @@ import { type Mail, MailError, type Mailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
 import { adminRouter } from "../src/routers/admin"
 import { publicRouter } from "../src/routers/public"
+import { clearVisitorLimits, visitorHeaders } from "./fixtures/visitor"
 
 const url = process.env.DATABASE_URL
 
@@ -63,9 +64,10 @@ describe.skipIf(!url)("mail log", () => {
     await runMigrations(db)
     await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
     const session = await base.auth.login("127.0.0.1", "owner@test.local", "clay-test-pass")
-    owner = ownerFor(new Headers({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" }))
+    owner = ownerFor(visitorHeaders({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" }))
   })
   afterAll(async () => {
+    await clearVisitorLimits(db)
     await db.delete(mailLog).where(like(mailLog.subject, `${tag}%`))
   })
 
@@ -119,7 +121,7 @@ describe.skipIf(!url)("mail log", () => {
     const down = () => new MailError("resend 503: down", true, 503)
     const { mailer, sent } = scripted([down(), down()])
     const visitor = createRouterClient(publicRouter, {
-      context: (): Context => createContext({ ...base, mailer }, new Headers()),
+      context: (): Context => createContext({ ...base, mailer }, visitorHeaders()),
     })
     const created = await visitor.orders.create({
       currency: "TND",
@@ -160,7 +162,7 @@ describe.skipIf(!url)("mail log", () => {
       context: (): Context =>
         createContext(
           { ...base, mailer: working.mailer },
-          new Headers({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" }),
+          visitorHeaders({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" }),
         ),
     })
     expect(await client.mail.resend({ id: failed!.id })).toEqual({ ok: true })
@@ -228,7 +230,7 @@ describe.skipIf(!url)("mail log", () => {
   })
 
   test("a visitor cannot reach admin.mail", async () => {
-    const visitor = createRouterClient(adminRouter, { context: (): Context => createContext(base, new Headers()) })
+    const visitor = createRouterClient(adminRouter, { context: (): Context => createContext(base, visitorHeaders()) })
     await expect(visitor.mail.failures({})).rejects.toThrow()
   })
 })
