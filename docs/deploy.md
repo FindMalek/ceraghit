@@ -57,6 +57,17 @@ Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Va
 The api does not migrate itself in production (`BOOTSTRAP=false`). The first real catalogue is loaded once with
 `DATABASE_URL=<neon> pnpm db:seed:catalog`; after that the owner edits everything in the dashboard.
 
+### migrations
+
+Neon is migrated before the new code ships and a Vercel rollback keeps the new schema, so every migration must work with the
+previous release: additive only (new tables, nullable columns or columns with a default, indexes, `ADD VALUE`, backfills).
+To remove or reshape something, expand then contract over two releases: add the new column, backfill, ship code that reads
+both; later drop the old one in its own PR, with a `-- destructive-ok: <reason>` line above the statement and the
+`migration:destructive` label, which only the owner adds (`vars.ALLOW_DESTRUCTIVE_MIGRATION=true` for that deploy).
+Only one open PR may add a migration at a time: the lowest PR number goes first, the next one waits, rebases on main and
+runs `pnpm db:generate` again. `node scripts/check-migrations.mjs --base origin/main` checks a branch locally (the
+`Migrations` workflow on PRs, and `deploy.yml` again before it touches Neon).
+
 ## photo storage (2.5 GB plan)
 
 Every file sent to the bucket is a row in `uploads` (key, folder, bytes). The dashboard compresses each photo to WebP
