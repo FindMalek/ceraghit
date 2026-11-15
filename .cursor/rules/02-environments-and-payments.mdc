@@ -41,5 +41,5 @@ holds live keys.
 
 # Scheduled jobs
 
-- Jobs are `POST /cron/<name>` endpoints on the api, bearer `CRON_SECRET`, idempotent. The scheduler holds only the api URL
-  and `CRON_SECRET` and calls production; previews have no schedules.
+- Job shape is in `AGENTS.md`. The scheduler holds only the api URL and `CRON_SECRET` and calls production; previews have
+  no schedules.

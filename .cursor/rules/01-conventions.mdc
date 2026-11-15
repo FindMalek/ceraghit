@@ -15,5 +15,4 @@ alwaysApply: true
   only network and time. Run only touched packages while iterating. `pnpm rules:check` fails on a test outside `test/`.
 - E2E: one spec per feature (`test/e2e/specs/<feature>.e2e.ts`), every user-visible step through `step()` so it is
   screenshotted, select by role or label, no `waitForTimeout`. A flaky test is a bug to fix; no skip without an issue number.
-- UI text: fr/en/ar about the same length.
 - Accessibility: labelled controls, 44px touch targets, AA contrast, visible focus. Mobile first, then desktop.
