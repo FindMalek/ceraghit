@@ -26,8 +26,8 @@
     "zod": "catalog:",
     "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
-    "@react-email/components": "1.0.12",
-    "@react-email/render": "2.3.1"
+    "@react-email/components": "catalog:",
+    "@react-email/render": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

@@ -56,7 +56,7 @@ export function EmailLayout({ locale, preview, webUrl, contactEmail, reason, chi
         >
           <Section style={{ padding: "24px 24px 0", textAlign: "center" }}>
             <Img
-              src={`${webUrl}/logo.webp`}
+              src={`${webUrl}/logo-mail.png`}
               alt="Ceraghit Creation"
               width="96"
               height="96"

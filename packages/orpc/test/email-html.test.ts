@@ -66,7 +66,7 @@ test.each(["fr", "en", "ar"])("customer mails in %s have branded html and a comp
   const allowed = new Set(Object.values(mailColors))
   for (const hex of html.match(/#[0-9a-f]{3,8}\b/gi) ?? [])
     expect(allowed.has(hex.toLowerCase() as never), hex).toBe(true)
-  expect(html).toContain('src="https://shop.test/logo.webp"')
+  expect(html).toContain('src="https://shop.test/logo-mail.png"')
   expect(html).toContain('alt="Ceraghit Creation"')
   expect(html).toContain('name="color-scheme"')
   expect(html).toContain(`lang="${locale}"`)

@@ -1,5 +1,11 @@
 {
   "extends": "@workspace/typescript-config/base.json",
-  "compilerOptions": { "module": "ESNext", "moduleResolution": "Bundler", "noEmit": true, "types": ["bun"] },
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "types": ["bun"],
+    "jsx": "react-jsx"
+  },
   "include": ["src", "test"]
 }

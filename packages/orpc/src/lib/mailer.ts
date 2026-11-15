@@ -1,3 +1,5 @@
+import { mailColors } from "../emails/brand"
+
 export interface Mail {
   to: string
   subject: string
@@ -137,7 +139,12 @@ export class RedirectMailer implements Mailer {
       subject: `[${this.label} → ${to}] ${subject}`,
       text: `${header.join("\n")}\n\n${text}`,
       ...(html
-        ? { html: html.replace(/<body[^>]*>/, (open) => `${open}<p>${header.map(escapeHtml).join("<br>")}</p>`) }
+        ? {
+            html: html.replace(
+              /<body[^>]*>/,
+              (open) => `${open}<p style="color:${mailColors.goldBright}">${header.map(escapeHtml).join("<br>")}</p>`,
+            ),
+          }
         : {}),
       idempotencyKey,
     })

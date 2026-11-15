@@ -24,6 +24,12 @@ catalogs:
     '@orpc/zod':
       specifier: 1.15.7
       version: 1.15.7
+    '@react-email/components':
+      specifier: 1.0.12
+      version: 1.0.12
+    '@react-email/render':
+      specifier: 2.3.1
+      version: 2.3.1
     '@tanstack/react-query':
       specifier: 5.104.3
       version: 5.104.3
@@ -289,10 +295,10 @@ importers:
         specifier: 'catalog:'
         version: 1.15.7(@orpc/client@1.15.7)(@tanstack/query-core@5.104.3)
       '@react-email/components':
-        specifier: 1.0.12
+        specifier: 'catalog:'
         version: 1.0.12(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@react-email/render':
-        specifier: 2.3.1
+        specifier: 'catalog:'
         version: 2.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@tanstack/react-query':
         specifier: 'catalog:'
