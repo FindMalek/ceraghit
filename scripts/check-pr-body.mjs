@@ -3,14 +3,14 @@
 import { execFileSync } from "node:child_process"
 import { pathToFileURL } from "node:url"
 
-const CLOSES = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#\d+/i
+const CLOSES = /\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?)\s+#\d+/i
 const MD_IMAGE = /!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g
 const HTML_IMAGE = /<img[^>]+src="([^"]+)"/gi
 
 export function checkBody(body, exists, repo = "FindMalek/ceraghit") {
   const errors = []
   const text = body ?? ""
-  if (!CLOSES.test(text)) errors.push("no `Closes #<issue>` in the PR body")
+  if (!CLOSES.test(text)) errors.push("no `Closes #<issue>` or `Refs #<issue>` in the PR body")
 
   const urls = [...text.matchAll(MD_IMAGE), ...text.matchAll(HTML_IMAGE)].map((m) => m[1])
   if (!urls.length) errors.push("no inline screenshot in the PR body (see docs/pr-process.md, `pnpm pr:screenshots`)")
