@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test"
 import { eq } from "drizzle-orm"
 import { E2E } from "../../env"
 import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
-import { admins, type Db, openDb, resetSetup, shopProfile } from "../../helpers/db"
+import { admins, completeSetup, type Db, openDb, resetSetup, shopProfile } from "../../helpers/db"
 
 const OWNER = "Sabri"
 const VALID_IBAN = "TN59 1000 6035 1835 9847 8831"
@@ -19,6 +19,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
+  await completeSetup(db)
   await db.close()
 })
 
@@ -157,7 +158,9 @@ test("re-running the seed keeps the owner name and the shop profile", async ({ p
   await page.goto(`${E2E.dashboardUrl}/onboarding?step=owner`)
   await page.getByLabel("Votre prénom et nom").fill(OWNER)
   await next(page, /profile\/updateOwner/)
+  await completeSetup(db)
   const before = await shop()
+  expect(before?.onboardedAt).not.toBeNull()
   execFileSync("bun", ["src/seed-cli.ts"], {
     cwd: `${E2E.repoRoot}packages/db`,
     env: {
@@ -169,6 +172,7 @@ test("re-running the seed keeps the owner name and the shop profile", async ({ p
     stdio: "pipe",
   })
   expect((await owner())?.name).toBe(OWNER)
+  expect((await owner())?.nameConfirmedAt).not.toBeNull()
   expect(await shop()).toEqual(before)
   await page.context().clearCookies()
   await loginAsOwnerAndWait(page)
