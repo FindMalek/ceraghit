@@ -76,18 +76,7 @@ export const settingsRouter = {
     .output(studioSettingsSchema)
     .handler(async ({ context }) => {
       const [settings, profile] = await Promise.all([getSettings(context.db), getShopProfile(context.db)])
-      return {
-        ...settings,
-        contactEmail: profile.email ?? "",
-        phones: profile.phones,
-        bank: {
-          holder: profile.bankHolder ?? "",
-          bank: profile.bankName ?? "",
-          rib: profile.bankRib ?? "",
-          iban: profile.bankIban ?? "",
-          bic: profile.bankBic ?? "",
-        },
-      }
+      return { ...settings, contactEmail: profile.email ?? "", phones: profile.phones }
     }),
 
   update: adminProcedure
@@ -102,17 +91,8 @@ export const settingsRouter = {
         if (!profile.notifyEmail || profile.notifyEmail === profile.email) patch.notifyEmail = patch.email
       }
       if (input.phones !== undefined) patch.phones = input.phones
-      if (input.bank) {
-        const text = (v: string) => v.trim() || null
-        patch.bankHolder = text(input.bank.holder)
-        patch.bankName = text(input.bank.bank)
-        patch.bankRib = text(input.bank.rib)
-        patch.bankIban = text(input.bank.iban)
-        patch.bankBic = text(input.bank.bic)
-      }
       if (Object.keys(patch).length > 0) await updateShopProfile(context.db, patch)
-      const { bank: _bank, ...rest } = input
-      await saveSettings(context.db, rest)
+      await saveSettings(context.db, input)
       return { ok: true as const }
     }),
 

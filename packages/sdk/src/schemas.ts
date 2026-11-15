@@ -304,13 +304,11 @@ export const studioSettingsSchema = z.object({
   shippingRates: shippingRatesSchema,
   /** Shown at checkout, e.g. "Pièces uniques expédiées sous 7 jours". */
   shippingNote: localizedSchema.nullable(),
-  /** Still edited by the dashboard and read for transfer instructions until they move to shop_profile. */
-  bank: bankDetailsSchema.optional(),
 })
 export type StudioSettings = z.infer<typeof studioSettingsSchema>
 
 /** What the storefront may read: contact from the shop profile, no bank account, plus the payment methods in effect (after the gateway check). */
-export const publicSettingsSchema = studioSettingsSchema.omit({ bank: true, contactEmail: true, phones: true }).extend({
+export const publicSettingsSchema = studioSettingsSchema.omit({ contactEmail: true, phones: true }).extend({
   contactEmail: z.string(),
   phones: z.array(z.string()),
   onlinePayments: z.boolean(),

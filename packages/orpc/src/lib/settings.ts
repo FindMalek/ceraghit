@@ -33,16 +33,8 @@ export const DEFAULT_SETTINGS: StudioSettings = {
 
 export async function getSettings(db: Db): Promise<StudioSettings> {
   const [row] = await db.select().from(settings).where(eq(settings.key, SETTINGS_KEY)).limit(1)
-  const parsed = studioSettingsSchema.safeParse(withBankRib(row?.value))
+  const parsed = studioSettingsSchema.safeParse(row?.value)
   return parsed.success ? parsed.data : DEFAULT_SETTINGS
-}
-
-/** Banks saved before the RIB field existed have no `rib`: read them as an empty one instead of dropping every setting. */
-function withBankRib(value: unknown): unknown {
-  if (!value || typeof value !== "object" || !("bank" in value)) return value
-  const bank = value.bank
-  if (!bank || typeof bank !== "object" || "rib" in bank) return value
-  return { ...value, bank: { ...bank, rib: "" } }
 }
 
 /** Keeps legacy keys already stored (contact, bank) so the shop profile backfill never loses them. */

@@ -9,7 +9,6 @@ import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
-import { getSettings } from "../src/lib/settings"
 import { ensureShopProfile, getShopProfile, studioInbox, updateShopProfile } from "../src/lib/shop-profile"
 import { appRouter } from "../src/routers"
 import { adminRouter } from "../src/routers/admin"
@@ -41,7 +40,7 @@ describe.skipIf(!url)("shop profile", () => {
     instagram: null,
     shippingRates: DEFAULT_SHIPPING_RATES,
     shippingNote: null,
-    bank: { holder: "Atelier Test", bank: "Banque Test", iban: "TN5910006035183598478831", rib: "", bic: "BSTUTNTT" },
+    bank: { holder: "Atelier Test", bank: "Banque Test", iban: "TN5910006035183598478831", bic: "BSTUTNTT" },
   }
   let original: unknown
 
@@ -85,13 +84,6 @@ describe.skipIf(!url)("shop profile", () => {
     })
     const profile = await getShopProfile(db)
     expect(profile).toMatchObject({ bankName: null, bankIban: null, bankBic: null, email: "atelier@example.com" })
-  })
-
-  test("a stored bank without a rib still reads, and keeps the shipping settings", async () => {
-    const { rib: _rib, ...bank } = legacy.bank
-    await setLegacy({ ...legacy, instagram: "@atelier", bank })
-    const read = await getSettings(db)
-    expect(read).toMatchObject({ instagram: "@atelier", bank: { iban: "TN5910006035183598478831", rib: "" } })
   })
 
   test("running the backfill again never overwrites the owner's edits", async () => {

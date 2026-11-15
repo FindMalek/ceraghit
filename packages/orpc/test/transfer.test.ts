@@ -119,5 +119,9 @@ describe.skipIf(!url)("transfer needs a real bank account", () => {
     const mail = sent.find((m) => m.to === email && m.text.includes(placed.number))
     expect(mail?.text).toContain("TN5910006035183598478831")
     expect(mail?.text).toContain("RIB: 10006035183598478831")
+
+    await setBank({ bankIban: null, bankRib: null })
+    const later = await guest.public.orders.get({ number: placed.number, token: placed.token })
+    expect(later.bank).toBeNull()
   })
 })
