@@ -42,6 +42,7 @@ pnpm install
 pnpm db:up && pnpm db:migrate && pnpm db:seed   # Postgres on :5435, the catalogue + demo orders
 pnpm dev:web          # storefront + api
 pnpm dev:dashboard    # dashboard + api (login with ADMIN_EMAIL / ADMIN_PASSWORD from .env)
+pnpm demo:reset       # wipes the whole local Postgres volume (other worktrees' databases too), asks first, --yes skips; stop dev first
 ```
 
 Checks: `pnpm check` (format), `pnpm lint`, `pnpm check-types`, `pnpm test` (needs `DATABASE_URL`), `pnpm build`.
