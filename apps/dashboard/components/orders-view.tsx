@@ -321,10 +321,10 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
   )
 }
 
-export function OrdersView() {
+export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
   const [status, setStatus] = useState<Filter>("all")
-  const [q, setQ] = useState("")
-  const [search, setSearch] = useState("")
+  const [q, setQ] = useState(initialQuery)
+  const [search, setSearch] = useState(initialQuery)
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {

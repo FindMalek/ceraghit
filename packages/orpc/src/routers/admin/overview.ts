@@ -1,4 +1,4 @@
-import { customRequests, orderItems, orders, products } from "@workspace/db"
+import { customRequests, mailLog, orderItems, orders, products } from "@workspace/db"
 import { statsRangeSchema, statsSchema } from "@workspace/sdk"
 import { and, asc, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm"
 import { releaseExpiredHolds } from "../../lib/orders"
@@ -87,6 +87,8 @@ export const overview = adminProcedure
 
     const newRequests = await db.$count(customRequests, eq(customRequests.status, "new"))
 
+    const failedMails = await db.$count(mailLog, eq(mailLog.status, "failed"))
+
     return {
       days: input.days,
       revenue,
@@ -98,5 +100,6 @@ export const overview = adminProcedure
       topProducts,
       byCountry,
       lowStock,
+      failedMails,
     }
   })

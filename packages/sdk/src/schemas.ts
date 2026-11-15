@@ -537,7 +537,21 @@ export const statsSchema = z.object({
   topProducts: z.array(z.object({ ref: z.string(), title: z.string(), quantity: z.number().int() })),
   byCountry: z.array(z.object({ country: z.string(), orders: z.number().int() })),
   lowStock: z.array(z.object({ id: z.string(), ref: z.string(), title: z.string(), stock: z.number().int() })),
+  /** Mails that could not be sent and are still waiting for the owner. */
+  failedMails: z.number().int(),
 })
+
+export const mailLogItemSchema = z.object({
+  id: z.string().uuid(),
+  kind: z.string(),
+  to: z.string(),
+  subject: z.string(),
+  error: z.string().nullable(),
+  attempts: z.number().int(),
+  createdAt: z.string(),
+  orderNumber: z.string().nullable(),
+})
+export type MailLogItem = z.infer<typeof mailLogItemSchema>
 
 /** What the studio's plan stores: dashboard images and customer photos together. */
 export const STORAGE_QUOTA_BYTES = 2_500_000_000
