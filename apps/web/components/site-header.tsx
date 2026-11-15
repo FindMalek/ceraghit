@@ -8,7 +8,7 @@ import { NAV_LINKS } from "./nav-links"
 export async function SiteHeader() {
   const t = await getTranslations("nav")
   return (
-    <header className="sticky top-0 z-30 border-border border-b bg-background/90 backdrop-blur">
+    <header className="print:hidden sticky top-0 z-30 border-border border-b bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 lg:gap-6">
         <MobileNav />
         <Link href="/" className="me-auto lg:me-0">

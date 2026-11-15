@@ -3,6 +3,7 @@ import { customRequests, orders } from "@workspace/db"
 import {
   checkoutSchema,
   customRequestInputSchema,
+  invoiceViewSchema,
   orderInputSchema,
   type PaymentMethod,
   PLACEHOLDER_BANK,
@@ -13,6 +14,7 @@ import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 import type { Context } from "../../context"
 import { publicError } from "../../errors"
+import { invoiceView, issueInvoice } from "../../lib/invoices"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
@@ -64,6 +66,29 @@ export const ordersRouter = {
         createdAt: order.createdAt.toISOString(),
         paidAt: order.paidAt?.toISOString() ?? null,
       }
+    }),
+
+  invoice: publicProcedure
+    .route({
+      method: "GET",
+      path: "/orders/{number}/invoice",
+      summary: "The invoice of a paid order, with the token from its link",
+      tags: TAG,
+    })
+    .input(z.object({ number: z.string(), token: z.string() }))
+    .output(invoiceViewSchema)
+    .handler(async ({ context, input }) => {
+      await enforceLimit(context, "orderGet", "too_many_lookups", "Too many attempts, try again in a few minutes.")
+      const order = await context.db.query.orders.findFirst({
+        where: and(eq(orders.number, input.number), eq(orders.publicToken, input.token)),
+        with: { items: true },
+      })
+      if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
+      if (order.status !== "paid" && order.status !== "fulfilled") {
+        throw new ORPCError("NOT_FOUND", { message: "Invoice not available yet." })
+      }
+      const invoice = await issueInvoice(context.db, order.id, context.now())
+      return { ...invoiceView(order, invoice, await getShopProfile(context.db)), canIssue: false }
     }),
 
   /** Only exists with the demo provider (local and preview without gateway keys). */

@@ -147,6 +147,9 @@
     "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement.",
     "noMethod": "Aucun moyen de paiement pour ce pays dans cette devise. Changez de devise ou écrivez-nous."
   },
+  "invoice": {
+    "print": "Imprimer ou enregistrer en PDF"
+  },
   "order": {
     "title": "Commande {number}",
     "status": {
@@ -169,6 +172,7 @@
     "shipping": "Livraison",
     "total": "Total",
     "notFound": "Commande introuvable. Vérifiez le lien reçu après votre commande.",
+    "invoiceLink": "Voir la facture",
     "keepLink": "Conservez cette page : elle permet de suivre votre commande.",
     "retryOrder": "Refaire une commande",
     "stillPending": "Le paiement n'est pas encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes : revenez sur cette page.",

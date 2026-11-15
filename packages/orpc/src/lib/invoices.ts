@@ -138,3 +138,6 @@ export function invoiceView(
     seller: invoice?.seller ?? sellerFromProfile(profile),
   }
 }
+
+export const invoiceUrl = (webUrl: string, order: { locale: string; number: string; publicToken: string }): string =>
+  `${webUrl}/${order.locale}/order/${order.number}/invoice?t=${order.publicToken}`
