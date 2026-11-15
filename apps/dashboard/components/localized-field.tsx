@@ -54,7 +54,11 @@ export function LocalizedField({
         <Tabs value={language} onValueChange={(next) => setLanguage(next as Language)}>
           <TabsList>
             {LANGUAGES.map((l) => (
-              <TabsTrigger key={l.value} value={l.value} className="px-3">
+              <TabsTrigger
+                key={l.value}
+                value={l.value}
+                className="px-3 text-foreground/85! data-active:text-foreground!"
+              >
                 {l.label}
                 {value[l.value].trim() && (
                   <span aria-hidden className="ml-1 text-gold">
