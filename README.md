@@ -52,4 +52,5 @@ Checks: `pnpm check` (format), `pnpm lint`, `pnpm check-types`, `pnpm test` (nee
 - Payments: [docs/payments.md](docs/payments.md)
 - Brand and how to change it: [docs/brand.md](docs/brand.md)
 - Contract and price notes: [docs/contract.md](docs/contract.md)
+- AI translation and the model eval: [docs/ai-translation.md](docs/ai-translation.md)
 - Agent rules: [AGENTS.md](AGENTS.md) and `.cursor/rules/`
