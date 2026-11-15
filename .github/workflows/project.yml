@@ -11,6 +11,9 @@ on:
   pull_request_review:
     types: [submitted]
 
+env:
+  PROJECT_NUMBER: "19"
+
 jobs:
   add-issue:
     if: github.event_name == 'issues'
@@ -25,7 +28,7 @@ jobs:
           NUMBER: ${{ github.event.issue.number }}
         run: |
           if [ -z "$GH_TOKEN" ]; then echo "::notice::PROJECT_TOKEN not set, skipping"; exit 0; fi
-          gh project item-add 16 --owner FindMalek --url "$URL" > /dev/null
+          gh project item-add "$PROJECT_NUMBER" --owner FindMalek --url "$URL" > /dev/null
           ./scripts/gh-project-status.sh "$NUMBER" Backlog
 
   review-status:
