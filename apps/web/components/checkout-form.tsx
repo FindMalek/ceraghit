@@ -4,11 +4,12 @@ import { useMutation } from "@tanstack/react-query"
 import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import {
-  availablePaymentMethods,
   formatMoney,
   localeSchema,
   orderInputSchema,
   type PaymentMethod,
+  type PaymentMethodFlags,
+  paymentMethodsFor,
   pick,
   type SHIPPING_COUNTRIES,
 } from "@workspace/sdk"
@@ -18,7 +19,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
-import { Link } from "@/i18n/navigation"
+import { Link, useRouter } from "@/i18n/navigation"
 import { lineKey, useCartStore } from "@/lib/cart-store"
 import { rememberOrderToken } from "@/lib/order-tokens"
 import { useHydrated } from "@/lib/use-hydrated"
@@ -36,8 +37,9 @@ type Field = (typeof FIELDS)[number]
 const METHOD_LABEL = { online: "methodOnline", cod: "methodCod", transfer: "methodTransfer" } as const
 const HINT_LABEL = { cod: "methodCodHint", transfer: "methodTransferHint" } as const
 
-export function CheckoutForm({ onlinePayments }: { onlinePayments: boolean }) {
+export function CheckoutForm({ paymentMethods }: { paymentMethods: PaymentMethodFlags }) {
   const t = useTranslations("checkout")
+  const router = useRouter()
   const tc = useTranslations("cart")
   const locale = useLocale()
   const hydrated = useHydrated()
@@ -54,8 +56,8 @@ export function CheckoutForm({ onlinePayments }: { onlinePayments: boolean }) {
   )
   const shipping = quote.data?.available ? quote.data.amountMinor : 0
   const canPay = quote.data?.available === true
-  const methods = availablePaymentMethods(country, onlinePayments)
-  const method = chosen && methods.includes(chosen) ? chosen : methods[0]!
+  const methods = paymentMethodsFor({ country, currency }, paymentMethods, true)
+  const method = chosen && methods.includes(chosen) ? chosen : methods[0]
   const offline = method !== "online"
   const [accepted, setAccepted] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<Field | "items" | "terms", string>>>({})
@@ -67,7 +69,10 @@ export function CheckoutForm({ onlinePayments }: { onlinePayments: boolean }) {
         clear()
         window.location.assign(checkout.payUrl)
       },
-      onError: (error) => showError(errorMessage(error)),
+      onError: (error) => {
+        showError(errorMessage(error))
+        router.refresh()
+      },
     }),
   )
 
@@ -178,6 +183,7 @@ export function CheckoutForm({ onlinePayments }: { onlinePayments: boolean }) {
               </span>
             </label>
           ))}
+          {methods.length === 0 && <p className="text-muted-foreground text-sm">{t("noMethod")}</p>}
         </fieldset>
       </div>
 
@@ -230,7 +236,12 @@ export function CheckoutForm({ onlinePayments }: { onlinePayments: boolean }) {
           </p>
         )}
         <TermsCheckbox checked={accepted} onChange={setAccepted} error={errors.terms} />
-        <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={create.isPending || !canPay}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-12 w-full text-base"
+          disabled={create.isPending || !canPay || !method}
+        >
           {create.isPending ? (
             <>
               <Spinner /> {t("paying")}

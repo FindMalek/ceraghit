@@ -144,7 +144,8 @@
     "backToShop": "Back to the shop",
     "termsLabel": "I accept the <link>terms and conditions of sale</link>.",
     "methodTransfer": "Bank transfer",
-    "methodTransferHint": "Outside Tunisia. You get our bank details on the order page and by email, and the order ships once the transfer is received."
+    "methodTransferHint": "Outside Tunisia. You get our bank details on the order page and by email, and the order ships once the transfer is received.",
+    "noMethod": "No payment method for this country in this currency. Switch currency or write to us."
   },
   "order": {
     "title": "Order {number}",

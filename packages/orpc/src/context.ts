@@ -21,7 +21,7 @@ export interface Services {
     /** "production", "pr-<n>" or "local". */
     deployEnv: string
     secureCookies: boolean
-    /** Card payment through the gateway. Off: Tunisia pays cash on delivery, the rest by bank transfer. */
+    /** Card payment until the owner saves the payments page in the dashboard (then the DB row wins). */
     onlinePayments: boolean
     /** Bearer token of the daily GitHub job that calls /cron/cleanup-uploads. Unset: the route does not exist. */
     cronSecret?: string

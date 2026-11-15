@@ -3,6 +3,7 @@
 import {
   ArrowSquareOutIcon,
   ChartLineUpIcon,
+  CreditCardIcon,
   EnvelopeSimpleIcon,
   GearIcon,
   MapPinIcon,
@@ -40,6 +41,7 @@ const NAV = [
   { href: "/orders", label: "Commandes", icon: ReceiptIcon },
   { href: "/requests", label: "Demandes", icon: EnvelopeSimpleIcon },
   { href: "/shipping", label: "Livraison", icon: TruckIcon },
+  { href: "/payments", label: "Paiements", icon: CreditCardIcon },
   { href: "/locations", label: "Ateliers", icon: MapPinIcon },
   { href: "/settings", label: "Réglages", icon: GearIcon },
 ]
