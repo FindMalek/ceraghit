@@ -12,7 +12,7 @@ export default async function DemoCheckout({
   return (
     <div className="mx-auto max-w-5xl px-4 py-16">
       {ref && order ? (
-        <DemoGateway orderNumber={order} paymentRef={ref} />
+        <DemoGateway orderNumber={order} paymentRef={ref} showMismatch={process.env.APP_ENV !== "production"} />
       ) : (
         <p className="text-center text-muted-foreground">{t("noOrder")}</p>
       )}
