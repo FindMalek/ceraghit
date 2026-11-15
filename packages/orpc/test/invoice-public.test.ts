@@ -8,6 +8,7 @@ import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
 import { appRouter } from "../src/routers"
+import { clearVisitorLimits, visitorHeaders } from "./fixtures/visitor"
 
 const url = process.env.DATABASE_URL
 const PREFIX = "TST-PINV-"
@@ -33,7 +34,7 @@ test.skipIf(!url)("a customer gets the invoice of a paid order only with its tok
   }
   await runMigrations(db)
   const guest = createRouterClient(appRouter, {
-    context: (): Context => createContext(services, new Headers({ "x-forwarded-for": "10.9.9.9" })),
+    context: (): Context => createContext(services, visitorHeaders()),
   })
   const base = {
     publicToken: "secret-token",
@@ -87,5 +88,6 @@ test.skipIf(!url)("a customer gets the invoice of a paid order only with its tok
   await db.delete(invoices).where(inArray(invoices.orderId, ids))
   await db.delete(invoiceCounters).where(inArray(invoiceCounters.year, [2095]))
   await db.delete(orders).where(like(orders.number, `${PREFIX}%`))
+  await clearVisitorLimits(db)
   await db.close()
 })
