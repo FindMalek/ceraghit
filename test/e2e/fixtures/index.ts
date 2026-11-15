@@ -54,7 +54,7 @@ export const test = base.extend<E2EOptions & E2EFixtures>({
 })
 
 export { payDemo } from "../helpers/demo-gateway"
-export { loginAsOwner } from "../helpers/login"
+export { loginAsOwner, loginAsOwnerAndWait } from "../helpers/login"
 export { createOrderViaApi, placeOrder } from "../helpers/order"
 export { clearMails, latestMailTo, mailWithSubject } from "../support/mailpit"
 export { expect }
