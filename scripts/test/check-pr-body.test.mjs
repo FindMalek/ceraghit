@@ -27,3 +27,7 @@ test("template comment alone in Screenshots fails", () => {
 test("pr-assets image that was not pushed fails", () => {
   assert.match(checkBody(body(IMG.replace("home-desktop", "home-mobile")), pushed).join(), /42\/home-mobile\.png/)
 })
+
+test("Refs #n counts as an issue link for partial work", () => {
+  assert.deepEqual(checkBody(body(IMG, "Refs #42"), pushed), [])
+})
