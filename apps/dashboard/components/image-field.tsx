@@ -3,7 +3,7 @@
 import { ORPCError } from "@orpc/client"
 import { ArrowDownIcon, ArrowUpIcon, ImageIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react"
 import { browserClient } from "@workspace/orpc/react"
-import { imageSrc, UPLOAD_MAX_BYTES } from "@workspace/sdk"
+import { imageSrc, MEDIA_MAX_BYTES } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { showError } from "@workspace/ui/components/error-banner"
 import { Input } from "@workspace/ui/components/input"
@@ -22,10 +22,10 @@ const TYPES: ContentType[] = ["image/jpeg", "image/png", "image/webp", "image/av
 async function uploadFile(original: File, folder: Folder): Promise<string> {
   if (!TYPES.includes(original.type as ContentType)) throw new Error("Formats acceptés : JPG, PNG, WebP, AVIF.")
   const file = await compressImage(original)
-  if (file.size > UPLOAD_MAX_BYTES) throw new Error("Cette image est trop lourde, même après compression.")
+  if (file.size > MEDIA_MAX_BYTES) throw new Error("Cette image est trop lourde, même après compression.")
   const target = await browserClient.admin.uploads.sign({
     folder,
-    contentType: file.type as ContentType,
+    contentType: "image/webp",
     size: file.size,
   })
   const res = await fetch(target.uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file })

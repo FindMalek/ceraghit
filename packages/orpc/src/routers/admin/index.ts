@@ -4,6 +4,7 @@ import { helpRouter } from "./help"
 import { invoicesRouter } from "./invoices"
 import { jobsRouter } from "./jobs"
 import { mailRouter } from "./mail"
+import { mediaRouter } from "./media"
 import { ordersRouter, requestsRouter } from "./orders"
 import { overview } from "./overview"
 import { profileRouter, setupRouter } from "./profile"
@@ -23,6 +24,7 @@ export const adminRouter = {
   locations: locationsRouter,
   settings: settingsRouter,
   uploads: uploadsRouter,
+  media: mediaRouter,
   help: helpRouter,
   profile: profileRouter,
   setup: setupRouter,

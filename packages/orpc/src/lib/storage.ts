@@ -22,6 +22,11 @@ export interface Storage {
   presignPut(key: string, contentType: string, size?: number): Promise<string>
   /** Whether the object exists, used to check a customer's upload really happened before saving its key. */
   head(key: string): Promise<boolean>
+  /**
+   * The object's bytes through the S3 api (never the CDN, which may cache a 404), or null when it does not exist.
+   * Stops and throws past `maxBytes`, so a huge upload is never held in memory.
+   */
+  read(key: string, maxBytes: number): Promise<Uint8Array | null>
   /** What an `<img>` should load: the CDN url when configured, otherwise a short-lived signed GET. */
   readUrl(key: string): Promise<string>
   publicUrl(key: string): string | null
@@ -64,6 +69,22 @@ export function createStorage(config: StorageConfig): Storage | null {
     async head(key) {
       const res = await aws.fetch(urlFor(key), { method: "HEAD" })
       return res.ok
+    },
+    async read(key, maxBytes) {
+      const res = await aws.fetch(urlFor(key))
+      if (res.status === 404) return null
+      if (!res.ok || !res.body) throw new Error(`bucket read failed (${res.status})`)
+      const chunks: Uint8Array[] = []
+      let total = 0
+      for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
+        total += chunk.length
+        if (total > maxBytes) {
+          await res.body.cancel()
+          throw new Error("object is larger than the limit")
+        }
+        chunks.push(chunk)
+      }
+      return Buffer.concat(chunks)
     },
     readUrl: (key) => (publicBase ? Promise.resolve(`${publicBase}/${key}`) : presign("GET", key, 3600)),
     publicUrl: (key) => (publicBase ? `${publicBase}/${key}` : null),

@@ -566,13 +566,18 @@ export type EmailDomain = z.infer<typeof emailDomainSchema>
 
 /** What the studio's plan stores: dashboard images and customer photos together. */
 export const STORAGE_QUOTA_BYTES = 2_500_000_000
-/** The dashboard shrinks every image first, so anything past this is not a normal photo. */
-export const UPLOAD_MAX_BYTES = 12 * 1024 * 1024
+
+/** Long side of a stored picture; the dashboard shrinks to it and the api refuses anything larger. */
+export const MEDIA_MAX_SIDE = 2400
+/** A smaller picture is a mistake for a ceramics shop. */
+export const MEDIA_MIN_SIDE = 200
+export const MEDIA_MAX_BYTES = 5 * 1024 * 1024
+export const MEDIA_CONTENT_TYPE = "image/webp"
 
 export const uploadSignSchema = z.object({
   folder: z.enum(["products", "categories", "locations"]),
-  contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
-  size: z.number().int().min(1).max(UPLOAD_MAX_BYTES),
+  contentType: z.literal(MEDIA_CONTENT_TYPE),
+  size: z.number().int().min(1).max(MEDIA_MAX_BYTES),
 })
 export const storageUsageSchema = z.object({
   usedBytes: z.number().int(),
@@ -622,3 +627,19 @@ export const mediaSchema = z.object({
   createdAt: z.string(),
 })
 export type Media = z.infer<typeof mediaSchema>
+
+const mediaSide = z.number().int().min(MEDIA_MIN_SIDE).max(MEDIA_MAX_SIDE)
+export const mediaSignSchema = z.object({
+  originalName: z.string().trim().min(1).max(200),
+  contentType: z.literal(MEDIA_CONTENT_TYPE),
+  size: z.number().int().min(1).max(MEDIA_MAX_BYTES),
+  width: mediaSide,
+  height: mediaSide,
+  /** sha-256 hex of the compressed file. */
+  hash: z.string().regex(/^[a-f0-9]{64}$/),
+  tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+})
+export const mediaSignResultSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("existing"), media: mediaSchema }),
+  z.object({ status: z.literal("upload"), mediaId: z.string(), uploadUrl: z.string() }),
+])
