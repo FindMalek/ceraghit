@@ -24,6 +24,16 @@ interface E2EFixtures {
 export const test = base.extend<E2EOptions & E2EFixtures>({
   appLocale: ["fr", { option: true }],
 
+  /** Every test is its own client for the api rate limits (10 orders per 10 minutes per ip), as real buyers are. */
+  page: async ({ page }, use, testInfo) => {
+    let hash = 0
+    for (const ch of `${testInfo.testId}:${testInfo.retry}`) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+    await page
+      .context()
+      .setExtraHTTPHeaders({ "x-forwarded-for": `10.${(hash >> 16) & 255}.${(hash >> 8) & 255}.${hash & 255}` })
+    await use(page)
+  },
+
   home: async ({ appLocale }, use) => {
     await use((path = "/") => `${E2E.webUrl}${localePath(appLocale, path)}`)
   },
