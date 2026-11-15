@@ -175,6 +175,28 @@ export const orders = pgTable(
   ],
 )
 
+/** Who moved an order to which status, and why. Written for every admin status change. */
+export const orderAudit = pgTable(
+  "order_audit",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    adminId: uuid("admin_id").references(() => admins.id, { onDelete: "set null" }),
+    /** "mark_paid_manually" or "set_status". */
+    action: text("action").notNull(),
+    fromStatus: orderStatus("from_status").notNull(),
+    toStatus: orderStatus("to_status").notNull(),
+    /** "transfer" | "payoneer" | "cash" | "other" for manual payments. */
+    method: text("method"),
+    reference: text("reference"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("order_audit_order_idx").on(t.orderId, t.createdAt)],
+)
+
 /** Title and price are copied at order time so later edits never rewrite history. */
 export const orderItems = pgTable(
   "order_items",
@@ -328,7 +350,11 @@ export const productVariantsRelations = relations(productVariants, ({ one }) => 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
   product: one(products, { fields: [productImages.productId], references: [products.id] }),
 }))
-export const ordersRelations = relations(orders, ({ many }) => ({ items: many(orderItems) }))
+export const ordersRelations = relations(orders, ({ many }) => ({ items: many(orderItems), audit: many(orderAudit) }))
+export const orderAuditRelations = relations(orderAudit, ({ one }) => ({
+  order: one(orders, { fields: [orderAudit.orderId], references: [orders.id] }),
+  admin: one(admins, { fields: [orderAudit.adminId], references: [admins.id] }),
+}))
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   order: one(orders, { fields: [orderItems.orderId], references: [orders.id] }),
   product: one(products, { fields: [orderItems.productId], references: [products.id] }),

@@ -39,3 +39,15 @@ test("demo descriptions point at real products, always in french, and two are no
   }
   expect(entries.filter(([, text]) => !text.en).map(([ref]) => ref)).toEqual(["0011", "0012"])
 })
+
+test("every paid transfer order has exactly one manual payment audit row", () => {
+  const { orders, audit } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const paidTransfers = orders.filter((o) => o.paymentMethod === "transfer" && o.paidAt)
+  expect(paidTransfers.length).toBeGreaterThan(0)
+  for (const order of paidTransfers) {
+    const rows = audit.filter((a) => a.orderId === order.id)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ action: "mark_paid_manually", method: "transfer", adminId: null })
+  }
+  expect(audit).toHaveLength(paidTransfers.length)
+})

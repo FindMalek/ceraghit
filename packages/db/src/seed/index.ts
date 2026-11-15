@@ -5,6 +5,7 @@ import {
   admins,
   categories,
   locations,
+  orderAudit,
   orderItems,
   orders,
   productImages,
@@ -161,6 +162,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
     )
     await tx.insert(orders).values(scenario.orders)
     await tx.insert(orderItems).values(scenario.items)
+    if (scenario.audit.length) await tx.insert(orderAudit).values(scenario.audit)
     await tx
       .insert(settings)
       .values({ key: "payments", value: { methods: { online: true, cod: true, transfer: true } } })
