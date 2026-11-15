@@ -1,6 +1,6 @@
 # Build context is the repo root: docker build -f apps/web/Dockerfile .
 FROM node:26-alpine AS base
-RUN npm install -g corepack turbo@2.11.9 && corepack enable
+RUN corepack enable && npm install -g turbo@2.11.9
 
 FROM base AS pruner
 WORKDIR /app

@@ -31,7 +31,7 @@ test("responses are hardened and /health is never cached", async () => {
 
 test("production sends HSTS and hides the api docs and spec", async () => {
   const fetch = serverFor("production")
-  for (const path of ["/v1/docs", "/v1/openapi.json", "/docs", "/"]) {
+  for (const path of ["/v1/docs", "/v1/docs/", "/v1/openapi.json", "/v1/openapi.json/", "/docs", "/"]) {
     const res = await fetch(get(path))
     expect(res.status).toBe(404)
     expect(res.headers.get("strict-transport-security")).toContain("max-age=63072000")

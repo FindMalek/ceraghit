@@ -15,7 +15,7 @@ import {
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
 
-const DOCS_PATHS = ["/", "/docs", "/v1/docs", "/v1/openapi.json"]
+const DOCS_REDIRECTS = ["/", "/docs"]
 const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
 
 /**
@@ -31,23 +31,30 @@ export function createServer(services: Services) {
   const rpc = new RPCHandler(appRouter, {
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
   })
+  const production = services.config.appEnv === "production"
   const rest = new OpenAPIHandler(appRouter, {
     plugins: [
       new ResponseHeadersPlugin(),
-      new OpenAPIReferencePlugin({
-        docsPath: "/docs",
-        specPath: "/openapi.json",
-        docsTitle: "Ceraghit API",
-        schemaConverters: [new ZodToJsonSchemaConverter()],
-        specGenerateOptions: {
-          info: { title: "Ceraghit API", version: "1.0.0", description: "Catalogue, orders, payments and the admin." },
-          servers: [{ url: `${services.config.apiPublicUrl}/v1` }],
-        },
-      }),
+      ...(production
+        ? []
+        : [
+            new OpenAPIReferencePlugin({
+              docsPath: "/docs",
+              specPath: "/openapi.json",
+              docsTitle: "Ceraghit API",
+              schemaConverters: [new ZodToJsonSchemaConverter()],
+              specGenerateOptions: {
+                info: {
+                  title: "Ceraghit API",
+                  version: "1.0.0",
+                  description: "Catalogue, orders, payments and the admin.",
+                },
+                servers: [{ url: `${services.config.apiPublicUrl}/v1` }],
+              },
+            }),
+          ]),
     ],
   })
-
-  const production = services.config.appEnv === "production"
 
   /** Every response gets the same hardening, whichever branch built it (redirects have immutable headers, so copy). */
   function harden(pathname: string, response: Response): Response {
@@ -67,7 +74,8 @@ export function createServer(services: Services) {
   async function route(request: Request): Promise<Response> {
     const url = new URL(request.url)
     const { pathname } = url
-    if (production && DOCS_PATHS.includes(pathname)) return Response.json({ message: "Not found." }, { status: 404 })
+    if (production && DOCS_REDIRECTS.includes(pathname))
+      return Response.json({ message: "Not found." }, { status: 404 })
     if (pathname === "/" || pathname === "/docs") return Response.redirect(new URL("/v1/docs", request.url), 302)
     if (pathname === "/health") {
       const db = await services.db
