@@ -19,3 +19,8 @@ export function t(locale: AppLocale, key: string): string {
   if (typeof node !== "string") throw new Error(`missing message ${locale}.${key}`)
   return node
 }
+
+/** `t` for messages with simple `{name}` placeholders. Plurals are not handled: assert counts from the DOM instead. */
+export function tv(locale: AppLocale, key: string, vars: Record<string, string | number>): string {
+  return t(locale, key).replace(/\{(\w+)\}/g, (_, name: string) => String(vars[name]))
+}

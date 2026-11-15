@@ -10,10 +10,13 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.11.0",
     "@playwright/test": "1.65.1",
     "@types/node": "catalog:",
+    "@workspace/sdk": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "aws4fetch": "1.0.20",
+    "postgres": "catalog:",
     "typescript": "catalog:"
   }
 }

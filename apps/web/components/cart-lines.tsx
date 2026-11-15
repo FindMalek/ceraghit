@@ -23,6 +23,7 @@ export function CartLines({ lines, onNavigate }: { lines: CartLine[]; onNavigate
             <Link
               href={`/product/${line.slug}`}
               onClick={onNavigate}
+              aria-label={title}
               className="frame relative block size-24 shrink-0 overflow-hidden"
             >
               {line.image && <Image src={imageSrc(line.image)} alt="" fill sizes="96px" className="object-cover" />}
