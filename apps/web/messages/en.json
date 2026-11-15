@@ -413,14 +413,7 @@
         "sections": [
           {
             "title": "Site publisher",
-            "body": [
-              "Ceraghit Creation · [company name]",
-              "Legal form: [to be filled in]",
-              "Address: [studio address]",
-              "Trade licence (patente): [patente number] · Tax ID: [tax identification number]",
-              "Publication director: Sabri Ghit",
-              "Contact: details shown at the bottom of every page."
-            ]
+            "body": ["Publication director: Sabri Ghit", "Contact: details shown at the bottom of every page."]
           },
           {
             "title": "Hosting and technical services",
@@ -485,6 +478,12 @@
           }
         ]
       }
+    },
+    "publisher": {
+      "company": "Company name: <v>{value}</v>",
+      "form": "Legal form: <v>{value}</v>",
+      "address": "Address: <v>{value}</v>",
+      "taxId": "Tax ID (matricule fiscal): <v>{value}</v>"
     }
   },
   "seo": {

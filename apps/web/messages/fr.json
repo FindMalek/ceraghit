@@ -414,10 +414,6 @@
           {
             "title": "Éditeur du site",
             "body": [
-              "Ceraghit Creation · [raison sociale]",
-              "Forme juridique : [à renseigner]",
-              "Adresse : [adresse de l'atelier]",
-              "Patente : [numéro de patente] · Matricule fiscal : [matricule fiscal]",
               "Directeur de la publication : Sabri Ghit",
               "Contact : coordonnées indiquées en bas de chaque page."
             ]
@@ -485,6 +481,12 @@
           }
         ]
       }
+    },
+    "publisher": {
+      "company": "Raison sociale : <v>{value}</v>",
+      "form": "Forme juridique : <v>{value}</v>",
+      "address": "Adresse : <v>{value}</v>",
+      "taxId": "Matricule fiscal : <v>{value}</v>"
     }
   },
   "seo": {
