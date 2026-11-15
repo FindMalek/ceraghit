@@ -43,6 +43,10 @@
     },
     "db:seed:catalog": {
       "cache": false
+    },
+    "api#test": {
+      "dependsOn": ["@workspace/orpc#test"],
+      "env": ["DATABASE_URL"]
     }
   }
 }

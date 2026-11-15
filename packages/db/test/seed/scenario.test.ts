@@ -80,3 +80,18 @@ test("the demo has one sent and one failed mail on real orders, so the failures 
   expect(failed.error).toBe("resend 503: service unavailable")
   expect(orders.find((o) => o.id === failed.orderId)?.email).toBe(failed.to)
 })
+
+test("demo job runs cover stale, failed, interrupted, healthy and never run", () => {
+  const now = new Date("2026-10-22T12:00:00Z")
+  const { jobRuns } = buildScenario(now, products)
+  const latest = (name: string) =>
+    jobRuns.filter((r) => r.name === name).sort((a, b) => b.startedAt!.getTime() - a.startedAt!.getTime())[0]
+  const hours = (name: string) => (now.getTime() - latest(name)!.startedAt!.getTime()) / 3_600_000
+  expect(latest("cleanup-uploads")).toMatchObject({ ok: true })
+  expect(hours("cleanup-uploads")).toBeGreaterThan(26)
+  expect(latest("release-holds")).toMatchObject({ ok: false, error: "Délai dépassé" })
+  expect(jobRuns.filter((r) => r.name === "release-holds").some((r) => r.ok)).toBe(true)
+  expect(latest("track-shipments")).toMatchObject({ ok: null, finishedAt: null })
+  expect(latest("retry-mail")).toMatchObject({ ok: true })
+  expect(latest("ai-usage-rollover")).toBeUndefined()
+})

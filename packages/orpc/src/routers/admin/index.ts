@@ -2,6 +2,7 @@ import { authRouter } from "./auth"
 import { categoriesRouter, productsRouter } from "./catalog"
 import { helpRouter } from "./help"
 import { invoicesRouter } from "./invoices"
+import { jobsRouter } from "./jobs"
 import { mailRouter } from "./mail"
 import { ordersRouter, requestsRouter } from "./orders"
 import { overview } from "./overview"
@@ -16,6 +17,7 @@ export const adminRouter = {
   categories: categoriesRouter,
   orders: ordersRouter,
   invoices: invoicesRouter,
+  jobs: jobsRouter,
   mail: mailRouter,
   requests: requestsRouter,
   locations: locationsRouter,
