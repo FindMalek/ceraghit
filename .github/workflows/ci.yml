@@ -114,6 +114,7 @@ jobs:
           node-version: "24"
       - run: pnpm install --frozen-lockfile
       - name: No high or critical advisories in production dependencies
+        shell: bash
         run: |
           for _ in 1 2; do
             status=0

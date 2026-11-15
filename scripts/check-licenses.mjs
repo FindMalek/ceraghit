@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
-const BLOCKED = /(^|[^A-Z])(A?GPL|LGPL|SSPL|BUSL|UNKNOWN|UNLICENSED)/i
+const BLOCKED = /(^|[^A-Z])(A?GPL|LGPL|SSPL|BUSL|UNKNOWN|UNLICENSED|CUSTOM|SEE LICENSE)/i
 
 function alternativeAllowed(expression) {
   return expression.split(/\s+AND\s+/i).every((term) => !BLOCKED.test(term))

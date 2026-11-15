@@ -21,4 +21,6 @@ test("an OR expression passes when one side is permissive", () => {
   assert.equal(licenseAllowed("(MIT OR GPL-3.0-only)"), true)
   assert.equal(licenseAllowed("MIT AND GPL-3.0-only"), false)
   assert.equal(licenseAllowed("UNKNOWN"), false)
+  assert.equal(licenseAllowed("SEE LICENSE IN LICENSE.md"), false)
+  assert.equal(licenseAllowed("Custom: https://example.com/license"), false)
 })
