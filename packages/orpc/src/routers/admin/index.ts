@@ -1,5 +1,6 @@
 import { authRouter } from "./auth"
 import { categoriesRouter, productsRouter } from "./catalog"
+import { helpRouter } from "./help"
 import { ordersRouter, requestsRouter } from "./orders"
 import { overview } from "./overview"
 import { locationsRouter, settingsRouter, uploadsRouter } from "./studio"
@@ -15,4 +16,5 @@ export const adminRouter = {
   locations: locationsRouter,
   settings: settingsRouter,
   uploads: uploadsRouter,
+  help: helpRouter,
 }
