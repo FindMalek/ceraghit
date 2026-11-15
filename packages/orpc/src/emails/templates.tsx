@@ -324,3 +324,26 @@ export const requestHtml = (request: StudioRequest, webUrl: string, contactEmail
   render(<RequestEmail request={request} webUrl={webUrl} contactEmail={contactEmail} />)
 export const orderExpiredHtml = (order: ConfirmationOrder, ctx: MailContext, days: number) =>
   render(<OrderExpiredEmail order={order} ctx={ctx} days={days} />)
+
+export function TestEmail({
+  env,
+  when,
+  webUrl,
+  contactEmail,
+}: {
+  env: string
+  when: string
+  webUrl: string
+  contactEmail: string
+}) {
+  return (
+    <EmailLayout locale="fr" preview="Email de test Ceraghit" webUrl={webUrl} contactEmail={contactEmail}>
+      <Text style={title}>Email de test</Text>
+      <Text style={para}>Cet email confirme que l'envoi depuis votre boutique fonctionne.</Text>
+      <Text style={para}>Environnement : {env}</Text>
+      <Text style={para}>Date : {when} UTC</Text>
+    </EmailLayout>
+  )
+}
+export const testHtml = (env: string, when: string, webUrl: string, contactEmail: string) =>
+  render(<TestEmail env={env} when={when} webUrl={webUrl} contactEmail={contactEmail} />)

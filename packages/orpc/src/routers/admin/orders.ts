@@ -18,7 +18,7 @@ import {
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
 import { z } from "zod"
 import { tryIssueInvoice } from "../../lib/invoices"
-import { cancelOrder, markPaidManually, recordAudit, releaseExpiredHolds } from "../../lib/orders"
+import { cancelOrder, LAZY_SWEEP_LIMIT, markPaidManually, recordAudit, releaseExpiredHolds } from "../../lib/orders"
 import { getPaymentSettings } from "../../lib/settings"
 import { adminProcedure } from "../../procedures"
 
@@ -67,7 +67,7 @@ export const ordersRouter = {
     .input(orderListQuerySchema)
     .output(z.array(adminOrderSchema))
     .handler(async ({ context, input }) => {
-      await releaseExpiredHolds(context, context.now())
+      await releaseExpiredHolds(context, context.now(), { limit: LAZY_SWEEP_LIMIT })
       const { holds } = await getPaymentSettings(context.db, context.config)
       const search = input.q ? `%${input.q.replace(/[%_]/g, "")}%` : null
       const rows = await context.db.query.orders.findMany({

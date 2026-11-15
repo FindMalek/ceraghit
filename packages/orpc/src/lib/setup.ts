@@ -1,6 +1,7 @@
 import { admins } from "@workspace/db"
 import {
   bankFromProfile,
+  type EmailDomain,
   type OptionalSetupStepId,
   SETUP_OPTIONAL_STEPS,
   SETUP_REQUIRED_STEPS,
@@ -9,6 +10,8 @@ import {
 } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
+import { loadEmailDomain } from "./email-domain"
+import { emailDomainVerified } from "./resend-domains"
 import { getShopProfile, type ShopProfileRow } from "./shop-profile"
 
 export interface SetupInput {
@@ -72,13 +75,26 @@ export function computeSetup({ owner, profile, integrations }: SetupInput): Setu
   }
 }
 
+const DOMAIN_TTL_MS = 60_000
+let domainCache: { at: number; key: string; state: EmailDomain } | null = null
+
+/** Read only (never asks Resend to verify) and cached, so the setup status does not hit Resend on every load. */
+async function cachedEmailDomain(ctx: Services): Promise<EmailDomain> {
+  const key = `${ctx.config.emailFrom}|${ctx.config.resendApiKey ?? ""}`
+  const at = ctx.now().getTime()
+  if (domainCache && domainCache.key === key && at - domainCache.at < DOMAIN_TTL_MS) return domainCache.state
+  const state = await loadEmailDomain(ctx)
+  domainCache = { at, key, state }
+  return state
+}
+
 /** Each lane that builds an integration replaces its check here. Must not throw; false on any error. */
 export const INTEGRATION_CHECKS: Record<OptionalSetupStepId, (ctx: Services) => Promise<boolean>> = {
   konnect: async (ctx) => ctx.payments.name === "konnect", // replaced by the vault check
   aramex: async () => false,
   payoneer: async () => false,
   groq: async () => false,
-  emailDomain: async (ctx) => !!ctx.config.emailFrom && !ctx.config.emailFrom.includes("resend.dev"),
+  emailDomain: async (ctx) => emailDomainVerified((await cachedEmailDomain(ctx)).state),
 }
 
 export async function loadSetup(ctx: Services, adminId: string): Promise<SetupStatus> {

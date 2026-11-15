@@ -1,7 +1,8 @@
-import { categories, customRequests, type Db, locations, productImages, uploads } from "@workspace/db"
+import { categories, customRequests, type Db, locations, media, productImages, uploads } from "@workspace/db"
 import { STORAGE_QUOTA_BYTES } from "@workspace/sdk"
-import { eq, isNotNull, sql } from "drizzle-orm"
+import { and, eq, exists, isNotNull, or, sql } from "drizzle-orm"
 import { publicError } from "../errors"
+import { MEDIA_REFERENCES } from "./media"
 import type { Storage } from "./storage"
 
 export async function storageUsage(db: Db) {
@@ -23,13 +24,24 @@ export async function reserveUpload(
   await db.insert(uploads).values(file).onConflictDoNothing()
 }
 
-/** `s3:<key>` values that something still shows: product, category and location images and customer request photos. */
+/**
+ * Bucket keys that something still shows: the legacy `s3:` strings of product, category and location images, customer
+ * request photos, bucket media referenced by id through `MEDIA_REFERENCES`, and every media the owner pinned (`keep`).
+ */
 async function referencedKeys(db: Db): Promise<Set<string>> {
-  const [fromProducts, fromCategories, fromLocations, fromRequests] = await Promise.all([
+  const referenced = or(
+    eq(media.keep, true),
+    ...MEDIA_REFERENCES.map((r) => exists(db.select({ one: sql`1` }).from(r.table).where(eq(r.column, media.id)))),
+  )
+  const [fromProducts, fromCategories, fromLocations, fromRequests, fromMedia] = await Promise.all([
     db.select({ v: productImages.image }).from(productImages),
     db.select({ v: categories.image }).from(categories).where(isNotNull(categories.image)),
     db.select({ v: locations.image }).from(locations).where(isNotNull(locations.image)),
     db.select({ v: customRequests.images }).from(customRequests),
+    db
+      .select({ key: media.key })
+      .from(media)
+      .where(and(eq(media.source, "bucket"), referenced)),
   ])
   const values = [
     ...fromProducts.map((r) => r.v),
@@ -37,7 +49,8 @@ async function referencedKeys(db: Db): Promise<Set<string>> {
     ...fromLocations.map((r) => r.v),
     ...fromRequests.flatMap((r) => r.v),
   ]
-  return new Set(values.filter((v): v is string => typeof v === "string" && v.startsWith("s3:")).map((v) => v.slice(3)))
+  const keys = values.filter((v): v is string => typeof v === "string" && v.startsWith("s3:")).map((v) => v.slice(3))
+  return new Set([...keys, ...fromMedia.map((r) => r.key)])
 }
 
 const DAY = 86_400_000

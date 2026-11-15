@@ -82,18 +82,22 @@ async function restock(tx: Tx, orderId: string): Promise<void> {
   }
 }
 
+/** One lazy sweep (a page load) releases at most this many offline orders; the cron has no such cap. */
+export const LAZY_SWEEP_LIMIT = 20
+
 /**
  * Cancels unpaid orders past their hold and puts the pieces back. Card orders hold 45 minutes; transfer and cash on
  * delivery orders hold the days the owner set (never for a method set to null). Each release goes through
- * `cancelOrder` (row lock, restock, audit) and the customer is told once, after it committed.
+ * `cancelOrder` (row lock, restock, audit). It never sends mail: `sendExpiryMails` does, from the cron.
+ * `limit` caps the offline releases of one call, `only` (tests) restricts it to those orders.
  */
 export async function releaseExpiredHolds(
   services: Services,
   now: Date,
-  /** Tests only: restrict the sweep to these orders so it cannot touch rows it did not create. */
-  only?: string[],
+  opts: { limit?: number; only?: string[] } = {},
 ): Promise<number> {
   const { db } = services
+  const { only } = opts
   const cutoff = new Date(now.getTime() - HOLD_MINUTES * 60_000)
   const online = await db.transaction(async (tx) => {
     const stale = await tx
@@ -117,6 +121,8 @@ export async function releaseExpiredHolds(
   for (const method of ["transfer", "cod"] as const) {
     const days = holdDays(method, holds)
     if (days === null) continue
+    const room = opts.limit === undefined ? undefined : opts.limit - offline
+    if (room !== undefined && room <= 0) break
     const due = await db
       .select({ id: orders.id })
       .from(orders)
@@ -128,6 +134,8 @@ export async function releaseExpiredHolds(
           only ? inArray(orders.id, only) : undefined,
         ),
       )
+      .orderBy(orders.createdAt)
+      .limit(room ?? 1000)
     for (const { id } of due) {
       const released = await cancelOrder(db, id, "cancelled", {
         adminId: null,
@@ -135,21 +143,42 @@ export async function releaseExpiredHolds(
         note: `délai de paiement dépassé (${days} j)`,
         onlyPending: true,
       })
-      if (!released) continue
-      offline++
-      await sendOrderExpiredEmail(services, id, days)
+      if (released) offline++
     }
   }
   return online + offline
 }
 
+/** Tells the customer of every released order not mailed yet. Best effort, called by the cron only. */
+export async function sendExpiryMails(services: Services, limit = 50): Promise<number> {
+  const { db } = services
+  const rows = await db
+    .select({ orderId: orderAudit.orderId, note: orderAudit.note })
+    .from(orderAudit)
+    .where(
+      and(
+        eq(orderAudit.action, "hold_expired"),
+        sql`not exists (select 1 from mail_log m where m.order_id = ${orderAudit.orderId} and m.kind = 'order_expired')`,
+      ),
+    )
+    .orderBy(orderAudit.createdAt)
+    .limit(limit)
+  for (const { orderId, note } of rows) {
+    const days = Number(/\((\d+) j\)/.exec(note ?? "")?.[1] ?? 0)
+    await sendOrderExpiredEmail(services, orderId, days)
+  }
+  return rows.length
+}
+
 let lastSweep = 0
 
-/** Catalogue reads free expired holds too, at most once a minute per instance. */
+/** Catalogue reads free expired holds too, at most once a minute per instance and 20 offline orders at a time. */
 export async function sweepExpiredHolds(services: Services, now: Date): Promise<void> {
   if (now.getTime() - lastSweep < 60_000) return
   lastSweep = now.getTime()
-  await releaseExpiredHolds(services, now).catch((error) => console.error("[holds] sweep failed", error))
+  await releaseExpiredHolds(services, now, { limit: LAZY_SWEEP_LIMIT }).catch((error) =>
+    console.error("[holds] sweep failed", error),
+  )
 }
 
 function newNumber(): string {
@@ -174,7 +203,7 @@ export async function createOrder(services: Services, input: OrderInput) {
       "This payment method is not available for your country.",
     )
   }
-  await releaseExpiredHolds(services, now())
+  await releaseExpiredHolds(services, now(), { limit: LAZY_SWEEP_LIMIT })
 
   const ids = [...new Set(input.items.map((i) => i.productId))]
   const rows = await findProducts(db, {

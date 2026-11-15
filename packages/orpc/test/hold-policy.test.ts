@@ -6,7 +6,7 @@ import { eq, inArray } from "drizzle-orm"
 import type { Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import type { Mail } from "../src/lib/mailer"
-import { cancelOrder, releaseExpiredHolds } from "../src/lib/orders"
+import { cancelOrder, releaseExpiredHolds, sendExpiryMails } from "../src/lib/orders"
 import { DemoProvider } from "../src/lib/payments"
 import { getPaymentSettings, savePaymentSettings } from "../src/lib/settings"
 
@@ -35,7 +35,7 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
     },
   }
   const mine: string[] = []
-  const sweep = () => releaseExpiredHolds(services, clock, mine)
+  const sweep = (limit?: number) => releaseExpiredHolds(services, clock, { only: mine, limit })
   const ours = (): Mail[] => sent.filter((m) => m.to.startsWith(tag))
   let categoryId = ""
   let originalPayments: unknown
@@ -150,12 +150,15 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
       fromStatus: "pending_payment",
       toStatus: "cancelled",
     })
+    expect(ours()).toHaveLength(0) // a sweep releases, only sendExpiryMails tells the customer
+    await sendExpiryMails(services)
     const mails = ours().filter((m) => m.to === day8.order.email)
     expect(mails).toHaveLength(1)
     expect(mails[0]!.subject).toContain(day8.order.number)
     expect(ours().filter((m) => m.to === day6.order.email)).toHaveLength(0)
 
     await sweep()
+    await sendExpiryMails(services)
     expect((await state(day8)).audit).toHaveLength(1)
     expect(ours().filter((m) => m.to === day8.order.email)).toHaveLength(1)
   })
@@ -195,5 +198,44 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
       .where(eq(orders.id, card.order.id))
     await sweep()
     expect(await state(card)).toMatchObject({ status: "cancelled", stock: 1 })
+  })
+
+  test("a lazy sweep releases at most its limit, the next one continues", async () => {
+    await setHolds({ transferDays: 7 })
+    const a = await place("transfer", 10)
+    const b = await place("transfer", 9)
+    const c = await place("transfer", 8)
+    expect(await sweep(2)).toBe(2)
+    expect((await Promise.all([a, b, c].map(state))).map((o) => o.status)).toEqual([
+      "cancelled",
+      "cancelled",
+      "pending_payment",
+    ])
+    expect(await sweep(2)).toBe(1)
+    expect((await state(c)).status).toBe("cancelled")
+  })
+
+  test("a failing mailer does not undo or fail the release", async () => {
+    await setHolds({ transferDays: 7 })
+    const late = await place("transfer", 9)
+    await sweep()
+    const failing: Services = {
+      ...services,
+      mailer: {
+        send: async () => {
+          throw new Error("smtp down")
+        },
+      },
+    }
+    await expect(sendExpiryMails(failing)).resolves.toBeGreaterThanOrEqual(1)
+    expect((await state(late)).status).toBe("cancelled")
+  })
+
+  test("a stored row from before holds existed reads as the defaults", async () => {
+    await db
+      .update(settings)
+      .set({ value: { methods: { online: false, cod: true, transfer: true } } })
+      .where(eq(settings.key, "payments"))
+    expect((await getPaymentSettings(db, services.config)).holds).toEqual(DEFAULT_HOLDS)
   })
 })

@@ -584,6 +584,25 @@ export const mailLogItemSchema = z.object({
 })
 export type MailLogItem = z.infer<typeof mailLogItemSchema>
 
+export const emailDomainSchema = z.object({
+  state: z.enum(["verified", "pending", "failed", "not_found", "restricted_key", "not_configured", "unavailable"]),
+  domain: z.string().nullable(),
+  from: z.string(),
+  records: z.array(
+    z.object({
+      purpose: z.string(),
+      type: z.string(),
+      name: z.string(),
+      value: z.string(),
+      priority: z.number().int().nullable(),
+      status: z.string(),
+    }),
+  ),
+  /** Suggested, never required. */
+  dmarc: z.object({ name: z.string(), value: z.string() }).nullable(),
+})
+export type EmailDomain = z.infer<typeof emailDomainSchema>
+
 /** What the studio's plan stores: dashboard images and customer photos together. */
 export const STORAGE_QUOTA_BYTES = 2_500_000_000
 /** The dashboard shrinks every image first, so anything past this is not a normal photo. */
@@ -618,3 +637,27 @@ export const shippingQuoteSchema = z.object({
   freeOverMinor: z.number().int().nullable(),
   subtotalMinor: z.number().int(),
 })
+
+export const mediaSourceSchema = z.enum(["bucket", "bundled", "external"])
+export const mediaSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  /** What `imageSrc()` accepts: `s3:<key>` for a bucket file, the path or URL otherwise. */
+  src: z.string(),
+  filename: z.string(),
+  originalName: z.string().nullable(),
+  mime: z.string(),
+  bytes: z.number().int(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  alt: localizedSchema.nullable(),
+  tags: z.array(z.string()),
+  source: mediaSourceSchema,
+  keep: z.boolean(),
+  usageCount: z.number().int(),
+  unusedSince: z.string().nullable(),
+  /** `unusedSince` + 30 days, null when used or pinned. */
+  deletesAt: z.string().nullable(),
+  createdAt: z.string(),
+})
+export type Media = z.infer<typeof mediaSchema>

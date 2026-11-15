@@ -14,6 +14,8 @@ export interface Services {
   storage: Storage | null
   auth: AdminAuth
   now: () => Date
+  /** Tests pass a fake for the Resend domains api. */
+  http?: typeof fetch
   /** Waits between mail retries; tests pass an instant one. */
   sleep?: (ms: number) => Promise<void>
   config: {
@@ -33,6 +35,8 @@ export interface Services {
     proxySecret?: string
     /** The From header of outgoing mail, read by the setup check for a verified sending domain. */
     emailFrom?: string
+    /** Server only, never sent to a client: reads the sending domain's DNS state. */
+    resendApiKey?: string
   }
 }
 

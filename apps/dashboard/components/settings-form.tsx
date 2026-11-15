@@ -11,6 +11,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import Link from "next/link"
 import { type FormEvent, useState } from "react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { EmailDomainCard } from "@/components/email-domain-card"
 import { JobsStatus } from "@/components/jobs-status"
 import { LocalizedField } from "@/components/localized-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
@@ -68,6 +69,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
   return (
     <form onSubmit={submit} className="flex min-h-full flex-col">
       <FieldGroup className="gap-8 px-4 py-6 md:max-w-4xl md:px-6">
+        <EmailDomainCard />
         <StorageUsage />
         <JobsStatus />
         <p className="text-muted-foreground text-sm">
