@@ -38,7 +38,7 @@ for (const app of readdirSync("apps")) {
 
 const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], { encoding: "utf8" })
 for (const path of files.split("\n")) {
-  if (/\.(test|spec)\.tsx?$/.test(path) && !`/${path}`.includes("/test/"))
+  if (/\.(test|spec)\.tsx?$/.test(path) && !/^((apps|packages)\/[^/]+\/)?test\//.test(path))
     errors.push(`move ${path} into the package's test/ folder`)
 }
 
