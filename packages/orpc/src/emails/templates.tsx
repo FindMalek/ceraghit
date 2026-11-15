@@ -15,6 +15,7 @@ import {
 import { render } from "@react-email/render"
 import { type Currency, formatMoney } from "@workspace/sdk"
 import type { CSSProperties, ReactNode } from "react"
+import { invoiceUrl } from "../lib/invoices"
 import { mailColors as c, MAIL_SERIF } from "./brand"
 import type { ConfirmationOrder, MailContext } from "./confirmation"
 import { asLocale, EMAIL_COPY, type Locale } from "./copy"
@@ -160,10 +161,10 @@ function Bank({ order, ctx, locale }: { order: ConfirmationOrder; ctx: MailConte
   )
 }
 
-function TrackLink({ href, locale }: { href: string; locale: Locale }) {
+function TrackLink({ href, locale, label }: { href: string; locale: Locale; label?: string }) {
   return (
     <Text style={para}>
-      {EMAIL_COPY[locale].common.link}{" "}
+      {label ?? EMAIL_COPY[locale].common.link}{" "}
       <Link href={href} style={{ color: c.goldTitle }}>
         {ltr(href, locale)}
       </Link>
@@ -177,9 +178,10 @@ interface CustomerProps {
   preview: string
   intro: string
   withBank: boolean
+  invoiceHref?: string
 }
 
-function CustomerOrder({ order, ctx, preview, intro, withBank }: CustomerProps) {
+function CustomerOrder({ order, ctx, preview, intro, withBank, invoiceHref }: CustomerProps) {
   const locale = asLocale(order.locale)
   const c1 = EMAIL_COPY[locale]
   return (
@@ -196,6 +198,7 @@ function CustomerOrder({ order, ctx, preview, intro, withBank }: CustomerProps) 
       <Totals order={order} locale={locale} />
       {withBank ? <Bank order={order} ctx={ctx} locale={locale} /> : null}
       <TrackLink href={orderUrl(ctx.webUrl, order)} locale={locale} />
+      {invoiceHref ? <TrackLink href={invoiceHref} locale={locale} label={c1.common.invoiceLink} /> : null}
       <Text style={para}>{c1.common.bye}</Text>
     </EmailLayout>
   )
@@ -216,8 +219,17 @@ export function ConfirmationEmail({ order, ctx }: { order: ConfirmationOrder; ct
 }
 
 export function PaymentReceivedEmail({ order, ctx }: { order: ConfirmationOrder; ctx: MailContext }) {
-  const k = EMAIL_COPY[asLocale(order.locale)].confirmation
-  return <CustomerOrder order={order} ctx={ctx} preview={k.subject(order.number)} intro={k.paid} withBank={false} />
+  const c1 = EMAIL_COPY[asLocale(order.locale)]
+  return (
+    <CustomerOrder
+      order={order}
+      ctx={ctx}
+      preview={c1.paymentReceived.subject(order.number)}
+      intro={c1.confirmation.paid}
+      withBank={false}
+      invoiceHref={invoiceUrl(ctx.webUrl, order)}
+    />
+  )
 }
 
 /** Studio mails stay in French. */

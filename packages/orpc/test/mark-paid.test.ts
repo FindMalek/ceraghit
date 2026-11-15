@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createRouterClient } from "@orpc/server"
-import { createDb, invoiceCounters, invoices, orderAudit, orders } from "@workspace/db"
+import { createDb, invoiceCounters, invoices, mailLog, orderAudit, orders } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { eq, inArray, like } from "drizzle-orm"
@@ -154,6 +154,19 @@ describe.skipIf(!url)("manual payment confirmation", () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({ action: "mark_paid_manually", method: "transfer", toStatus: "paid" })
     expect(sent.filter((m) => m.to === o.email)).toHaveLength(1)
+  })
+
+  test.each([
+    ["fr", "Paiement reçu pour votre commande"],
+    ["en", "Payment received for your order"],
+    ["ar", "تم استلام الدفع لطلبك"],
+  ])("marking paid logs one payment received mail in %s", async (locale, start) => {
+    const o = await order({ locale, email: `mp-${locale}-${seq}@example.test` })
+    await owner.orders.markPaidManually(echo(o))
+    const rows = await db.select().from(mailLog).where(eq(mailLog.orderId, o.id))
+    expect(rows.map((r) => r.kind)).toEqual(["payment_received"])
+    expect(rows[0]!.subject).toBe(`${start} ${o.number}`)
+    expect(rows[0]!.text).toContain("/invoice?t=")
   })
 
   test("paying and cancelling at the same time never leaves a state the audit does not explain", async () => {

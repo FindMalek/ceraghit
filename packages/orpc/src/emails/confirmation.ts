@@ -1,4 +1,5 @@
 import type { BankDetails } from "@workspace/sdk"
+import { invoiceUrl } from "../lib/invoices"
 import type { Mail } from "../lib/mailer"
 import { asLocale, EMAIL_COPY } from "./copy"
 import { bankBlock, greeting, itemLines, join, type MailOrder, orderFooter, totalLines } from "./layout"
@@ -89,7 +90,7 @@ export async function renderPaymentReceived(order: ConfirmationOrder, ctx: MailC
   return {
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
-    subject: c.confirmation.subject(order.number),
+    subject: c.paymentReceived.subject(order.number),
     html: await paymentReceivedHtml(order, ctx),
     text: join(
       [
@@ -99,7 +100,7 @@ export async function renderPaymentReceived(order: ConfirmationOrder, ctx: MailC
         ...itemLines(order, locale),
         "",
         ...totalLines(order, locale, c),
-        ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order) }, locale),
+        ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order), invoiceUrl: invoiceUrl(ctx.webUrl, order) }, locale),
       ],
       locale,
     ),

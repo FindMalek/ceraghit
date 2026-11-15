@@ -63,7 +63,7 @@ export function orderFooter(c: EmailCopy, links: { orderUrl: string; invoiceUrl?
   return [
     "",
     `${c.common.link} ${ltr(links.orderUrl, locale)}`,
-    ...(links.invoiceUrl ? [ltr(links.invoiceUrl, locale)] : []),
+    ...(links.invoiceUrl ? [`${c.common.invoiceLink} ${ltr(links.invoiceUrl, locale)}`] : []),
     "",
     c.common.bye,
   ]

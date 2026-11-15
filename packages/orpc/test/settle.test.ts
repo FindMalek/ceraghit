@@ -4,6 +4,7 @@ import {
   createDb,
   invoiceCounters,
   invoices,
+  mailLog,
   orderAudit,
   orderItems,
   orders,
@@ -135,6 +136,8 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     const toBuyer = sent.filter((m) => m.to === "st-buyer@example.test")
     expect(toBuyer).toHaveLength(1)
     expect(await audit(o.id)).toHaveLength(0)
+    const kinds = (await db.select().from(mailLog).where(eq(mailLog.orderId, o.id))).map((r) => r.kind)
+    expect(kinds).not.toContain("payment_received")
   })
 
   test("an amount off by one stays pending and leaves one gateway_mismatch row, however often it is asked", async () => {
