@@ -5,7 +5,7 @@ Next.js 16 App Router, next-intl, TanStack Query + oRPC, shadcn from `@workspace
 
 - Routes live under `app/[locale]` (`fr` default without prefix, `en`, `ar` RTL). `proxy.ts` is next-intl's middleware.
   French is the base; `en.json` and `ar.json` are real translations with the same keys and ICU arguments, enforced by
-  `lib/messages.test.ts` (add every new string to all three). `ENABLED_LOCALES` (`lib/locales.ts`) drives the switcher,
+  `test/lib/messages.test.ts` (add every new string to all three). `ENABLED_LOCALES` (`lib/locales.ts`) drives the switcher,
   hreflang and the sitemap. DB text is `Localized`, read with `pick()`; catalogue seed text is translated in `packages/db/src/seed/translations.ts`.
 - Arabic is RTL: logical utilities only, `rtl:rotate-180` on directional icons, amounts isolated by `formatMoney`, refs /
   phones / emails in `<bdi>`, Amiri applied to all font utilities by `[lang="ar"]` in `packages/ui` globals.

@@ -10,6 +10,7 @@ alwaysApply: true
 - No comments that restate the code. Keep only non-obvious constraints, footguns and product decisions.
 - Biome formats and lints (`pnpm check`). No `any` without a reason in a comment.
 - Money is always integer minor units (TND millimes, EUR cents). Format with `formatMoney` from `@workspace/sdk`.
-- Tests: `bun test` next to the code, one test per behavior, real Postgres for api tests (`DATABASE_URL`), mock only
-  network and time. Run only touched packages while iterating.
+- Tests: `bun test`, files in the package's `test/` folder mirroring the source path (`packages/orpc/test/router.test.ts`),
+  never beside the source; e2e in `/test/e2e`. One test per behavior, real Postgres for api tests (`DATABASE_URL`), mock
+  only network and time. Run only touched packages while iterating. `pnpm rules:check` fails on a test outside `test/`.
 - Accessibility: labelled controls, 44px touch targets, AA contrast, visible focus. Mobile first, then desktop.

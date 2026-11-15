@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from "bun:test"
 import type { Product } from "@workspace/sdk"
-import { itemCount, subtotal, useCartStore } from "./cart-store"
+import { itemCount, subtotal, useCartStore } from "../../lib/cart-store"
 
 const piece = (over: Partial<Product>): Product => ({
   id: "p1",
