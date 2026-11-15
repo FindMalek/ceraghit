@@ -60,6 +60,17 @@ describe.skipIf(!url)("demo seed states", () => {
     expect((await getShopProfile(db)).legalName).toBe("Atelier Sabri")
   })
 
+  test("the demo seed is refused in production", async () => {
+    const previous = process.env.APP_ENV
+    process.env.APP_ENV = "production"
+    try {
+      await expect(seed(createDb(url!, 1), { demo: true })).rejects.toThrow("APP_ENV=production")
+    } finally {
+      if (previous === undefined) delete process.env.APP_ENV
+      else process.env.APP_ENV = previous
+    }
+  })
+
   test("the catalogue seed for production keeps the catalogue descriptions and adds no demo content", async () => {
     const db = await freshDb({ catalog: true })
     const rows = await db.select({ ref: products.ref, description: products.description }).from(products)

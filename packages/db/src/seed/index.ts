@@ -47,6 +47,8 @@ export interface SeedOptions {
 }
 
 export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean; catalog: boolean; demo: boolean }> {
+  if (opts.demo && process.env.APP_ENV === "production")
+    throw new Error("the demo seed is refused when APP_ENV=production")
   const done = { admin: false, catalog: false, demo: false }
   if (opts.admin?.email && opts.admin.password) {
     const passwordHash = await hashPassword(opts.admin.password)
