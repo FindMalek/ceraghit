@@ -25,7 +25,8 @@ env:
 
 jobs:
   migrate:
-    if: vars.DEPLOY_ENABLED == 'true'
+    # Manual runs from another branch must not migrate Neon; deploy and smoke need this job, so they skip too.
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted, the-keep]
     timeout-minutes: 10
     environment: production
