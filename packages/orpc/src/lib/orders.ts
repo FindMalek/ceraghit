@@ -87,7 +87,12 @@ async function restock(tx: Tx, orderId: string): Promise<void> {
  * delivery orders hold the days the owner set (never for a method set to null). Each release goes through
  * `cancelOrder` (row lock, restock, audit) and the customer is told once, after it committed.
  */
-export async function releaseExpiredHolds(services: Services, now: Date): Promise<number> {
+export async function releaseExpiredHolds(
+  services: Services,
+  now: Date,
+  /** Tests only: restrict the sweep to these orders so it cannot touch rows it did not create. */
+  only?: string[],
+): Promise<number> {
   const { db } = services
   const cutoff = new Date(now.getTime() - HOLD_MINUTES * 60_000)
   const online = await db.transaction(async (tx) => {
@@ -95,7 +100,12 @@ export async function releaseExpiredHolds(services: Services, now: Date): Promis
       .update(orders)
       .set({ status: "cancelled" })
       .where(
-        and(eq(orders.status, "pending_payment"), eq(orders.paymentMethod, "online"), lt(orders.createdAt, cutoff)),
+        and(
+          eq(orders.status, "pending_payment"),
+          eq(orders.paymentMethod, "online"),
+          lt(orders.createdAt, cutoff),
+          only ? inArray(orders.id, only) : undefined,
+        ),
       )
       .returning({ id: orders.id })
     for (const { id } of stale) await restock(tx, id)
@@ -115,6 +125,7 @@ export async function releaseExpiredHolds(services: Services, now: Date): Promis
           eq(orders.status, "pending_payment"),
           eq(orders.paymentMethod, method),
           lt(orders.createdAt, new Date(now.getTime() - days * 864e5)),
+          only ? inArray(orders.id, only) : undefined,
         ),
       )
     for (const { id } of due) {

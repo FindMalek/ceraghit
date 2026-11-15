@@ -34,6 +34,8 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
       onlinePayments: true,
     },
   }
+  const mine: string[] = []
+  const sweep = () => releaseExpiredHolds(services, clock, mine)
   const ours = (): Mail[] => sent.filter((m) => m.to.startsWith(tag))
   let categoryId = ""
   let originalPayments: unknown
@@ -92,6 +94,7 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
       unitMinor: 1_200,
       quantity: 1,
     })
+    mine.push(order!.id)
     return { order: order!, productId: product!.id }
   }
   const state = async (o: { order: { id: string }; productId: string }) => {
@@ -136,7 +139,7 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
     await setHolds({ transferDays: 7 })
     const day6 = await place("transfer", 6)
     const day8 = await place("transfer", 8)
-    await releaseExpiredHolds(services, clock)
+    await sweep()
     expect(await state(day6)).toMatchObject({ status: "pending_payment", stock: 0 })
     const released = await state(day8)
     expect(released).toMatchObject({ status: "cancelled", stock: 1 })
@@ -152,7 +155,7 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
     expect(mails[0]!.subject).toContain(day8.order.number)
     expect(ours().filter((m) => m.to === day6.order.email)).toHaveLength(0)
 
-    await releaseExpiredHolds(services, clock)
+    await sweep()
     expect((await state(day8)).audit).toHaveLength(1)
     expect(ours().filter((m) => m.to === day8.order.email)).toHaveLength(1)
   })
@@ -160,13 +163,13 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
   test("cash on delivery never expires by default and follows codDays once set", async () => {
     await setHolds({ codDays: null })
     const cod = await place("cod", 30)
-    await releaseExpiredHolds(services, clock)
+    await sweep()
     expect((await state(cod)).status).toBe("pending_payment")
 
     await setHolds({ codDays: 3 })
     const fresh = await place("cod", 2)
     const old = await place("cod", 4)
-    await releaseExpiredHolds(services, clock)
+    await sweep()
     expect((await state(fresh)).status).toBe("pending_payment")
     expect((await state(old)).status).toBe("cancelled")
     expect((await state(cod)).status).toBe("cancelled")
@@ -175,7 +178,7 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
   test("a paid order is never released, and cancelOrder with onlyPending leaves it alone", async () => {
     await setHolds({ transferDays: 1 })
     const paid = await place("transfer", 20, "paid")
-    await releaseExpiredHolds(services, clock)
+    await sweep()
     expect(await state(paid)).toMatchObject({ status: "paid", stock: 0 })
     expect(
       await cancelOrder(db, paid.order.id, "cancelled", { adminId: null, action: "hold_expired", onlyPending: true }),
@@ -190,7 +193,7 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
       .update(orders)
       .set({ createdAt: new Date(clock.getTime() - 50 * 60_000) })
       .where(eq(orders.id, card.order.id))
-    await releaseExpiredHolds(services, clock)
+    await sweep()
     expect(await state(card)).toMatchObject({ status: "cancelled", stock: 1 })
   })
 })
