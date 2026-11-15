@@ -30,6 +30,17 @@ EUR checkout with foreign Visa/Mastercard and settlement currency; settlement de
 the patente; final rate for international cards; whether the amount field in `GET /payments/{ref}` is minor units (the
 sandbox test decides, `settleOrder` refuses to mark paid on a mismatch).
 
+## sandbox checklist (issue #170)
+
+Run on a preview with `KONNECT_TEST_API_KEY` and `KONNECT_TEST_WALLET_ID`. Record every observed value here.
+
+- [ ] TND order of 12,500 DT: init body `amount` is 12500 (millimes); record what `GET /payments/{ref}` returns in `amount`
+- [ ] EUR order 45,00 EUR: init `amount` 4500, `token` EUR; record returned `amount` and `token`
+- [ ] failed card: order cancelled, stock back
+- [ ] abandoned (no action for `lifespan` 30 min): order cancelled by `releaseExpiredHolds` after 45 min, stock back
+- [ ] webhook received (Dokploy logs) and return page both settle once
+- [ ] if the unit is NOT minor, fix `KonnectProvider.check` conversion and the fixture in one PR
+
 ## current mode (dashboard "Paiements" page)
 
 The owner switches card (Konnect), cash on delivery and bank transfer on or off in the dashboard (`/payments`), stored in
