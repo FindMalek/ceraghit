@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { detectCurrency } from "./currency"
+import { detectCurrency } from "../../lib/currency"
 
 test("Tunisia pays in dinars, every other country in euros, unknown falls back to dinars", () => {
   const at = (country?: string) => detectCurrency(new Headers(country ? { "x-vercel-ip-country": country } : {}))

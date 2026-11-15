@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { fitWithin, formatMoney, imageSrc, pick, slugify, toMinor } from "./format"
+import { fitWithin, formatMoney, imageSrc, pick, slugify, toMinor } from "../src/format"
 
 test("the same product shows its TND and EUR price", () => {
   expect(formatMoney(60_000, "TND", "en")).toBe("60 DT")

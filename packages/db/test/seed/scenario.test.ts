@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { buildScenario } from "./scenario"
+import { buildScenario } from "../../src/seed/scenario"
 
 const products = [
   { id: "a", ref: "0010", title: "Curda Seca", priceTnd: 40_000, priceEur: 1_200 },

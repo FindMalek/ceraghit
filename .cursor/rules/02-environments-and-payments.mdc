@@ -15,7 +15,7 @@ alwaysApply: true
 | `APP_ENV` | local | preview | production |
 
 - `apps/api/src/env.ts` enforces this: production requires live Konnect + R2 + `DEPLOY_ENV=production` and forbids demo
-  seed; every other env forbids `KONNECT_MODE=live`. `env.test.ts` covers it.
+  seed; every other env forbids `KONNECT_MODE=live`. `apps/api/test/env.test.ts` covers it.
 - Secrets are scoped by GitHub Environment (`preview`, `production`). Production secrets (`DATABASE_URL`, Konnect live,
   R2, Vercel token) must not be readable from preview workflows.
 - Production migrations run in `.github/workflows/deploy.yml` before the deploy. `BOOTSTRAP` (migrate + seed on boot) is
