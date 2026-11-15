@@ -1,8 +1,9 @@
 import { orders } from "@workspace/db"
-import { type Currency, formatMoney } from "@workspace/sdk"
+import { type Currency, formatMoney, PLACEHOLDER_BANK } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
 import { getSettings } from "./settings"
+import { getShopProfile, studioInbox } from "./shop-profile"
 
 const COPY = {
   fr: {
@@ -73,24 +74,26 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
     ]
     const url = `${config.webUrl}/${locale}/order/${order.number}?t=${order.publicToken}`
     const settings = await getSettings(db)
-    const studio = settings.contactEmail
+    const profile = await getShopProfile(db)
+    const studio = studioInbox(profile)
+    const bank = settings.bank ?? PLACEHOLDER_BANK
     const cod = order.paymentMethod === "cod"
     const transfer = order.paymentMethod === "transfer"
     const bankLines = transfer
       ? [
           "",
           `${c.bankTitle}:`,
-          `${c.holder}: ${settings.bank.holder}`,
-          `${c.bank}: ${settings.bank.bank}`,
-          `IBAN: ${settings.bank.iban}`,
-          ...(settings.bank.bic ? [`BIC: ${settings.bank.bic}`] : []),
+          `${c.holder}: ${bank.holder}`,
+          `${c.bank}: ${bank.bank}`,
+          `IBAN: ${bank.iban}`,
+          ...(bank.bic ? [`BIC: ${bank.bic}`] : []),
           `${c.reference}: ${order.number}`,
         ]
       : []
 
     const toCustomer = {
       to: order.email,
-      replyTo: studio,
+      replyTo: profile.email ?? studio ?? undefined,
       subject: c.subject(order.number),
       text: [
         c.hello(order.customerName),
@@ -128,7 +131,9 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
         .filter((l, i, all) => l !== "" || all[i - 1] !== "")
         .join("\n"),
     }
-    const results = await Promise.allSettled([mailer.send(toCustomer), mailer.send(toStudio)])
+    const sends = [mailer.send(toCustomer)]
+    if (studio) sends.push(mailer.send({ ...toStudio, to: studio }))
+    const results = await Promise.allSettled(sends)
     for (const r of results) if (r.status === "rejected") console.error(`[mail ${order.number}]`, r.reason)
   } catch (error) {
     console.error("[order emails]", error)

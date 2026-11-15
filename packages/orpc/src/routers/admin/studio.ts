@@ -4,6 +4,7 @@ import {
   locationInputSchema,
   locationSchema,
   paymentSettingsSchema,
+  type ShopProfileInput,
   storageUsageSchema,
   studioSettingsSchema,
   uploadSignSchema,
@@ -14,6 +15,7 @@ import { asc, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { gatewayReady } from "../../lib/payments"
 import { getPaymentSettings, getSettings, savePaymentSettings, saveSettings } from "../../lib/settings"
+import { getShopProfile, updateShopProfile } from "../../lib/shop-profile"
 import { reserveUpload, storageUsage } from "../../lib/uploads"
 import { adminProcedure } from "../../procedures"
 
@@ -72,13 +74,24 @@ export const settingsRouter = {
   get: adminProcedure
     .route({ method: "GET", path: "/admin/settings", summary: "Contact details and delivery fees", tags: TAG })
     .output(studioSettingsSchema)
-    .handler(({ context }) => getSettings(context.db)),
+    .handler(async ({ context }) => {
+      const [settings, profile] = await Promise.all([getSettings(context.db), getShopProfile(context.db)])
+      return { ...settings, contactEmail: profile.email ?? "", phones: profile.phones }
+    }),
 
   update: adminProcedure
     .route({ method: "PUT", path: "/admin/settings", summary: "Save settings", tags: TAG })
     .input(studioSettingsSchema)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
+      const profile = await getShopProfile(context.db)
+      const patch: ShopProfileInput = {}
+      if (input.contactEmail !== undefined) {
+        patch.email = input.contactEmail.trim() || null
+        if (!profile.notifyEmail || profile.notifyEmail === profile.email) patch.notifyEmail = patch.email
+      }
+      if (input.phones !== undefined) patch.phones = input.phones
+      if (Object.keys(patch).length > 0) await updateShopProfile(context.db, patch)
       await saveSettings(context.db, input)
       return { ok: true as const }
     }),

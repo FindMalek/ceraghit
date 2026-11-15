@@ -163,6 +163,7 @@ export const bankDetailsSchema = z.object({
   bank: z.string().trim().max(120),
   iban: z.string().trim().max(60),
   bic: z.string().trim().max(20),
+  rib: z.string().trim().max(30).optional(),
 })
 export type BankDetails = z.infer<typeof bankDetailsSchema>
 
@@ -174,23 +175,127 @@ export const PLACEHOLDER_BANK: BankDetails = {
   bic: "",
 }
 
-export const studioSettingsSchema = z.object({
-  contactEmail: z.string(),
+export const shopProfileSchema = z.object({
+  legalName: z.string().nullable(),
+  displayName: z.string().nullable(),
+  legalForm: z.string().nullable(),
+  taxId: z.string().nullable(),
+  registryNumber: z.string().nullable(),
+  address: z.string().nullable(),
+  postalCode: z.string().nullable(),
+  city: z.string().nullable(),
+  country: z.string(),
   phones: z.array(z.string()),
+  email: z.string().nullable(),
+  notifyEmail: z.string().nullable(),
+  bankHolder: z.string().nullable(),
+  bankName: z.string().nullable(),
+  bankRib: z.string().nullable(),
+  bankIban: z.string().nullable(),
+  bankBic: z.string().nullable(),
+  invoiceNote: localizedSchema.nullable(),
+  shippingConfirmedAt: z.string().nullable(),
+  skippedSteps: z.array(z.string()),
+  onboardedAt: z.string().nullable(),
+  updatedAt: z.string(),
+})
+export type ShopProfile = z.infer<typeof shopProfileSchema>
+
+const compact = (s: string) => s.replace(/\s+/g, "")
+const profileText = (max: number) => z.string().trim().max(max).nullable().optional()
+const profileCode = (pattern: RegExp, upper = false) =>
+  z
+    .string()
+    .transform((s) => (upper ? compact(s).toUpperCase() : compact(s)))
+    .pipe(z.string().regex(pattern))
+    .nullable()
+    .optional()
+
+/** Editable fields only, each optional so the onboarding can save one step at a time. */
+export const shopProfileInputSchema = z.object({
+  legalName: profileText(120),
+  displayName: profileText(120),
+  legalForm: profileText(120),
+  taxId: profileText(40),
+  registryNumber: profileText(40),
+  address: profileText(300),
+  postalCode: profileText(20),
+  city: profileText(120),
+  country: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z]{2}$/)
+    .optional(),
+  phones: z.array(z.string().trim().min(6).max(30)).max(4).optional(),
+  email: z.email().max(200).nullable().optional(),
+  notifyEmail: z.email().max(200).nullable().optional(),
+  bankHolder: profileText(120),
+  bankName: profileText(120),
+  bankRib: profileCode(/^\d{20}$/),
+  bankIban: profileCode(/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/, true),
+  bankBic: profileCode(/^[A-Z0-9]{8}([A-Z0-9]{3})?$/, true),
+  invoiceNote: localizedSchema.nullable().optional(),
+})
+export type ShopProfileInput = z.infer<typeof shopProfileInputSchema>
+
+/**
+ * What the storefront may read. The matricule fiscal is public (legal notice); registry number,
+ * notification email, bank account and onboarding state never are.
+ */
+export const publicShopProfileSchema = shopProfileSchema.pick({
+  displayName: true,
+  legalName: true,
+  legalForm: true,
+  taxId: true,
+  address: true,
+  postalCode: true,
+  city: true,
+  country: true,
+  phones: true,
+  email: true,
+})
+export type PublicShopProfile = z.infer<typeof publicShopProfileSchema>
+
+type ProfileBank = Pick<ShopProfile, "bankHolder" | "bankName" | "bankIban" | "bankRib" | "bankBic">
+
+/** The account to show customers, or null while it is incomplete or still the old placeholder. */
+export function bankFromProfile(profile: ProfileBank): BankDetails | null {
+  const [holder, bank, iban, rib, bic] = [
+    profile.bankHolder,
+    profile.bankName,
+    profile.bankIban,
+    profile.bankRib,
+    profile.bankBic,
+  ].map((v) => v?.trim() ?? "")
+  if ([holder, bank, iban, rib, bic].includes(PLACEHOLDER_BANK.bank)) return null
+  if (!holder || !bank || !(iban || rib)) return null
+  return { holder, bank, iban: iban ?? "", bic: bic ?? "", ...(rib ? { rib } : {}) }
+}
+
+export const studioSettingsSchema = z.object({
+  /** Owned by shop_profile: the dashboard form still sends it and the update copies it into the profile. */
+  contactEmail: z.string().optional(),
+  /** Owned by shop_profile: the dashboard form still sends it and the update copies it into the profile. */
+  phones: z.array(z.string()).optional(),
   whatsapp: z.string().nullable(),
   instagram: z.string().nullable(),
   shippingRates: shippingRatesSchema,
   /** Shown at checkout, e.g. "Pièces uniques expédiées sous 7 jours". */
   shippingNote: localizedSchema.nullable(),
-  /** Account shown to customers outside Tunisia on their order page and in their email. */
-  bank: bankDetailsSchema.default(PLACEHOLDER_BANK),
+  /** Still edited by the dashboard and read for transfer instructions until they move to shop_profile. */
+  bank: bankDetailsSchema.optional(),
 })
 export type StudioSettings = z.infer<typeof studioSettingsSchema>
 
-/** What the storefront may read: no bank account, plus the payment methods in effect (after the gateway check). */
-export const publicSettingsSchema = studioSettingsSchema
-  .omit({ bank: true })
-  .extend({ onlinePayments: z.boolean(), paymentMethods: paymentMethodFlagsSchema })
+/** What the storefront may read: contact from the shop profile, no bank account, plus the payment methods in effect (after the gateway check). */
+export const publicSettingsSchema = studioSettingsSchema.omit({ bank: true, contactEmail: true, phones: true }).extend({
+  contactEmail: z.string(),
+  phones: z.array(z.string()),
+  onlinePayments: z.boolean(),
+  paymentMethods: paymentMethodFlagsSchema,
+  profile: publicShopProfileSchema,
+})
 export type PublicSettings = z.infer<typeof publicSettingsSchema>
 
 export const cartItemSchema = z.object({
