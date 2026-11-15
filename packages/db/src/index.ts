@@ -8,4 +8,5 @@ export function createDb(url: string, max = 10) {
 }
 
 export type Db = ReturnType<typeof createDb>
+export * from "./demo-ref"
 export * from "./schema"

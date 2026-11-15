@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { buildScenario, DEMO_DESCRIPTIONS } from "../../src/seed/scenario"
 
@@ -16,6 +17,19 @@ test("the demo shop has both currencies, paid revenue and a pending order", () =
   for (const order of orders) {
     const lines = items.filter((i) => i.orderId === order.id)
     expect(lines.reduce((sum, i) => sum + i.unitMinor * i.quantity, 0)).toBe(order.totalMinor)
+  }
+})
+
+test("seeded online orders carry a gateway ref that matches them and none is pending", () => {
+  const { orders } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  for (const order of orders.filter((o) => o.paymentMethod === "online")) {
+    expect(order.status).not.toBe("pending_payment")
+    expect(parseDemoRef(order.paymentRef!)).toEqual({
+      outcome: order.status === "cancelled" ? "failed" : "paid",
+      orderNumber: order.number!,
+      amountMinor: order.totalMinor!,
+      currency: order.currency as "TND" | "EUR",
+    })
   }
 })
 

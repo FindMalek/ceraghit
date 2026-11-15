@@ -99,15 +99,15 @@ export const ordersRouter = {
   /** Only exists with the demo provider (local and preview without gateway keys). */
   demoResolve: publicProcedure
     .route({ method: "POST", path: "/orders/demo-resolve", summary: "Demo checkout outcome", tags: TAG })
-    .input(z.object({ ref: z.string(), outcome: z.enum(["paid", "failed"]) }))
+    .input(z.object({ ref: z.string(), outcome: z.enum(["paid", "failed", "mismatch"]) }))
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       if (!(context.payments instanceof DemoProvider) || context.config.appEnv === "production") {
         throw publicError("NOT_FOUND", "payment_not_found", "Not found.")
       }
-      if (!context.payments.resolve(input.ref, input.outcome))
-        throw publicError("NOT_FOUND", "payment_not_found", "Unknown payment.")
-      await settleOrder(context, input.ref)
+      const ref = await context.payments.resolve(context.db, input.ref, input.outcome)
+      if (!ref) throw publicError("NOT_FOUND", "payment_not_found", "Unknown payment.")
+      await settleOrder(context, ref)
       return { ok: true as const }
     }),
 }

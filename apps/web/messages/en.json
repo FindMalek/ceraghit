@@ -192,6 +192,7 @@
     "text": "This is a test gateway, no money is charged. Choose the payment outcome for order {order}.",
     "pay": "Simulate a successful payment",
     "fail": "Simulate a failure",
+    "mismatch": "Wrong amount (test)",
     "noOrder": "Incomplete payment link.",
     "failedToResolve": "The demo gateway is not available in this environment.",
     "noToken": "This order cannot be found on this device."

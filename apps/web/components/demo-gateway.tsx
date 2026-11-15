@@ -8,7 +8,15 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { recallOrderToken } from "@/lib/order-tokens"
 
-export function DemoGateway({ orderNumber, paymentRef }: { orderNumber: string; paymentRef: string }) {
+export function DemoGateway({
+  orderNumber,
+  paymentRef,
+  showMismatch,
+}: {
+  orderNumber: string
+  paymentRef: string
+  showMismatch: boolean
+}) {
   const t = useTranslations("demo")
   const router = useRouter()
   const resolve = useMutation(
@@ -30,6 +38,7 @@ export function DemoGateway({ orderNumber, paymentRef }: { orderNumber: string; 
           size="lg"
           className="h-12"
           disabled={resolve.isPending}
+          data-testid="demo-pay"
           onClick={() => resolve.mutate({ ref: paymentRef, outcome: "paid" })}
         >
           {t("pay")}
@@ -39,10 +48,23 @@ export function DemoGateway({ orderNumber, paymentRef }: { orderNumber: string; 
           variant="outline"
           className="h-12"
           disabled={resolve.isPending}
+          data-testid="demo-fail"
           onClick={() => resolve.mutate({ ref: paymentRef, outcome: "failed" })}
         >
           {t("fail")}
         </Button>
+        {showMismatch && (
+          <Button
+            size="lg"
+            variant="ghost"
+            className="h-12"
+            disabled={resolve.isPending}
+            data-testid="demo-mismatch"
+            onClick={() => resolve.mutate({ ref: paymentRef, outcome: "mismatch" })}
+          >
+            {t("mismatch")}
+          </Button>
+        )}
       </div>
     </div>
   )

@@ -19,6 +19,10 @@ const payments =
     ? new KonnectProvider(env.KONNECT_API_KEY, env.KONNECT_WALLET_ID, env.KONNECT_MODE)
     : new DemoProvider(env.WEB_URL)
 
+if (env.APP_ENV === "production" && env.ONLINE_PAYMENTS && payments.name === "demo") {
+  throw new Error("production cannot take card payments through the demo gateway")
+}
+
 const fetch = createServer({
   db,
   payments,

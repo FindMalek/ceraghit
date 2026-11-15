@@ -192,6 +192,7 @@
     "text": "Ceci est une passerelle de test, aucun argent n'est débité. Choisissez le résultat du paiement pour la commande {order}.",
     "pay": "Simuler un paiement réussi",
     "fail": "Simuler un échec",
+    "mismatch": "Montant incorrect (test)",
     "noOrder": "Lien de paiement incomplet.",
     "failedToResolve": "La passerelle de démonstration n'est pas disponible sur cet environnement.",
     "noToken": "Impossible de retrouver cette commande sur cet appareil."
