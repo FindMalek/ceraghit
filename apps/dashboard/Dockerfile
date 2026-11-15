@@ -1,6 +1,6 @@
 # Build context is the repo root: docker build -f apps/dashboard/Dockerfile .
 FROM node:26-alpine AS base
-RUN corepack enable && npm install -g turbo@2.11.9
+RUN npm install -g corepack turbo@2.11.9 && corepack enable
 
 FROM base AS pruner
 WORKDIR /app
