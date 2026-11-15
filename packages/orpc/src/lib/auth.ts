@@ -20,13 +20,12 @@ export class AdminAuth {
     private now: () => Date = () => new Date(),
   ) {}
 
-  /** True once this address or this email used up its failed attempts. */
-  async locked(address: string, email: string): Promise<boolean> {
+  /** What locked this login: the email (1 hour) or the address (15 minutes), null when neither used up its attempts. */
+  async locked(address: string, email: string): Promise<"email" | "ip" | null> {
     const now = this.now()
-    return (
-      (await isLimited(this.db, ipKey(address), LIMITS.loginIp, now)) ||
-      (await isLimited(this.db, await emailKey(email), LIMITS.loginEmail, now))
-    )
+    if (await isLimited(this.db, await emailKey(email), LIMITS.loginEmail, now)) return "email"
+    if (await isLimited(this.db, ipKey(address), LIMITS.loginIp, now)) return "ip"
+    return null
   }
 
   /** Counts the attempt before the slow hash check so parallel guesses can't slip past the lock. A success clears it. */

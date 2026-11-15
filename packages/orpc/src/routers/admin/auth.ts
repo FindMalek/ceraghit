@@ -15,8 +15,11 @@ export const authRouter = {
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       const address = clientAddress(context.headers, context.config.proxySecret)
-      if (await context.auth.locked(address, input.email)) {
-        throw new ORPCError("TOO_MANY_REQUESTS", { message: "Too many attempts. Try again in 15 minutes." })
+      const lock = await context.auth.locked(address, input.email)
+      if (lock) {
+        throw new ORPCError("TOO_MANY_REQUESTS", {
+          message: `Too many attempts. Try again in ${lock === "email" ? "1 hour" : "15 minutes"}.`,
+        })
       }
       const session = await context.auth.login(address, input.email, input.password)
       if (!session) throw new ORPCError("UNAUTHORIZED", { message: "Wrong email or password." })

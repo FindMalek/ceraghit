@@ -28,15 +28,15 @@ describe.skipIf(!url)("rate limits", () => {
     clock = new Date()
     const here = `1.1.1.${tag}`
     for (let i = 0; i < LIMITS.loginIp.max; i++) {
-      expect(await auth.locked(here, email)).toBe(false)
+      expect(await auth.locked(here, email)).toBeNull()
       expect(await auth.login(here, email, "wrong")).toBeNull()
     }
-    expect(await auth.locked(here, email)).toBe(true)
+    expect(await auth.locked(here, email)).toBe("ip")
     expect(await auth.login(here, email, "clay-test-pass")).toBeNull()
     expect(await auth.login(`2.2.2.${tag}`, email, "clay-test-pass")).not.toBeNull()
 
     clock = new Date(clock.getTime() + LIMITS.loginIp.windowMs + 1)
-    expect(await auth.locked(here, email)).toBe(false)
+    expect(await auth.locked(here, email)).toBeNull()
     expect(await auth.login(here, email, "clay-test-pass")).not.toBeNull()
   })
 
@@ -45,13 +45,13 @@ describe.skipIf(!url)("rate limits", () => {
     const here = `3.3.3.${tag}`
     for (let i = 0; i < LIMITS.loginIp.max - 1; i++) await auth.login(here, email, "wrong")
     expect(await auth.login(here, email, "clay-test-pass")).not.toBeNull()
-    expect(await auth.locked(here, email)).toBe(false)
+    expect(await auth.locked(here, email)).toBeNull()
   })
 
   test("the email is locked across addresses, rotating them does not help", async () => {
     clock = new Date()
     for (let i = 0; i < LIMITS.loginEmail.max; i++) await auth.login(`10.0.${i}.${tag}`, email, "wrong")
-    expect(await auth.locked(`9.9.9.${tag}`, email)).toBe(true)
+    expect(await auth.locked(`9.9.9.${tag}`, email)).toBe("email")
   })
 
   test("takeLimit counts per key and sweeps old rows", async () => {

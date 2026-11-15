@@ -13,9 +13,12 @@ const TRUSTED_PREFIX = "x-ceraghit-"
 export const CLIENT_IP_HEADER = `${TRUSTED_PREFIX}client-ip`
 export const PROXY_SECRET_HEADER = `${TRUSTED_PREFIX}proxy-secret`
 
-/** The visitor's address as the platform (Vercel, Traefik) saw it, before it becomes the web function's own. */
+/**
+ * The visitor's address as the platform (Vercel, Traefik) saw it, before it becomes the web function's own.
+ * x-forwarded-for first: x-real-ip is only a fallback, a client can send it and the platform does not always overwrite it.
+ */
 function visitorAddress(headers: Headers): string | undefined {
-  return headers.get("x-real-ip")?.trim() || headers.get("x-forwarded-for")?.split(",")[0]?.trim() || undefined
+  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip")?.trim() || undefined
 }
 
 export function createProxy(allowed: RegExp[]) {
