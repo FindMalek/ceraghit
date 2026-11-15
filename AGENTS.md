@@ -38,6 +38,8 @@ pnpm + Turborepo, Next.js 16 (App Router, `proxy.ts`, `params` are Promises), oR
   Production migrates in the deploy workflow, the api does not migrate itself there.
 - Demo/preview data: `packages/db/src/seed`. A feature that adds a state adds it to `scenario.ts` and its test.
 - Text shown to people is French first; DB text is `Localized` (`fr` required, `en`/`ar` optional) read with `pick()`.
+- fr/en/ar strings stay about the same length: `apps/web/test/messages-parity.test.ts` enforces the bands in
+  `packages/sdk/src/i18n-parity.ts`. Rewrite the long or short side so it reads naturally, never pad with filler.
 - Tests: one per behavior, through the public function or endpoint, mock only network/time. Don't test types or getters.
 - Commits `type(scope): subject`, one issue per PR, branch via `gh issue develop <n> --checkout`. Agents do not commit,
   push or reply to reviews unless the owner says so in that message. No AI attribution anywhere.
