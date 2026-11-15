@@ -7,6 +7,7 @@ import { useSidebar } from "@workspace/ui/components/sidebar"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSetupStatus } from "@/lib/use-setup-status"
 
 const TABS = [
   { href: "/", label: "Aperçu", icon: ChartLineUpIcon },
@@ -24,6 +25,7 @@ export function MobileTabBar() {
   const { setOpenMobile } = useSidebar()
   // What is waiting for the owner: orders to deal with and new requests, refreshed every minute.
   const stats = useQuery(orpc.admin.overview.queryOptions({ input: { days: 30 }, refetchInterval: 60_000 }))
+  const remaining = useSetupStatus().data?.remaining ?? 0
   const waiting: Record<string, number> = {
     "/orders": stats.data?.pendingOrders ?? 0,
     "/requests": stats.data?.newRequests ?? 0,
@@ -55,7 +57,15 @@ export function MobileTabBar() {
         </Link>
       ))}
       <button type="button" onClick={() => setOpenMobile(true)} className={cn(item, "text-muted-foreground")}>
-        <ListIcon className="size-6" />
+        <span className="relative">
+          <ListIcon className="size-6" />
+          {remaining > 0 && (
+            <span className="-top-1.5 -right-2.5 absolute grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground tabular-nums leading-4">
+              <span aria-hidden="true">{remaining}</span>
+              <span className="sr-only">{`${remaining} ${remaining > 1 ? "étapes" : "étape"} à terminer`}</span>
+            </span>
+          )}
+        </span>
         Menu
       </button>
     </nav>

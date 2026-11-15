@@ -27,6 +27,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
@@ -34,6 +35,7 @@ import {
 } from "@workspace/ui/components/sidebar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSetupStatus } from "@/lib/use-setup-status"
 
 const NAV = [
   { href: "/", label: "Vue d'ensemble", icon: ChartLineUpIcon },
@@ -54,6 +56,7 @@ const isActive = (href: string, pathname: string) =>
 export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: string }; webUrl: string }) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
+  const remaining = useSetupStatus().data?.remaining ?? 0
   const signOut = async () => {
     await browserClient.admin.auth.logout().catch(() => {})
     window.location.assign("/login")
@@ -86,6 +89,12 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
                     <item.icon />
                     <span>{item.label}</span>
                   </SidebarMenuButton>
+                  {item.href === "/settings/profile" && remaining > 0 && (
+                    <SidebarMenuBadge className="bg-primary text-primary-foreground">
+                      <span aria-hidden="true">{remaining}</span>
+                      <span className="sr-only">{`${remaining} ${remaining > 1 ? "étapes" : "étape"} à terminer`}</span>
+                    </SidebarMenuBadge>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
