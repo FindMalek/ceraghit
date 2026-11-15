@@ -1,6 +1,7 @@
 import { E2E } from "../env"
 import { expect, payDemo, placeOrder, test } from "../fixtures"
 import { t } from "../helpers/messages"
+import { pieceFor } from "../support/catalogue"
 
 const PRICE = /\d\s(DT|د\.ت|€)/
 
@@ -26,32 +27,45 @@ test("a product from the shop shows its price", async ({ page, home, step }) => 
   })
 })
 
-test("a cash on delivery order reaches the dashboard", { tag: "@fr" }, async ({ page, ownerPage, step, appLocale }) => {
-  let number = ""
-  await step("place a cash on delivery order in Tunisia", async () => {
-    ;({ number } = await placeOrder(page, { locale: appLocale, method: "cod" }))
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(number)
-  })
-  await step(
-    "the owner sees it in the orders list",
-    async () => {
-      await ownerPage.goto(`${E2E.dashboardUrl}/orders`)
-      await ownerPage.getByPlaceholder("Numéro, nom ou email").fill(number)
-      const rows = ownerPage.getByText(/^CER-\d+$/).filter({ visible: true })
-      await expect(rows).toHaveCount(1)
-      await expect(rows).toHaveText(number)
-    },
-    ownerPage,
-  )
-})
+test(
+  "a cash on delivery order reaches the dashboard",
+  { tag: "@fr" },
+  async ({ page, ownerPage, step, appLocale }, testInfo) => {
+    let number = ""
+    await step("place a cash on delivery order in Tunisia", async () => {
+      const piece = await pieceFor(page.request, testInfo)
+      ;({ number } = await placeOrder(page, { locale: appLocale, method: "cod", productSlug: piece.slug }))
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(number)
+    })
+    await step(
+      "the owner sees it in the orders list",
+      async () => {
+        await ownerPage.goto(`${E2E.dashboardUrl}/orders`)
+        const rows = ownerPage.getByText(/^CER-\d+$/).filter({ visible: true })
+        await expect(rows.first()).toBeVisible()
+        const filtered = ownerPage.waitForResponse((res) => res.request().postData()?.includes(number) ?? false)
+        await ownerPage.getByPlaceholder("Numéro, nom ou email").fill(number)
+        await filtered
+        await expect(rows).toHaveCount(1)
+        await expect(rows).toHaveText(number)
+      },
+      ownerPage,
+    )
+  },
+)
 
-test("an online demo payment marks the order paid", { tag: ["@fr", "@desktop"] }, async ({ page, step, appLocale }) => {
-  await step("place an online order", async () => {
-    await placeOrder(page, { locale: appLocale, method: "online" })
-    await expect(page).toHaveURL(/\/checkout\/demo\?/)
-  })
-  await step("pay on the demo gateway", async () => {
-    await payDemo(page, appLocale, "success")
-    await expect(page.getByRole("status").first()).toContainText(t(appLocale, "order.status.paid"))
-  })
-})
+test(
+  "an online demo payment marks the order paid",
+  { tag: ["@fr", "@desktop"] },
+  async ({ page, step, appLocale }, testInfo) => {
+    await step("place an online order", async () => {
+      const piece = await pieceFor(page.request, testInfo)
+      await placeOrder(page, { locale: appLocale, method: "online", productSlug: piece.slug })
+      await expect(page).toHaveURL(/\/checkout\/demo\?/)
+    })
+    await step("pay on the demo gateway", async () => {
+      await payDemo(page, appLocale, "success")
+      await expect(page.getByRole("status").first()).toContainText(t(appLocale, "order.status.paid"))
+    })
+  },
+)
