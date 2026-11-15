@@ -18,6 +18,7 @@ export type Localized = { fr: string; en?: string; ar?: string }
 export const currency = pgEnum("currency", ["TND", "EUR"])
 export const productStatus = pgEnum("product_status", ["draft", "published", "archived"])
 export const orderStatus = pgEnum("order_status", ["pending_payment", "paid", "fulfilled", "cancelled", "refunded"])
+export const mailStatus = pgEnum("mail_status", ["sent", "failed", "resent"])
 export const requestStatus = pgEnum("request_status", ["new", "contacted", "done", "declined"])
 
 export const admins = pgTable("admins", {
@@ -236,6 +237,28 @@ export const customRequests = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("custom_requests_status_idx").on(t.status)],
+)
+
+/** One row per mail the api tried to send. `to` is the real recipient, before any redirect outside production. */
+export const mailLog = pgTable(
+  "mail_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    kind: text("kind").notNull(),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "set null" }),
+    to: text("to").notNull(),
+    subject: text("subject").notNull(),
+    /** Kept to resend, emptied after 90 days. */
+    text: text("text").notNull(),
+    replyTo: text("reply_to"),
+    status: mailStatus("status").notNull(),
+    providerId: text("provider_id"),
+    error: text("error"),
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+  },
+  (t) => [index("mail_log_status_idx").on(t.status, t.createdAt)],
 )
 
 /** Every file sent to the bucket (dashboard images, customer photos): what the owner's storage counter adds up. */

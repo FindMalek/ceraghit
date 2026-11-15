@@ -2,6 +2,7 @@ import { orders } from "@workspace/db"
 import { type Currency, formatMoney, PLACEHOLDER_BANK } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
+import { deliverMail } from "./mail-log"
 import { getSettings } from "./settings"
 import { getShopProfile, studioInbox } from "./shop-profile"
 
@@ -58,7 +59,7 @@ const COPY = {
 
 /** Customer and studio each get one mail when an order is confirmed (paid online, or placed as cash on delivery or bank transfer). */
 export async function sendOrderEmails(services: Services, orderId: string): Promise<void> {
-  const { db, mailer, config } = services
+  const { db, config } = services
   try {
     const order = await db.query.orders.findFirst({ where: eq(orders.id, orderId), with: { items: true } })
     if (!order) return
@@ -131,10 +132,8 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
         .filter((l, i, all) => l !== "" || all[i - 1] !== "")
         .join("\n"),
     }
-    const sends = [mailer.send(toCustomer)]
-    if (studio) sends.push(mailer.send({ ...toStudio, to: studio }))
-    const results = await Promise.allSettled(sends)
-    for (const r of results) if (r.status === "rejected") console.error(`[mail ${order.number}]`, r.reason)
+    await deliverMail(services, "order_confirmation", toCustomer, { orderId, inline: true })
+    if (studio) await deliverMail(services, "order_studio", { ...toStudio, to: studio }, { orderId, inline: true })
   } catch (error) {
     console.error("[order emails]", error)
   }
@@ -142,7 +141,7 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
 
 /** Tells the customer the owner confirmed their payment. Never throws. */
 export async function sendPaymentReceivedEmail(services: Services, orderId: string): Promise<void> {
-  const { db, mailer, config } = services
+  const { db, config } = services
   try {
     const order = await db.query.orders.findFirst({ where: eq(orders.id, orderId), with: { items: true } })
     if (!order) return
@@ -150,26 +149,31 @@ export async function sendPaymentReceivedEmail(services: Services, orderId: stri
     const c = COPY[locale]
     const money = (minor: number) => formatMoney(minor, order.currency as Currency, locale)
     const profile = await getShopProfile(db)
-    await mailer.send({
-      to: order.email,
-      replyTo: profile.email ?? studioInbox(profile) ?? undefined,
-      subject: c.subject(order.number),
-      text: [
-        c.hello(order.customerName),
-        "",
-        c.paid,
-        "",
-        ...order.items.map((i) => `- ${i.ref} ${i.title} x ${i.quantity}  ${money(i.unitMinor * i.quantity)}`),
-        "",
-        `${c.subtotal}: ${money(order.subtotalMinor)}`,
-        `${c.shipping}: ${money(order.shippingMinor)}`,
-        `${c.total}: ${money(order.totalMinor)}`,
-        "",
-        `${c.link} ${config.webUrl}/${locale}/order/${order.number}?t=${order.publicToken}`,
-        "",
-        c.bye,
-      ].join("\n"),
-    })
+    await deliverMail(
+      services,
+      "payment_received",
+      {
+        to: order.email,
+        replyTo: profile.email ?? studioInbox(profile) ?? undefined,
+        subject: c.subject(order.number),
+        text: [
+          c.hello(order.customerName),
+          "",
+          c.paid,
+          "",
+          ...order.items.map((i) => `- ${i.ref} ${i.title} x ${i.quantity}  ${money(i.unitMinor * i.quantity)}`),
+          "",
+          `${c.subtotal}: ${money(order.subtotalMinor)}`,
+          `${c.shipping}: ${money(order.shippingMinor)}`,
+          `${c.total}: ${money(order.totalMinor)}`,
+          "",
+          `${c.link} ${config.webUrl}/${locale}/order/${order.number}?t=${order.publicToken}`,
+          "",
+          c.bye,
+        ].join("\n"),
+      },
+      { orderId, inline: true },
+    )
   } catch (error) {
     console.error("[payment received email]", error)
   }

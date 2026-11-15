@@ -13,4 +13,6 @@ alwaysApply: true
 - Tests: `bun test`, files in the package's `test/` folder mirroring the source path (`packages/orpc/test/router.test.ts`),
   never beside the source; e2e in `/test/e2e`. One test per behavior, real Postgres for api tests (`DATABASE_URL`), mock
   only network and time. Run only touched packages while iterating. `pnpm rules:check` fails on a test outside `test/`.
+- E2E: one spec per feature (`test/e2e/specs/<feature>.e2e.ts`), every user-visible step through `step()` so it is
+  screenshotted, select by role or label, no `waitForTimeout`. A flaky test is a bug to fix; no skip without an issue number.
 - Accessibility: labelled controls, 44px touch targets, AA contrast, visible focus. Mobile first, then desktop.

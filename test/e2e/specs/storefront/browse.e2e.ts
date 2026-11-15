@@ -102,11 +102,14 @@ test("hero stays on its first photo with reduced motion", async ({ page, home })
 })
 
 test("hero rotates to the next photo after five seconds", async ({ page, home }) => {
-  await page.clock.install()
+  // Frozen before load: a slow page must not burn the five seconds before the carousel starts its timer.
+  await page.clock.install({ time: 0 })
+  await page.clock.pauseAt(1000) // pauseAt needs a time after the installed one
   await page.goto(home())
   const slides = page.locator("main img.object-cover.transition-opacity")
   expect(await slides.count()).toBeGreaterThan(1)
   await expect(slides.first()).toHaveClass(/opacity-100/)
+  await expect(page.locator("main [data-hydrated=true]")).toBeVisible()
   await page.clock.runFor(5000)
   await expect(slides.nth(1)).toHaveClass(/opacity-100/)
   await expect(slides.first()).toHaveClass(/opacity-0/)

@@ -15,6 +15,15 @@ export const REQUEST_STATUS = {
   declined: "Refusée",
 } as const
 
+export const MAIL_KIND: Record<string, string> = {
+  order_confirmation: "Confirmation de commande",
+  order_studio: "Nouvelle commande (atelier)",
+  request_studio: "Demande de pièce unique",
+  payment_received: "Paiement reçu",
+  shipped: "Commande expédiée",
+  test: "Test",
+}
+
 export const CURRENCY_LABEL: Record<Currency, string> = { TND: "Dinars (DT)", EUR: "Euros (€)" }
 
 const DATE = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Tunis" })
