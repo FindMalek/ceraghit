@@ -1,6 +1,13 @@
 export { type AppEnv, type Context, createContext, type Services } from "./context"
 export { AdminAuth } from "./lib/auth"
-export { ConsoleMailer, type Mail, type Mailer, RedirectMailer, ResendMailer } from "./lib/mailer"
+export {
+  ConsoleMailer,
+  type Mail,
+  type Mailer,
+  MailpitMailer,
+  RedirectMailer,
+  ResendMailer,
+} from "./lib/mailer"
 export { settleOrder } from "./lib/orders"
 export { DemoProvider, KonnectProvider, type PaymentProvider } from "./lib/payments"
 export { sweepRateLimits } from "./lib/rate-limit"

@@ -38,6 +38,12 @@ keep lint, types, test and build parallel. Node, pnpm and Bun come from the setu
 3. a sticky PR comment (Vercel style) with status, visit links, dashboard login, database url and API docs, plus a GitHub
    deployment (`preview-pr-<n>`) so the PR shows "View deployment"
 4. payments use the demo gateway, or the Konnect **sandbox** when `KONNECT_TEST_*` secrets exist
+5. a Mailpit app `ceraghit-mail-pr-<n>` on `mail-pr-<n>.ceraghit.findmalek.engineer`, behind basic auth
+   (`PREVIEW_MAILPIT_AUTH`, `user:password`), linked in the PR comment. The api reaches it over the internal network
+   (`MAILPIT_URL=http://<app name>:8025`, its send endpoint accepts any caller, the UI and read api need the login), so
+   every preview mail keeps its full body there and is still redirected to `MAIL_REDIRECT_TO`. Without the secret the
+   preview has no catcher and mails go through Resend as before. E2E reads mails with `test/e2e/support/mailpit.ts`
+   (`MAILPIT_URL=https://user:password@mail-pr-<n>.…`). The Mailpit app is deleted with the PR
 
 Postgres is published on port `15000 + <n>` of the-keep (LAN and tailnet only). `pnpm db:shell pr-<n>` opens psql over ssh.
 Closing the PR deletes the apps, database, uploads (`pr-<n>/` in `ceraghit-dev`) and marks the deployment inactive.
@@ -131,9 +137,9 @@ the dashboard, customer photos on `/custom` by the storefront, both straight to 
 **DNS** (Vercel DNS, `findmalek.engineer`): `ceraghit` and `*.ceraghit` CNAME → `home.findmalek.engineer`.
 
 **GitHub** repo variables: `PREVIEW_ENABLED=true` (previews) and later `DEPLOY_ENABLED=true` (production deploys, only once the `production` environment is complete), `DOKPLOY_PUBLIC_URL`, `PREVIEW_DOMAIN=ceraghit.findmalek.engineer`,
-`PREVIEW_DB_HOST` (the-keep tailnet ip), `S3_ENDPOINT`, `PREVIEW_S3_BUCKET=ceraghit-dev`, `PREVIEW_ADMIN_EMAIL`, `PREVIEW_MAIL_REDIRECT_TO` (inbox that gets every preview email),
+`PREVIEW_DB_HOST` (the-keep tailnet ip), `S3_ENDPOINT`, `PREVIEW_S3_BUCKET=ceraghit-dev`, `PREVIEW_ADMIN_EMAIL`, `PREVIEW_MAIL_REDIRECT_TO` (inbox that gets every preview email, still also kept in the preview's Mailpit),
 `TURBO_API=https://turbo.findmalek.engineer`, `TURBO_TEAM=ceraghit`.
-Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_PASSWORD`, `PREVIEW_S3_ACCESS_KEY_ID`,
+Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_PASSWORD`, `PREVIEW_MAILPIT_AUTH` (`user:password` for the preview mail UI), `PREVIEW_S3_ACCESS_KEY_ID`,
 `PREVIEW_S3_SECRET_ACCESS_KEY`, optional `KONNECT_TEST_API_KEY` / `KONNECT_TEST_WALLET_ID`, optional `GHCR_READ_TOKEN`
 (classic PAT `read:packages`), `PROJECT_TOKEN` (classic PAT `project`, for `project.yml`).
 `production` environment variables: `PRODUCTION_WEB_HOST`,

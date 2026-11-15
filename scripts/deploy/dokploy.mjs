@@ -11,6 +11,7 @@ const POLL_TIMEOUT_MS = 15 * 60_000
 const COMMENT_TITLE =
   "**Preview deployments** on the-keep (Dokploy). Learn more in [docs/deploy.md](../blob/main/docs/deploy.md)."
 const IMAGE = (app, tag) => `ghcr.io/findmalek/ceraghit-${app}:${tag}`
+const MAILPIT_IMAGE = "axllent/mailpit:v1.33.1"
 
 function requireEnv(name) {
   const value = process.env[name]
@@ -128,7 +129,7 @@ async function deployApp(environment, app) {
   const { applicationId } = await ensureApplication(environment, app.name)
   // Only a long-lived read token: Dokploy keeps registry logins for the whole box, and a workflow's own token expires
   // with the run, after which every pull on the-keep (other apps too) gets "denied". Without one, pull anonymously.
-  const token = process.env.GHCR_READ_TOKEN
+  const token = app.publicImage ? undefined : process.env.GHCR_READ_TOKEN
   await dokploy("application.saveDockerProvider", {
     applicationId,
     dockerImage: app.image,
@@ -186,18 +187,38 @@ async function waitWithRetry(deployed, onChange) {
 }
 
 /** The api goes first: web and dashboard reach it by its swarm service name on dokploy-network. */
-async function deployAll(environment, { tag, hosts, apiEnv }) {
+async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
   const suffix = tag.startsWith("pr-") ? `-${tag}` : ""
   const urls = Object.fromEntries(Object.entries(hosts).map(([k, h]) => [k, `https://${h}`]))
   // Shared by the three apps so the api trusts the visitor address the web and dashboard proxies forward.
   const proxySecret = randomBytes(24).toString("hex")
+  // The api sends over the internal network, so only the UI and the read api sit behind the basic auth.
+  const mail =
+    hosts.mail && mailAuth
+      ? await deployApp(environment, {
+          name: `ceraghit-mail${suffix}`,
+          label: "mail",
+          image: MAILPIT_IMAGE,
+          publicImage: true,
+          host: hosts.mail,
+          port: 8025,
+          env: { MP_MAX_MESSAGES: "2000", MP_UI_AUTH: mailAuth, MP_SEND_API_AUTH_ACCEPT_ANY: "true" },
+        })
+      : null
   const api = await deployApp(environment, {
     name: `ceraghit-api${suffix}`,
     label: "api",
     image: IMAGE("api", tag),
     host: hosts.api,
     port: 3001,
-    env: { NODE_ENV: "production", WEB_URL: urls.web, API_PUBLIC_URL: urls.api, PROXY_SECRET: proxySecret, ...apiEnv },
+    env: {
+      NODE_ENV: "production",
+      WEB_URL: urls.web,
+      API_PUBLIC_URL: urls.api,
+      PROXY_SECRET: proxySecret,
+      MAILPIT_URL: mail ? `http://${mail.appName}:8025` : undefined,
+      ...apiEnv,
+    },
   })
   const front = {
     API_URL: `http://${api.appName}:3001`,
@@ -221,7 +242,7 @@ async function deployAll(environment, { tag, hosts, apiEnv }) {
     port: 3002,
     env: front,
   })
-  return [web, dashboard, api]
+  return mail ? [web, dashboard, api, mail] : [web, dashboard, api]
 }
 
 /** Previews never get live keys: the gateway is the demo checkout unless Konnect sandbox keys are provided. */
@@ -261,6 +282,9 @@ function renderAccess(access) {
     `| Drizzle Studio | \`DATABASE_URL='${access.databaseUrl}' pnpm db:studio\` |`,
     `| Uploads | \`${access.bucket}/${access.tag}/\` on ${access.s3} |`,
     `| API docs | https://${access.apiHost}/v1/docs |`,
+    ...(access.mailHost
+      ? [`| Mail catcher | https://${access.mailHost} (basic auth, \`PREVIEW_MAILPIT_AUTH\`) |`]
+      : []),
     "",
     "<sub>Seeded with the real catalogue and two months of demo orders in TND and EUR. Everything here is deleted when the PR closes.</sub>",
   ]
@@ -352,6 +376,7 @@ const previewHosts = (pr, domain) => ({
   web: `pr-${pr}.${domain}`,
   dashboard: `pr-${pr}-dashboard.${domain}`,
   api: `pr-${pr}-api.${domain}`,
+  mail: `mail-pr-${pr}.${domain}`,
 })
 
 /** Previews publish their database on 15000 + PR number: LAN and tailnet only, the router forwards nothing there. */
@@ -370,10 +395,13 @@ async function previewAdmin(environment, apiAppName, pr) {
 async function previewUp() {
   const pr = requireEnv("PR_NUMBER")
   const tag = `pr-${pr}`
+  const mailAuth = process.env.PREVIEW_MAILPIT_AUTH
+  if (!mailAuth) console.warn("PREVIEW_MAILPIT_AUTH is not set: this preview has no mail catcher")
   const hosts = previewHosts(pr, requireEnv("PREVIEW_DOMAIN"))
+  if (!mailAuth) delete hosts.mail
   const environment = await ensureEnvironment(PREVIEW_PROJECT)
   await upsertComment(
-    renderComment(["web", "dashboard", "api"].map((label) => ({ label, host: hosts[label], status: "building" }))),
+    renderComment(Object.keys(hosts).map((label) => ({ label, host: hosts[label], status: "building" }))),
   )
   const pg = await ensurePostgres(environment, `ceraghit-db-${tag}`, `ceraghit-api-${tag}`)
   const port = previewDbPort(pr)
@@ -388,11 +416,13 @@ async function previewUp() {
     s3: process.env.S3_ENDPOINT || "",
     apiHost: hosts.api,
     dashboardHost: hosts.dashboard,
+    mailHost: hosts.mail,
     payments: process.env.KONNECT_TEST_API_KEY ? "Konnect sandbox" : "demo gateway (pick paid or failed)",
   }
   const deployed = await deployAll(environment, {
     tag,
     hosts,
+    mailAuth,
     apiEnv: {
       ...previewApiEnv(),
       ADMIN_EMAIL: admin.email,

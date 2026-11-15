@@ -39,11 +39,13 @@ Production runs on Vercel (three projects), Neon Postgres and Cloudflare R2. Pre
 ```bash
 cp .env.example .env
 pnpm install
-pnpm db:up && pnpm db:migrate && pnpm db:seed   # Postgres on :5435, the catalogue + demo orders
+pnpm db:up && pnpm db:migrate && pnpm db:seed   # Postgres on :5435 + Mailpit, the catalogue + demo orders
 pnpm dev:web          # storefront + api
 pnpm dev:dashboard    # dashboard + api (login with ADMIN_EMAIL / ADMIN_PASSWORD from .env)
 pnpm demo:reset       # wipes the whole local Postgres volume (other worktrees' databases too), asks first, --yes skips; stop dev first
 ```
+
+Every mail the api sends locally lands in Mailpit (http://localhost:8025, `MAILPIT_URL` in `.env`) with its full body. Leave `MAILPIT_URL` empty and mails are printed in the api console instead. E2E specs read them with `test/e2e/support/mailpit.ts` (`latestMailTo`, `mailWithSubject`, `clearMails`); with `MAIL_REDIRECT_TO` set every mail goes to that one address, so look them up by subject (the order number).
 
 Checks: `pnpm check` (format), `pnpm lint`, `pnpm check-types`, `pnpm test` (needs `DATABASE_URL`), `pnpm build`.
 
