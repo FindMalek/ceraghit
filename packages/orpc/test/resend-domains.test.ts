@@ -4,6 +4,7 @@ import { runMigrations } from "@workspace/db/migrate"
 import type { Services } from "../src/context"
 import { loadEmailDomain } from "../src/lib/email-domain"
 import { emailDomainState, getDomain } from "../src/lib/resend-domains"
+import { INTEGRATION_CHECKS } from "../src/lib/setup"
 
 const record = (record: string, status: string) => ({
   record,
@@ -86,6 +87,24 @@ describe.skipIf(!url)("resend domains", () => {
   test("a domain missing from the account is not_found", async () => {
     const res = await loadEmailDomain(services(fakeResend({ status: "", dkim: "", list: [] })))
     expect(res.state).toBe("not_found")
+  })
+
+  test("a 500 or a broken body is unavailable, not failed", async () => {
+    const down = (async () => Response.json({}, { status: 500 })) as unknown as typeof fetch
+    expect((await loadEmailDomain(services(down))).state).toBe("unavailable")
+    const broken = (async () => new Response("<html>")) as unknown as typeof fetch
+    expect((await loadEmailDomain(services(broken))).state).toBe("unavailable")
+  })
+
+  test("the setup step is done only when the domain is verified, without asking Resend to verify", async () => {
+    const calls: string[] = []
+    const inner = fakeResend({ status: "verified", dkim: "verified" })
+    const http = ((input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push(`${init?.method ?? "GET"} ${String(input)}`)
+      return inner(input, init)
+    }) as typeof fetch
+    expect(await INTEGRATION_CHECKS.emailDomain(services(http))).toBe(true)
+    expect(calls.some((c) => c.startsWith("POST"))).toBe(false)
   })
 
   test("failed and temporary_failure are failed", () => {

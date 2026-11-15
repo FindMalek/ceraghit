@@ -77,6 +77,7 @@ describe.skipIf(!url)("admin.mail.test", () => {
     await db.update(shopProfile).set({ notifyEmail: null }).where(eq(shopProfile.id, "shop"))
     const res = await as(`${tag}-2`, token).mail.test({})
     expect(res.to).toBe("owner@test.local")
+    await db.delete(mailLog).where(eq(mailLog.to, "owner@test.local"))
   })
 
   test("a visitor cannot send a test email", async () => {

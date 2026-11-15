@@ -64,7 +64,14 @@ export const getDomain = (apiKey: string, id: string, http: typeof fetch = fetch
 export const verifyDomain = (apiKey: string, id: string, http: typeof fetch = fetch) =>
   call(apiKey, http, `/domains/${encodeURIComponent(id)}/verify`, z.object({}).passthrough(), "POST")
 
-export type EmailDomainState = "verified" | "pending" | "failed" | "not_found" | "restricted_key" | "not_configured"
+export type EmailDomainState =
+  | "verified"
+  | "pending"
+  | "failed"
+  | "not_found"
+  | "restricted_key"
+  | "not_configured"
+  | "unavailable"
 
 /** Maps Resend's status (`not_started`, `pending`, `verified`, `failed`, `temporary_failure`) to what the owner sees. */
 export function emailDomainState(domain: { status: string } | null): EmailDomainState {

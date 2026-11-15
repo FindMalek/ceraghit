@@ -11,12 +11,22 @@ import Link from "next/link"
 import { useState } from "react"
 import { errorMessage } from "@/lib/errors"
 
-type Row = { key: string; label: string; type: string; name: string; value: string; status: string; hint?: string }
+type Row = {
+  key: string
+  label: string
+  type: string
+  name: string
+  value: string
+  priority?: number
+  status: string
+  hint?: string
+}
 
 const STATE: Record<EmailDomain["state"], { label: string; variant: "default" | "secondary" | "destructive" }> = {
   verified: { label: "Vérifié", variant: "default" },
   pending: { label: "En attente", variant: "secondary" },
   failed: { label: "Échec", variant: "destructive" },
+  unavailable: { label: "Resend ne répond pas", variant: "secondary" },
   not_found: { label: "Domaine absent de Resend", variant: "destructive" },
   restricted_key: { label: "Clé Resend limitée à l'envoi", variant: "destructive" },
   not_configured: { label: "Non configuré (aperçu)", variant: "secondary" },
@@ -27,6 +37,7 @@ const EXPLAIN: Partial<Record<EmailDomain["state"], string>> = {
   restricted_key:
     "La clé Resend ne peut qu'envoyer des emails. Créez une clé avec accès complet pour voir l'état du domaine ici.",
   not_configured: "Les aperçus envoient leurs emails dans Mailpit : il n'y a pas de domaine à vérifier.",
+  unavailable: "Resend ne répond pas, réessayez dans un instant.",
   failed: "Resend n'a pas pu vérifier le domaine. Contrôlez les enregistrements ci-dessous.",
 }
 
@@ -75,6 +86,12 @@ function RecordCard({ row }: { row: Row }) {
         <dd>
           <bdi className="select-all break-all font-mono">{row.name}</bdi>
         </dd>
+        {row.priority !== undefined && (
+          <>
+            <dt className="text-muted-foreground">Priorité</dt>
+            <dd className="font-mono">{row.priority}</dd>
+          </>
+        )}
         <dt className="text-muted-foreground">Valeur</dt>
         <dd>
           <bdi className="select-all break-all font-mono">{row.value}</bdi>
@@ -116,7 +133,8 @@ export function EmailDomainCard() {
     label: r.purpose,
     type: r.type,
     name: r.name,
-    value: r.priority === null ? r.value : `${r.priority} ${r.value}`,
+    value: r.value,
+    priority: r.priority ?? undefined,
     status: r.status,
   }))
   if (data.dmarc && data.state !== "not_configured")

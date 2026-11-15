@@ -546,7 +546,7 @@ export const mailLogItemSchema = z.object({
 export type MailLogItem = z.infer<typeof mailLogItemSchema>
 
 export const emailDomainSchema = z.object({
-  state: z.enum(["verified", "pending", "failed", "not_found", "restricted_key", "not_configured"]),
+  state: z.enum(["verified", "pending", "failed", "not_found", "restricted_key", "not_configured", "unavailable"]),
   domain: z.string().nullable(),
   from: z.string(),
   records: z.array(

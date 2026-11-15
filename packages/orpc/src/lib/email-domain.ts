@@ -35,14 +35,14 @@ export async function loadEmailDomain(ctx: Services, opts: { verify?: boolean } 
 
   const list = await listDomains(key, http)
   if (list.kind === "restricted_key") return { ...empty, state: "restricted_key" }
-  if (list.kind === "unavailable") return { ...empty, state: "failed" }
+  if (list.kind === "unavailable") return { ...empty, state: "unavailable" }
   const found = list.value.data.find((d) => d.name.toLowerCase() === domain)
   if (!found) return { ...empty, state: "not_found" }
 
   if (opts.verify) await verifyDomain(key, found.id, http)
   const detail = await getDomain(key, found.id, http)
   if (detail.kind === "restricted_key") return { ...empty, state: "restricted_key" }
-  if (detail.kind === "unavailable") return { ...empty, state: "failed" }
+  if (detail.kind === "unavailable") return { ...empty, state: "unavailable" }
 
   const profile = await getShopProfile(ctx.db)
   const rua = profile.notifyEmail ?? profile.email
