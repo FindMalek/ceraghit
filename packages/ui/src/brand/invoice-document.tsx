@@ -27,9 +27,17 @@ export function InvoiceDocument({ view }: { view: InvoiceView }) {
             {seller.legalName && seller.legalName !== sellerName && (
               <p>{[seller.legalName, seller.legalForm].filter(Boolean).join(" ")}</p>
             )}
-            {seller.address && <p>{seller.address}</p>}
+            {seller.address && (
+              <p>
+                <bdi>{seller.address}</bdi>
+              </p>
+            )}
             {(sellerCity || seller.country) && (
-              <p>{[sellerCity, countryName(seller.country, locale)].filter(Boolean).join(", ")}</p>
+              <p>
+                <bdi>{sellerCity}</bdi>
+                {sellerCity && ", "}
+                {countryName(seller.country, locale)}
+              </p>
             )}
             {seller.phone && <p dir="ltr">{seller.phone}</p>}
             {seller.email && <p dir="ltr">{seller.email}</p>}
@@ -49,7 +57,7 @@ export function InvoiceDocument({ view }: { view: InvoiceView }) {
           <h1 className="text-3xl">{issued ? t.invoice : t.proforma}</h1>
           {issued ? (
             <p className="font-medium tabular-nums">
-              {t.invoiceNo} {view.number}
+              {t.invoiceNo} <bdi dir="ltr">{view.number}</bdi>
             </p>
           ) : (
             <p>{t.notIssued}</p>
@@ -58,7 +66,7 @@ export function InvoiceDocument({ view }: { view: InvoiceView }) {
             {t.date} : {dateFormat(when, locale)}
           </p>
           <p className="tabular-nums">
-            {t.orderNo} {view.orderNumber}
+            {t.orderNo} <bdi dir="ltr">{view.orderNumber}</bdi>
           </p>
         </div>
       </header>
@@ -66,11 +74,13 @@ export function InvoiceDocument({ view }: { view: InvoiceView }) {
       <section className="invoice-block text-sm">
         <p className="invoice-label">{t.billedTo}</p>
         <p className="font-medium">{customer.name}</p>
-        <p>{customer.address}</p>
         <p>
-          {[[customer.postalCode, customer.city].filter(Boolean).join(" "), countryName(customer.country, locale)]
-            .filter(Boolean)
-            .join(", ")}
+          <bdi>{customer.address}</bdi>
+        </p>
+        <p>
+          <bdi>{[customer.postalCode, customer.city].filter(Boolean).join(" ")}</bdi>
+          {(customer.postalCode || customer.city) && ", "}
+          {countryName(customer.country, locale)}
         </p>
         <p dir="ltr" className="text-start">
           {customer.email} · {customer.phone}
