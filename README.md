@@ -42,6 +42,7 @@ pnpm install
 pnpm db:up && pnpm db:migrate && pnpm db:seed   # Postgres on :5435, the catalogue + demo orders
 pnpm dev:web          # storefront + api
 pnpm dev:dashboard    # dashboard + api (login with ADMIN_EMAIL / ADMIN_PASSWORD from .env)
+pnpm demo:reset       # wipes the whole local Postgres volume (other worktrees' databases too), asks first, --yes skips; stop dev first
 ```
 
 Checks: `pnpm check` (format), `pnpm lint`, `pnpm check-types`, `pnpm test` (needs `DATABASE_URL`), `pnpm build`.
@@ -52,4 +53,5 @@ Checks: `pnpm check` (format), `pnpm lint`, `pnpm check-types`, `pnpm test` (nee
 - Payments: [docs/payments.md](docs/payments.md)
 - Brand and how to change it: [docs/brand.md](docs/brand.md)
 - Contract and price notes: [docs/contract.md](docs/contract.md)
+- AI translation and the model eval: [docs/ai-translation.md](docs/ai-translation.md)
 - Agent rules: [AGENTS.md](AGENTS.md) and `.cursor/rules/`

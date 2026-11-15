@@ -12,6 +12,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "intl-messageformat": "^11.2.15",
     "zod": "catalog:"
   },
   "devDependencies": {

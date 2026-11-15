@@ -3,7 +3,7 @@
 import { PlusIcon, TrashIcon } from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { DEFAULT_SHIPPING_RATES, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
+import { DEFAULT_SHIPPING_RATES, PLACEHOLDER_BANK, type StudioSettings, studioSettingsSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSet } from "@workspace/ui/components/field"
@@ -25,15 +25,15 @@ const INSTAGRAM = /^@?[A-Za-z0-9._]{1,30}$/
 
 function SettingsFormBody({ settings }: { settings: StudioSettings }) {
   const queryClient = useQueryClient()
-  const [email, setEmail] = useState(settings.contactEmail)
-  const [phones, setPhones] = useState(settings.phones.length ? settings.phones : [""])
+  const [email, setEmail] = useState(settings.contactEmail ?? "")
+  const [phones, setPhones] = useState(settings.phones?.length ? settings.phones : [""])
   const [whatsapp, setWhatsapp] = useState(settings.whatsapp ?? "")
   const [instagram, setInstagram] = useState(settings.instagram ?? "")
   const [rates, setRates] = useState<RatesDraft>(ratesToDraft(settings.shippingRates))
   const [rateErrors, setRateErrors] = useState<RatesErrors>({})
   const [resetting, setResetting] = useState(false)
   const [note, setNote] = useState<LocalizedDraft>(toLocalizedDraft(settings.shippingNote))
-  const [bank, setBank] = useState(settings.bank)
+  const [bank, setBank] = useState(settings.bank ?? PLACEHOLDER_BANK)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const save = useMutation(

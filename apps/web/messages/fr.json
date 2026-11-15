@@ -111,7 +111,7 @@
     "summary": "Récapitulatif",
     "contact": "Vos coordonnées",
     "name": "Nom complet",
-    "email": "E-mail",
+    "email": "Adresse e-mail",
     "phone": "Téléphone",
     "delivery": "Adresse de livraison",
     "country": "Pays",
@@ -127,7 +127,7 @@
     "payIn": "Vous payez en {currency}",
     "method": "Mode de paiement",
     "methodOnline": "Carte bancaire ou e-DINAR",
-    "methodCod": "Paiement en espèces à la livraison",
+    "methodCod": "Espèces à la livraison",
     "methodCodHint": "Disponible en Tunisie. Vous réglez le livreur à la réception.",
     "placeOrder": "Confirmer la commande",
     "errors": {
@@ -144,7 +144,8 @@
     "backToShop": "Voir la boutique",
     "termsLabel": "J'accepte les <link>conditions générales de vente</link>.",
     "methodTransfer": "Virement bancaire",
-    "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement."
+    "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement.",
+    "noMethod": "Aucun moyen de paiement pour ce pays dans cette devise. Changez de devise ou écrivez-nous."
   },
   "order": {
     "title": "Commande {number}",
@@ -183,7 +184,7 @@
     "reference": "Référence à indiquer"
   },
   "demo": {
-    "title": "Paiement de démonstration",
+    "title": "Paiement de test",
     "text": "Ceci est une passerelle de test, aucun argent n'est débité. Choisissez le résultat du paiement pour la commande {order}.",
     "pay": "Simuler un paiement réussi",
     "fail": "Simuler un échec",
@@ -195,7 +196,7 @@
     "title": "Créer une pièce unique",
     "intro": "Racontez-nous votre idée : un thème, des dimensions, une inspiration. L'atelier étudie votre demande et vous répond par e-mail avec un devis.",
     "name": "Nom complet",
-    "email": "E-mail",
+    "email": "Adresse e-mail",
     "phone": "Téléphone (facultatif)",
     "country": "Pays (facultatif)",
     "description": "Votre projet",
@@ -399,7 +400,7 @@
             ]
           },
           {
-            "title": "Réception",
+            "title": "Réception du colis",
             "body": [
               "Vérifiez l'état du colis à la livraison et signalez toute anomalie à l'atelier selon les conditions générales de vente."
             ]

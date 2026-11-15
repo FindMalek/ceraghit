@@ -1,12 +1,12 @@
 import { ORPCError } from "@orpc/server"
 import { type Db, orderItems, orders, products, productVariants } from "@workspace/db"
-import { availablePaymentMethods, type Currency, estimateShipping, type OrderInput, pick } from "@workspace/sdk"
+import { type Currency, estimateShipping, type OrderInput, paymentMethodsFor, pick } from "@workspace/sdk"
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { findProducts } from "./catalog"
 import { sendOrderEmails } from "./order-emails"
 import { unitMinor } from "./pricing"
-import { getSettings } from "./settings"
+import { effectivePaymentMethods, getSettings } from "./settings"
 
 /** A pending order holds its stock this long, then the pieces go back on sale. */
 export const HOLD_MINUTES = 45
@@ -61,9 +61,9 @@ function newNumber(): string {
 
 export async function createOrder(services: Services, input: OrderInput) {
   const { db, payments, config, now } = services
-  const allowed = availablePaymentMethods(input.country, config.onlinePayments)
-  const method = input.paymentMethod ?? allowed[0]!
-  if (!allowed.includes(method)) {
+  const allowed = paymentMethodsFor(input, await effectivePaymentMethods(services), true)
+  const method = input.paymentMethod ?? allowed[0]
+  if (!method || !allowed.includes(method)) {
     throw new ORPCError("BAD_REQUEST", { message: "This payment method is not available for your country." })
   }
   await releaseExpiredHolds(db, now())

@@ -1,0 +1,38 @@
+# Fails when the PR body has no `Closes #n`, no inline screenshot, or embeds a `pr-assets` image that was never pushed.
+# See docs/pr-process.md. AI attribution is checked by commit-lint.yml, not here.
+
+name: PR body
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-body-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-body:
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Fetch pr-assets
+        run: git fetch --no-tags --depth=1 origin pr-assets || echo "no pr-assets branch yet"
+      - name: Check the PR body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        # the live body, not the event payload, so "re-run job" sees the latest edit
+        run: |
+          BODY="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq '.body // ""')"
+          export BODY
+          node scripts/check-pr-body.mjs

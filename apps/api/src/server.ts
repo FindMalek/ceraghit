@@ -4,7 +4,14 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ResponseHeadersPlugin, SimpleCsrfProtectionHandlerPlugin } from "@orpc/server/plugins"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
-import { appRouter, cleanupUploads, createContext, type Services, settleOrder } from "@workspace/orpc"
+import {
+  appRouter,
+  cleanupUploads,
+  createContext,
+  effectivePaymentMethods,
+  type Services,
+  settleOrder,
+} from "@workspace/orpc"
 import { sql } from "drizzle-orm"
 
 /**
@@ -50,7 +57,7 @@ export function createServer(services: Services) {
           ok: db,
           db,
           payments: `${services.payments.name}:${services.payments.mode}`,
-          onlinePayments: services.config.onlinePayments,
+          onlinePayments: db ? (await effectivePaymentMethods(services)).online : null,
           env: services.config.deployEnv,
         },
         { status: db ? 200 : 503 },

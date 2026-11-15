@@ -15,7 +15,8 @@ import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
-import { getSettings } from "../../lib/settings"
+import { effectivePaymentMethods, getSettings } from "../../lib/settings"
+import { getShopProfile, publicShopProfile } from "../../lib/shop-profile"
 import { publicProcedure } from "../../procedures"
 
 const TAG = ["catalog"]
@@ -105,8 +106,19 @@ export const catalogRouter = {
     .route({ method: "GET", path: "/settings", summary: "Contact details and delivery fees", tags: TAG })
     .output(publicSettingsSchema)
     .handler(async ({ context }) => {
-      const { bank: _bank, ...settings } = await getSettings(context.db)
-      return { ...settings, onlinePayments: context.config.onlinePayments }
+      const { bank: _bank, contactEmail: _email, phones: _phones, ...settings } = await getSettings(context.db)
+      const [profile, paymentMethods] = await Promise.all([
+        getShopProfile(context.db),
+        effectivePaymentMethods(context),
+      ])
+      return {
+        ...settings,
+        contactEmail: profile.email ?? "",
+        phones: profile.phones,
+        onlinePayments: paymentMethods.online,
+        paymentMethods,
+        profile: publicShopProfile(profile),
+      }
     }),
 
   shippingQuote: publicProcedure

@@ -25,6 +25,7 @@ export const admins = pgTable("admins", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
+  nameConfirmedAt: timestamp("name_confirmed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -234,6 +235,37 @@ export const uploads = pgTable(
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: jsonb("value").$type<unknown>().notNull(),
+})
+
+/** The studio's legal identity, contact and bank account. One row, id "shop". */
+export const shopProfile = pgTable("shop_profile", {
+  id: text("id").primaryKey().default("shop"),
+  legalName: text("legal_name"),
+  displayName: text("display_name"),
+  legalForm: text("legal_form"),
+  /** Matricule fiscal. */
+  taxId: text("tax_id"),
+  /** RNE / patente. */
+  registryNumber: text("registry_number"),
+  address: text("address"),
+  postalCode: text("postal_code"),
+  city: text("city"),
+  country: text("country").notNull().default("TN"),
+  phones: jsonb("phones").$type<string[]>().notNull().default([]),
+  /** Public contact. */
+  email: text("email"),
+  /** Where studio notifications go, falls back to `email`. */
+  notifyEmail: text("notify_email"),
+  bankHolder: text("bank_holder"),
+  bankName: text("bank_name"),
+  bankRib: text("bank_rib"),
+  bankIban: text("bank_iban"),
+  bankBic: text("bank_bic"),
+  invoiceNote: jsonb("invoice_note").$type<Localized>(),
+  shippingConfirmedAt: timestamp("shipping_confirmed_at", { withTimezone: true }),
+  skippedSteps: jsonb("skipped_steps").$type<string[]>().notNull().default([]),
+  onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 })
 
 export const categoriesRelations = relations(categories, ({ many }) => ({ products: many(products) }))
