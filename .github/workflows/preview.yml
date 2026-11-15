@@ -47,7 +47,7 @@ jobs:
         run: |
           all='["api","web","dashboard"]'
           base=$(git merge-base "origin/$BASE_REF" "$HEAD_SHA") || { echo "apps=$all" >> "$GITHUB_OUTPUT"; exit 0; }
-          if git diff --name-only "$base" "$HEAD_SHA" | grep -Eq '^(pnpm-lock\.yaml|turbo\.json|package\.json|apps/[^/]+/Dockerfile|\.github/workflows/preview\.yml)$'; then
+          if git diff --name-only "$base" "$HEAD_SHA" | grep -Eq '^(pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|package\.json|\.npmrc|\.dockerignore|apps/[^/]+/Dockerfile|\.github/workflows/preview\.yml)$'; then
             echo "apps=$all" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -80,12 +80,11 @@ jobs:
           image="ghcr.io/findmalek/ceraghit-$APP"
           if printf '%s' "$APPS" | jq -e --arg a "$APP" 'index($a)' >/dev/null; then
             echo "- $APP: built (changed by this PR)" >> "$GITHUB_STEP_SUMMARY"
-          elif docker buildx imagetools inspect "$image:main" >/dev/null 2>&1; then
-            docker buildx imagetools create -t "$image:pr-$PR_NUMBER" "$image:main"
+          elif docker buildx imagetools inspect "$image:main" >/dev/null 2>&1 && docker buildx imagetools create -t "$image:pr-$PR_NUMBER" "$image:main"; then
             echo "reused=true" >> "$GITHUB_OUTPUT"
             echo "- $APP: reused \`:main\` as \`pr-$PR_NUMBER\`" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- $APP: built (no \`:main\` image yet)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- $APP: built (no \`:main\` image, or the retag failed)" >> "$GITHUB_STEP_SUMMARY"
           fi
       # The homelab buildkit sometimes drops its connection (EOF, graceful_stop): try again once with a fresh builder.
       - id: build

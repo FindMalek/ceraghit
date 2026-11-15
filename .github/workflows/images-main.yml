@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build:
-    if: vars.PREVIEW_ENABLED == 'true'
+    if: vars.PREVIEW_ENABLED == 'true' && github.ref == 'refs/heads/main'
     runs-on: [self-hosted, the-keep]
     timeout-minutes: 40
     strategy:
