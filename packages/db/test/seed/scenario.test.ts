@@ -24,7 +24,7 @@ test("seeded online orders carry a gateway ref that matches them and none is pen
   const { orders } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
   for (const order of orders.filter((o) => o.paymentMethod === "online")) {
     expect(order.status).not.toBe("pending_payment")
-    expect(parseDemoRef(order.paymentRef!)).toEqual({
+    expect(parseDemoRef(order.paymentRef!)).toMatchObject({
       outcome: order.status === "cancelled" ? "failed" : "paid",
       orderNumber: order.number!,
       amountMinor: order.totalMinor!,
@@ -63,5 +63,20 @@ test("every paid transfer order has exactly one manual payment audit row", () =>
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({ action: "mark_paid_manually", method: "transfer", adminId: null })
   }
-  expect(audit).toHaveLength(paidTransfers.length)
+  expect(audit.filter((a) => a.action === "mark_paid_manually")).toHaveLength(paidTransfers.length)
+})
+
+test("the demo shows one late payment on a cancelled online order", () => {
+  const { orders, audit } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const rows = audit.filter((a) => a.action === "late_payment")
+  expect(rows).toHaveLength(1)
+  expect(orders.find((o) => o.id === rows[0]!.orderId)).toMatchObject({ paymentMethod: "online", status: "cancelled" })
+})
+
+test("the demo has one sent and one failed mail on real orders, so the failures page is never empty", () => {
+  const { orders, mail } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  expect(mail.map((m) => m.status).sort()).toEqual(["failed", "sent"])
+  const failed = mail.find((m) => m.status === "failed")!
+  expect(failed.error).toBe("resend 503: service unavailable")
+  expect(orders.find((o) => o.id === failed.orderId)?.email).toBe(failed.to)
 })

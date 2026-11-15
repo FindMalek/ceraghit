@@ -174,3 +174,10 @@ Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_P
 - **cookies**: the admin cookie is `HttpOnly; SameSite=Lax; Priority=High`, `Secure` outside local. It stays `Lax` and not
   `Strict` so a link to the dashboard from an email or chat keeps the session. The locale cookie is `Lax`, `Secure` in
   production; the currency cookie is only read (a local/preview testing aid).
+
+## mail log
+
+Every mail goes through `deliverMail` and leaves a row in `mail_log` (sent or failed, with the real recipient and the
+body). Transient errors (network, 429, 5xx) are retried twice; a failure shows up under "Emails en échec" in the dashboard
+with a banner until the owner resends or dismisses it. The same daily `cleanup-uploads` call deletes rows older than 90
+days (bodies hold customer details).

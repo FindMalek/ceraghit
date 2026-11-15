@@ -7,7 +7,7 @@ import { eq, inArray } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
-import { DemoProvider } from "../src/lib/payments"
+import { assertNoDemoInProduction, DemoProvider } from "../src/lib/payments"
 import { appRouter } from "../src/routers"
 
 const url = process.env.DATABASE_URL
@@ -121,7 +121,32 @@ describe.skipIf(!url)("demo gateway", () => {
   })
 
   test("a ref the gateway never issued counts as failed", async () => {
-    expect((await new DemoProvider("https://web.test").check("demo_seed_3")).status).toBe("failed")
+    const demo = new DemoProvider("https://web.test")
+    for (const ref of ["demo_seed_3", "demo:paid:CER-1", "demo:paid:CER-1:100:TND", "demo:paid:CER-1:x:TND:abc"]) {
+      expect((await demo.check(ref)).status).toBe("failed")
+    }
+  })
+
+  test("a hand-made ref for someone else's order is refused", async () => {
+    const client = clientFor(servicesFor("local"))
+    const { created, ref } = await buy(client)
+    const [, , number, amount, currency] = ref.split(":")
+    for (const forged of [
+      `demo:pending:${number}:${amount}:${currency}`,
+      `demo:pending:${number}:${amount}:${currency}:${"0".repeat(32)}`,
+    ]) {
+      await expect(client.public.orders.demoResolve({ ref: forged, outcome: "paid" })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      })
+    }
+    expect((await view(client, created)).status).toBe("pending_payment")
+  })
+
+  test("the api refuses to boot with card payments on the demo gateway in production", () => {
+    const demo = new DemoProvider("https://web.test")
+    expect(() => assertNoDemoInProduction({ appEnv: "production", onlinePayments: true }, demo)).toThrow()
+    expect(() => assertNoDemoInProduction({ appEnv: "production", onlinePayments: false }, demo)).not.toThrow()
+    expect(() => assertNoDemoInProduction({ appEnv: "preview", onlinePayments: true }, demo)).not.toThrow()
   })
 
   test("production never resolves demo payments", async () => {

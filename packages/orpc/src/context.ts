@@ -14,6 +14,8 @@ export interface Services {
   storage: Storage | null
   auth: AdminAuth
   now: () => Date
+  /** Waits between mail retries; tests pass an instant one. */
+  sleep?: (ms: number) => Promise<void>
   config: {
     webUrl: string
     apiPublicUrl: string

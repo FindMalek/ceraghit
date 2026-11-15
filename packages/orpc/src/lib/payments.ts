@@ -1,5 +1,5 @@
 import type { Db } from "@workspace/db"
-import { demoRef, orders, parseDemoRef } from "@workspace/db"
+import { demoRef, newDemoNonce, orders, parseDemoRef } from "@workspace/db"
 import type { Currency } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
 import type { AppEnv } from "../context"
@@ -103,6 +103,13 @@ export class KonnectProvider implements PaymentProvider {
   }
 }
 
+/** Boot guard: the demo gateway must never sit behind card payments in production. */
+export function assertNoDemoInProduction(env: { appEnv: AppEnv; onlinePayments: boolean }, payments: PaymentProvider) {
+  if (env.appEnv === "production" && env.onlinePayments && payments.name === "demo") {
+    throw new Error("production cannot take card payments through the demo gateway")
+  }
+}
+
 /**
  * Local and preview checkout without a gateway: the web app shows a fake page where you pick the outcome.
  * Stateless: the outcome lives in the order's payment ref (see `demoRef`), so an api restart forgets nothing.
@@ -119,6 +126,7 @@ export class DemoProvider implements PaymentProvider {
       orderNumber: input.orderNumber,
       amountMinor: input.amountMinor,
       currency: input.currency,
+      nonce: newDemoNonce(),
     })
     return { ref, payUrl: `${this.webUrl}/checkout/demo?ref=${encodeURIComponent(ref)}&order=${input.orderNumber}` }
   }

@@ -3,10 +3,27 @@ export interface Mail {
   subject: string
   text: string
   replyTo?: string
+  /** Same value across the retries of one mail, so a retry after an accepted send cannot deliver twice. */
+  idempotencyKey?: string
 }
 
 export interface Mailer {
-  send(mail: Mail): Promise<void>
+  /** The provider's id for the mail when it gives one. */
+  send(mail: Mail): Promise<{ id: string | null } | undefined>
+}
+
+/** `transient` errors (network, 429, 5xx) are worth retrying, the others (bad key, unverified domain, invalid mail) are not. */
+export class MailError extends Error {
+  constructor(
+    message: string,
+    readonly transient: boolean,
+    readonly status: number,
+    /** Milliseconds the provider asked us to wait. */
+    readonly retryAfterMs?: number,
+  ) {
+    super(message)
+    this.name = "MailError"
+  }
 }
 
 /** Local without a mail catcher: nothing leaves the machine, the whole mail is logged. */
@@ -17,7 +34,12 @@ export class ConsoleMailer implements Mailer {
       .map((line) => (line ? `  ${line}` : line))
       .join("\n")
     console.info(`[mail] to ${mail.to}: ${mail.subject}\n${body}`)
+    return { id: null }
   }
+}
+
+async function bodyOf(res: Response): Promise<string> {
+  return (await res.text().catch(() => "")).slice(0, 300)
 }
 
 /** "Name <addr>" or a bare address. */
@@ -48,9 +70,12 @@ export class MailpitMailer implements Mailer {
         Text: text,
       }),
     })
-    if (!res.ok) throw new Error(`mailpit ${res.status}: ${await res.text().catch(() => "")}`)
+    if (!res.ok) throw new MailError(`mailpit ${res.status}: ${await bodyOf(res)}`, res.status >= 500, res.status)
+    return { id: null }
   }
 }
+
+const RESEND_TIMEOUT_MS = 4000
 
 export class ResendMailer implements Mailer {
   constructor(
@@ -59,13 +84,33 @@ export class ResendMailer implements Mailer {
     private http: typeof fetch = fetch,
   ) {}
 
-  async send({ to, subject, text, replyTo }: Mail) {
-    const res = await this.http("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { authorization: `Bearer ${this.apiKey}`, "content-type": "application/json" },
-      body: JSON.stringify({ from: this.from, to, subject, text, reply_to: replyTo }),
-    })
-    if (!res.ok) throw new Error(`resend ${res.status}: ${await res.text().catch(() => "")}`)
+  async send({ to, subject, text, replyTo, idempotencyKey }: Mail) {
+    let res: Response
+    try {
+      res = await this.http("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${this.apiKey}`,
+          "content-type": "application/json",
+          ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
+        },
+        body: JSON.stringify({ from: this.from, to, subject, text, reply_to: replyTo }),
+        signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
+      })
+    } catch {
+      throw new MailError("resend: network error", true, 0)
+    }
+    if (!res.ok) {
+      const seconds = Number(res.headers.get("retry-after"))
+      throw new MailError(
+        `resend ${res.status}: ${await bodyOf(res)}`,
+        res.status === 429 || res.status >= 500,
+        res.status,
+        Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined,
+      )
+    }
+    const body = (await res.json().catch(() => null)) as { id?: unknown } | null
+    return { id: typeof body?.id === "string" ? body.id : null }
   }
 }
 
@@ -80,12 +125,13 @@ export class RedirectMailer implements Mailer {
     private label: string,
   ) {}
 
-  async send({ to, subject, text, replyTo }: Mail) {
+  async send({ to, subject, text, replyTo, idempotencyKey }: Mail) {
     const header = [`Destinataire d'origine : ${to}`, ...(replyTo ? [`Répondre à : ${replyTo}`] : [])]
-    await this.inner.send({
+    return this.inner.send({
       to: this.redirectTo,
       subject: `[${this.label} → ${to}] ${subject}`,
       text: `${header.join("\n")}\n\n${text}`,
+      idempotencyKey,
     })
   }
 }

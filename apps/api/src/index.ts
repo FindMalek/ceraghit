@@ -1,7 +1,7 @@
 import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { AdminAuth, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
+import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
 import { loadEnv } from "./env"
 import { createMailer, mailTransport } from "./mailer"
 import { createServer } from "./server"
@@ -19,9 +19,7 @@ const payments =
     ? new KonnectProvider(env.KONNECT_API_KEY, env.KONNECT_WALLET_ID, env.KONNECT_MODE)
     : new DemoProvider(env.WEB_URL)
 
-if (env.APP_ENV === "production" && env.ONLINE_PAYMENTS && payments.name === "demo") {
-  throw new Error("production cannot take card payments through the demo gateway")
-}
+assertNoDemoInProduction({ appEnv: env.APP_ENV, onlinePayments: env.ONLINE_PAYMENTS }, payments)
 
 const fetch = createServer({
   db,
