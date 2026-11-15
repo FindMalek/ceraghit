@@ -1,6 +1,7 @@
 {
   "name": "ceraghit",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "turbo dev",
@@ -20,6 +21,7 @@
     "db:seed:catalog": "turbo db:seed:catalog -F @workspace/db",
     "db:studio": "turbo db:studio -F @workspace/db",
     "ui:add": "pnpm --filter @workspace/ui exec shadcn add",
+    "licenses:check": "node scripts/check-licenses.mjs",
     "rules:check": "node scripts/check-rules.mjs",
     "pr:screenshots": "node scripts/pr-screenshots.mjs",
     "start-issue": "scripts/start-issue.sh",
