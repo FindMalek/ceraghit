@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import ar from "../messages/ar.json"
-import en from "../messages/en.json"
-import fr from "../messages/fr.json"
-import { leaves } from "../test/helpers/messages"
+import ar from "../../messages/ar.json"
+import en from "../../messages/en.json"
+import fr from "../../messages/fr.json"
+import { leaves } from "../helpers/messages"
 
 /** ICU argument names and rich-text tags: `{count, plural, ...}` gives count, `<link>` gives <link>. */
 function placeholders(message: string): string[] {
