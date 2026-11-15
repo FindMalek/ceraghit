@@ -33,7 +33,13 @@ holds live keys.
 - `settleOrder` re-fetches `GET /payments/{ref}` and only marks paid when status is completed **and** amount, currency and
   order number match. Webhook is unsigned: never trust its payload.
 - The only other way to paid is `markPaidManually` (admin only, audited in `order_audit`), for transfers and Payoneer links
-  the gateway never sees. It refuses card orders and an amount or currency the owner did not see.
+  the gateway never sees. It refuses card orders and an amount or currency the owner did not see. Each call stores who,
+  when, method and note; only the owner can call it, never customer or webhook data.
 - Konnect: `POST /api/v2/payments/init-payment`, header `X-Api-Key`, sandbox host `api.preprod.konnect.network`. Amount in
   minor units, currency in `token`. Keep new gateways behind `PaymentProvider`.
 - Pieces are `quoteOnly` (no cart, "ask for a quote") when they are commissions or too expensive for card checkout.
+
+# Scheduled jobs
+
+- Jobs are `POST /cron/<name>` endpoints on the api, bearer `CRON_SECRET`, idempotent. The scheduler holds only the api URL
+  and `CRON_SECRET` and calls production; previews have no schedules.
