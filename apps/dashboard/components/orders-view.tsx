@@ -385,8 +385,8 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                     className="frame flex w-full flex-col gap-1 bg-card/70 p-3 text-left"
                   >
                     <span className="flex items-center justify-between gap-2">
-                      <span className="text-lg tabular-nums">{order.number}</span>
-                      <span className="flex items-center gap-1.5">
+                      <span className="whitespace-nowrap text-lg tabular-nums">{order.number}</span>
+                      <span className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
                         <HoldBadge order={order} />
                         <OrderStatusBadge status={order.status} />
                       </span>
