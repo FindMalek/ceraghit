@@ -33,6 +33,8 @@ jobs:
           node-version: "24"
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - name: Script tests
+        run: node --test "scripts/test/*.test.mjs"
       - name: AI rules are in sync
         run: pnpm rules:check
       - name: Schema changes have a migration
