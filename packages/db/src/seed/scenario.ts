@@ -208,6 +208,7 @@ export function buildScenario(
   const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[] } = { orders: [], items: [], audit: [] }
 
   let abroadCount = 0
+  let seenLate = false
   for (let n = 0; n < 45; n++) {
     const id = crypto.randomUUID()
     const abroad = rand() < 0.3
@@ -265,6 +266,18 @@ export function buildScenario(
         method: "transfer",
         note: "démo",
         createdAt: new Date(createdAt.getTime() + 5 * 60_000),
+      })
+    }
+    if (!offline && status === "cancelled" && !seenLate) {
+      seenLate = true
+      out.audit.push({
+        orderId: id,
+        adminId: null,
+        action: "late_payment",
+        fromStatus: "cancelled",
+        toStatus: "cancelled",
+        note: "paiement reçu après l'annulation (démo)",
+        createdAt: new Date(createdAt.getTime() + 50 * 60_000),
       })
     }
     for (const p of unique) {

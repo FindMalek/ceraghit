@@ -1,0 +1,194 @@
+import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import {
+  categories,
+  createDb,
+  invoiceCounters,
+  invoices,
+  orderAudit,
+  orderItems,
+  orders,
+  products,
+} from "@workspace/db"
+import { runMigrations } from "@workspace/db/migrate"
+import { seed } from "@workspace/db/seed"
+import { eq, inArray, like } from "drizzle-orm"
+import type { Services } from "../src/context"
+import type { Mail } from "../src/lib/mailer"
+import { settleOrder } from "../src/lib/orders"
+import type { PaymentCheck, PaymentProvider } from "../src/lib/payments"
+import { getPaymentResponse } from "./fixtures/konnect"
+
+const url = process.env.DATABASE_URL
+
+describe.skipIf(!url)("settleOrder against the gateway answer", () => {
+  const db = createDb(url!)
+  const sent: Mail[] = []
+  let answer: PaymentCheck = { status: "pending", amountMinor: 0, currency: null, orderNumber: null }
+  let checks = 0
+  const payments: PaymentProvider = {
+    name: "konnect",
+    mode: "test",
+    init: async () => ({ payUrl: "x", ref: "x" }),
+    check: async () => {
+      checks++
+      return answer
+    },
+  }
+  const services = {
+    db,
+    payments,
+    mailer: { send: async (mail: Mail) => void sent.push(mail) },
+    storage: null,
+    now: () => new Date("2096-03-10T10:00:00Z"),
+    config: { webUrl: "https://web.test", apiPublicUrl: "https://api.test", appEnv: "local", deployEnv: "test" },
+  } as unknown as Services
+
+  let seq = 0
+  let productId = ""
+
+  const konnectAnswer = (
+    over: Parameters<typeof getPaymentResponse>[0],
+    status: PaymentCheck["status"],
+  ): PaymentCheck => {
+    const { payment } = getPaymentResponse(over)
+    return {
+      status,
+      amountMinor: payment.amount,
+      currency: payment.token as "EUR",
+      orderNumber: payment.orderId,
+    }
+  }
+
+  const order = async (over: Partial<typeof orders.$inferInsert> = {}) => {
+    const n = `TST-ST-${Date.now()}-${seq++}`
+    const [row] = await db
+      .insert(orders)
+      .values({
+        number: n,
+        publicToken: "t",
+        status: "pending_payment",
+        paymentMethod: "online",
+        paymentProvider: "konnect",
+        paymentRef: `ref-${n}`,
+        currency: "EUR",
+        subtotalMinor: 3_400,
+        totalMinor: 3_400,
+        customerName: "Test Buyer",
+        email: "st-buyer@example.test",
+        phone: "+32470000000",
+        country: "BE",
+        city: "Bruxelles",
+        address: "1 rue du test",
+        locale: "fr",
+        ...over,
+      })
+      .returning()
+    await db
+      .insert(orderItems)
+      .values({ orderId: row!.id, productId, ref: "R", title: "x", unitMinor: 3_400, quantity: 1 })
+    return row!
+  }
+  const audit = (orderId: string) => db.select().from(orderAudit).where(eq(orderAudit.orderId, orderId))
+  const statusOf = async (orderId: string) => (await db.select().from(orders).where(eq(orders.id, orderId)))[0]!.status
+
+  beforeAll(async () => {
+    await runMigrations(db)
+    await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
+    const [cat] = await db
+      .insert(categories)
+      .values({ slug: "tst-st", name: { fr: "Test" } })
+      .returning()
+    const [p] = await db
+      .insert(products)
+      .values({
+        ref: "TST-ST",
+        slug: "tst-st",
+        categoryId: cat!.id,
+        title: { fr: "x" },
+        priceTnd: 40_000,
+        priceEur: 3_400,
+        stock: 5,
+        status: "published",
+      })
+      .returning()
+    productId = p!.id
+  })
+
+  afterAll(async () => {
+    const mine = await db.select({ id: orders.id }).from(orders).where(like(orders.number, "TST-ST-%"))
+    const ids = mine.map((o) => o.id)
+    if (ids.length) {
+      await db.delete(invoices).where(inArray(invoices.orderId, ids))
+      await db.delete(orders).where(inArray(orders.id, ids))
+    }
+    await db.delete(invoiceCounters).where(eq(invoiceCounters.year, 2096))
+    await db.delete(products).where(eq(products.id, productId))
+    await db.delete(categories).where(eq(categories.slug, "tst-st"))
+  })
+
+  test("a matching paid answer pays once even with concurrent calls, and sends one email set", async () => {
+    const o = await order()
+    answer = konnectAnswer({ orderId: o.number }, "paid")
+    sent.length = 0
+    await Promise.all([settleOrder(services, o.paymentRef!), settleOrder(services, o.paymentRef!)])
+    expect(await statusOf(o.id)).toBe("paid")
+    const toBuyer = sent.filter((m) => m.to === "st-buyer@example.test")
+    expect(toBuyer).toHaveLength(1)
+    expect(await audit(o.id)).toHaveLength(0)
+  })
+
+  test("an amount off by one stays pending and leaves one gateway_mismatch row, however often it is asked", async () => {
+    const o = await order()
+    answer = konnectAnswer({ orderId: o.number, amount: 3_399 }, "paid")
+    await settleOrder(services, o.paymentRef!)
+    await settleOrder(services, o.paymentRef!)
+    expect(await statusOf(o.id)).toBe("pending_payment")
+    const rows = await audit(o.id)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ action: "gateway_mismatch", adminId: null, fromStatus: "pending_payment" })
+    expect(rows[0]!.note).toContain("3399")
+    expect(rows[0]!.note).not.toContain("st-buyer@example.test")
+  })
+
+  test("a wrong currency or a wrong order number is a mismatch too", async () => {
+    const wrongCurrency = await order()
+    answer = konnectAnswer({ orderId: wrongCurrency.number, token: "TND" }, "paid")
+    await settleOrder(services, wrongCurrency.paymentRef!)
+    expect(await statusOf(wrongCurrency.id)).toBe("pending_payment")
+    expect((await audit(wrongCurrency.id))[0]?.action).toBe("gateway_mismatch")
+
+    const wrongNumber = await order()
+    answer = konnectAnswer({ orderId: "CER-OTHER" }, "paid")
+    await settleOrder(services, wrongNumber.paymentRef!)
+    expect(await statusOf(wrongNumber.id)).toBe("pending_payment")
+    expect((await audit(wrongNumber.id))[0]?.action).toBe("gateway_mismatch")
+  })
+
+  test("a failed answer cancels the order and puts the piece back", async () => {
+    const o = await order()
+    const [before] = await db.select().from(products).where(eq(products.id, productId))
+    answer = konnectAnswer({ orderId: o.number, status: "failed" }, "failed")
+    expect(await settleOrder(services, o.paymentRef!)).toMatchObject({ status: "cancelled" })
+    const [after] = await db.select().from(products).where(eq(products.id, productId))
+    expect(after!.stock).toBe(before!.stock + 1)
+  })
+
+  test("a paid answer for an order already cancelled records one late_payment row and keeps it cancelled", async () => {
+    const o = await order({ status: "cancelled" })
+    answer = konnectAnswer({ orderId: o.number }, "paid")
+    await settleOrder(services, o.paymentRef!)
+    const checksAfterFirst = checks
+    await settleOrder(services, o.paymentRef!)
+    expect(checks).toBe(checksAfterFirst)
+    expect(await statusOf(o.id)).toBe("cancelled")
+    const rows = await audit(o.id)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ action: "late_payment", fromStatus: "cancelled", toStatus: "cancelled" })
+  })
+
+  test("an unknown ref is null and does not ask the gateway", async () => {
+    const before = checks
+    expect(await settleOrder(services, "nope")).toBeNull()
+    expect(checks).toBe(before)
+  })
+})
