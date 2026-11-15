@@ -1,0 +1,13 @@
+# Throwaway S3 for the e2e stack. Test-only values.
+metadata_dir = "/var/garage/meta"
+data_dir = "/var/garage/data"
+db_engine = "sqlite"
+replication_factor = 1
+
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "127.0.0.1:3901"
+rpc_secret = "1799bccfd7411eddcf9ebd316bc1f5287ad12a68094e1c6ac968d1d4d4a1d4f1"
+
+[s3_api]
+s3_region = "us-east-1"
+api_bind_addr = "[::]:3900"

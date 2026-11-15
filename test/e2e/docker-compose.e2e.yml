@@ -1,0 +1,41 @@
+# Throwaway services for the e2e run: no volumes, so every `pnpm e2e` starts empty. Ports are env-overridable
+# to run next to a dev stack (see env.ts). Used by scripts/prepare.ts with the project name ceraghit-e2e.
+name: ceraghit-e2e
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ceraghit
+      POSTGRES_PASSWORD: ceraghit
+      POSTGRES_DB: ceraghit_e2e
+    ports:
+      - "${E2E_DB_PORT:-5436}:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ceraghit -d ceraghit_e2e"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  garage:
+    image: dxflrs/garage:v2.1.0
+    ports:
+      - "${E2E_S3_PORT:-9100}:3900"
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro
+    tmpfs:
+      - /var/garage
+
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    environment:
+      MP_MAX_MESSAGES: 500
+    ports:
+      - "${E2E_MAILPIT_UI_PORT:-8025}:8025"
+      - "${E2E_MAILPIT_SMTP_PORT:-1025}:1025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

@@ -24,6 +24,8 @@
     "ui:add": "pnpm --filter @workspace/ui exec shadcn add",
     "licenses:check": "node scripts/check-licenses.mjs",
     "rules:check": "node scripts/check-rules.mjs",
+    "e2e": "pnpm --filter @workspace/e2e e2e",
+    "e2e:install": "pnpm --filter @workspace/e2e exec playwright install --with-deps chromium webkit",
     "pr:screenshots": "node scripts/pr-screenshots.mjs",
     "start-issue": "scripts/start-issue.sh",
     "db:shell": "scripts/db-shell.sh"
