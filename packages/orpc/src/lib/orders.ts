@@ -37,7 +37,7 @@ export interface AuditRow {
 }
 
 export async function recordAudit(tx: Tx, row: AuditRow): Promise<void> {
-  await tx.insert(orderAudit).values(row)
+  await tx.insert(orderAudit).values({ ...row, createdAt: sql`clock_timestamp()` })
 }
 
 /**
@@ -52,7 +52,7 @@ async function recordAuditOnce(db: Db, row: AuditRow): Promise<void> {
       .from(orderAudit)
       .where(and(eq(orderAudit.orderId, row.orderId), eq(orderAudit.action, row.action)))
       .limit(1)
-    if (!existing) await tx.insert(orderAudit).values(row)
+    if (!existing) await tx.insert(orderAudit).values({ ...row, createdAt: sql`clock_timestamp()` })
   })
 }
 

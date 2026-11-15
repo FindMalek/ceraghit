@@ -93,7 +93,7 @@ export async function deliverMail(
   return ok
 }
 
-/** Resends a failed mail through the normal path; the same row is closed on success or keeps the new error. */
+/** Resends a failed mail through the normal path. Only the stored text is sent again (the log keeps no html); the same row is closed on success or keeps the new error. */
 export async function resendMail(services: Services, id: string): Promise<boolean | null> {
   const row = await services.db.query.mailLog.findFirst({
     where: and(eq(mailLog.id, id), eq(mailLog.status, "failed")),

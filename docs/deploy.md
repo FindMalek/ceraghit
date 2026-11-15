@@ -92,6 +92,10 @@ Every file sent to the bucket is a row in `uploads` (key, folder, bytes). The da
 from R2 and the counter after 30 days unused. `cleanup-dev-bucket.yml` does the homelab bucket: files of closed PRs and
 anything older than 14 days.
 
+Jobs are `POST /cron/<name>` (bearer `CRON_SECRET`), each run is a row in `job_runs` and Réglages shows the last run of
+every job with a stale warning. To add one, register it in `apps/api/src/cron.ts` and list it in
+`packages/sdk/src/jobs.ts`. `release-holds` frees stock held by abandoned online checkouts; any scheduler can call it.
+
 ## rate limits
 
 Limits are counted in the `rate_limits` table (fixed windows, shared by every api instance), keyed by the visitor's address:

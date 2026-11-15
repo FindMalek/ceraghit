@@ -30,22 +30,22 @@ const order = (patch: Partial<ConfirmationOrder> = {}): ConfirmationOrder => ({
   ...patch,
 })
 
-test("transfer confirmation shows the profile bank block", () => {
-  const { text } = renderOrderConfirmation(order(), ctx)
+test("transfer confirmation shows the profile bank block", async () => {
+  const { text } = await renderOrderConfirmation(order(), ctx)
   expect(text).toContain("IBAN: TN5910006035183598478831")
   expect(text).toContain("RIB: 10006035183598478831")
   expect(text).toContain("Référence à indiquer: CG-1001")
   expect(text).toContain("https://web.test/fr/order/CG-1001?t=tok")
 })
 
-test("missing bank gives a contact line, never an empty IBAN", () => {
-  const { text } = renderOrderConfirmation(order(), { ...ctx, bank: null })
+test("missing bank gives a contact line, never an empty IBAN", async () => {
+  const { text } = await renderOrderConfirmation(order(), { ...ctx, bank: null })
   expect(text).not.toContain("IBAN")
   expect(text).toContain("contact@studio.test")
 })
 
-test("arabic isolates ltr tokens and starts lines with RLM", () => {
-  const { text } = renderOrderConfirmation(order({ locale: "ar" }), ctx)
+test("arabic isolates ltr tokens and starts lines with RLM", async () => {
+  const { text } = await renderOrderConfirmation(order({ locale: "ar" }), ctx)
   expect(text).toContain("IBAN: ⁦TN5910006035183598478831⁩")
   expect(text).toContain("⁦https://web.test/ar/order/CG-1001?t=tok⁩")
   expect(text).not.toContain("⁦⁦")
@@ -53,8 +53,8 @@ test("arabic isolates ltr tokens and starts lines with RLM", () => {
   expect(lines.every((l) => l.startsWith("‏"))).toBe(true)
 })
 
-test("studio mail is French and goes to the given inbox", () => {
-  const mail = renderStudioNewOrder(order(), "notify@studio.test")
+test("studio mail is French and goes to the given inbox", async () => {
+  const mail = await renderStudioNewOrder(order(), ctx, "notify@studio.test")
   expect(mail.to).toBe("notify@studio.test")
   expect(mail.subject).toBe("Nouvelle commande CG-1001 (virement à recevoir)")
 })

@@ -9,6 +9,7 @@ export interface EmailCopy {
     link: string
     invoiceLink: string
     bye: string
+    reason: string
   }
   confirmation: {
     subject: (orderNumber: string) => string
@@ -36,6 +37,7 @@ export const EMAIL_COPY = {
       link: "Suivre votre commande :",
       invoiceLink: "Votre facture :",
       bye: "Ceraghit Creation",
+      reason: "Vous recevez cet email car vous avez commandé chez Ceraghit Creation.",
     },
     confirmation: {
       subject: (n) => `Votre commande ${n} chez Ceraghit`,
@@ -61,6 +63,7 @@ export const EMAIL_COPY = {
       link: "Follow your order:",
       invoiceLink: "Your invoice:",
       bye: "Ceraghit Creation",
+      reason: "You are receiving this email because you ordered from Ceraghit Creation.",
     },
     confirmation: {
       subject: (n) => `Your Ceraghit order ${n}`,
@@ -86,6 +89,7 @@ export const EMAIL_COPY = {
       link: "يمكنك متابعة طلبك من هنا:",
       invoiceLink: "فاتورتك:",
       bye: "Ceraghit Creation",
+      reason: "وصلتك هذه الرسالة لأنك طلبت من Ceraghit Creation.",
     },
     confirmation: {
       subject: (n) => `طلبك ${n} من سيراغيت`,

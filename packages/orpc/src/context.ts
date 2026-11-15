@@ -27,6 +27,8 @@ export interface Services {
     onlinePayments: boolean
     /** Bearer token of the daily GitHub job that calls /cron/cleanup-uploads. Unset: the route does not exist. */
     cronSecret?: string
+    /** Names the api answers on `POST /cron/<name>`; the dashboard shows the other catalogued jobs as not active yet. */
+    cronJobs?: string[]
     /** Shared with the web and dashboard proxies: makes the client address they forward trustworthy. */
     proxySecret?: string
     /** The From header of outgoing mail, read by the setup check for a verified sending domain. */

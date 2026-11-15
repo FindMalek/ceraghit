@@ -23,12 +23,17 @@ const order = (locale: string): ConfirmationOrder => ({
   paymentMethod: "transfer",
 })
 
-test.each(["fr", "en", "ar"] as const)("payment received mail in %s links the order and its invoice", (locale) => {
-  const { text, to, subject } = renderPaymentReceived(order(locale), ctx)
-  expect(to).toBe("buyer@example.com")
-  expect(subject).toBe(EMAIL_COPY[locale].paymentReceived.subject("CG-1001"))
-  expect(subject).not.toBe(EMAIL_COPY[locale].confirmation.subject("CG-1001"))
-  expect(text).toContain(EMAIL_COPY[locale].common.invoiceLink)
-  expect(text).toContain(`https://web.test/${locale}/order/CG-1001?t=tok`)
-  expect(text).toContain(`https://web.test/${locale}/order/CG-1001/invoice?t=tok`)
-})
+test.each(["fr", "en", "ar"] as const)(
+  "payment received mail in %s links the order and its invoice",
+  async (locale) => {
+    const { text, html, to, subject } = await renderPaymentReceived(order(locale), ctx)
+    expect(to).toBe("buyer@example.com")
+    expect(subject).toBe(EMAIL_COPY[locale].paymentReceived.subject("CG-1001"))
+    expect(subject).not.toBe(EMAIL_COPY[locale].confirmation.subject("CG-1001"))
+    expect(text).toContain(EMAIL_COPY[locale].common.invoiceLink)
+    expect(text).toContain(`https://web.test/${locale}/order/CG-1001?t=tok`)
+    expect(text).toContain(`https://web.test/${locale}/order/CG-1001/invoice?t=tok`)
+    expect(html).toContain(`href="https://web.test/${locale}/order/CG-1001/invoice?t=tok"`)
+    expect(html).toContain(EMAIL_COPY[locale].common.invoiceLink)
+  },
+)

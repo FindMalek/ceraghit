@@ -4,6 +4,7 @@ import { hashPassword } from "../password"
 import {
   admins,
   categories,
+  jobRuns,
   locations,
   mailLog,
   orderAudit,
@@ -165,6 +166,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
     await tx.insert(orderItems).values(scenario.items)
     if (scenario.audit.length) await tx.insert(orderAudit).values(scenario.audit)
     if (scenario.mail.length) await tx.insert(mailLog).values(scenario.mail)
+    await tx.insert(jobRuns).values(scenario.jobRuns)
     await tx
       .insert(settings)
       .values({ key: "payments", value: { methods: { online: true, cod: true, transfer: true } } })
