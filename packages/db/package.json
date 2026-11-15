@@ -8,7 +8,8 @@
     "./schema": "./src/schema.ts",
     "./migrate": "./src/migrate.ts",
     "./password": "./src/password.ts",
-    "./seed": "./src/seed/index.ts"
+    "./seed": "./src/seed/index.ts",
+    "./catalogue": "./src/seed/catalogue.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
