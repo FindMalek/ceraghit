@@ -39,14 +39,20 @@ export async function recordAudit(tx: Tx, row: AuditRow): Promise<void> {
   await tx.insert(orderAudit).values(row)
 }
 
-/** Once per order and action: the gateway is asked again on every webhook and page load. */
+/**
+ * Once per order and action: the gateway is asked again on every webhook and page load, often at the same time.
+ * The advisory lock serialises the not-exists check, since there is no unique key to lean on.
+ */
 async function recordAuditOnce(db: Db, row: AuditRow): Promise<void> {
-  const [existing] = await db
-    .select({ id: orderAudit.id })
-    .from(orderAudit)
-    .where(and(eq(orderAudit.orderId, row.orderId), eq(orderAudit.action, row.action)))
-    .limit(1)
-  if (!existing) await db.insert(orderAudit).values(row)
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`order_audit:${row.orderId}:${row.action}`}))`)
+    const [existing] = await tx
+      .select({ id: orderAudit.id })
+      .from(orderAudit)
+      .where(and(eq(orderAudit.orderId, row.orderId), eq(orderAudit.action, row.action)))
+      .limit(1)
+    if (!existing) await tx.insert(orderAudit).values(row)
+  })
 }
 
 function paymentMatches(order: { totalMinor: number; currency: string; number: string }, check: PaymentCheck): boolean {
@@ -349,6 +355,7 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
       .from(orderAudit)
       .where(and(eq(orderAudit.orderId, order.id), eq(orderAudit.action, "late_payment")))
       .limit(1)
+    // shortcut: once the row exists the gateway is not asked again
     if (!seen) {
       const late = await payments.check(ref)
       if (late.status === "paid") {

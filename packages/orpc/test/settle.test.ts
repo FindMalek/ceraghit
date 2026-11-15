@@ -150,6 +150,26 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     expect(rows[0]!.note).not.toContain("st-buyer@example.test")
   })
 
+  test("concurrent mismatch answers leave exactly one gateway_mismatch row", async () => {
+    const o = await order()
+    answer = konnectAnswer({ orderId: o.number, amount: 100 }, "paid")
+    await Promise.all(Array.from({ length: 6 }, () => settleOrder(services, o.paymentRef!)))
+    expect(await audit(o.id)).toHaveLength(1)
+  })
+
+  test("a wrong amount first, then the right one, still settles with the mismatch row kept and one email", async () => {
+    const o = await order()
+    answer = konnectAnswer({ orderId: o.number, amount: 3_000 }, "paid")
+    await settleOrder(services, o.paymentRef!)
+    expect(await statusOf(o.id)).toBe("pending_payment")
+    sent.length = 0
+    answer = konnectAnswer({ orderId: o.number }, "paid")
+    await Promise.all([settleOrder(services, o.paymentRef!), settleOrder(services, o.paymentRef!)])
+    expect(await statusOf(o.id)).toBe("paid")
+    expect(await audit(o.id)).toHaveLength(1)
+    expect(sent.filter((m) => m.to === "st-buyer@example.test")).toHaveLength(1)
+  })
+
   test("a wrong currency or a wrong order number is a mismatch too", async () => {
     const wrongCurrency = await order()
     answer = konnectAnswer({ orderId: wrongCurrency.number, token: "TND" }, "paid")
