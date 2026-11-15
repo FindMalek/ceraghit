@@ -99,6 +99,7 @@ jobs:
           PREVIEW_DB_HOST: ${{ vars.PREVIEW_DB_HOST }}
           ADMIN_EMAIL: ${{ vars.PREVIEW_ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.PREVIEW_ADMIN_PASSWORD }}
+          MAIL_REDIRECT_TO: ${{ vars.PREVIEW_MAIL_REDIRECT_TO }}
           KONNECT_TEST_API_KEY: ${{ secrets.KONNECT_TEST_API_KEY }}
           KONNECT_TEST_WALLET_ID: ${{ secrets.KONNECT_TEST_WALLET_ID }}
           S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}

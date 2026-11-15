@@ -32,3 +32,24 @@ export class ResendMailer implements Mailer {
     if (!res.ok) throw new Error(`resend ${res.status}: ${await res.text().catch(() => "")}`)
   }
 }
+
+/**
+ * Outside production every mail goes to one inbox. replyTo is dropped so a reply from that inbox never reaches a real
+ * customer; the original recipient and replyTo are shown in the subject and body instead.
+ */
+export class RedirectMailer implements Mailer {
+  constructor(
+    private inner: Mailer,
+    private redirectTo: string,
+    private label: string,
+  ) {}
+
+  async send({ to, subject, text, replyTo }: Mail) {
+    const header = [`Destinataire d'origine : ${to}`, ...(replyTo ? [`Répondre à : ${replyTo}`] : [])]
+    await this.inner.send({
+      to: this.redirectTo,
+      subject: `[${this.label} → ${to}] ${subject}`,
+      text: `${header.join("\n")}\n\n${text}`,
+    })
+  }
+}

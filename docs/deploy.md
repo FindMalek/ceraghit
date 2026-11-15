@@ -43,7 +43,7 @@ Closing the PR deletes the apps, database, uploads (`pr-<n>/` in `ceraghit-dev`)
 with its own Postgres: web https://ceraghit.findmalek.engineer, dashboard https://dashboard.ceraghit.findmalek.engineer,
 api https://api.ceraghit.findmalek.engineer (docs at `/v1/docs`). It is a preview-grade environment: demo payments (or
 Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Variables: `STAGING_WEB_HOST`,
-`STAGING_DASHBOARD_HOST`, `STAGING_API_HOST`, `STAGING_ADMIN_EMAIL`; secret `STAGING_ADMIN_PASSWORD`.
+`STAGING_DASHBOARD_HOST`, `STAGING_API_HOST`, `STAGING_ADMIN_EMAIL`, `STAGING_MAIL_REDIRECT_TO`; secret `STAGING_ADMIN_PASSWORD`.
 
 ## production (merge to main)
 
@@ -100,7 +100,7 @@ write by hand. Resend needs its SPF/DKIM records on the same zone, and `commande
 
 | project | env (Production only) |
 | :-- | :-- |
-| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused) |
+| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it |
 | web | `APP_ENV=production`, `API_URL` (api origin), `WEB_URL` |
 | dashboard | `APP_ENV=production`, `API_URL`, `WEB_URL` |
 
@@ -117,7 +117,7 @@ the dashboard, customer photos on `/custom` by the storefront, both straight to 
 **DNS** (Vercel DNS, `findmalek.engineer`): `ceraghit` and `*.ceraghit` CNAME → `home.findmalek.engineer`.
 
 **GitHub** repo variables: `PREVIEW_ENABLED=true` (previews) and later `DEPLOY_ENABLED=true` (production deploys, only once the `production` environment is complete), `DOKPLOY_PUBLIC_URL`, `PREVIEW_DOMAIN=ceraghit.findmalek.engineer`,
-`PREVIEW_DB_HOST` (the-keep tailnet ip), `S3_ENDPOINT`, `PREVIEW_S3_BUCKET=ceraghit-dev`, `PREVIEW_ADMIN_EMAIL`,
+`PREVIEW_DB_HOST` (the-keep tailnet ip), `S3_ENDPOINT`, `PREVIEW_S3_BUCKET=ceraghit-dev`, `PREVIEW_ADMIN_EMAIL`, `PREVIEW_MAIL_REDIRECT_TO` (inbox that gets every preview email),
 `TURBO_API=https://turbo.findmalek.engineer`, `TURBO_TEAM=ceraghit`.
 Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_PASSWORD`, `PREVIEW_S3_ACCESS_KEY_ID`,
 `PREVIEW_S3_SECRET_ACCESS_KEY`, optional `KONNECT_TEST_API_KEY` / `KONNECT_TEST_WALLET_ID`, optional `GHCR_READ_TOKEN`

@@ -33,6 +33,8 @@ const schema = z
     /** Order emails go through Resend. Without a key they are only logged (local and previews). */
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().default("Ceraghit <onboarding@resend.dev>"),
+    /** Outside production every email goes to this one inbox instead of the real recipient. Refused in production. */
+    MAIL_REDIRECT_TO: z.email().optional(),
     S3_ENDPOINT: z.string().optional(),
     S3_REGION: z.string().default("auto"),
     S3_BUCKET: z.string().optional(),
@@ -59,9 +61,11 @@ const schema = z
       }
       if (env.SEED_DEMO && env.BOOTSTRAP) fail("production must not seed demo data")
       if (env.DEPLOY_ENV !== "production") fail("production needs DEPLOY_ENV=production")
+      if (env.MAIL_REDIRECT_TO) fail("MAIL_REDIRECT_TO is not allowed in production")
     } else {
       if (env.KONNECT_MODE === "live") fail("live payment keys are only allowed with APP_ENV=production")
       if (env.DEPLOY_ENV === "production") fail("DEPLOY_ENV=production is only allowed with APP_ENV=production")
+      if (env.RESEND_API_KEY && !env.MAIL_REDIRECT_TO) fail("outside production, RESEND_API_KEY needs MAIL_REDIRECT_TO")
     }
   })
 
