@@ -13,7 +13,7 @@ export const overview = adminProcedure
   .handler(async ({ context, input }) => {
     const { db } = context
     const now = context.now()
-    await releaseExpiredHolds(db, now)
+    await releaseExpiredHolds(context, now)
     const since = new Date(now.getTime() - input.days * 864e5)
     const inRange = and(inArray(orders.status, PAID), gte(orders.paidAt, since))
 

@@ -22,10 +22,38 @@ export type PaymentMethod = z.infer<typeof paymentMethodSchema>
 export const paymentMethodFlagsSchema = z.object({ online: z.boolean(), cod: z.boolean(), transfer: z.boolean() })
 export type PaymentMethodFlags = z.infer<typeof paymentMethodFlagsSchema>
 
+/** Days an unpaid offline order keeps its pieces, per method; `null` = never expires. */
+export const holdSettingsSchema = z.object({
+  transferDays: z.number().int().min(1).max(60).nullable().default(7),
+  codDays: z.number().int().min(1).max(60).nullable().default(null),
+  warnDays: z.number().int().min(0).max(14).default(2),
+})
+export type HoldSettings = z.infer<typeof holdSettingsSchema>
+export const DEFAULT_HOLDS: HoldSettings = { transferDays: 7, codDays: null, warnDays: 2 }
+
 export const paymentSettingsSchema = z.object({
   methods: paymentMethodFlagsSchema.default({ online: false, cod: true, transfer: true }),
+  holds: holdSettingsSchema.default(DEFAULT_HOLDS),
 })
 export type PaymentSettings = z.infer<typeof paymentSettingsSchema>
+
+/** Days an unpaid order of this method may wait before it is released, or null when it never is. */
+export function holdDays(paymentMethod: string, holds: HoldSettings): number | null {
+  if (paymentMethod === "transfer") return holds.transferDays
+  if (paymentMethod === "cod") return holds.codDays
+  return null
+}
+
+/** When an unpaid offline order is released; null for card orders (45 min hold) or a method set to never. */
+export function holdExpiresAt(order: { paymentMethod: string; createdAt: Date }, holds: HoldSettings): Date | null {
+  const days = holdDays(order.paymentMethod, holds)
+  return days === null ? null : new Date(order.createdAt.getTime() + days * 864e5)
+}
+
+/** True when the release is at most `warnDays` away. */
+export function holdExpiresSoon(expiresAt: Date, now: Date, holds: HoldSettings): boolean {
+  return expiresAt.getTime() - now.getTime() <= holds.warnDays * 864e5
+}
 
 /**
  * Methods offered at checkout, in display order. Settings only switch methods off: cod stays Tunisia + TND,
@@ -44,7 +72,10 @@ export function paymentMethodsFor(
 }
 
 /** French message when a save would leave Tunisia (TND) or abroad (EUR) without any way to pay. */
-export function validatePaymentSettings(settings: PaymentSettings, gatewayReady: boolean): string | null {
+export function validatePaymentSettings(
+  settings: Pick<PaymentSettings, "methods">,
+  gatewayReady: boolean,
+): string | null {
   if (paymentMethodsFor({ country: "TN", currency: "TND" }, settings.methods, gatewayReady).length === 0)
     return "Au moins un moyen de paiement doit rester actif pour la Tunisie."
   if (paymentMethodsFor({ country: "FR", currency: "EUR" }, settings.methods, gatewayReady).length === 0)
@@ -383,7 +414,11 @@ export const orderSchema = z.object({
 })
 
 /** What the customer sees on their order page: the bank account only while a transfer is still expected. */
-export const publicOrderSchema = orderSchema.extend({ bank: bankDetailsSchema.nullable() })
+export const publicOrderSchema = orderSchema.extend({
+  bank: bankDetailsSchema.nullable(),
+  /** ISO instant an unpaid transfer or cash order is released, null when it never is. */
+  payBefore: z.string().nullable(),
+})
 
 export const manualPaymentMethodSchema = z.enum(["transfer", "payoneer", "cash", "other"])
 export type ManualPaymentMethod = z.infer<typeof manualPaymentMethodSchema>
@@ -402,6 +437,10 @@ export const orderAuditSchema = z.object({
 
 export const adminOrderSchema = orderSchema.extend({
   id: z.string(),
+  /** ISO instant the unpaid order is released; null when paid, cancelled or never released. */
+  holdExpiresAt: z.string().nullable(),
+  /** The release is within the owner's warning window. */
+  holdWarning: z.boolean(),
   customerName: z.string(),
   email: z.string(),
   phone: z.string(),

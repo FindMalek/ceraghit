@@ -24,8 +24,8 @@ import { MANUAL_METHOD_LABEL, MarkPaidDialog } from "@/components/mark-paid-dial
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
-import { OrderStatusBadge } from "@/components/status-badge"
-import { formatDate, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
+import { HoldBadge, OrderStatusBadge } from "@/components/status-badge"
+import { formatDate, formatDayYear, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
 type Status = "pending_payment" | "paid" | "fulfilled" | "cancelled" | "refunded"
@@ -124,6 +124,7 @@ function Line({ label, value }: { label: string; value: React.ReactNode }) {
 
 const GATEWAY_AUDIT_LABEL: Record<string, string> = {
   gateway_mismatch: "Paiement Konnect incohérent : à vérifier dans votre espace Konnect",
+  hold_expired: "Annulée automatiquement : délai de paiement dépassé",
   late_payment: "Paiement Konnect reçu après l'annulation : à rembourser ou restaurer à la main",
 }
 
@@ -188,9 +189,15 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
               <SheetHeader>
                 <SheetTitle className="text-3xl tabular-nums">{order.number}</SheetTitle>
                 <SheetDescription>
-                  {formatDate(order.createdAt)} · <OrderStatusBadge status={order.status} />
+                  {formatDate(order.createdAt)} · <OrderStatusBadge status={order.status} /> <HoldBadge order={order} />
                 </SheetDescription>
               </SheetHeader>
+              {order.holdExpiresAt && order.holdWarning && (
+                <p className="mx-4 mb-4 rounded-md border border-ochre/60 bg-ochre/10 p-3 text-sm">
+                  Sans paiement d'ici le {formatDayYear(order.holdExpiresAt)}, la commande sera annulée et les pièces
+                  remises en vente.
+                </p>
+              )}
               <div className="flex flex-col gap-6 px-4 pb-4">
                 <section>
                   <h2 className="mb-1 font-heading text-2xl">Client</h2>
@@ -379,7 +386,10 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                   >
                     <span className="flex items-center justify-between gap-2">
                       <span className="text-lg tabular-nums">{order.number}</span>
-                      <OrderStatusBadge status={order.status} />
+                      <span className="flex items-center gap-1.5">
+                        <HoldBadge order={order} />
+                        <OrderStatusBadge status={order.status} />
+                      </span>
                     </span>
                     <span>{order.customerName}</span>
                     <span className="flex justify-between text-muted-foreground text-sm">
@@ -423,7 +433,10 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                       </TableCell>
                       <TableCell>{PAYMENT_SHORT[order.paymentMethod]}</TableCell>
                       <TableCell>
-                        <OrderStatusBadge status={order.status} />
+                        <span className="flex items-center gap-1.5">
+                          <OrderStatusBadge status={order.status} />
+                          <HoldBadge order={order} />
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -2,7 +2,12 @@ import { orders } from "@workspace/db"
 import { bankFromProfile } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
-import { renderOrderConfirmation, renderPaymentReceived, renderStudioNewOrder } from "../emails/confirmation"
+import {
+  renderOrderConfirmation,
+  renderOrderExpired,
+  renderPaymentReceived,
+  renderStudioNewOrder,
+} from "../emails/confirmation"
 import { deliverMail } from "./mail-log"
 import { getShopProfile, studioInbox } from "./shop-profile"
 
@@ -56,5 +61,19 @@ export async function sendPaymentReceivedEmail(services: Services, orderId: stri
     })
   } catch (error) {
     console.error("[payment received email]", error)
+  }
+}
+
+/** Tells the customer an unpaid order was released after `days` days. Never throws. */
+export async function sendOrderExpiredEmail(services: Services, orderId: string, days: number): Promise<void> {
+  try {
+    const loaded = await loadMail(services, orderId)
+    if (!loaded) return
+    await deliverMail(services, "order_expired", await renderOrderExpired(loaded.order, loaded.ctx, days), {
+      orderId,
+      inline: true,
+    })
+  } catch (error) {
+    console.error("[order expired email]", error)
   }
 }

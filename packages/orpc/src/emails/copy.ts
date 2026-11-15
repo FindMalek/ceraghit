@@ -25,6 +25,11 @@ export interface EmailCopy {
   paymentReceived: {
     subject: (orderNumber: string) => string
   }
+  expired: {
+    subject: (orderNumber: string) => string
+    body: (days: number) => string
+    again: string
+  }
 }
 
 export const EMAIL_COPY = {
@@ -53,6 +58,12 @@ export const EMAIL_COPY = {
     paymentReceived: {
       subject: (n) => `Paiement reçu pour votre commande ${n}`,
     },
+    expired: {
+      subject: (n) => `Votre commande ${n} a été annulée`,
+      body: (days) =>
+        `Nous n'avons pas reçu votre paiement sous ${days} jours, votre commande a donc été annulée et les pièces sont de nouveau en vente.`,
+      again: "Répondez à cet email ou commandez à nouveau si les pièces vous intéressent toujours.",
+    },
   },
   en: {
     common: {
@@ -79,6 +90,12 @@ export const EMAIL_COPY = {
     paymentReceived: {
       subject: (n) => `Payment received for your order ${n}`,
     },
+    expired: {
+      subject: (n) => `Your order ${n} was cancelled`,
+      body: (days) =>
+        `We did not receive your payment within ${days} days, so your order was cancelled and the pieces are back on sale.`,
+      again: "Reply to this email or order again if you still want them.",
+    },
   },
   ar: {
     common: {
@@ -104,6 +121,11 @@ export const EMAIL_COPY = {
     },
     paymentReceived: {
       subject: (n) => `تم استلام الدفع لطلبك ${n}`,
+    },
+    expired: {
+      subject: (n) => `تم إلغاء طلبك ${n}`,
+      body: (days) => `لم نستلم دفعتك خلال ${days} أيام، لذلك تم إلغاء طلبك وعادت القطع للبيع.`,
+      again: "راسلنا أو اطلب من جديد إذا كنت لا تزال ترغب بها.",
     },
   },
 } satisfies Record<Locale, EmailCopy>

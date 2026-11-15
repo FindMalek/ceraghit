@@ -20,6 +20,7 @@ export const MAIL_KIND: Record<string, string> = {
   order_studio: "Nouvelle commande (atelier)",
   request_studio: "Demande de pièce unique",
   payment_received: "Paiement reçu",
+  order_expired: "Commande annulée (délai dépassé)",
   shipped: "Commande expédiée",
   test: "Test",
 }
@@ -27,6 +28,10 @@ export const MAIL_KIND: Record<string, string> = {
 export const CURRENCY_LABEL: Record<Currency, string> = { TND: "Dinars (DT)", EUR: "Euros (€)" }
 
 const DATE = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Tunis" })
+const DAY = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", timeZone: "Africa/Tunis" })
+const DAY_YEAR = new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeZone: "Africa/Tunis" })
+export const formatDay = (iso: string): string => DAY.format(new Date(iso))
+export const formatDayYear = (iso: string): string => DAY_YEAR.format(new Date(iso))
 export const formatDate = (iso: string): string => DATE.format(new Date(iso))
 
 export const PAYMENT_LABEL = {

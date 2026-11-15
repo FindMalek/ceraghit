@@ -3,6 +3,7 @@ import { type Db, orderAudit, orderItems, orders, products, productVariants } fr
 import {
   type Currency,
   estimateShipping,
+  holdDays,
   type ManualPaymentMethod,
   type OrderInput,
   paymentMethodsFor,
@@ -14,10 +15,10 @@ import { orderUrl } from "../emails/order-url"
 import { publicError } from "../errors"
 import { findProducts } from "./catalog"
 import { tryIssueInvoice } from "./invoices"
-import { sendOrderEmails, sendPaymentReceivedEmail } from "./order-emails"
+import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentReceivedEmail } from "./order-emails"
 import type { PaymentCheck } from "./payments"
 import { unitMinor } from "./pricing"
-import { effectivePaymentMethods, getSettings } from "./settings"
+import { effectivePaymentMethods, getPaymentSettings, getSettings } from "./settings"
 
 /** A pending order holds its stock this long, then the pieces go back on sale. */
 export const HOLD_MINUTES = 45
@@ -28,7 +29,7 @@ type OrderStatus = typeof orders.$inferSelect.status
 export interface AuditRow {
   orderId: string
   adminId: string | null
-  action: "mark_paid_manually" | "set_status" | "gateway_mismatch" | "late_payment"
+  action: "mark_paid_manually" | "set_status" | "gateway_mismatch" | "late_payment" | "hold_expired"
   fromStatus: OrderStatus
   toStatus: OrderStatus
   method?: string | null
@@ -81,10 +82,15 @@ async function restock(tx: Tx, orderId: string): Promise<void> {
   }
 }
 
-/** Cancels unpaid orders past their hold and puts the pieces back. Called lazily, there is no cron on previews. */
-export async function releaseExpiredHolds(db: Db, now: Date): Promise<number> {
+/**
+ * Cancels unpaid orders past their hold and puts the pieces back. Card orders hold 45 minutes; transfer and cash on
+ * delivery orders hold the days the owner set (never for a method set to null). Each release goes through
+ * `cancelOrder` (row lock, restock, audit) and the customer is told once, after it committed.
+ */
+export async function releaseExpiredHolds(services: Services, now: Date): Promise<number> {
+  const { db } = services
   const cutoff = new Date(now.getTime() - HOLD_MINUTES * 60_000)
-  return db.transaction(async (tx) => {
+  const online = await db.transaction(async (tx) => {
     const stale = await tx
       .update(orders)
       .set({ status: "cancelled" })
@@ -95,15 +101,44 @@ export async function releaseExpiredHolds(db: Db, now: Date): Promise<number> {
     for (const { id } of stale) await restock(tx, id)
     return stale.length
   })
+
+  const { holds } = await getPaymentSettings(db, services.config)
+  let offline = 0
+  for (const method of ["transfer", "cod"] as const) {
+    const days = holdDays(method, holds)
+    if (days === null) continue
+    const due = await db
+      .select({ id: orders.id })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.status, "pending_payment"),
+          eq(orders.paymentMethod, method),
+          lt(orders.createdAt, new Date(now.getTime() - days * 864e5)),
+        ),
+      )
+    for (const { id } of due) {
+      const released = await cancelOrder(db, id, "cancelled", {
+        adminId: null,
+        action: "hold_expired",
+        note: `délai de paiement dépassé (${days} j)`,
+        onlyPending: true,
+      })
+      if (!released) continue
+      offline++
+      await sendOrderExpiredEmail(services, id, days)
+    }
+  }
+  return online + offline
 }
 
 let lastSweep = 0
 
-/** Catalogue reads free expired holds too (there is no cron), at most once a minute per instance. */
-export async function sweepExpiredHolds(db: Db, now: Date): Promise<void> {
+/** Catalogue reads free expired holds too, at most once a minute per instance. */
+export async function sweepExpiredHolds(services: Services, now: Date): Promise<void> {
   if (now.getTime() - lastSweep < 60_000) return
   lastSweep = now.getTime()
-  await releaseExpiredHolds(db, now).catch((error) => console.error("[holds] sweep failed", error))
+  await releaseExpiredHolds(services, now).catch((error) => console.error("[holds] sweep failed", error))
 }
 
 function newNumber(): string {
@@ -128,7 +163,7 @@ export async function createOrder(services: Services, input: OrderInput) {
       "This payment method is not available for your country.",
     )
   }
-  await releaseExpiredHolds(db, now())
+  await releaseExpiredHolds(services, now())
 
   const ids = [...new Set(input.items.map((i) => i.productId))]
   const rows = await findProducts(db, {
@@ -269,14 +304,19 @@ export async function cancelOrder(
   db: Db,
   orderId: string,
   to: "cancelled" | "refunded" = "cancelled",
-  audit?: { adminId: string },
+  audit?: { adminId: string | null; action?: AuditRow["action"]; note?: string; onlyPending?: boolean },
 ): Promise<boolean> {
   return db.transaction(async (tx) => {
     const [before] = await tx.select({ status: orders.status }).from(orders).where(eq(orders.id, orderId)).for("update")
     const [order] = await tx
       .update(orders)
       .set({ status: to })
-      .where(and(eq(orders.id, orderId), inArray(orders.status, ["pending_payment", "paid"])))
+      .where(
+        and(
+          eq(orders.id, orderId),
+          inArray(orders.status, audit?.onlyPending ? ["pending_payment"] : ["pending_payment", "paid"]),
+        ),
+      )
       .returning({ id: orders.id })
     if (!order || !before) return false
     await restock(tx, orderId)
@@ -284,9 +324,10 @@ export async function cancelOrder(
       await recordAudit(tx, {
         orderId,
         adminId: audit.adminId,
-        action: "set_status",
+        action: audit.action ?? "set_status",
         fromStatus: before.status,
         toStatus: to,
+        note: audit.note,
       })
     }
     return true

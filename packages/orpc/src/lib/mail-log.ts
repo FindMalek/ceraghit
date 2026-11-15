@@ -8,6 +8,7 @@ export type MailKind =
   | "order_studio"
   | "request_studio"
   | "payment_received"
+  | "order_expired"
   | "shipped"
   | "test"
 

@@ -31,7 +31,7 @@ export const CRON_JOBS: Record<string, CronJob> = {
   },
   "release-holds": {
     async run(services, now) {
-      return { released: await releaseExpiredHolds(services.db, now) }
+      return { released: await releaseExpiredHolds(services, now) }
     },
   },
 }

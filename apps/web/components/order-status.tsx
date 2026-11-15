@@ -69,6 +69,16 @@ export function OrderStatus({ number, token }: { number: string; token: string }
         {waiting && !stillWaiting && <Spinner className="mx-auto" />}
       </div>
 
+      {transferPending && order.payBefore && (
+        <p className="text-center text-gold">
+          {t("payBefore", {
+            date: new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Africa/Tunis" }).format(
+              new Date(order.payBefore),
+            ),
+          })}
+        </p>
+      )}
+
       {order.bank && (
         <section className="frame space-y-3 bg-card/70 p-6">
           <h2 className="text-3xl">{t("bankTitle")}</h2>
