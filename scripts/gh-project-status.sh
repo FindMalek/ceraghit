@@ -6,7 +6,7 @@
 set -euo pipefail
 
 OWNER="FindMalek"
-PROJECT_NUMBER=19
+PROJECT_NUMBER="${PROJECT_NUMBER:-19}"
 
 NUMBER="${1:?usage: gh-project-status.sh <issue-or-pr-number> <status>}"
 STATUS="${2:?usage: gh-project-status.sh <issue-or-pr-number> <status>}"
