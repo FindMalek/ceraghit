@@ -142,7 +142,7 @@
     },
     "failed": "The order could not be created.",
     "backToShop": "Back to the shop",
-    "termsLabel": "I accept the <link>terms and conditions of sale</link>.",
+    "termsLabel": "I accept the <terms>terms and conditions of sale</terms> and the <privacy>privacy policy</privacy>.",
     "methodTransfer": "Bank transfer",
     "methodTransferHint": "Outside Tunisia. You get our bank details on the order page and by email, and the order ships once the transfer is received.",
     "noMethod": "No payment method for this country in this currency. Switch currency or write to us."
@@ -283,7 +283,8 @@
           {
             "title": "1. Purpose",
             "body": [
-              "These terms and conditions of sale govern every order placed on this site with Ceraghit Creation (\"the studio\"). Placing an order means you have read and accepted these terms."
+              "These terms and conditions of sale govern every order placed on this site with {company} (\"the studio\"). Placing an order means you have read and accepted these terms.",
+              "Seller: {company}, {address}. Tax ID (matricule fiscal): {taxId}. Contact: {contact}."
             ]
           },
           {
@@ -356,7 +357,7 @@
           {
             "title": "12. Contact",
             "body": [
-              "For any question about an order, write to the studio or call it using the details at the bottom of every page, quoting the order number (CER-12345)."
+              "For any question about an order, write to or call the studio ({contact}), quoting the order number (CER-12345)."
             ]
           }
         ]
@@ -413,13 +414,13 @@
         "sections": [
           {
             "title": "Site publisher",
-            "body": ["Publication director: Sabri Ghit", "Contact: details shown at the bottom of every page."]
+            "body": ["Publication director: Sabri Ghit", "Contact: {contact}"]
           },
           {
             "title": "Hosting and technical services",
             "body": [
-              "Site hosted by Vercel Inc. (vercel.com).",
-              "Database: Neon. Image storage and delivery: Cloudflare. Card payment: Konnect."
+              "Site hosted by Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, United States (vercel.com).",
+              "Database: Neon. Image storage and delivery: Cloudflare R2. Email delivery: Resend. Card payment: Konnect."
             ]
           },
           {
@@ -441,43 +442,66 @@
           {
             "title": "Who is responsible",
             "body": [
-              "Ceraghit Creation, [company name], is responsible for processing the data collected on this site. Contact: details shown at the bottom of every page."
+              "{company}, {address}, is responsible for processing the data collected on this site. Contact: {contact}."
             ]
           },
           {
             "title": "What we collect",
             "body": [
               "When you order: name, email, phone, delivery address, country, any note, and the contents and amount of the order.",
-              "When you request a unique piece: name, email, phone and country (optional), project description, dimensions, budget and inspiration links.",
-              "In your browser: your currency, your language and the contents of your cart, kept locally so the site works. No advertising trackers are used."
+              "When you request a unique piece: name, email, phone and country (optional), project description, dimensions, budget, inspiration links and up to three photos you attach.",
+              "Studio account: the email and (hashed) password of the person who runs the shop. Visitors have no account.",
+              "We collect nothing else: no profiling, no audience measurement, no targeted advertising."
             ]
           },
           {
-            "title": "Why",
+            "title": "Why and on what basis",
             "body": [
-              "To process and deliver your order, answer your requests, keep the studio's accounts and meet our legal obligations."
-            ]
-          },
-          {
-            "title": "Who we share it with",
-            "body": [
-              "Konnect (card payment), Vercel (hosting), Neon (database), Cloudflare (images) and the carrier in charge of delivery (name, address, phone). These providers only use it to deliver their service."
+              "To process, deliver and invoice your order, or answer your unique piece request: this is performing the contract, or steps you take before one.",
+              "To keep invoices and the studio's accounts: a legal obligation.",
+              "No promotional emails and no automated decisions: you only get messages about your order or your request."
             ]
           },
           {
             "title": "How long we keep it",
             "body": [
-              "Orders: [duration to be confirmed, for example 10 years for accounting records]. Unique piece requests: [duration to be confirmed, for example 24 months]."
+              "Orders and invoices: 10 years, as required by accounting rules. After that your details are anonymised.",
+              "Unique piece requests and their photos: deleted 12 months after the last exchange with the studio.",
+              "Photos uploaded but never attached to a request are deleted automatically."
+            ]
+          },
+          {
+            "title": "Who we share it with",
+            "body": [
+              "Hosting and storage: Vercel (the site), Neon (database) and Cloudflare R2 (images and photos attached to requests).",
+              "Payment: Konnect (card, Tunisia) receives the amount, your name, email and phone. Payoneer only takes part if you choose to pay by Payoneer link.",
+              "Order emails: Resend. Delivery: the carrier (Aramex or equivalent) receives your name, address and phone.",
+              "Automatic translation: Groq only receives product texts written by the studio, never customer data.",
+              "Some providers are outside the European Union (United States, Tunisia): transfers rely on standard contractual clauses or the EU-US data privacy framework. They only use your data to provide their service."
             ]
           },
           {
             "title": "Your rights",
             "body": [
-              "You can ask for access to your data, its correction or its deletion, within the limits of our legal retention obligations, by writing to the studio."
+              "You can ask for access to your data, its correction or erasure, restriction of its processing, object to it or get it in a readable format, by writing to the studio ({contact}). We answer within a month. Erasure is limited by our legal retention obligations.",
+              "You can complain to the authority of your country: the CNIL (France), the APD (Belgium) or the INPDP (Tunisia)."
+            ]
+          },
+          {
+            "title": "Cookies and local storage",
+            "body": [
+              "This site uses no advertising cookie, no audience measurement and no third-party tracker, so no consent banner is needed.",
+              "It only stores what is strictly necessary: the session cookie \"NEXT_LOCALE\" (chosen language) and, in your browser's local storage, \"ceraghit-cart\" (your cart) and \"ceraghit-order-tokens\" (access to your orders on this device). Your currency is worked out from your country and is not stored."
             ]
           }
         ]
       }
+    },
+    "missing": {
+      "company": "[company name to complete]",
+      "address": "[address to complete]",
+      "taxId": "[tax ID to complete]",
+      "contact": "[contact to complete]"
     },
     "publisher": {
       "company": "Company name: <v>{value}</v>",
