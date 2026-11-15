@@ -23,7 +23,7 @@ export function MobileCartBar() {
   if (!hydrated || lines.length === 0 || HIDDEN_ON.some((p) => pathname.startsWith(p))) return null
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-40 border-border border-t bg-background/95 p-3 backdrop-blur md:hidden"
+      className="print:hidden fixed inset-x-0 bottom-0 z-40 border-border border-t bg-background/95 p-3 backdrop-blur md:hidden"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       <button

@@ -6,6 +6,7 @@ import {
   orderInputSchema,
   type PaymentMethod,
   PLACEHOLDER_BANK,
+  publicInvoiceViewSchema,
   publicOrderSchema,
   requestUploadInputSchema,
 } from "@workspace/sdk"
@@ -13,6 +14,7 @@ import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 import type { Context } from "../../context"
 import { publicError } from "../../errors"
+import { invoiceView, issueInvoice } from "../../lib/invoices"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
@@ -64,6 +66,34 @@ export const ordersRouter = {
         createdAt: order.createdAt.toISOString(),
         paidAt: order.paidAt?.toISOString() ?? null,
       }
+    }),
+
+  invoice: publicProcedure
+    .route({
+      method: "GET",
+      path: "/orders/{number}/invoice",
+      summary: "The invoice of a paid order, with the token from its link",
+      tags: TAG,
+    })
+    .input(z.object({ number: z.string(), token: z.string() }))
+    .output(publicInvoiceViewSchema)
+    .handler(async ({ context, input }) => {
+      await enforceLimit(context, "orderGet", "too_many_lookups", "Too many attempts, try again in a few minutes.")
+      const order = await context.db.query.orders.findFirst({
+        where: and(eq(orders.number, input.number), eq(orders.publicToken, input.token)),
+        with: { items: true },
+      })
+      if (!order) throw publicError("NOT_FOUND", "order_not_found", "Order not found.")
+      if (order.status !== "paid" && order.status !== "fulfilled") {
+        throw publicError("NOT_FOUND", "order_not_found", "Invoice not available yet.")
+      }
+      const invoice = await issueInvoice(context.db, order.id, context.now())
+      const {
+        orderId: _orderId,
+        canIssue: _canIssue,
+        ...view
+      } = invoiceView(order, invoice, await getShopProfile(context.db))
+      return view
     }),
 
   /** Only exists with the demo provider (local and preview without gateway keys). */
