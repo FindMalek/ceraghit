@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { getSettings } from "@/lib/api"
 import { LEGAL_DOCS } from "@/lib/legal"
+import { formatAddress, shopName } from "@/lib/profile"
 import { LanguageSwitcher } from "./language-switcher"
 import { NAV_LINKS } from "./nav-links"
 
@@ -13,6 +14,7 @@ export async function SiteFooter() {
     getTranslations("legal"),
     getSettings(),
   ])
+  const address = formatAddress(settings.profile)
   return (
     <footer className="mt-24 border-border border-t bg-background/80 pb-24 md:pb-0">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-3">
@@ -34,6 +36,11 @@ export async function SiteFooter() {
         </nav>
         <address className="space-y-1 not-italic">
           <h2 className="font-heading text-muted-foreground text-sm uppercase tracking-widest">{t("contact")}</h2>
+          {address && (
+            <p className="flex min-h-11 items-center">
+              <bdi>{address}</bdi>
+            </p>
+          )}
           <a href={`mailto:${settings.contactEmail}`} className="flex min-h-11 items-center hover:text-foreground">
             <bdi>{settings.contactEmail}</bdi>
           </a>
@@ -81,7 +88,7 @@ export async function SiteFooter() {
       </nav>
       <LanguageSwitcher className="justify-center border-border border-t py-1" />
       <p className="border-border border-t py-4 text-center text-muted-foreground text-xs">
-        © {new Date().getFullYear()} Ceraghit Creation. {t("rights")}
+        © {new Date().getFullYear()} {shopName(settings.profile)}. {t("rights")}
       </p>
     </footer>
   )
