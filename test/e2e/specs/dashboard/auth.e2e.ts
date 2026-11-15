@@ -5,9 +5,8 @@ import { expect, loginAsOwner, test } from "../../fixtures"
 import { adminSessions, ageLimits, ageSession, completeSetup, type Db, openDb, rateLimits } from "../../helpers/db"
 
 const COOKIE = "ceraghit_admin"
-const LOGIN_FAILED = /Wrong email or password/
-const LOCKED = /Too many attempts\. Try again in 15 minutes/
-const ME = `${E2E.dashboardUrl}/api/rpc/admin/auth/me`
+const LOGIN_FAILED = /Email ou mot de passe incorrect/
+const LOCKED = /Trop de tentatives\. Réessayez dans 15 minutes/
 
 let db: Db
 
@@ -132,7 +131,17 @@ test("forged and expired cookies are refused", async ({ page, context, step }) =
     await ageSession(db, sha(cookie?.value ?? ""), new Date(Date.now() - 60_000))
     await page.goto(`${E2E.dashboardUrl}/orders`)
     await expect(page).toHaveURL(/\/login$/)
-    const res = await page.request.post(ME, { data: { json: null } })
-    expect(res.status()).toBe(401)
+    const status = await page.evaluate(
+      async (url) =>
+        (
+          await fetch(url, {
+            method: "POST",
+            headers: { "content-type": "application/json", "x-csrf-token": "orpc" },
+            body: JSON.stringify({ json: null }),
+          })
+        ).status,
+      "/api/rpc/admin/auth/me",
+    )
+    expect(status).toBe(401)
   })
 })

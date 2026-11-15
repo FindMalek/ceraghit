@@ -20,25 +20,23 @@ export async function resetSetup(db: Db): Promise<void> {
 
 /** Marks the shop as onboarded the way the demo seed does, so the rest of the dashboard opens. */
 export async function completeSetup(db: Db): Promise<void> {
-  await db
-    .insert(shopProfile)
-    .values({
-      legalName: "Ceraghit Creation",
-      displayName: "Ceraghit",
-      address: "1 rue de l'Atelier",
-      city: "Tunis",
-      country: "TN",
-      phones: ["+21620000000"],
-      email: "shop@e2e.local",
-      notifyEmail: "shop@e2e.local",
-      taxId: "1234567/A/M/000",
-      bankHolder: "Ceraghit Creation",
-      bankName: "Banque e2e",
-      bankRib: "10006035183598478831",
-      shippingConfirmedAt: new Date(),
-      onboardedAt: new Date(),
-    })
-    .onConflictDoNothing()
+  const profile = {
+    legalName: "Ceraghit Creation",
+    displayName: "Ceraghit",
+    address: "1 rue de l'Atelier",
+    city: "Tunis",
+    country: "TN",
+    phones: ["+21620000000"],
+    email: "shop@e2e.local",
+    notifyEmail: "shop@e2e.local",
+    taxId: "1234567/A/M/000",
+    bankHolder: "Ceraghit Creation",
+    bankName: "Banque e2e",
+    bankRib: "10006035183598478831",
+    shippingConfirmedAt: new Date(),
+    onboardedAt: new Date(),
+  }
+  await db.insert(shopProfile).values(profile).onConflictDoUpdate({ target: shopProfile.id, set: profile })
   await db.update(admins).set({ nameConfirmedAt: new Date() }).where(eq(admins.email, E2E.adminEmail.toLowerCase()))
 }
 

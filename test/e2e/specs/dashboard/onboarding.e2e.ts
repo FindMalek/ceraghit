@@ -75,7 +75,7 @@ test("the wizard saves each step, validates the IBAN and resumes after a reload"
     await page.getByLabel("Matricule fiscal").fill("1234567/A/M/000")
     await page.getByLabel("Adresse").fill("1 rue de l'Atelier")
     await page.getByLabel("Ville").fill("Tunis")
-    await page.getByLabel("Email", { exact: true }).fill("shop@e2e.local")
+    await page.getByLabel("Email de contact").fill("shop@e2e.local")
     await page.getByLabel("Email des notifications").fill("notify@e2e.local")
     await page
       .getByLabel(/Téléphone|Numéro/)
