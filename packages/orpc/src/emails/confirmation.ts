@@ -1,4 +1,5 @@
 import type { BankDetails } from "@workspace/sdk"
+import { invoiceUrl } from "../lib/invoices"
 import type { Mail } from "../lib/mailer"
 import { asLocale, EMAIL_COPY } from "./copy"
 import { bankBlock, greeting, itemLines, join, type MailOrder, orderFooter, totalLines } from "./layout"
@@ -93,7 +94,7 @@ export function renderPaymentReceived(order: ConfirmationOrder, ctx: MailContext
         ...itemLines(order, locale),
         "",
         ...totalLines(order, locale, c),
-        ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order) }, locale),
+        ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order), invoiceUrl: invoiceUrl(ctx.webUrl, order) }, locale),
       ],
       locale,
     ),
