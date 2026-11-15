@@ -1,7 +1,8 @@
+// `bun test` in apps/api alone needs an already migrated DB: turbo runs it after the orpc tests, which migrate.
 import { afterAll, describe, expect, test } from "bun:test"
 import { createDb, jobRuns, orders } from "@workspace/db"
 import { AdminAuth, ConsoleMailer, DemoProvider, type Services } from "@workspace/orpc"
-import { eq } from "drizzle-orm"
+import { and, count, eq, lt } from "drizzle-orm"
 import { CRON_JOBS } from "../src/cron"
 import { createServer } from "../src/server"
 
@@ -81,18 +82,30 @@ describe.skipIf(!url)("cron endpoints", () => {
       createdAt: new Date(Date.now() - 2 * 60 * 60_000),
     })
 
+    const [{ expired = 0 } = {}] = await db
+      .select({ expired: count() })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.status, "pending_payment"),
+          eq(orders.paymentMethod, "online"),
+          lt(orders.createdAt, new Date(Date.now() - 45 * 60_000)),
+        ),
+      )
+    expect(expired).toBeGreaterThanOrEqual(1)
+
     const first = await call(`/cron/${JOB}`, { bearer: SECRET })
     expect(first.status).toBe(200)
-    expect(((await first.json()) as { released: number }).released).toBeGreaterThanOrEqual(1)
+    expect(await first.json()).toEqual({ ok: true, released: expired })
     const [order] = await db.select().from(orders).where(eq(orders.number, holdNumber))
     expect(order!.status).toBe("cancelled")
 
     const second = await call(`/cron/${JOB}`, { bearer: SECRET })
     expect(await second.json()).toEqual({ ok: true, released: 0 })
     const rows = await runs(JOB)
-    expect(rows.map((r) => [r.ok, r.counts.released === 0])).toEqual([
-      [true, false],
-      [true, true],
+    expect(rows.map((r) => [r.ok, r.counts])).toEqual([
+      [true, { released: expired }],
+      [true, { released: 0 }],
     ])
   })
 
