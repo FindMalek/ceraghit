@@ -1,7 +1,9 @@
-import type { orderItems, orders } from "../schema"
+import type { Localized, locations, orderItems, orders, shopProfile } from "../schema"
 
 type NewOrder = typeof orders.$inferInsert
 type NewItem = typeof orderItems.$inferInsert
+type NewLocation = typeof locations.$inferInsert
+type NewProfile = typeof shopProfile.$inferInsert
 
 export interface ScenarioProduct {
   id: string
@@ -22,11 +24,163 @@ const PEOPLE = [
   "Julien Martin",
 ]
 const TN_CITIES = ["Tunis", "La Marsa", "Sousse", "Sfax", "Hammamet", "Nabeul"]
+const STREETS: Record<string, string[]> = {
+  Tunis: ["rue de Marseille", "avenue Habib Bourguiba", "rue Charles de Gaulle"],
+  "La Marsa": ["avenue Taieb Mhiri", "rue Hédi Chaker"],
+  Sousse: ["boulevard de la Corniche", "rue Ibn Khaldoun"],
+  Sfax: ["avenue Hédi Chaker", "rue Mongi Slim"],
+  Hammamet: ["avenue de la République", "rue des Jasmins"],
+  Nabeul: ["rue des Potiers", "avenue Farhat Hached"],
+  Bruxelles: ["rue Haute", "avenue Louise"],
+  Lyon: ["rue de la République", "quai Saint-Antoine"],
+  Berlin: ["Oranienstraße", "Kastanienallee"],
+}
+const ORDER_LOCALES = ["fr", "en", "ar"] as const
 const ABROAD = [
   { country: "BE", city: "Bruxelles" },
   { country: "FR", city: "Lyon" },
   { country: "DE", city: "Berlin" },
 ]
+
+/** A complete, clearly fake shop profile: the onboarded demo state. */
+export function buildDemoProfile(now: Date): NewProfile {
+  return {
+    id: "shop",
+    displayName: "Ceraghit Creation",
+    legalName: "Ceraghit Creation (démo)",
+    legalForm: "Personne physique",
+    taxId: "0000000/A/M/000",
+    registryNumber: "B0000000000",
+    address: "14 rue des Potiers",
+    postalCode: "8000",
+    city: "Nabeul",
+    country: "TN",
+    phones: ["+216 20 000 000"],
+    email: "atelier@example.com",
+    notifyEmail: "commandes@example.com",
+    bankHolder: "Ceraghit Creation",
+    bankName: "Banque de démonstration",
+    bankRib: "00000000000000000000",
+    bankIban: "TN5900000000000000000000",
+    bankBic: "DEMOTNTT",
+    invoiceNote: {
+      fr: "TVA non applicable (démo).",
+      en: "VAT not applicable (demo).",
+      ar: "الضريبة على القيمة المضافة غير مطبقة (عرض تجريبي).",
+    },
+    shippingConfirmedAt: now,
+    onboardedAt: now,
+  }
+}
+
+export const DEMO_LOCATIONS: NewLocation[] = [
+  {
+    name: "Atelier Ceraghit Nabeul (démo)",
+    description: {
+      fr: "L'atelier où les pièces sont modelées, émaillées et cuites. Visite sur rendez-vous.",
+      en: "The workshop where pieces are modelled, glazed and fired. Visits by appointment.",
+      ar: "الورشة التي تُشكَّل فيها القطع وتُطلى وتُشوى. الزيارة بموعد مسبق.",
+    },
+    address: "Avenue Habib Bourguiba",
+    city: "Nabeul",
+    country: "Tunisie",
+    phone: "+216 20 000 000",
+    hours: {
+      fr: "Du mardi au samedi, 10h à 18h",
+      en: "Tuesday to Saturday, 10am to 6pm",
+      ar: "من الثلاثاء إلى السبت، 10 صباحًا إلى 6 مساءً",
+    },
+    position: 0,
+  },
+  {
+    name: "Galerie Ceraghit Bruxelles (démo)",
+    description: {
+      fr: "Une sélection de pièces à découvrir en Europe, présentée dans une galerie partenaire.",
+      en: "A selection of pieces to discover in Europe, shown in a partner gallery.",
+      ar: "مجموعة مختارة من القطع تُعرض في معرض شريك في أوروبا.",
+    },
+    address: "Rue Haute 120",
+    city: "Bruxelles",
+    country: "Belgique",
+    phone: "+32 470 00 00 00",
+    hours: {
+      fr: "Du mercredi au samedi, 11h à 19h",
+      en: "Wednesday to Saturday, 11am to 7pm",
+      ar: "من الأربعاء إلى السبت، 11 صباحًا إلى 7 مساءً",
+    },
+    position: 1,
+  },
+]
+
+/** Demo-only copy by catalogue ref; the catalogue itself (real, seeded in production) stays untouched. 0011 and 0012 are fr only. */
+export const DEMO_DESCRIPTIONS: Record<string, Localized> = {
+  "0010": {
+    fr: "Une assiette murale en terre cuite émaillée, modelée à la main. Chaque pièce garde les marques de l'atelier, aucune n'est tout à fait pareille.",
+    en: "A glazed terracotta wall plate, modelled by hand. Each piece keeps the marks of the workshop, no two are quite alike.",
+    ar: "طبق جداري من الطين المشوي المطلي، مشكّل يدويًا. تحتفظ كل قطعة بآثار الورشة، ولا تتطابق قطعتان تمامًا.",
+  },
+  "0011": {
+    fr: "Une Curda Seca aux motifs géométriques, émaillée à la main puis cuite deux fois. Elle se pose sur une étagère ou s'accroche au mur.",
+  },
+  "0012": {
+    fr: "Une Curda Seca aux teintes profondes, dessinée au trait avant l'émaillage. Les reflets changent selon la lumière de la pièce.",
+  },
+  "0013": {
+    fr: "La Curda Seca de la collection, au décor inspiré des carreaux andalous. Elle s'accorde avec les teintes chaudes d'un intérieur méditerranéen.",
+    en: "The collection's Curda Seca, with a pattern inspired by Andalusian tiles. It suits the warm tones of a Mediterranean interior.",
+    ar: "كوردا سيكا المجموعة، بزخرفة مستوحاة من الزليج الأندلسي. تناسب ألوان البيوت المتوسطية الدافئة.",
+  },
+  "0200": {
+    fr: "Une lampe votive en terre cuite émaillée, ajourée à la main. Posée avec une bougie, elle projette une lumière douce sur le mur.",
+    en: "A glazed terracotta votive lamp, pierced by hand. With a candle inside, it casts a soft light on the wall.",
+    ar: "مصباح نذري من الطين المشوي المطلي، مخرَّم يدويًا. مع شمعة بداخله يرسم ضوءًا هادئًا على الجدار.",
+  },
+  "0201": {
+    fr: "Une lampe votive au décor floral, émaillée à la main. Elle existe aussi en terre cuite non émaillée.",
+    en: "A votive lamp with a floral pattern, hand glazed. It also comes in unglazed terracotta.",
+    ar: "مصباح نذري بزخرفة نباتية، مطلي يدويًا. يتوفر أيضًا من الطين المشوي غير المطلي.",
+  },
+  "0202": {
+    fr: "Une lampe votive aux ajours fins, pensée pour une table de soirée. Le décor se découpe sur la flamme.",
+    en: "A votive lamp with fine openings, made for an evening table. The pattern stands out against the flame.",
+    ar: "مصباح نذري بفتحات دقيقة، صُنع لمائدة المساء. تتجلى الزخرفة أمام اللهب.",
+  },
+  "0050": {
+    fr: "Méduse en bas-relief, modelée à la main dans la terre puis cuite. Le regard et les serpents sont repris à la main après la cuisson.",
+    en: "Medusa in bas-relief, hand-modelled in clay then fired. The gaze and the snakes are reworked by hand after firing.",
+    ar: "ميدوزا بنحت بارز، مشكّلة يدويًا من الطين ثم مشوية. تُعاد عينها وثعابينها يدويًا بعد الشي.",
+  },
+  "0051": {
+    fr: "Amor Dominator, un bas-relief aux lignes tendues, modelé puis patiné à la main. Il se fixe au mur avec deux crochets.",
+    en: "Amor Dominator, a bas-relief with taut lines, modelled then patinated by hand. It hangs on the wall with two hooks.",
+    ar: "أمور المهيمن، نحت بارز بخطوط مشدودة، مشكّل ثم مصقول يدويًا. يُعلَّق على الجدار بخطافين.",
+  },
+  "0052": {
+    fr: "Neptune triomphant sur son char, un bas-relief aux reliefs profonds. La patine claire met en valeur chaque détail.",
+    en: "Triumphant Neptune on his chariot, a bas-relief with deep relief. The light patina shows off every detail.",
+    ar: "نبتون المنتصر على عربته، نحت بارز بنتوءات عميقة. تُبرز الباتينا الفاتحة كل التفاصيل.",
+  },
+  "0600": {
+    fr: "Un bas-relief en céramique à thème libre, réalisé selon vos envies. Le format et les teintes se choisissent avec l'atelier.",
+    en: "A ceramic bas-relief on a theme of your choice, made to your wishes. The size and colours are chosen with the workshop.",
+    ar: "نحت بارز من السيراميك بموضوع حر، يُنجز وفق رغبتك. يُحدَّد الحجم والألوان مع الورشة.",
+  },
+  "0700": {
+    fr: "Le masque de Carthage, une pièce unique taillée à la main d'après les masques puniques. Il est numéroté et signé au dos.",
+    en: "The Mask of Carthage, a one-off piece carved by hand after Punic masks. It is numbered and signed on the back.",
+    ar: "قناع قرطاج، قطعة فريدة منحوتة يدويًا على غرار الأقنعة البونيقية. مرقَّمة وموقَّعة من الخلف.",
+  },
+  "0001": {
+    fr: "Un haut-relief unique, modelé à la main pendant plusieurs semaines. Livré avec son système d'accroche.",
+    en: "A unique high relief, hand-modelled over several weeks. Delivered with its hanging system.",
+    ar: "نحت بارز عالٍ فريد، مشكّل يدويًا على مدى أسابيع. يُسلَّم مع نظام التعليق.",
+  },
+  "0004": {
+    fr: "Une sculpture en ronde-bosse, pièce unique modelée dans la terre. Elle se regarde sous tous les angles.",
+    en: "A sculpture in the round, a one-off piece modelled in clay. It is meant to be seen from every angle.",
+    ar: "منحوتة مجسّمة، قطعة فريدة مشكّلة من الطين. تُرى من كل الزوايا.",
+  },
+}
 
 /** Small deterministic generator, so the demo (and its test) always produce the same shop history. */
 function rng(seed: number) {
@@ -45,6 +199,7 @@ export function buildScenario(now: Date, products: ScenarioProduct[]): { orders:
   const pick = <T>(list: T[]): T => list[Math.floor(rand() * list.length)]!
   const out: { orders: NewOrder[]; items: NewItem[] } = { orders: [], items: [] }
 
+  let abroadCount = 0
   for (let n = 0; n < 45; n++) {
     const id = crypto.randomUUID()
     const abroad = rand() < 0.3
@@ -60,6 +215,8 @@ export function buildScenario(now: Date, products: ScenarioProduct[]): { orders:
           : roll < 0.4
             ? "fulfilled"
             : "paid"
+    const locale = abroad ? ORDER_LOCALES[abroadCount++ % ORDER_LOCALES.length]! : n % 9 === 5 ? "ar" : "fr"
+    const streets = STREETS[place.city]!
     const cod = !abroad && n % 4 === 0
     const transfer = abroad && n % 3 === 0
     const offline = cod || transfer
@@ -82,8 +239,8 @@ export function buildScenario(now: Date, products: ScenarioProduct[]): { orders:
       phone: abroad ? "+32 470 00 00 00" : "+216 20 000 000",
       country: place.country,
       city: place.city,
-      address: "12 rue des Potiers",
-      locale: abroad ? "fr" : "fr",
+      address: `${3 + ((n * 7) % 90)} ${streets[n % streets.length]}`,
+      locale,
       paymentMethod: cod ? "cod" : transfer ? "transfer" : "online",
       paymentProvider: cod ? "cod" : transfer ? "transfer" : "demo",
       paymentRef: offline ? null : `demo_seed_${n}`,
