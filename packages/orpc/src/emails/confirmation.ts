@@ -85,7 +85,7 @@ export function renderPaymentReceived(order: ConfirmationOrder, ctx: MailContext
   return {
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
-    subject: c.confirmation.subject(order.number),
+    subject: c.paymentReceived.subject(order.number),
     text: join(
       [
         ...greeting(c, order.customerName),

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { type ConfirmationOrder, renderPaymentReceived } from "../src/emails/confirmation"
+import { EMAIL_COPY } from "../src/emails/copy"
 
 const ctx = { webUrl: "https://web.test", bank: null, contactEmail: "contact@studio.test", studio: null }
 const order = (locale: string): ConfirmationOrder => ({
@@ -22,9 +23,12 @@ const order = (locale: string): ConfirmationOrder => ({
   paymentMethod: "transfer",
 })
 
-test.each(["fr", "en", "ar"])("payment received mail in %s links the order and its invoice", (locale) => {
-  const { text, to } = renderPaymentReceived(order(locale), ctx)
+test.each(["fr", "en", "ar"] as const)("payment received mail in %s links the order and its invoice", (locale) => {
+  const { text, to, subject } = renderPaymentReceived(order(locale), ctx)
   expect(to).toBe("buyer@example.com")
+  expect(subject).toBe(EMAIL_COPY[locale].paymentReceived.subject("CG-1001"))
+  expect(subject).not.toBe(EMAIL_COPY[locale].confirmation.subject("CG-1001"))
+  expect(text).toContain(EMAIL_COPY[locale].common.invoiceLink)
   expect(text).toContain(`https://web.test/${locale}/order/CG-1001?t=tok`)
   expect(text).toContain(`https://web.test/${locale}/order/CG-1001/invoice?t=tok`)
 })

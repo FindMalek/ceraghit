@@ -7,6 +7,7 @@ export interface EmailCopy {
     shipping: string
     total: string
     link: string
+    invoiceLink: string
     bye: string
   }
   confirmation: {
@@ -20,6 +21,9 @@ export interface EmailCopy {
     reference: string
     bankMissing: (email: string) => string
   }
+  paymentReceived: {
+    subject: (orderNumber: string) => string
+  }
 }
 
 export const EMAIL_COPY = {
@@ -30,6 +34,7 @@ export const EMAIL_COPY = {
       shipping: "Livraison",
       total: "Total",
       link: "Suivre votre commande :",
+      invoiceLink: "Votre facture :",
       bye: "Ceraghit Creation",
     },
     confirmation: {
@@ -43,6 +48,9 @@ export const EMAIL_COPY = {
       reference: "Référence à indiquer",
       bankMissing: (email) => `Nos coordonnées bancaires suivent très vite, ou écrivez-nous : ${email}`,
     },
+    paymentReceived: {
+      subject: (n) => `Paiement reçu pour votre commande ${n}`,
+    },
   },
   en: {
     common: {
@@ -51,6 +59,7 @@ export const EMAIL_COPY = {
       shipping: "Shipping",
       total: "Total",
       link: "Follow your order:",
+      invoiceLink: "Your invoice:",
       bye: "Ceraghit Creation",
     },
     confirmation: {
@@ -64,6 +73,9 @@ export const EMAIL_COPY = {
       reference: "Reference to write",
       bankMissing: (email) => `Our bank details follow very soon, or write to us: ${email}`,
     },
+    paymentReceived: {
+      subject: (n) => `Payment received for your order ${n}`,
+    },
   },
   ar: {
     common: {
@@ -72,6 +84,7 @@ export const EMAIL_COPY = {
       shipping: "التوصيل",
       total: "المجموع",
       link: "يمكنك متابعة طلبك من هنا:",
+      invoiceLink: "فاتورتك:",
       bye: "Ceraghit Creation",
     },
     confirmation: {
@@ -84,6 +97,9 @@ export const EMAIL_COPY = {
       bank: "البنك",
       reference: "المرجع المطلوب كتابته",
       bankMissing: (email) => `ستصلك بياناتنا البنكية قريبا، أو راسلنا: ${email}`,
+    },
+    paymentReceived: {
+      subject: (n) => `تم استلام الدفع لطلبك ${n}`,
     },
   },
 } satisfies Record<Locale, EmailCopy>
