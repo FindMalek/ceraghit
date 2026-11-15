@@ -157,6 +157,7 @@ export const ordersRouter = {
         .where(eq(orderAudit.orderId, input.id))
         .orderBy(desc(orderAudit.createdAt))
       return rows.map(({ a, adminName }) => ({
+        id: a.id,
         action: a.action,
         fromStatus: a.fromStatus,
         toStatus: a.toStatus,

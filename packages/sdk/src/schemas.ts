@@ -397,6 +397,7 @@ export const manualPaymentMethodSchema = z.enum(["transfer", "payoneer", "cash",
 export type ManualPaymentMethod = z.infer<typeof manualPaymentMethodSchema>
 
 export const orderAuditSchema = z.object({
+  id: z.string(),
   action: z.string(),
   fromStatus: orderStatusSchema,
   toStatus: orderStatusSchema,

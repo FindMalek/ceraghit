@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createRouterClient } from "@orpc/server"
-import { createDb, invoices, orderAudit, orders } from "@workspace/db"
+import { createDb, invoiceCounters, invoices, orderAudit, orders } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { eq, inArray, like } from "drizzle-orm"
@@ -21,7 +21,7 @@ describe.skipIf(!url)("manual payment confirmation", () => {
     mailer: { send: async (mail) => void sent.push(mail) },
     storage: null,
     auth: new AdminAuth(db),
-    now: () => new Date("2027-03-10T10:00:00Z"),
+    now: () => new Date("2096-03-10T10:00:00Z"),
     config: {
       webUrl: "https://web.test",
       apiPublicUrl: "https://api.test",
@@ -82,6 +82,7 @@ describe.skipIf(!url)("manual payment confirmation", () => {
       await db.delete(invoices).where(inArray(invoices.orderId, ids))
       await db.delete(orders).where(inArray(orders.id, ids))
     }
+    await db.delete(invoiceCounters).where(eq(invoiceCounters.year, 2096))
   })
 
   test("a double click pays once, writes one audit row and sends one email", async () => {
@@ -143,5 +144,27 @@ describe.skipIf(!url)("manual payment confirmation", () => {
       toStatus: "cancelled",
       adminName: "Sabri Ghit",
     })
+  })
+
+  test("setStatus paid goes through the audit and the email", async () => {
+    sent.length = 0
+    const o = await order()
+    await owner.orders.setStatus({ id: o.id, status: "paid" })
+    const rows = await owner.orders.audit({ id: o.id })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ action: "mark_paid_manually", method: "transfer", toStatus: "paid" })
+    expect(sent.filter((m) => m.to === o.email)).toHaveLength(1)
+  })
+
+  test("paying and cancelling at the same time never leaves a state the audit does not explain", async () => {
+    const o = await order()
+    await Promise.allSettled([
+      owner.orders.markPaidManually(echo(o)),
+      owner.orders.setStatus({ id: o.id, status: "cancelled" }),
+    ])
+    const [row] = await db.select().from(orders).where(eq(orders.id, o.id))
+    const audit = await owner.orders.audit({ id: o.id })
+    expect(audit[0]!.toStatus).toBe(row!.status)
+    expect(audit.filter((a) => a.action === "mark_paid_manually")).toHaveLength(row!.paidAt ? 1 : 0)
   })
 })

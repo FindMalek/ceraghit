@@ -72,7 +72,10 @@ export function MarkPaidDialog({
         onOpenChange(false)
         onDone()
       },
-      onError: (error) => showError(errorMessage(error)),
+      onError: (error) => {
+        onOpenChange(false)
+        showError(errorMessage(error))
+      },
     }),
   )
 

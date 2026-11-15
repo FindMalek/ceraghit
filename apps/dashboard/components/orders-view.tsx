@@ -135,7 +135,7 @@ function History({ orderId }: { orderId: string }) {
             : null
           const detail = [method, row.reference ? `réf. ${row.reference}` : null].filter(Boolean).join(", ")
           return (
-            <li key={`${row.createdAt}-${row.toStatus}`} className="py-2">
+            <li key={row.id} className="py-2">
               <span className="block text-muted-foreground text-sm">{formatDate(row.createdAt)}</span>
               {row.adminName ?? "Démo"} : {ORDER_STATUS[row.fromStatus].toLowerCase()} →{" "}
               {ORDER_STATUS[row.toStatus].toLowerCase()}

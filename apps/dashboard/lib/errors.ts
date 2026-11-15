@@ -19,10 +19,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   ],
   [/^An order that is (\w+) cannot become (\w+)\.?$/, () => "Cette commande ne peut pas passer à ce statut."],
   [/^This order cannot be marked paid/, () => "Cette commande ne peut pas être marquée payée."],
-  [
-    /^Card payments are confirmed by the gateway only/,
-    () => "Les paiements par carte sont confirmés par la passerelle uniquement.",
-  ],
+  [/^Card payments are confirmed by the gateway only/, () => "Un paiement par carte est confirmé automatiquement."],
   [/^The amount changed, reload the order/, () => "Le montant a changé, rechargez la commande."],
   [/^The storage space is full/, () => "L'espace de stockage (2,5 Go) est plein. Supprimez des photos inutilisées."],
   [/^Image storage is not configured/, () => "Le stockage des images n'est pas configuré ici."],
