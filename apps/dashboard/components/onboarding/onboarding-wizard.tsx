@@ -1,7 +1,7 @@
 "use client"
 
 import { CheckCircleIcon, CircleIcon } from "@phosphor-icons/react"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import type { OptionalSetupStepId, SetupStatus, ShopProfile } from "@workspace/sdk"
 import { Badge } from "@workspace/ui/components/badge"
@@ -53,10 +53,12 @@ const stepHref = (step: OnboardingStep) => `/onboarding?step=${step}`
 
 function OptionalCards({ setup }: { setup: SetupStatus }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const skip = useMutation(
     orpc.admin.setup.skip.mutationOptions({
       onSuccess: () => {
         clearError()
+        queryClient.invalidateQueries({ queryKey: orpc.admin.setup.status.key() })
         router.refresh()
       },
       onError: (e) => showError(errorMessage(e)),
@@ -187,6 +189,7 @@ export function OnboardingWizard({
   setup: SetupStatus
 }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const mounted = useRef(false)
   useEffect(() => {
     mounted.current = true
@@ -194,7 +197,10 @@ export function OnboardingWizard({
 
   const index = ONBOARDING_STEPS.indexOf(step)
   const go = (to: OnboardingStep) => router.push(stepHref(to))
-  const next = () => go(ONBOARDING_STEPS[index + 1] ?? "done")
+  const next = () => {
+    queryClient.invalidateQueries({ queryKey: orpc.admin.setup.status.key() })
+    go(ONBOARDING_STEPS[index + 1] ?? "done")
+  }
   const back = () => go(ONBOARDING_STEPS[Math.max(index - 1, 0)] ?? "welcome")
   const number = NUMBERED.indexOf(step) + 1
 

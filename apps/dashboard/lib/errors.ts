@@ -3,6 +3,7 @@ import { ORPCError } from "@orpc/client"
 export { isUnauthorized } from "@workspace/orpc/errors"
 
 const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
+  [/^Email introuvable\.?$/, () => "Email introuvable."],
   [/^Wrong email or password\.?$/, () => "Email ou mot de passe incorrect."],
   [/^Too many attempts\. Try again in 1 hour/, () => "Trop de tentatives. Réessayez dans 1 heure."],
   [/^Too many attempts/, () => "Trop de tentatives. Réessayez dans 15 minutes."],

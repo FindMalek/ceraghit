@@ -3,6 +3,7 @@ import { OrdersView } from "@/components/orders-view"
 
 export const metadata: Metadata = { title: "Commandes" }
 
-export default function OrdersPage() {
-  return <OrdersView />
+export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const { q } = await searchParams
+  return <OrdersView initialQuery={q?.slice(0, 40) ?? ""} />
 }

@@ -70,6 +70,7 @@ export function SetupProgressCard() {
                     type="button"
                     variant="ghost"
                     className="h-11"
+                    aria-label={`Ignorer ${stepTitle(step.id)}`}
                     disabled={skip.isPending}
                     onClick={() => skip.mutate({ step: step.id as OptionalSetupStepId })}
                   >

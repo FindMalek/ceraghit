@@ -122,6 +122,11 @@ function Line({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
+const GATEWAY_AUDIT_LABEL: Record<string, string> = {
+  gateway_mismatch: "Paiement Konnect incohérent : à vérifier dans votre espace Konnect",
+  late_payment: "Paiement Konnect reçu après l'annulation : à rembourser ou restaurer à la main",
+}
+
 function History({ orderId }: { orderId: string }) {
   const audit = useQuery(orpc.admin.orders.audit.queryOptions({ input: { id: orderId } }))
   if (!audit.data?.length) return null
@@ -134,6 +139,16 @@ function History({ orderId }: { orderId: string }) {
             ? (MANUAL_METHOD_LABEL[row.method as keyof typeof MANUAL_METHOD_LABEL] ?? row.method)
             : null
           const detail = [method, row.reference ? `réf. ${row.reference}` : null].filter(Boolean).join(", ")
+          const gatewayIssue = GATEWAY_AUDIT_LABEL[row.action]
+          if (gatewayIssue) {
+            return (
+              <li key={row.id} className="py-2">
+                <span className="block text-muted-foreground text-sm">{formatDate(row.createdAt)}</span>
+                {gatewayIssue}
+                {row.note && <span className="block text-muted-foreground">{row.note}</span>}
+              </li>
+            )
+          }
           return (
             <li key={row.id} className="py-2">
               <span className="block text-muted-foreground text-sm">{formatDate(row.createdAt)}</span>
@@ -306,10 +321,10 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
   )
 }
 
-export function OrdersView() {
+export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
   const [status, setStatus] = useState<Filter>("all")
-  const [q, setQ] = useState("")
-  const [search, setSearch] = useState("")
+  const [q, setQ] = useState(initialQuery)
+  const [search, setSearch] = useState(initialQuery)
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {

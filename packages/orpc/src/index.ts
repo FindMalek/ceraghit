@@ -1,5 +1,6 @@
 export { type AppEnv, type Context, createContext, type Services } from "./context"
 export { AdminAuth } from "./lib/auth"
+export { purgeMailLog } from "./lib/mail-log"
 export {
   ConsoleMailer,
   type Mail,

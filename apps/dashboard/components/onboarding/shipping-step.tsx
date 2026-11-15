@@ -34,6 +34,7 @@ function ShippingBody({
     orpc.admin.setup.confirmShipping.mutationOptions({
       onSuccess: () => {
         clearError()
+        queryClient.invalidateQueries({ queryKey: orpc.admin.setup.status.key() })
         onDone()
       },
       onError: (e) => showError(errorMessage(e)),
