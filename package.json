@@ -15,6 +15,7 @@
     "db:up": "docker compose -f docker/docker-compose.yml up -d",
     "db:down": "docker compose -f docker/docker-compose.yml down",
     "demo:reset": "scripts/demo-reset.sh",
+    "demo:reset:onboarding": "scripts/demo-reset.sh --onboarding",
     "db:generate": "turbo db:generate -F @workspace/db",
     "db:migrate": "turbo db:migrate -F @workspace/db",
     "db:seed": "turbo db:seed -F @workspace/db",
@@ -23,6 +24,8 @@
     "ui:add": "pnpm --filter @workspace/ui exec shadcn add",
     "licenses:check": "node scripts/check-licenses.mjs",
     "rules:check": "node scripts/check-rules.mjs",
+    "e2e": "pnpm --filter @workspace/e2e e2e",
+    "e2e:install": "pnpm --filter @workspace/e2e exec playwright install --with-deps chromium webkit",
     "pr:screenshots": "node scripts/pr-screenshots.mjs",
     "start-issue": "scripts/start-issue.sh",
     "db:shell": "scripts/db-shell.sh"

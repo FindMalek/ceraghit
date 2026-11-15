@@ -92,6 +92,15 @@ Every file sent to the bucket is a row in `uploads` (key, folder, bytes). The da
 from R2 and the counter after 30 days unused. `cleanup-dev-bucket.yml` does the homelab bucket: files of closed PRs and
 anything older than 14 days.
 
+## rate limits
+
+Limits are counted in the `rate_limits` table (fixed windows, shared by every api instance), keyed by the visitor's address:
+login 5 failures per 15 min per address and 10 per hour per email, orders 10 per 10 min, order lookups 60 per 10 min,
+unique piece requests 5 per hour, request photo uploads 12 per 10 min. Behind the `/api` proxy the api only sees the web
+function, so the proxy forwards the real address in `x-ceraghit-client-ip` with `PROXY_SECRET`; the api ignores it without
+the matching secret. The daily cleanup also deletes counters older than a day. To unlock the owner right away:
+`delete from rate_limits where key like 'login:%'`. Optional on top: Vercel WAF rate limiting rules.
+
 ## one-time setup
 
 **Vercel, the short way**: `cp docs/production.env.example .env.production.local`, fill it in, `npx vercel@65.9.0 login`, then
@@ -111,16 +120,20 @@ write by hand. Resend needs its SPF/DKIM records on the same zone, and `commande
 
 | project | env (Production only) |
 | :-- | :-- |
-| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it |
-| web | `APP_ENV=production`, `API_URL` (api origin), `WEB_URL` |
-| dashboard | `APP_ENV=production`, `API_URL`, `WEB_URL` |
+| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it, `PROXY_SECRET` (required, 24+ random characters) |
+| web | `APP_ENV=production`, `API_URL` (api origin), `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL` (same values as the api: they only feed the CSP, no keys), `PROXY_SECRET` (same value as the api) |
+| dashboard | `APP_ENV=production`, `API_URL`, `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL`, `PROXY_SECRET` (same value as the api) |
 
 **Neon**: one project, production branch; keep the pooled connection string as `DATABASE_URL`.
 
 **Cloudflare R2**: bucket `ceraghit-prod`, a public custom domain (`cdn.<domain>`) for `S3_PUBLIC_URL`, an API token scoped
 to that bucket, and a CORS rule allowing `PUT` from the dashboard **and the web** origins (product photos are uploaded by
 the dashboard, customer photos on `/custom` by the storefront, both straight to the bucket; the web ones are limited to
-5 MB and signed with their exact size and type).
+5 MB and signed with their exact size and type). Exact rule, nothing else (no `*`, no `GET`, the api never sends CORS headers either):
+
+```json
+[{ "AllowedOrigins": ["https://ceraghit.com", "https://dashboard.ceraghit.com"], "AllowedMethods": ["PUT"], "AllowedHeaders": ["content-type"], "MaxAgeSeconds": 3600 }]
+```
 
 **Garage** (the-keep): bucket `ceraghit-dev` with key `ceraghit-dev-key` (previews and local), CORS allowing `PUT` from
 `*.ceraghit.findmalek.engineer`.
@@ -142,3 +155,22 @@ Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_P
 - api on Vercel: `apps/api/api/index.ts` re-exports the fetch handler and `vercel.json` rewrites every path to it. Verify
   `/health` and a `/rpc` call on the first deploy; if the function entry needs another shape, only `apps/api/api` changes.
 - Konnect live keys and the answers in issue #1 (EUR with foreign cards, settlement, fees).
+
+## security headers
+
+- **web and dashboard** (`proxy.ts`, built by `buildCsp` in `packages/sdk/src/security.ts`): a nonce CSP per request
+  (`script-src 'self' 'nonce-…' 'strict-dynamic'`, `style-src 'self' 'unsafe-inline'`, `frame-ancestors 'none'`,
+  `object-src 'none'`), `Cross-Origin-Opener-Policy: same-origin`, and HSTS (`max-age=63072000; includeSubDomains; preload`)
+  only when `APP_ENV=production`. The bucket hosts come from `S3_ENDPOINT` and `S3_PUBLIC_URL` (images and the presigned
+  PUT), the dashboard also allows the storefront origin for catalogue photos (`WEB_URL`), `https://www.youtube-nocookie.com`
+  frames and `https://i.ytimg.com` thumbnails (Aide page); the storefront allows `https://*.konnect.network` as form target.
+  Pages must stay dynamic (a prerendered page has no nonce).
+- `CSP_REPORT_ONLY=true` on a web or dashboard app turns the policy into `Content-Security-Policy-Report-Only`
+  (use it to try a new third party before enforcing).
+- **api**: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, HSTS in production, `Cache-Control: no-store`
+  on `/rpc`, `/v1`, `/health`, `/cron`, `/webhooks`. No `Access-Control-Allow-Origin` is ever sent: browsers only call the
+  `/api` proxy of their own app. `/v1/docs`, `/v1/openapi.json` (and `/`, `/docs`) answer 404 in production, they stay on
+  local and previews.
+- **cookies**: the admin cookie is `HttpOnly; SameSite=Lax; Priority=High`, `Secure` outside local. It stays `Lax` and not
+  `Strict` so a link to the dashboard from an email or chat keeps the session. The locale cookie is `Lax`, `Secure` in
+  production; the currency cookie is only read (a local/preview testing aid).

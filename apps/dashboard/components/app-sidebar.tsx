@@ -11,6 +11,7 @@ import {
   QuestionIcon,
   ReceiptIcon,
   SignOutIcon,
+  StorefrontIcon,
   TagIcon,
   TruckIcon,
 } from "@phosphor-icons/react"
@@ -43,8 +44,12 @@ const NAV = [
   { href: "/shipping", label: "Livraison", icon: TruckIcon },
   { href: "/payments", label: "Paiements", icon: CreditCardIcon },
   { href: "/locations", label: "Ateliers", icon: MapPinIcon },
+  { href: "/settings/profile", label: "Profil", icon: StorefrontIcon },
   { href: "/settings", label: "Réglages", icon: GearIcon },
 ]
+
+const isActive = (href: string, pathname: string) =>
+  href === "/" || href === "/settings" ? pathname === href : pathname.startsWith(href)
 
 export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: string }; webUrl: string }) {
   const pathname = usePathname()
@@ -74,7 +79,7 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
                   <SidebarMenuButton
                     size="lg"
                     tooltip={item.label}
-                    isActive={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
+                    isActive={isActive(item.href, pathname)}
                     onClick={() => setOpenMobile(false)}
                     render={<Link href={item.href} />}
                   >

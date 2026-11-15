@@ -2,12 +2,21 @@
 
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import { useTranslations } from "next-intl"
+import type { ReactNode } from "react"
 import { Link } from "@/i18n/navigation"
 
 interface Props {
   checked: boolean
   onChange: (checked: boolean) => void
   error?: string
+}
+
+function LegalLink({ doc, children }: { doc: "terms" | "privacy"; children: ReactNode }) {
+  return (
+    <Link href={`/legal/${doc}`} target="_blank" className="underline underline-offset-4 hover:text-foreground">
+      {children}
+    </Link>
+  )
 }
 
 export function TermsCheckbox({ checked, onChange, error }: Props) {
@@ -26,11 +35,8 @@ export function TermsCheckbox({ checked, onChange, error }: Props) {
         />
         <span>
           {t.rich("termsLabel", {
-            link: (chunks) => (
-              <Link href="/legal/terms" target="_blank" className="underline underline-offset-4 hover:text-foreground">
-                {chunks}
-              </Link>
-            ),
+            terms: (chunks) => <LegalLink doc="terms">{chunks}</LegalLink>,
+            privacy: (chunks) => <LegalLink doc="privacy">{chunks}</LegalLink>,
           })}
         </span>
       </label>

@@ -1,0 +1,19 @@
+{
+  "name": "@workspace/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "e2e": "bun scripts/prepare.ts && playwright test",
+    "e2e:ui": "playwright test --ui",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "catalog:",
+    "@workspace/typescript-config": "workspace:*",
+    "aws4fetch": "1.0.20",
+    "typescript": "catalog:"
+  }
+}

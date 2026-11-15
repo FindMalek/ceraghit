@@ -1,4 +1,5 @@
 import { SidebarInset, SidebarProvider } from "@workspace/ui/components/sidebar"
+import { redirect } from "next/navigation"
 import { AppConfigProvider } from "@/components/app-config"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ErrorHost } from "@/components/error-host"
@@ -8,7 +9,8 @@ import { admin, webUrl } from "@/lib/api"
 export const dynamic = "force-dynamic"
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const me = await admin((api) => api.auth.me())
+  const [me, setup] = await Promise.all([admin((api) => api.auth.me()), admin((api) => api.setup.status())])
+  if (!setup.onboarded) redirect("/onboarding")
   return (
     <AppConfigProvider value={{ webUrl: webUrl() }}>
       <SidebarProvider>

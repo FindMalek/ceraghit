@@ -43,6 +43,7 @@ pnpm db:up && pnpm db:migrate && pnpm db:seed   # Postgres on :5435 + Mailpit, t
 pnpm dev:web          # storefront + api
 pnpm dev:dashboard    # dashboard + api (login with ADMIN_EMAIL / ADMIN_PASSWORD from .env)
 pnpm demo:reset       # wipes the whole local Postgres volume (other worktrees' databases too), asks first, --yes skips; stop dev first
+pnpm demo:reset:onboarding   # same, with an empty shop profile so the dashboard onboarding starts
 ```
 
 Every mail the api sends locally lands in Mailpit (http://localhost:8025, `MAILPIT_URL` in `.env`) with its full body. Leave `MAILPIT_URL` empty and mails are printed in the api console instead. E2E specs read them with `test/e2e/support/mailpit.ts` (`latestMailTo`, `mailWithSubject`, `clearMails`); with `MAIL_REDIRECT_TO` set every mail goes to that one address, so look them up by subject (the order number).

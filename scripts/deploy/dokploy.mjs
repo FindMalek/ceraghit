@@ -190,6 +190,8 @@ async function waitWithRetry(deployed, onChange) {
 async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
   const suffix = tag.startsWith("pr-") ? `-${tag}` : ""
   const urls = Object.fromEntries(Object.entries(hosts).map(([k, h]) => [k, `https://${h}`]))
+  // Shared by the three apps so the api trusts the visitor address the web and dashboard proxies forward.
+  const proxySecret = randomBytes(24).toString("hex")
   // The api sends over the internal network, so only the UI and the read api sit behind the basic auth.
   const mail =
     hosts.mail && mailAuth
@@ -213,11 +215,18 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
       NODE_ENV: "production",
       WEB_URL: urls.web,
       API_PUBLIC_URL: urls.api,
+      PROXY_SECRET: proxySecret,
       MAILPIT_URL: mail ? `http://${mail.appName}:8025` : undefined,
       ...apiEnv,
     },
   })
-  const front = { API_URL: `http://${api.appName}:3001`, WEB_URL: urls.web, APP_ENV: "preview" }
+  const front = {
+    API_URL: `http://${api.appName}:3001`,
+    WEB_URL: urls.web,
+    APP_ENV: "preview",
+    PROXY_SECRET: proxySecret,
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
+  }
   const web = await deployApp(environment, {
     name: `ceraghit-web${suffix}`,
     label: "web",

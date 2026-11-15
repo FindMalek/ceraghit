@@ -5,7 +5,9 @@
 # `down -v` drops the whole local Postgres cluster, so every other database in it (ceraghit_wt_<n> of the other
 # worktrees) is lost too. It asks for confirmation first; `--yes` skips the prompt, and without a tty `--yes` is required.
 #
-# Usage: pnpm demo:reset [--yes]
+# `--onboarding` leaves the shop profile empty so the dashboard onboarding starts (pnpm demo:reset:onboarding).
+#
+# Usage: pnpm demo:reset [--yes] [--onboarding]
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -50,10 +52,12 @@ DBNAME="$(printf '%s' "$URL" | sed -nE 's#^[a-z]+://[^@]*@[^/]+/(.*)$#\1#p')"
 [ "$DBNAME" = "ceraghit" ] || refuse "the database name must be exactly ceraghit, not '${DBNAME}' (worktree databases live in the same cluster)"
 
 YES=0
+SEED_ARGS=()
 for arg in "$@"; do
   case "$arg" in
     --yes | -y) YES=1 ;;
-    *) refuse "unknown argument $arg (only --yes is accepted)" ;;
+    --onboarding) SEED_ARGS+=(--onboarding) ;;
+    *) refuse "unknown argument $arg (only --yes and --onboarding are accepted)" ;;
   esac
 done
 
@@ -80,6 +84,6 @@ echo "==> migrating"
 pnpm db:migrate
 
 echo "==> seeding the demo"
-pnpm db:seed
+pnpm -F @workspace/db db:seed "${SEED_ARGS[@]+"${SEED_ARGS[@]}"}"
 
 echo "demo database ready, dashboard login: ${ADMIN_EMAIL:-<set ADMIN_EMAIL in .env>}"

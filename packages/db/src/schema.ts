@@ -231,6 +231,13 @@ export const uploads = pgTable(
   (t) => [index("uploads_unused_idx").on(t.unusedSince)],
 )
 
+/** Fixed-window counters shared by every api instance: `login:ip:<ip>`, `orders:<ip>`, ... Old rows are swept daily. */
+export const rateLimits = pgTable("rate_limits", {
+  key: text("key").primaryKey(),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+  count: integer("count").notNull(),
+})
+
 /** Single-row key/value store for owner-editable settings (contact, shipping fees). */
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),

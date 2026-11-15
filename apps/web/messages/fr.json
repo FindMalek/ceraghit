@@ -142,7 +142,7 @@
     },
     "failed": "La commande n'a pas pu être créée.",
     "backToShop": "Voir la boutique",
-    "termsLabel": "J'accepte les <link>conditions générales de vente</link>.",
+    "termsLabel": "J'accepte les <terms>conditions générales de vente</terms> et la <privacy>politique de confidentialité</privacy>.",
     "methodTransfer": "Virement bancaire",
     "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement.",
     "noMethod": "Aucun moyen de paiement pour ce pays dans cette devise. Changez de devise ou écrivez-nous.",
@@ -228,6 +228,7 @@
     "photoUploading": "Envoi de la photo en cours",
     "photoErrors": {
       "failed": "L'envoi a échoué, réessayez.",
+      "tooMany": "Trop d'envois, réessayez bientôt.",
       "type": "Format non pris en charge (JPEG, PNG ou WebP).",
       "tooLarge": "Photo trop lourde (5 Mo maximum)."
     }
@@ -286,7 +287,8 @@
           {
             "title": "1. Objet",
             "body": [
-              "Les présentes conditions générales de vente régissent toute commande passée sur ce site auprès de Ceraghit Creation (« l'atelier »). Passer commande implique d'avoir lu et accepté ces conditions."
+              "Les présentes conditions générales de vente régissent toute commande passée sur ce site auprès de {company} (« l'atelier »). Passer commande implique d'avoir lu et accepté ces conditions.",
+              "Vendeur : {company}, {address}. Matricule fiscal : {taxId}. Contact : {contact}."
             ]
           },
           {
@@ -359,7 +361,7 @@
           {
             "title": "12. Contact",
             "body": [
-              "Pour toute question sur une commande, écrivez à l'atelier ou appelez-le aux coordonnées indiquées en bas de chaque page, en rappelant le numéro de commande (CER-12345)."
+              "Pour toute question sur une commande, écrivez à l'atelier ou appelez-le ({contact}), en rappelant le numéro de commande (CER-12345)."
             ]
           }
         ]
@@ -416,16 +418,13 @@
         "sections": [
           {
             "title": "Éditeur du site",
-            "body": [
-              "Directeur de la publication : Sabri Ghit",
-              "Contact : coordonnées indiquées en bas de chaque page."
-            ]
+            "body": ["Directeur de la publication : Sabri Ghit", "Contact : {contact}"]
           },
           {
             "title": "Hébergement et services techniques",
             "body": [
-              "Site hébergé par Vercel Inc. (vercel.com).",
-              "Base de données : Neon. Stockage et diffusion des images : Cloudflare. Paiement par carte : Konnect."
+              "Site hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis (vercel.com).",
+              "Base de données : Neon. Stockage et diffusion des images : Cloudflare R2. Envoi des e-mails : Resend. Paiement par carte : Konnect."
             ]
           },
           {
@@ -447,43 +446,66 @@
           {
             "title": "Qui est responsable",
             "body": [
-              "Ceraghit Creation, [raison sociale], est responsable du traitement des données collectées sur ce site. Contact : coordonnées indiquées en bas de chaque page."
+              "{company}, {address}, est responsable du traitement des données collectées sur ce site. Contact : {contact}."
             ]
           },
           {
             "title": "Ce que nous collectons",
             "body": [
               "Lors d'une commande : nom, e-mail, téléphone, adresse de livraison, pays, note éventuelle, contenu et montant de la commande.",
-              "Lors d'une demande de pièce unique : nom, e-mail, téléphone et pays (facultatifs), description du projet, dimensions, budget et liens d'inspiration.",
-              "Dans votre navigateur : votre devise, votre langue et le contenu de votre panier, conservés en local pour le fonctionnement du site. Aucun traceur publicitaire n'est utilisé."
+              "Lors d'une demande de pièce unique : nom, e-mail, téléphone et pays (facultatifs), description du projet, dimensions, budget, liens d'inspiration et jusqu'à trois photos que vous joignez.",
+              "Compte de l'atelier : l'e-mail et le mot de passe (chiffré) de la personne qui gère la boutique. Les visiteurs n'ont pas de compte.",
+              "Nous ne collectons rien d'autre : pas de profilage, pas de mesure d'audience, pas de publicité ciblée."
             ]
           },
           {
-            "title": "Pourquoi",
+            "title": "Pourquoi et sur quelle base",
             "body": [
-              "Pour traiter et livrer votre commande, répondre à vos demandes, tenir la comptabilité de l'atelier et respecter nos obligations légales."
-            ]
-          },
-          {
-            "title": "Avec qui nous les partageons",
-            "body": [
-              "Konnect (paiement par carte), Vercel (hébergement), Neon (base de données), Cloudflare (images) et le transporteur chargé de la livraison (nom, adresse, téléphone). Ces prestataires ne les utilisent que pour fournir leur service."
+              "Traiter, livrer et facturer votre commande, ou répondre à votre demande de pièce unique : c'est l'exécution du contrat, ou de vos démarches avant un contrat.",
+              "Conserver les factures et la comptabilité de l'atelier : obligation légale.",
+              "Aucun e-mail promotionnel et aucune décision automatisée : vous ne recevez que des messages liés à votre commande ou à votre demande."
             ]
           },
           {
             "title": "Durée de conservation",
             "body": [
-              "Commandes : [durée à confirmer, par exemple 10 ans pour les pièces comptables]. Demandes de pièce unique : [durée à confirmer, par exemple 24 mois]."
+              "Commandes et factures : 10 ans, durée imposée par les obligations comptables. Passé ce délai, vos coordonnées sont anonymisées.",
+              "Demandes de pièce unique et leurs photos : supprimées 12 mois après le dernier échange avec l'atelier.",
+              "Les photos envoyées mais jamais rattachées à une demande sont effacées automatiquement."
+            ]
+          },
+          {
+            "title": "Avec qui nous les partageons",
+            "body": [
+              "Hébergement et stockage : Vercel (site), Neon (base de données) et Cloudflare R2 (images et photos jointes aux demandes).",
+              "Paiement : Konnect (carte bancaire, Tunisie) reçoit le montant, votre nom, votre e-mail et votre téléphone. Payoneer n'intervient que si vous choisissez de payer par lien Payoneer.",
+              "E-mails de commande : Resend. Livraison : le transporteur (Aramex ou équivalent) reçoit votre nom, votre adresse et votre téléphone.",
+              "Traduction automatique : Groq ne reçoit que les textes des produits rédigés par l'atelier, jamais de donnée client.",
+              "Certains prestataires sont situés hors de l'Union européenne (États-Unis, Tunisie)."
             ]
           },
           {
             "title": "Vos droits",
             "body": [
-              "Vous pouvez demander l'accès à vos données, leur rectification ou leur suppression, dans la limite de nos obligations légales de conservation, en écrivant à l'atelier."
+              "Vous pouvez demander l'accès à vos données, leur rectification, leur effacement, la limitation de leur traitement, vous y opposer ou les récupérer dans un format lisible, en écrivant à l'atelier ({contact}). Réponse sous un mois. L'effacement est limité par nos obligations légales de conservation.",
+              "Une réclamation est possible auprès de l'autorité de votre pays : la CNIL (France), l'APD (Belgique) ou l'INPDP (Tunisie)."
+            ]
+          },
+          {
+            "title": "Cookies et stockage local",
+            "body": [
+              "Ce site n'utilise ni cookie publicitaire, ni outil de mesure d'audience, ni traceur tiers : aucun bandeau de consentement n'est donc nécessaire.",
+              "Il ne dépose que le strict nécessaire : le cookie de session « NEXT_LOCALE » (langue choisie) et, dans le stockage local de votre navigateur, « ceraghit-cart » (votre panier) et « ceraghit-order-tokens » (accès à vos commandes sur cet appareil). Votre devise est déduite de votre pays de connexion et n'est pas enregistrée."
             ]
           }
         ]
       }
+    },
+    "missing": {
+      "company": "[raison sociale à compléter]",
+      "address": "[adresse à compléter]",
+      "taxId": "[matricule fiscal à compléter]",
+      "contact": "[contact à compléter]"
     },
     "publisher": {
       "company": "Raison sociale : <v>{value}</v>",
@@ -523,6 +545,9 @@
       "payment_service_down": "Le service de paiement n'a pas répondu, réessayez.",
       "photos_unavailable": "L'envoi de photos n'est pas disponible pour le moment.",
       "too_many_uploads": "Trop d'envois, réessayez dans quelques minutes.",
+      "too_many_orders": "Trop de commandes, réessayez dans quelques minutes.",
+      "too_many_lookups": "Trop de tentatives, réessayez dans quelques minutes.",
+      "too_many_requests": "Trop de demandes, réessayez plus tard.",
       "photo_missing": "Une photo n'a pas été envoyée, ajoutez-la de nouveau.",
       "storage_full": "L'espace de stockage est plein."
     }

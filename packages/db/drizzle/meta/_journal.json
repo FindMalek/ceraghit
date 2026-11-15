@@ -43,6 +43,13 @@
       "when": 1794747820317,
       "tag": "0005_minor_secret_warriors",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794755399102,
+      "tag": "0006_zippy_talos",
+      "breakpoints": true
     }
   ]
 }

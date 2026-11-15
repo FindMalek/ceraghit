@@ -8,6 +8,19 @@ const HOP_BY_HOP = ["connection", "keep-alive", "transfer-encoding", "upgrade", 
 export const WEB_ALLOWED = [/^\/rpc\/public\//, /^\/files\//]
 export const DASHBOARD_ALLOWED = [/^\/rpc\/admin\//, /^\/files\//]
 
+/** Headers only this proxy may set: the api trusts the client address in them when the secret matches. */
+const TRUSTED_PREFIX = "x-ceraghit-"
+export const CLIENT_IP_HEADER = `${TRUSTED_PREFIX}client-ip`
+export const PROXY_SECRET_HEADER = `${TRUSTED_PREFIX}proxy-secret`
+
+/**
+ * The visitor's address as the platform (Vercel, Traefik) saw it, before it becomes the web function's own.
+ * x-forwarded-for first: x-real-ip is only a fallback, a client can send it and the platform does not always overwrite it.
+ */
+function visitorAddress(headers: Headers): string | undefined {
+  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip")?.trim() || undefined
+}
+
 export function createProxy(allowed: RegExp[]) {
   return (request: Request) => proxyToApi(request, allowed)
 }
@@ -20,6 +33,13 @@ export async function proxyToApi(request: Request, allowed: RegExp[]): Promise<R
   const target = new URL(path + url.search, base)
   const headers = new Headers(request.headers)
   for (const h of HOP_BY_HOP) headers.delete(h)
+  for (const name of [...headers.keys()]) if (name.startsWith(TRUSTED_PREFIX)) headers.delete(name)
+  const secret = process.env.PROXY_SECRET
+  const address = visitorAddress(request.headers)
+  if (secret && address) {
+    headers.set(CLIENT_IP_HEADER, address)
+    headers.set(PROXY_SECRET_HEADER, secret)
+  }
   headers.set("x-forwarded-host", url.host)
   headers.set("x-forwarded-proto", url.protocol.replace(":", ""))
   const hasBody = !["GET", "HEAD"].includes(request.method)
