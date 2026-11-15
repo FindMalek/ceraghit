@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process"
 import { mkdtempSync, readdirSync, rmSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { extname, join, relative, sep } from "node:path"
+import { pathToFileURL } from "node:url"
 
 const BRANCH = "pr-assets"
 const MAX_BYTES = 5 * 1024 * 1024
@@ -44,7 +45,7 @@ const slug = (segment) =>
     .replace(/[^a-z0-9._-]+/g, "-")
     .replace(/^-+|-+$/g, "") || "x"
 
-function collect(dir) {
+export function collect(dir) {
   let root
   try {
     root = statSync(dir)
@@ -55,6 +56,8 @@ function collect(dir) {
   const files = []
   const walk = (d) => {
     for (const name of readdirSync(d).sort()) {
+      // playwright report folders ship their own node_modules full of icons
+      if (name.startsWith(".") || name === "node_modules") continue
       const p = join(d, name)
       const st = statSync(p)
       if (st.isDirectory()) walk(p)
@@ -152,9 +155,11 @@ function upload(files, key) {
   }
 }
 
-const args = parseArgs(process.argv.slice(2))
-const files = collect(args.dir)
-const repo = repoSlug()
-const key = slug(args.key || defaultKey(repo))
-if (!args.dryRun) upload(files, key)
-console.log(markdown(files, repo, key))
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const args = parseArgs(process.argv.slice(2))
+  const files = collect(args.dir)
+  const repo = repoSlug()
+  const key = slug(args.key || defaultKey(repo))
+  if (!args.dryRun) upload(files, key)
+  console.log(markdown(files, repo, key))
+}
