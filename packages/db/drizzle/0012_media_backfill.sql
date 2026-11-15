@@ -10,7 +10,7 @@ SELECT
 	now()
 FROM (
 	SELECT DISTINCT ON (key) key, image, alt FROM (
-		SELECT CASE WHEN image LIKE 's3:%' THEN substr(image, 4) ELSE image END AS key, image, alt, 0 AS ord, position, id::text AS tie
+		SELECT CASE WHEN image LIKE 's3:%' THEN substr(image, 4) ELSE image END AS key, image, nullif(trim(alt), '') AS alt, 0 AS ord, position, id::text AS tie
 			FROM "product_images" WHERE nullif(trim(image), '') IS NOT NULL
 		UNION ALL
 		SELECT CASE WHEN image LIKE 's3:%' THEN substr(image, 4) ELSE image END, image, NULL, 1, position, id::text
@@ -29,7 +29,7 @@ UPDATE "categories" c SET "image_media_id" = m.id FROM "media" m
 WHERE c."image_media_id" IS NULL AND c.image IS NOT NULL AND m.key = CASE WHEN c.image LIKE 's3:%' THEN substr(c.image, 4) ELSE c.image END;--> statement-breakpoint
 UPDATE "locations" l SET "image_media_id" = m.id FROM "media" m
 WHERE l."image_media_id" IS NULL AND l.image IS NOT NULL AND m.key = CASE WHEN l.image LIKE 's3:%' THEN substr(l.image, 4) ELSE l.image END;--> statement-breakpoint
-UPDATE "product_images" SET "alt_text" = jsonb_build_object('fr', alt) WHERE "alt_text" IS NULL AND alt IS NOT NULL AND trim(alt) <> '';--> statement-breakpoint
+UPDATE "product_images" SET "alt_text" = jsonb_build_object('fr', trim(alt)) WHERE "alt_text" IS NULL AND nullif(trim(alt), '') IS NOT NULL;--> statement-breakpoint
 UPDATE "product_images" pi SET "is_main" = true
 FROM (
 	SELECT DISTINCT ON (product_id) id FROM "product_images" ORDER BY product_id, position, id

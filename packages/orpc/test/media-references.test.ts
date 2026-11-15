@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { categories, createDb, locations, media, productImages, products, uploads } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import * as schema from "@workspace/db/schema"
-import { and, eq, inArray, is, sql } from "drizzle-orm"
+import { eq, inArray, is, sql } from "drizzle-orm"
 import { getTableConfig, PgTable } from "drizzle-orm/pg-core"
 import { MEDIA_REFERENCES } from "../src/lib/media"
 import type { Storage } from "../src/lib/storage"
@@ -70,7 +70,7 @@ describe.skipIf(!url)("media backfill and cleanup", () => {
     await db.insert(uploads).values({ key: keys.bucket, folder: "products", contentType: "image/webp", bytes: 1234 })
     await db.insert(productImages).values([
       { productId: ids.product, image: `s3:${keys.bucket}`, alt: "Vase", position: 1 },
-      { productId: ids.product, image: keys.bundled, position: 0 },
+      { productId: ids.product, image: keys.bundled, alt: "  ", position: 0 },
     ])
 
     await backfill()
@@ -91,6 +91,8 @@ describe.skipIf(!url)("media backfill and cleanup", () => {
     expect(images.every((i) => i.mediaId)).toBe(true)
     expect(images.filter((i) => i.isMain).map((i) => i.image)).toEqual([keys.bundled])
     expect(images.find((i) => i.alt === "Vase")?.altText).toEqual({ fr: "Vase" })
+    expect(images.find((i) => i.alt === "  ")?.altText).toBeNull()
+    expect(rows.find((r) => r.key === keys.bundled)?.alt).toBeNull()
     const [c] = await db.select().from(categories).where(eq(categories.id, ids.cat))
     expect(c?.imageMediaId).toBe(rows.find((r) => r.key === keys.bucket)!.id)
     const [l] = await db
@@ -104,29 +106,35 @@ describe.skipIf(!url)("media backfill and cleanup", () => {
     const removed: string[] = []
     const storage = { remove: async (k: string) => void removed.push(k) } as unknown as Storage
     const files = [keys.pinned, keys.used, keys.lost]
-    await db
-      .insert(uploads)
-      .values(files.map((key) => ({ key, folder: "media", contentType: "image/webp", bytes: 10 })))
-    const [pinned, used] = await db
-      .insert(media)
-      .values(files.map((key) => ({ key, filename: "x.webp", confirmedAt: new Date(), keep: key === keys.pinned })))
-      .returning()
-    await db
-      .update(locations)
-      .set({ imageMediaId: used!.id })
-      .where(eq(locations.name, `loc-${run}`))
-    expect(pinned).toBeDefined()
-
     const start = new Date("2027-01-10T03:00:00Z")
-    await cleanupUploads(db, storage, start)
-    await cleanupUploads(db, storage, new Date(start.getTime() + 31 * 86_400_000))
-    const mine = removed.filter((k) => k.includes(run))
-    expect(mine).toContain(keys.lost)
-    expect(mine).not.toContain(keys.pinned)
-    expect(mine).not.toContain(keys.used)
+    const rollback = new Error("rollback")
+    // cleanup walks every uploads row, so it runs in a transaction that is always rolled back: other data is never touched
     await db
-      .update(locations)
-      .set({ imageMediaId: null })
-      .where(and(eq(locations.name, `loc-${run}`)))
+      .transaction(async (tx) => {
+        const t = tx as unknown as typeof db
+        await t
+          .insert(uploads)
+          .values(files.map((key) => ({ key, folder: "media", contentType: "image/webp", bytes: 10 })))
+        const rows = await t
+          .insert(media)
+          .values(files.map((key) => ({ key, filename: "x.webp", confirmedAt: new Date(), keep: key === keys.pinned })))
+          .returning()
+        const used = rows.find((r) => r.key === keys.used)!
+        await t
+          .update(locations)
+          .set({ imageMediaId: used.id })
+          .where(eq(locations.name, `loc-${run}`))
+
+        await cleanupUploads(t, storage, start)
+        await cleanupUploads(t, storage, new Date(start.getTime() + 31 * 86_400_000))
+        const mine = removed.filter((k) => k.includes(run))
+        expect(mine).toContain(keys.lost)
+        expect(mine).not.toContain(keys.pinned)
+        expect(mine).not.toContain(keys.used)
+        throw rollback
+      })
+      .catch((e) => {
+        if (e !== rollback) throw e
+      })
   })
 })
