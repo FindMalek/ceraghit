@@ -9,15 +9,17 @@ const INTERVAL_MS = 5000
 /** Crossfades through the photos on its own. Stays still for visitors who prefer reduced motion. */
 export function HeroCarousel({ images }: { images: string[] }) {
   const [active, setActive] = useState(0)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
+    setReady(true)
     if (images.length < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
     const timer = setInterval(() => setActive((i) => (i + 1) % images.length), INTERVAL_MS)
     return () => clearInterval(timer)
   }, [images.length])
 
   return (
-    <div className="frame relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden bg-card">
+    <div data-hydrated={ready} className="frame relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden bg-card">
       {images.map((src, i) => (
         <Image
           key={src}
