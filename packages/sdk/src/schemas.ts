@@ -247,16 +247,16 @@ export function bankFromProfile(profile: ProfileBank): BankDetails | null {
 }
 
 export const studioSettingsSchema = z.object({
-  /** Legacy, now in shop_profile: read only by the backfill, never written by the UI. */
+  /** Owned by shop_profile: the dashboard form still sends it and the update copies it into the profile. */
   contactEmail: z.string().optional(),
-  /** Legacy, now in shop_profile: read only by the backfill, never written by the UI. */
+  /** Owned by shop_profile: the dashboard form still sends it and the update copies it into the profile. */
   phones: z.array(z.string()).optional(),
   whatsapp: z.string().nullable(),
   instagram: z.string().nullable(),
   shippingRates: shippingRatesSchema,
   /** Shown at checkout, e.g. "Pièces uniques expédiées sous 7 jours". */
   shippingNote: localizedSchema.nullable(),
-  /** Legacy, now in shop_profile: read only by the backfill, never written by the UI. */
+  /** Still edited by the dashboard and read for transfer instructions until they move to shop_profile. */
   bank: bankDetailsSchema.optional(),
 })
 export type StudioSettings = z.infer<typeof studioSettingsSchema>

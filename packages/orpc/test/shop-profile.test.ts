@@ -9,7 +9,7 @@ import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
-import { ensureShopProfile, getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
+import { ensureShopProfile, getShopProfile, studioInbox, updateShopProfile } from "../src/lib/shop-profile"
 import { appRouter } from "../src/routers"
 import { adminRouter } from "../src/routers/admin"
 
@@ -118,5 +118,19 @@ describe.skipIf(!url)("shop profile", () => {
     expect(profile).toMatchObject({ email: "atelier@example.com", bankIban: "TN5910006035183598478831" })
     const [row] = await db.select().from(settings).where(eq(settings.key, "studio"))
     expect(row?.value).toMatchObject({ instagram: "@atelier", contactEmail: "atelier@example.com" })
+  })
+
+  test("a contact saved from the dashboard settings reaches the storefront", async () => {
+    await setLegacy(legacy)
+    const session = await services.auth.login("127.0.0.1", "owner@test.local", "clay-test-pass")
+    const owner = createRouterClient(adminRouter, {
+      context: (): Context =>
+        createContext(services, new Headers({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" })),
+    })
+    await owner.settings.update({ ...legacy, contactEmail: "nouveau@example.com", phones: ["+216 21 111 111"] })
+    const guest = createRouterClient(appRouter, { context: (): Context => createContext(services, new Headers()) })
+    const result = await guest.public.catalog.settings()
+    expect(result).toMatchObject({ contactEmail: "nouveau@example.com", phones: ["+216 21 111 111"] })
+    expect(studioInbox(await getShopProfile(db))).toBe("nouveau@example.com")
   })
 })
