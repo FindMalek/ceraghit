@@ -598,3 +598,27 @@ export const shippingQuoteSchema = z.object({
   freeOverMinor: z.number().int().nullable(),
   subtotalMinor: z.number().int(),
 })
+
+export const mediaSourceSchema = z.enum(["bucket", "bundled", "external"])
+export const mediaSchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  /** What `imageSrc()` accepts: `s3:<key>` for a bucket file, the path or URL otherwise. */
+  src: z.string(),
+  filename: z.string(),
+  originalName: z.string().nullable(),
+  mime: z.string(),
+  bytes: z.number().int(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  alt: localizedSchema.nullable(),
+  tags: z.array(z.string()),
+  source: mediaSourceSchema,
+  keep: z.boolean(),
+  usageCount: z.number().int(),
+  unusedSince: z.string().nullable(),
+  /** `unusedSince` + 30 days, null when used or pinned. */
+  deletesAt: z.string().nullable(),
+  createdAt: z.string(),
+})
+export type Media = z.infer<typeof mediaSchema>

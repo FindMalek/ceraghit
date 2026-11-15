@@ -38,6 +38,11 @@ export function imageSrc(image: string, webOrigin = ""): string {
   return image
 }
 
+/** The string `imageSrc()` accepts for a media row. */
+export function mediaSrc(media: { key: string; source: "bucket" | "bundled" | "external" }): string {
+  return media.source === "bucket" ? `s3:${media.key}` : media.key
+}
+
 export function slugify(text: string): string {
   return text
     .replace(/œ/gi, "oe")
