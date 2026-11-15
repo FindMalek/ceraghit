@@ -223,6 +223,7 @@ function previewApiEnv() {
     APP_ENV: "preview",
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    MAIL_REDIRECT_TO: process.env.MAIL_REDIRECT_TO,
     KONNECT_API_KEY: process.env.KONNECT_TEST_API_KEY,
     KONNECT_WALLET_ID: process.env.KONNECT_TEST_WALLET_ID,
     KONNECT_MODE: "test",

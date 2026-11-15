@@ -43,3 +43,15 @@ test("production runs without gateway keys while online payment is off, and asks
   expect(loadEnv(production).ONLINE_PAYMENTS).toBe(false)
   expect(() => loadEnv({ ...production, ONLINE_PAYMENTS: "true", KONNECT_MODE: "live" })).toThrow(/KONNECT_API_KEY/)
 })
+
+test("production refuses MAIL_REDIRECT_TO", () => {
+  expect(() => loadEnv({ ...production, MAIL_REDIRECT_TO: "redirect@example.com" })).toThrow(/MAIL_REDIRECT_TO/)
+})
+
+test("outside production a Resend key needs MAIL_REDIRECT_TO", () => {
+  const preview = { ...base, APP_ENV: "preview", RESEND_API_KEY: "re_test" }
+  expect(() => loadEnv(preview)).toThrow(/MAIL_REDIRECT_TO/)
+  expect(loadEnv({ ...preview, MAIL_REDIRECT_TO: "redirect@example.com" }).MAIL_REDIRECT_TO).toBe(
+    "redirect@example.com",
+  )
+})

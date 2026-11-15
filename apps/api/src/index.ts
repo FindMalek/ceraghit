@@ -1,8 +1,9 @@
 import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { AdminAuth, ConsoleMailer, createStorage, DemoProvider, KonnectProvider, ResendMailer } from "@workspace/orpc"
+import { AdminAuth, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
 import { loadEnv } from "./env"
+import { createMailer } from "./mailer"
 import { createServer } from "./server"
 
 const env = loadEnv()
@@ -21,7 +22,7 @@ const payments =
 const fetch = createServer({
   db,
   payments,
-  mailer: env.RESEND_API_KEY ? new ResendMailer(env.RESEND_API_KEY, env.EMAIL_FROM) : new ConsoleMailer(),
+  mailer: createMailer(env),
   storage: createStorage({
     endpoint: env.S3_ENDPOINT,
     region: env.S3_REGION,
