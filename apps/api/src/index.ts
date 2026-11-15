@@ -42,6 +42,7 @@ const fetch = createServer({
     secureCookies: env.APP_ENV !== "local",
     onlinePayments: env.ONLINE_PAYMENTS,
     cronSecret: env.CRON_SECRET,
+    proxySecret: env.PROXY_SECRET,
     emailFrom: env.EMAIL_FROM,
   },
 })

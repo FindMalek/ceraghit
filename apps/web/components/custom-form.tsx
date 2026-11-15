@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
+import { errorMessage, isTooManyRequests } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import { customRequestInputSchema, localeSchema } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -31,7 +31,7 @@ export function CustomForm({ initialDescription }: { initialDescription?: string
   const create = useMutation(
     orpc.public.requests.create.mutationOptions({
       onSuccess: () => setSent(true),
-      onError: (error) => showError(errorMessage(error) || t("failed")),
+      onError: (error) => showError(isTooManyRequests(error) ? t("tooMany") : errorMessage(error) || t("failed")),
     }),
   )
 

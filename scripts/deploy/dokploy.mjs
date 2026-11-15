@@ -189,15 +189,22 @@ async function waitWithRetry(deployed, onChange) {
 async function deployAll(environment, { tag, hosts, apiEnv }) {
   const suffix = tag.startsWith("pr-") ? `-${tag}` : ""
   const urls = Object.fromEntries(Object.entries(hosts).map(([k, h]) => [k, `https://${h}`]))
+  // Shared by the three apps so the api trusts the visitor address the web and dashboard proxies forward.
+  const proxySecret = randomBytes(24).toString("hex")
   const api = await deployApp(environment, {
     name: `ceraghit-api${suffix}`,
     label: "api",
     image: IMAGE("api", tag),
     host: hosts.api,
     port: 3001,
-    env: { NODE_ENV: "production", WEB_URL: urls.web, API_PUBLIC_URL: urls.api, ...apiEnv },
+    env: { NODE_ENV: "production", WEB_URL: urls.web, API_PUBLIC_URL: urls.api, PROXY_SECRET: proxySecret, ...apiEnv },
   })
-  const front = { API_URL: `http://${api.appName}:3001`, WEB_URL: urls.web, APP_ENV: "preview" }
+  const front = {
+    API_URL: `http://${api.appName}:3001`,
+    WEB_URL: urls.web,
+    APP_ENV: "preview",
+    PROXY_SECRET: proxySecret,
+  }
   const web = await deployApp(environment, {
     name: `ceraghit-web${suffix}`,
     label: "web",

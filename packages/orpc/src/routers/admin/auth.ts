@@ -3,13 +3,10 @@ import { loginSchema } from "@workspace/sdk"
 import { z } from "zod"
 import { ADMIN_COOKIE } from "../../lib/auth"
 import { readCookie, serializeCookie } from "../../lib/cookies"
+import { clientAddress } from "../../lib/rate-limit"
 import { adminProcedure, publicProcedure } from "../../procedures"
 
 const adminSchema = z.object({ id: z.string(), email: z.string(), name: z.string(), nameConfirmed: z.boolean() })
-
-function clientAddress(headers: Headers): string {
-  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip") || "local"
-}
 
 export const authRouter = {
   login: publicProcedure
@@ -17,8 +14,8 @@ export const authRouter = {
     .input(loginSchema)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      const address = clientAddress(context.headers)
-      if (context.auth.locked(address)) {
+      const address = clientAddress(context.headers, context.config.proxySecret)
+      if (await context.auth.locked(address, input.email)) {
         throw new ORPCError("TOO_MANY_REQUESTS", { message: "Too many attempts. Try again in 15 minutes." })
       }
       const session = await context.auth.login(address, input.email, input.password)

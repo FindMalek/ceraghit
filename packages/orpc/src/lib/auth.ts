@@ -1,47 +1,46 @@
 import { adminSessions, admins, type Db } from "@workspace/db"
 import { verifyPassword } from "@workspace/db/password"
 import { and, eq, gt } from "drizzle-orm"
+import { isLimited, LIMITS, resetLimit, takeLimit } from "./rate-limit"
 
 export const ADMIN_COOKIE = "ceraghit_admin"
 const SESSION_DAYS = 14
-const LOCK_AFTER = 8
-const LOCK_MS = 15 * 60_000
 
 async function sha256(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))
   return Buffer.from(digest).toString("hex")
 }
 
+const ipKey = (address: string) => `login:ip:${address}`
+const emailKey = async (email: string) => `login:email:${await sha256(email.trim().toLowerCase())}`
+
 export class AdminAuth {
-  private failures = new Map<string, number[]>()
+  constructor(
+    private db: Db,
+    private now: () => Date = () => new Date(),
+  ) {}
 
-  constructor(private db: Db) {}
-
-  private recent(address: string): number[] {
-    const now = Date.now()
-    const recent = (this.failures.get(address) ?? []).filter((at) => now - at < LOCK_MS)
-    if (recent.length) this.failures.set(address, recent)
-    else this.failures.delete(address)
-    return recent
+  /** True once this address or this email used up its failed attempts. */
+  async locked(address: string, email: string): Promise<boolean> {
+    const now = this.now()
+    return (
+      (await isLimited(this.db, ipKey(address), LIMITS.loginIp, now)) ||
+      (await isLimited(this.db, await emailKey(email), LIMITS.loginEmail, now))
+    )
   }
 
-  locked(address: string): boolean {
-    return this.recent(address).length >= LOCK_AFTER
-  }
-
-  /** Counts the attempt before the slow hash check so parallel guesses can't slip past the lock. */
+  /** Counts the attempt before the slow hash check so parallel guesses can't slip past the lock. A success clears it. */
   async login(address: string, email: string, password: string): Promise<{ token: string; expires: Date } | null> {
-    if (this.locked(address)) return null
-    if (this.failures.size > 10_000) this.failures.clear()
-    const attempt = Date.now()
-    this.failures.set(address, [...this.recent(address), attempt])
+    const keys = [ipKey(address), await emailKey(email)]
+    const [ipOk, emailOk] = await Promise.all([
+      takeLimit(this.db, keys[0]!, LIMITS.loginIp, this.now()),
+      takeLimit(this.db, keys[1]!, LIMITS.loginEmail, this.now()),
+    ])
+    if (!ipOk || !emailOk) return null
     const admin = await this.db.query.admins.findFirst({ where: eq(admins.email, email.toLowerCase()) })
     const ok = admin ? await verifyPassword(password, admin.passwordHash).catch(() => false) : false
     if (!admin || !ok) return null
-    this.failures.set(
-      address,
-      this.recent(address).filter((at) => at !== attempt),
-    )
+    await Promise.all(keys.map((key) => resetLimit(this.db, key)))
     const token = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url")
     const expires = new Date(Date.now() + SESSION_DAYS * 864e5)
     await this.db

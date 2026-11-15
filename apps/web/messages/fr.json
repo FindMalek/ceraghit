@@ -141,6 +141,7 @@
       "terms": "Vous devez accepter les conditions générales de vente pour payer."
     },
     "failed": "La commande n'a pas pu être créée.",
+    "tooMany": "Trop de tentatives, réessayez dans quelques minutes.",
     "backToShop": "Voir la boutique",
     "termsLabel": "J'accepte les <link>conditions générales de vente</link>.",
     "methodTransfer": "Virement bancaire",
@@ -217,6 +218,7 @@
       "description": "Décrivez votre projet en quelques phrases (10 caractères minimum)."
     },
     "failed": "La demande n'a pas pu être envoyée.",
+    "tooMany": "Trop de demandes, réessayez plus tard.",
     "privacy": "Vos informations servent uniquement à répondre à votre demande. <link>Confidentialité</link>",
     "photos": "Photos de référence (facultatif)",
     "photosHint": "Jusqu'à 3 photos : une inspiration, un lieu, une pièce existante. Elles sont réduites avant l'envoi.",
@@ -225,6 +227,7 @@
     "photoUploading": "Envoi de la photo en cours",
     "photoErrors": {
       "failed": "L'envoi a échoué, réessayez.",
+      "tooMany": "Trop d'envois, réessayez bientôt.",
       "type": "Format non pris en charge (JPEG, PNG ou WebP).",
       "tooLarge": "Photo trop lourde (5 Mo maximum)."
     }

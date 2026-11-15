@@ -141,6 +141,7 @@
       "terms": "You must accept the terms and conditions of sale to pay."
     },
     "failed": "The order could not be created.",
+    "tooMany": "Too many attempts, try again in a few minutes.",
     "backToShop": "Back to the shop",
     "termsLabel": "I accept the <link>terms and conditions of sale</link>.",
     "methodTransfer": "Bank transfer",
@@ -217,6 +218,7 @@
       "description": "Describe your project in a few sentences (10 characters minimum)."
     },
     "failed": "The request could not be sent.",
+    "tooMany": "Too many requests, try again later.",
     "privacy": "Your information is only used to answer your request. <link>Privacy</link>",
     "photos": "Reference photos (optional)",
     "photosHint": "Up to 3 photos: an inspiration, a place, an existing piece. They are reduced before sending.",
@@ -225,6 +227,7 @@
     "photoUploading": "Uploading the photo",
     "photoErrors": {
       "failed": "The upload failed, try again.",
+      "tooMany": "Too many uploads, try again soon.",
       "type": "Unsupported format (JPEG, PNG or WebP).",
       "tooLarge": "Photo too large (5 MB maximum)."
     }

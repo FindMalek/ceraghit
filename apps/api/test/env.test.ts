@@ -7,6 +7,7 @@ const production = {
   APP_ENV: "production",
   DEPLOY_ENV: "production",
   SEED_DEMO: "false",
+  PROXY_SECRET: "p".repeat(32),
   RESEND_API_KEY: "re_test",
   EMAIL_FROM: "Ceraghit <commandes@ceraghit.com>",
   WEB_URL: "https://ceraghit.com",
@@ -54,4 +55,11 @@ test("outside production a Resend key needs MAIL_REDIRECT_TO", () => {
   expect(loadEnv({ ...preview, MAIL_REDIRECT_TO: "redirect@example.com" }).MAIL_REDIRECT_TO).toBe(
     "redirect@example.com",
   )
+})
+
+test("production refuses a missing or short PROXY_SECRET", () => {
+  const { PROXY_SECRET: _secret, ...without } = production
+  expect(() => loadEnv(without)).toThrow(/PROXY_SECRET/)
+  expect(() => loadEnv({ ...production, PROXY_SECRET: "short" })).toThrow(/PROXY_SECRET/)
+  expect(loadEnv({ ...base, APP_ENV: "preview" }).PROXY_SECRET).toBeUndefined()
 })

@@ -14,7 +14,7 @@ import { z } from "zod"
 import type { Context } from "../../context"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
-import { clientAddress, RateLimit } from "../../lib/rate-limit"
+import { enforceLimit } from "../../lib/rate-limit"
 import { getSettings } from "../../lib/settings"
 import { getShopProfile, studioInbox } from "../../lib/shop-profile"
 import { reserveUpload } from "../../lib/uploads"
@@ -27,13 +27,17 @@ export const ordersRouter = {
     .route({ method: "POST", path: "/orders", summary: "Place an order and get the payment link", tags: TAG })
     .input(orderInputSchema)
     .output(checkoutSchema)
-    .handler(({ context, input }) => createOrder(context, input)),
+    .handler(async ({ context, input }) => {
+      await enforceLimit(context, "orderCreate", "Too many orders, try again in a few minutes.")
+      return createOrder(context, input)
+    }),
 
   get: publicProcedure
     .route({ method: "GET", path: "/orders/{number}", summary: "An order, with the token from its link", tags: TAG })
     .input(z.object({ number: z.string(), token: z.string() }))
     .output(publicOrderSchema)
     .handler(async ({ context, input }) => {
+      await enforceLimit(context, "orderGet", "Too many attempts, try again in a few minutes.")
       const order = await context.db.query.orders.findFirst({
         where: and(eq(orders.number, input.number), eq(orders.publicToken, input.token)),
         with: { items: true },
@@ -78,7 +82,6 @@ export const ordersRouter = {
 }
 
 const IMAGE_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const
-const uploadLimit = new RateLimit(12, 10 * 60_000)
 
 /** The studio answers requests by email, so it gets one the moment a request comes in. Never fails the request. */
 async function notifyStudio(
@@ -124,9 +127,7 @@ export const requestsRouter = {
     .handler(async ({ context, input }) => {
       const { storage } = context
       if (!storage) throw new ORPCError("SERVICE_UNAVAILABLE", { message: "Photos are not available right now." })
-      if (!uploadLimit.take(clientAddress(context.headers))) {
-        throw new ORPCError("TOO_MANY_REQUESTS", { message: "Too many uploads, try again in a few minutes." })
-      }
+      await enforceLimit(context, "uploadUrl", "Too many uploads, try again in a few minutes.")
       const key = `${storage.prefix}requests/${crypto.randomUUID()}.${IMAGE_EXTENSIONS[input.contentType]}`
       await reserveUpload(context.db, {
         key,
@@ -147,6 +148,7 @@ export const requestsRouter = {
     .input(customRequestInputSchema)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
+      await enforceLimit(context, "requestCreate", "Too many requests, try again later.")
       const { storage } = context
       const required = `s3:${storage?.prefix ?? ""}requests/`
       for (const image of input.images) {

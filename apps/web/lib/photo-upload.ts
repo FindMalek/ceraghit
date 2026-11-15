@@ -21,7 +21,7 @@ export async function downscale(file: File): Promise<Blob> {
 }
 
 export class PhotoError extends Error {
-  constructor(readonly kind: "unavailable" | "tooLarge" | "type" | "failed") {
+  constructor(readonly kind: "unavailable" | "tooMany" | "tooLarge" | "type" | "failed") {
     super(kind)
   }
 }
@@ -36,7 +36,9 @@ export async function uploadPhoto(file: File): Promise<string> {
     target = await browserClient.public.requests.uploadUrl({ contentType: blob.type as "image/jpeg", size: blob.size })
   } catch (error) {
     const code = (error as { code?: string }).code
-    throw new PhotoError(code === "SERVICE_UNAVAILABLE" ? "unavailable" : "failed")
+    throw new PhotoError(
+      code === "SERVICE_UNAVAILABLE" ? "unavailable" : code === "TOO_MANY_REQUESTS" ? "tooMany" : "failed",
+    )
   }
   const res = await fetch(target.uploadUrl, { method: "PUT", headers: { "content-type": blob.type }, body: blob })
   if (!res.ok) throw new PhotoError("failed")

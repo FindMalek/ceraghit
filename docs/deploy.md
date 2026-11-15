@@ -86,6 +86,15 @@ Every file sent to the bucket is a row in `uploads` (key, folder, bytes). The da
 from R2 and the counter after 30 days unused. `cleanup-dev-bucket.yml` does the homelab bucket: files of closed PRs and
 anything older than 14 days.
 
+## rate limits
+
+Limits are counted in the `rate_limits` table (fixed windows, shared by every api instance), keyed by the visitor's address:
+login 5 failures per 15 min per address and 10 per hour per email, orders 10 per 10 min, order lookups 60 per 10 min,
+unique piece requests 5 per hour, request photo uploads 12 per 10 min. Behind the `/api` proxy the api only sees the web
+function, so the proxy forwards the real address in `x-ceraghit-client-ip` with `PROXY_SECRET`; the api ignores it without
+the matching secret. The daily cleanup also deletes counters older than a day. To unlock the owner right away:
+`delete from rate_limits where key like 'login:%'`. Optional on top: Vercel WAF rate limiting rules.
+
 ## one-time setup
 
 **Vercel, the short way**: `cp docs/production.env.example .env.production.local`, fill it in, `npx vercel@65.9.0 login`, then
@@ -105,9 +114,9 @@ write by hand. Resend needs its SPF/DKIM records on the same zone, and `commande
 
 | project | env (Production only) |
 | :-- | :-- |
-| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it |
-| web | `APP_ENV=production`, `API_URL` (api origin), `WEB_URL` |
-| dashboard | `APP_ENV=production`, `API_URL`, `WEB_URL` |
+| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it, `PROXY_SECRET` (required, 24+ random characters) |
+| web | `APP_ENV=production`, `API_URL` (api origin), `WEB_URL`, `PROXY_SECRET` (same value as the api) |
+| dashboard | `APP_ENV=production`, `API_URL`, `WEB_URL`, `PROXY_SECRET` (same value as the api) |
 
 **Neon**: one project, production branch; keep the pooled connection string as `DATABASE_URL`.
 

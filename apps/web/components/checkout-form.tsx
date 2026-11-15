@@ -1,7 +1,7 @@
 "use client"
 
 import { useMutation } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
+import { errorMessage, isTooManyRequests } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import {
   formatMoney,
@@ -70,7 +70,7 @@ export function CheckoutForm({ paymentMethods }: { paymentMethods: PaymentMethod
         window.location.assign(checkout.payUrl)
       },
       onError: (error) => {
-        showError(errorMessage(error))
+        showError(isTooManyRequests(error) ? t("tooMany") : errorMessage(error))
         router.refresh()
       },
     }),
