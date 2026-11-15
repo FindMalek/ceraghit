@@ -1,7 +1,7 @@
-import { ORPCError } from "@orpc/server"
 import { categories, customRequests, type Db, locations, productImages, uploads } from "@workspace/db"
 import { STORAGE_QUOTA_BYTES } from "@workspace/sdk"
 import { eq, isNotNull, sql } from "drizzle-orm"
+import { publicError } from "../errors"
 import type { Storage } from "./storage"
 
 export async function storageUsage(db: Db) {
@@ -18,7 +18,7 @@ export async function reserveUpload(
 ): Promise<void> {
   const { usedBytes } = await storageUsage(db)
   if (usedBytes + file.bytes > STORAGE_QUOTA_BYTES) {
-    throw new ORPCError("PAYLOAD_TOO_LARGE", { message: "The storage space is full." })
+    throw publicError("PAYLOAD_TOO_LARGE", "storage_full", "The storage space is full.")
   }
   await db.insert(uploads).values(file).onConflictDoNothing()
 }
