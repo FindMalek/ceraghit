@@ -5,6 +5,8 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { Metadata } from "next"
 import { FONT_VARIABLES } from "@/lib/fonts"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: { default: "Ceraghit · Dashboard", template: "%s · Ceraghit" },
   icons: { icon: "/logo.webp" },

@@ -217,7 +217,12 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
       ...apiEnv,
     },
   })
-  const front = { API_URL: `http://${api.appName}:3001`, WEB_URL: urls.web, APP_ENV: "preview" }
+  const front = {
+    API_URL: `http://${api.appName}:3001`,
+    WEB_URL: urls.web,
+    APP_ENV: "preview",
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
+  }
   const web = await deployApp(environment, {
     name: `ceraghit-web${suffix}`,
     label: "web",

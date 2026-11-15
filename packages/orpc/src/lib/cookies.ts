@@ -12,6 +12,7 @@ export function serializeCookie(name: string, value: string, opts: { expires: Da
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
+    "Priority=High",
     `Expires=${opts.expires.toUTCString()}`,
     opts.secure ? "Secure" : "",
   ]
