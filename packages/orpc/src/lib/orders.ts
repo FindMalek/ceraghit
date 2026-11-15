@@ -5,9 +5,8 @@ import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { findProducts } from "./catalog"
 import { sendOrderEmails } from "./order-emails"
-import { gatewayReady } from "./payments"
 import { unitMinor } from "./pricing"
-import { getPaymentSettings, getSettings } from "./settings"
+import { effectivePaymentMethods, getSettings } from "./settings"
 
 /** A pending order holds its stock this long, then the pieces go back on sale. */
 export const HOLD_MINUTES = 45
@@ -62,8 +61,7 @@ function newNumber(): string {
 
 export async function createOrder(services: Services, input: OrderInput) {
   const { db, payments, config, now } = services
-  const { methods } = await getPaymentSettings(db, config)
-  const allowed = paymentMethodsFor(input, methods, gatewayReady(services))
+  const allowed = paymentMethodsFor(input, await effectivePaymentMethods(services), true)
   const method = input.paymentMethod ?? allowed[0]
   if (!method || !allowed.includes(method)) {
     throw new ORPCError("BAD_REQUEST", { message: "This payment method is not available for your country." })

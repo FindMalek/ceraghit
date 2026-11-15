@@ -51,10 +51,15 @@ export async function savePaymentSettings(db: Db, value: PaymentSettings): Promi
     .onConflictDoUpdate({ target: settings.key, set: { value } })
 }
 
-/** The switches as they apply right now: card is off whatever was saved when the gateway is not ready. */
+/**
+ * The switches as they apply right now: card is off whatever was saved when the gateway is not ready. If card was the
+ * only method saved for Tunisia or abroad, cod or transfer comes back so the shop never silently stops taking orders.
+ */
 export async function effectivePaymentMethods(
   services: Pick<Services, "db" | "payments" | "config">,
 ): Promise<PaymentMethodFlags> {
   const { methods } = await getPaymentSettings(services.db, services.config)
-  return { ...methods, online: methods.online && gatewayReady(services) }
+  const online = methods.online && gatewayReady(services)
+  if (online) return methods
+  return { online, cod: methods.cod || methods.online, transfer: methods.transfer || methods.online }
 }

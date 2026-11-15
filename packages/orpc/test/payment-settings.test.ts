@@ -35,6 +35,7 @@ describe.skipIf(!url)("payment settings", () => {
   let categoryId = ""
   let productId = ""
   let cookie = ""
+  let savedPayments: typeof settings.$inferSelect | undefined
 
   const owner = (over: Partial<Services["config"]> = {}) =>
     createRouterClient(appRouter, {
@@ -48,7 +49,7 @@ describe.skipIf(!url)("payment settings", () => {
   beforeAll(async () => {
     await runMigrations(db)
     await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
-    await db.delete(settings).where(eq(settings.key, "payments"))
+    ;[savedPayments] = await db.delete(settings).where(eq(settings.key, "payments")).returning()
     const [cat] = await db
       .insert(categories)
       .values({ slug: tag, name: { fr: "Test" } })
@@ -74,6 +75,7 @@ describe.skipIf(!url)("payment settings", () => {
 
   afterAll(async () => {
     await db.delete(settings).where(eq(settings.key, "payments"))
+    if (savedPayments) await db.insert(settings).values(savedPayments)
     await db.delete(orders).where(eq(orders.email, email))
     await db.delete(products).where(eq(products.categoryId, categoryId))
     await db.delete(categories).where(eq(categories.id, categoryId))
@@ -113,6 +115,21 @@ describe.skipIf(!url)("payment settings", () => {
     })
     const card = await client.public.orders.create(order)
     expect((await client.public.orders.get({ number: card.number, token: card.token })).paymentMethod).toBe("online")
+  })
+
+  test("card saved alone falls back to cod and transfer once the gateway stops being ready", async () => {
+    await db
+      .insert(settings)
+      .values({ key: "payments", value: { methods: { online: true, cod: false, transfer: false } } })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value: { methods: { online: true, cod: false, transfer: false } } },
+      })
+    expect((await owner({ appEnv: "production" }).public.catalog.settings()).paymentMethods).toEqual({
+      online: false,
+      cod: true,
+      transfer: true,
+    })
   })
 
   test("saving cannot leave Tunisia without a way to pay", async () => {

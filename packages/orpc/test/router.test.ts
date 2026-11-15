@@ -8,6 +8,7 @@ import {
   productImages,
   products,
   productVariants,
+  settings,
   uploads,
 } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
@@ -51,6 +52,7 @@ describe.skipIf(!url)("router", () => {
   const tag = `t${Date.now()}`
   let categoryId = ""
   const ids: Record<string, string> = {}
+  let savedPayments: typeof settings.$inferSelect | undefined
 
   const customer = {
     currency: "TND" as const,
@@ -65,6 +67,7 @@ describe.skipIf(!url)("router", () => {
   beforeAll(async () => {
     await runMigrations(db)
     await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
+    ;[savedPayments] = await db.delete(settings).where(eq(settings.key, "payments")).returning()
     const [cat] = await db
       .insert(categories)
       .values({ slug: tag, name: { fr: "Test" } })
@@ -94,6 +97,7 @@ describe.skipIf(!url)("router", () => {
   })
 
   afterAll(async () => {
+    if (savedPayments) await db.insert(settings).values(savedPayments).onConflictDoNothing()
     const all = await db.select({ id: orders.id }).from(orders).where(eq(orders.email, customer.email))
     if (all.length)
       await db.delete(orders).where(

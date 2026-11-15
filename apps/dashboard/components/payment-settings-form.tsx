@@ -90,7 +90,11 @@ function PaymentSettingsBody({
                 <FieldLabel htmlFor={`method-${key}`}>{title}</FieldLabel>
                 <FieldDescription>{description}</FieldDescription>
                 {locked && (
-                  <FieldDescription className="text-foreground">Ajoutez d'abord vos clés Konnect.</FieldDescription>
+                  <FieldDescription className="text-foreground">
+                    {initial.online
+                      ? "Carte enregistrée mais clés Konnect absentes : livraison et virement sont proposés à la place."
+                      : "Ajoutez d'abord vos clés Konnect."}
+                  </FieldDescription>
                 )}
               </FieldContent>
               <Switch
