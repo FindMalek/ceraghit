@@ -417,10 +417,6 @@
           {
             "title": "Éditeur du site",
             "body": [
-              "Ceraghit Creation · [raison sociale]",
-              "Forme juridique : [à renseigner]",
-              "Adresse : [adresse de l'atelier]",
-              "Patente : [numéro de patente] · Matricule fiscal : [matricule fiscal]",
               "Directeur de la publication : Sabri Ghit",
               "Contact : coordonnées indiquées en bas de chaque page."
             ]
@@ -488,6 +484,12 @@
           }
         ]
       }
+    },
+    "publisher": {
+      "company": "Raison sociale : <v>{value}</v>",
+      "form": "Forme juridique : <v>{value}</v>",
+      "address": "Adresse : <v>{value}</v>",
+      "taxId": "Matricule fiscal : <v>{value}</v>"
     }
   },
   "seo": {
@@ -502,5 +504,26 @@
     "title": "Une erreur est survenue",
     "text": "Un problème est survenu de notre côté. Réessayez dans un instant.",
     "retry": "Réessayer"
+  },
+  "errors": {
+    "api": {
+      "payment_method_unavailable": "Ce mode de paiement n'est pas disponible pour votre pays.",
+      "piece_not_found": "Cette pièce n'existe pas.",
+      "piece_unavailable": "Une pièce de votre panier n'est plus disponible.",
+      "piece_quote_only": "Cette pièce est vendue sur devis, envoyez-nous une demande.",
+      "piece_unique": "Cette pièce est unique, une seule est possible.",
+      "option_unavailable": "Une option de votre panier n'est plus disponible.",
+      "option_required": "Choisissez une option pour chaque pièce du panier.",
+      "out_of_stock": "Une pièce de votre panier n'est plus en stock.",
+      "order_too_big": "Cette commande est trop volumineuse pour être expédiée en ligne, envoyez-nous une demande.",
+      "order_failed": "La commande n'a pas pu être créée, réessayez.",
+      "order_not_found": "Commande introuvable.",
+      "payment_not_found": "Paiement introuvable.",
+      "payment_service_down": "Le service de paiement n'a pas répondu, réessayez.",
+      "photos_unavailable": "L'envoi de photos n'est pas disponible pour le moment.",
+      "too_many_uploads": "Trop d'envois, réessayez dans quelques minutes.",
+      "photo_missing": "Une photo n'a pas été envoyée, ajoutez-la de nouveau.",
+      "storage_full": "L'espace de stockage est plein."
+    }
   }
 }

@@ -3,12 +3,25 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     groups:
       minor-and-patch:
         update-types: [minor, patch]
     open-pull-requests-limit: 5
+  - package-ecosystem: docker
+    directories:
+      - /apps/api
+      - /apps/dashboard
+      - /apps/web
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

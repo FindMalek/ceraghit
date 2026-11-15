@@ -1,5 +1,5 @@
 import { type Db, settings, shopProfile } from "@workspace/db"
-import { type PublicShopProfile, type ShopProfileInput, UNFILLED_BANK_TEXT } from "@workspace/sdk"
+import { type PublicShopProfile, type ShopProfile, UNFILLED_BANK_TEXT } from "@workspace/sdk"
 import { eq, sql } from "drizzle-orm"
 import { DEFAULT_CONTACT, SETTINGS_KEY } from "./settings"
 
@@ -46,7 +46,10 @@ export async function getShopProfile(db: Db): Promise<ShopProfileRow> {
   return created!
 }
 
-export async function updateShopProfile(db: Db, patch: ShopProfileInput): Promise<ShopProfileRow> {
+export async function updateShopProfile(
+  db: Db,
+  patch: Partial<typeof shopProfile.$inferInsert>,
+): Promise<ShopProfileRow> {
   await ensureShopProfile(db)
   const [row] = await db
     .update(shopProfile)
@@ -54,6 +57,16 @@ export async function updateShopProfile(db: Db, patch: ShopProfileInput): Promis
     .where(eq(shopProfile.id, ID))
     .returning()
   return row!
+}
+
+export function toShopProfile(row: ShopProfileRow): ShopProfile {
+  const { id: _id, shippingConfirmedAt, onboardedAt, updatedAt, ...rest } = row
+  return {
+    ...rest,
+    shippingConfirmedAt: shippingConfirmedAt?.toISOString() ?? null,
+    onboardedAt: onboardedAt?.toISOString() ?? null,
+    updatedAt: updatedAt.toISOString(),
+  }
 }
 
 export function publicShopProfile(row: ShopProfileRow): PublicShopProfile {

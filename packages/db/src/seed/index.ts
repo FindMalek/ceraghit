@@ -50,6 +50,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
     await db
       .insert(admins)
       .values({ email: opts.admin.email.toLowerCase(), name: opts.admin.name ?? "Sabri Ghit", passwordHash })
+      // The name belongs to the owner after onboarding: only the password follows the env.
       .onConflictDoUpdate({ target: admins.email, set: { passwordHash } })
     done.admin = true
   }

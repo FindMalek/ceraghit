@@ -90,7 +90,7 @@ jobs:
       - id: build
         if: steps.reuse.outputs.reused != 'true'
         continue-on-error: true
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
@@ -108,7 +108,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Build again
         if: steps.reuse.outputs.reused != 'true' && steps.build.outcome == 'failure'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
@@ -142,6 +142,7 @@ jobs:
           ADMIN_EMAIL: ${{ vars.PREVIEW_ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.PREVIEW_ADMIN_PASSWORD }}
           MAIL_REDIRECT_TO: ${{ vars.PREVIEW_MAIL_REDIRECT_TO }}
+          PREVIEW_MAILPIT_AUTH: ${{ secrets.PREVIEW_MAILPIT_AUTH }}
           KONNECT_TEST_API_KEY: ${{ secrets.KONNECT_TEST_API_KEY }}
           KONNECT_TEST_WALLET_ID: ${{ secrets.KONNECT_TEST_WALLET_ID }}
           S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}

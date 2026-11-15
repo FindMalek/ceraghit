@@ -1,8 +1,8 @@
-import { ORPCError } from "@orpc/server"
 import { type Db, orderItems, orders, products, productVariants } from "@workspace/db"
 import { type Currency, estimateShipping, type OrderInput, paymentMethodsFor, pick } from "@workspace/sdk"
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
+import { publicError } from "../errors"
 import { findProducts } from "./catalog"
 import { sendOrderEmails } from "./order-emails"
 import { unitMinor } from "./pricing"
@@ -69,7 +69,11 @@ export async function createOrder(services: Services, input: OrderInput) {
   }
   const method = input.paymentMethod ?? allowed[0]
   if (!method || !allowed.includes(method)) {
-    throw new ORPCError("BAD_REQUEST", { message: "This payment method is not available for your country." })
+    throw publicError(
+      "BAD_REQUEST",
+      "payment_method_unavailable",
+      "This payment method is not available for your country.",
+    )
   }
   await releaseExpiredHolds(db, now())
 
@@ -80,17 +84,17 @@ export async function createOrder(services: Services, input: OrderInput) {
   const byId = new Map(rows.map((r) => [r.id, r]))
   const lines = input.items.map((item) => {
     const row = byId.get(item.productId)
-    if (!row) throw new ORPCError("NOT_FOUND", { message: "A piece in your cart is no longer available." })
+    if (!row) throw publicError("NOT_FOUND", "piece_unavailable", "A piece in your cart is no longer available.")
     if (row.quoteOnly)
-      throw new ORPCError("BAD_REQUEST", { message: `${row.ref} is sold on quote, send a request instead.` })
+      throw publicError("BAD_REQUEST", "piece_quote_only", `${row.ref} is sold on quote, send a request instead.`)
     if (row.unique && item.quantity > 1)
-      throw new ORPCError("BAD_REQUEST", { message: `${row.ref} is a unique piece.` })
+      throw publicError("BAD_REQUEST", "piece_unique", `${row.ref} is a unique piece.`)
     const variant = item.variantId ? row.variants.find((v) => v.id === item.variantId) : undefined
     if (item.variantId && !variant) {
-      throw new ORPCError("NOT_FOUND", { message: "An option in your cart is no longer available." })
+      throw publicError("NOT_FOUND", "option_unavailable", "An option in your cart is no longer available.")
     }
     if (!variant && row.variants.length > 0) {
-      throw new ORPCError("BAD_REQUEST", { message: `Choose an option for ${row.ref}.` })
+      throw publicError("BAD_REQUEST", "option_required", `Choose an option for ${row.ref}.`)
     }
     return { row, variant, quantity: item.quantity }
   })
@@ -106,9 +110,11 @@ export async function createOrder(services: Services, input: OrderInput) {
     subtotal,
   )
   if (!quote.available) {
-    throw new ORPCError("BAD_REQUEST", {
-      message: "This order is too big to ship online, please send a request instead.",
-    })
+    throw publicError(
+      "BAD_REQUEST",
+      "order_too_big",
+      "This order is too big to ship online, please send a request instead.",
+    )
   }
   const shipping = quote.amountMinor
   const total = subtotal + shipping
@@ -127,7 +133,7 @@ export async function createOrder(services: Services, input: OrderInput) {
             .where(and(eq(products.id, row.id), sql`${products.stock} >= ${quantity}`))
             .returning({ id: products.id })
       if (!updated.length) {
-        throw new ORPCError("CONFLICT", { message: `${pick(row.title, input.locale)} is no longer in stock.` })
+        throw publicError("CONFLICT", "out_of_stock", `${pick(row.title, input.locale)} is no longer in stock.`)
       }
     }
     const publicToken = Buffer.from(crypto.getRandomValues(new Uint8Array(18))).toString("base64url")
@@ -170,7 +176,7 @@ export async function createOrder(services: Services, input: OrderInput) {
       )
       return order
     }
-    throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Could not create the order." })
+    throw publicError("INTERNAL_SERVER_ERROR", "order_failed", "Could not create the order.")
   })
 
   const orderUrl = `${config.webUrl}/${input.locale}/order/${created.number}?t=${created.publicToken}`

@@ -1,0 +1,9 @@
+{
+  "packages": [
+    {
+      "name": "@img/sharp-libvips-*",
+      "license": "LGPL-3.0-or-later",
+      "reason": "prebuilt libvips shared library loaded dynamically by sharp (next/image), not modified or statically linked into our code"
+    }
+  ]
+}

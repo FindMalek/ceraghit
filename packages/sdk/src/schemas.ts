@@ -267,6 +267,33 @@ export function bankFromProfile(profile: ProfileBank): BankDetails | null {
   return { holder, bank, iban, rib, bic }
 }
 
+export const SETUP_REQUIRED_STEPS = ["owner", "profile", "bank", "shipping"] as const
+export const SETUP_OPTIONAL_STEPS = ["konnect", "aramex", "payoneer", "groq", "emailDomain"] as const
+export const setupStepIdSchema = z.enum([...SETUP_REQUIRED_STEPS, ...SETUP_OPTIONAL_STEPS])
+export type SetupStepId = z.infer<typeof setupStepIdSchema>
+export type OptionalSetupStepId = (typeof SETUP_OPTIONAL_STEPS)[number]
+
+export const setupStepSchema = z.object({
+  id: setupStepIdSchema,
+  required: z.boolean(),
+  done: z.boolean(),
+  skipped: z.boolean(),
+  /** Field names still empty, for the UI hint. */
+  missing: z.array(z.string()),
+})
+export type SetupStep = z.infer<typeof setupStepSchema>
+
+export const setupStatusSchema = z.object({
+  steps: z.array(setupStepSchema),
+  requiredDone: z.boolean(),
+  onboarded: z.boolean(),
+  /** Required steps not done plus optional ones neither done nor skipped: the badge number. */
+  remaining: z.number().int(),
+  total: z.number().int(),
+  done: z.number().int(),
+})
+export type SetupStatus = z.infer<typeof setupStatusSchema>
+
 export const studioSettingsSchema = z.object({
   /** Owned by shop_profile: the dashboard form still sends it and the update copies it into the profile. */
   contactEmail: z.string().optional(),

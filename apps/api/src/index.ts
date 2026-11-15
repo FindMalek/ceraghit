@@ -3,7 +3,7 @@ import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { AdminAuth, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
 import { loadEnv } from "./env"
-import { createMailer } from "./mailer"
+import { createMailer, mailTransport } from "./mailer"
 import { createServer } from "./server"
 
 const env = loadEnv()
@@ -42,10 +42,13 @@ const fetch = createServer({
     secureCookies: env.APP_ENV !== "local",
     onlinePayments: env.ONLINE_PAYMENTS,
     cronSecret: env.CRON_SECRET,
+    emailFrom: env.EMAIL_FROM,
   },
 })
 
-console.info(`api (${env.APP_ENV}/${env.DEPLOY_ENV}, payments: ${payments.name}:${payments.mode})`)
+console.info(
+  `api (${env.APP_ENV}/${env.DEPLOY_ENV}, payments: ${payments.name}:${payments.mode}, mail: ${mailTransport(env)})`,
+)
 
 /** Bun serves this default export directly, and Vercel's function entry (api/index.ts) re-exports it. */
 export default { port: env.PORT, hostname: "0.0.0.0", fetch }

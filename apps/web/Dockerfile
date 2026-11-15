@@ -1,6 +1,6 @@
 # Build context is the repo root: docker build -f apps/web/Dockerfile .
-FROM node:24-alpine AS base
-RUN corepack enable && npm install -g turbo@2.11.9
+FROM node:26-alpine AS base
+RUN npm install -g corepack && corepack enable && npm install -g turbo@2.11.9
 
 FROM base AS pruner
 WORKDIR /app
@@ -17,7 +17,7 @@ ARG TURBO_TEAM
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN --mount=type=secret,id=turbo_token,env=TURBO_TOKEN pnpm turbo build --filter=web
 
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
