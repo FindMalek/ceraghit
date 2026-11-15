@@ -1,6 +1,7 @@
 import { authRouter } from "./auth"
 import { categoriesRouter, productsRouter } from "./catalog"
 import { helpRouter } from "./help"
+import { invoicesRouter } from "./invoices"
 import { ordersRouter, requestsRouter } from "./orders"
 import { overview } from "./overview"
 import { profileRouter, setupRouter } from "./profile"
@@ -13,6 +14,7 @@ export const adminRouter = {
   products: productsRouter,
   categories: categoriesRouter,
   orders: ordersRouter,
+  invoices: invoicesRouter,
   requests: requestsRouter,
   locations: locationsRouter,
   settings: settingsRouter,

@@ -4,6 +4,7 @@ import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { publicError } from "../errors"
 import { findProducts } from "./catalog"
+import { tryIssueInvoice } from "./invoices"
 import { sendOrderEmails } from "./order-emails"
 import { unitMinor } from "./pricing"
 import { effectivePaymentMethods, getSettings } from "./settings"
@@ -246,7 +247,10 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
       .set({ status: "paid", paidAt: now() })
       .where(and(eq(orders.id, order.id), eq(orders.status, "pending_payment")))
       .returning({ status: orders.status })
-    if (paid) await sendOrderEmails(services, order.id)
+    if (paid) {
+      await tryIssueInvoice(db, order.id, now())
+      await sendOrderEmails(services, order.id)
+    }
     return { number: order.number, status: paid?.status ?? "paid" }
   }
   if (check.status === "failed") {

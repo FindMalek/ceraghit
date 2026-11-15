@@ -169,3 +169,99 @@
     transform: scaleX(-1);
   }
 }
+
+/* Invoice: an A4 sheet on screen, the same sheet in print. Black on white to save ink. */
+.invoice {
+  width: 210mm;
+  min-height: 297mm;
+  max-width: none;
+  margin-inline: auto;
+  padding: 15mm;
+  background: var(--invoice-paper);
+  color: var(--invoice-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  & h1,
+  & h3,
+  & .font-heading {
+    color: var(--invoice-ink);
+  }
+  & .text-muted-foreground {
+    color: color-mix(in oklab, var(--invoice-ink) 65%, white);
+  }
+  & .invoice-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--invoice-rule);
+    padding-bottom: 1rem;
+  }
+  & .invoice-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--invoice-ink) 65%, white);
+  }
+  &[lang="ar"] .invoice-label {
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  & .invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    & th {
+      border-bottom: 1px solid var(--invoice-ink);
+      padding: 0.35rem 0;
+      font-weight: 600;
+    }
+    & td {
+      border-bottom: 1px solid var(--invoice-rule);
+      padding: 0.45rem 0;
+    }
+    & tr {
+      break-inside: avoid;
+    }
+  }
+  & .invoice-totals {
+    margin-inline-start: auto;
+    min-width: 16rem;
+    font-size: 0.875rem;
+    & div {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      padding: 0.15rem 0;
+    }
+    & .invoice-grand {
+      border-top: 1px solid var(--invoice-ink);
+      margin-top: 0.25rem;
+      padding-top: 0.35rem;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+  }
+  & .invoice-block {
+    break-inside: avoid;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  html,
+  body {
+    background: white;
+  }
+  body::before {
+    display: none;
+  }
+  .invoice {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+  }
+}

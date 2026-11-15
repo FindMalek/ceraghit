@@ -355,6 +355,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@workspace/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
