@@ -16,7 +16,7 @@ export async function SiteFooter() {
   ])
   const address = formatAddress(settings.profile)
   return (
-    <footer className="mt-24 border-border border-t bg-background/80 pb-24 md:pb-0">
+    <footer className="print:hidden mt-24 border-border border-t bg-background/80 pb-24 md:pb-0">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-3">
         <div className="space-y-3">
           <Logo name="Ceraghit" />

@@ -141,6 +141,16 @@ export function OrderStatus({ number, token }: { number: string; token: string }
           </div>
         </dl>
       </section>
+      {(order.status === "paid" || order.status === "fulfilled") && (
+        <div className="text-center">
+          <Link
+            href={`/order/${number}/invoice?t=${encodeURIComponent(token)}`}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11")}
+          >
+            {t("invoiceLink")}
+          </Link>
+        </div>
+      )}
       <p className="text-center text-muted-foreground text-sm">{t("keepLink")}</p>
     </div>
   )

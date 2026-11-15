@@ -37,6 +37,11 @@ export function sellerFromProfile(profile: ShopProfileRow): InvoiceSeller {
   }
 }
 
+const sellerView = (seller: InvoiceSeller): InvoiceView["seller"] => ({
+  ...seller,
+  bank: seller.bank && { ...seller.bank, rib: seller.bank.rib ?? "" },
+})
+
 const isIssuable = (status: string) => status === "paid" || status === "fulfilled"
 
 const isUniqueViolation = (error: unknown): boolean => {
@@ -135,6 +140,9 @@ export function invoiceView(
       city: order.city,
       country: order.country,
     },
-    seller: invoice?.seller ?? sellerFromProfile(profile),
+    seller: sellerView(invoice?.seller ?? sellerFromProfile(profile)),
   }
 }
+
+export const invoiceUrl = (webUrl: string, order: { locale: string; number: string; publicToken: string }): string =>
+  `${webUrl}/${order.locale}/order/${order.number}/invoice?t=${order.publicToken}`

@@ -148,6 +148,9 @@
     "noMethod": "No payment method for this country in this currency. Switch currency or write to us.",
     "unavailableAbroad": "Orders from abroad reopen very soon. Write to us to reserve a piece."
   },
+  "invoice": {
+    "print": "Print or save as PDF"
+  },
   "order": {
     "title": "Order {number}",
     "status": {
@@ -170,6 +173,7 @@
     "shipping": "Delivery",
     "total": "Total",
     "notFound": "Order not found. Check the link you received after ordering.",
+    "invoiceLink": "View invoice",
     "keepLink": "Keep this page: it lets you follow your order.",
     "retryOrder": "Place the order again",
     "stillPending": "The payment is not confirmed yet. If you have paid, confirmation can take a few minutes: come back to this page.",
