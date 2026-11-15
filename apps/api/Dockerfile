@@ -1,11 +1,11 @@
 # Build context is the repo root: docker build -f apps/api/Dockerfile .
-FROM node:24-alpine AS pruner
+FROM node:26-alpine AS pruner
 RUN npm install -g turbo@2.11.9
 WORKDIR /app
 COPY . .
 RUN turbo prune api --docker
 
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 RUN corepack enable
 WORKDIR /app
 COPY --from=pruner /app/out/json/ .
