@@ -19,7 +19,6 @@ test("pages carry title, description, canonical, hreflang and social tags", { ta
     expect(await meta('meta[name="robots"]'), `${path} robots`).toContain("noindex")
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /^https?:\/\//)
     for (const locale of [...APP_LOCALES, "x-default"]) {
-      if (locale === "x-default") continue
       await expect(page.locator(`link[rel="alternate"][hreflang="${locale}"]`), `${path} ${locale}`).toHaveCount(1)
     }
     const og = await meta('meta[property="og:image"]')
@@ -52,11 +51,10 @@ test("home has business JSON-LD and robots disallows everything outside producti
   const blocks = await page.locator('script[type="application/ld+json"]').allTextContents()
   const org = blocks.map((b) => JSON.parse(b)).find((b) => b["@type"] === "LocalBusiness")
   expect(org).toBeTruthy()
-  if (org.logo) {
-    const logo = typeof org.logo === "string" ? org.logo : org.logo.url
-    const res = await page.request.get(new URL(new URL(logo).pathname, E2E.webUrl).toString())
-    expect(res.status()).toBe(200)
-  }
+  expect(org.logo).toBeTruthy()
+  const logo = typeof org.logo === "string" ? org.logo : org.logo.url
+  const logoRes = await page.request.get(new URL(new URL(logo).pathname, E2E.webUrl).toString())
+  expect(logoRes.status()).toBe(200)
   const robots = await page.request.get(`${E2E.webUrl}/robots.txt`)
-  expect(await robots.text()).toMatch(/Disallow: \//)
+  expect(await robots.text()).toMatch(/^Disallow: \/$/m)
 })

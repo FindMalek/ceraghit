@@ -48,8 +48,15 @@ test("sorting by price ascending lists the cheapest first, from the TND prices",
   const sorted = [...all].sort((a, b) => a.prices.TND - b.prices.TND)
   const lowest = sorted[0] as Product
   await expect(cards(page).first()).toContainText(price(lowest.prices.TND, "TND", appLocale))
-  const minors = await cards(page).evaluateAll((els) => els.map((el) => el.textContent ?? ""))
-  expect(minors.length).toBe(all.length)
+  const texts = await cards(page).evaluateAll((els) => els.map((el) => el.textContent ?? ""))
+  expect(texts.length).toBe(all.length)
+  const byRefLength = [...all].sort((a, b) => b.ref.length - a.ref.length)
+  const tnd = texts.map((text) => {
+    const match = byRefLength.find((p) => text.includes(p.ref))
+    if (!match) throw new Error(`no catalogue piece in card: ${text}`)
+    return match.prices.TND
+  })
+  expect(tnd).toEqual([...tnd].sort((a, b) => a - b))
 })
 
 test("a category page lists only that category's pieces", async ({ page, request, home, appLocale, step }) => {

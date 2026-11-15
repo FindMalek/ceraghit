@@ -41,6 +41,7 @@ test("the skip link focuses the main content", { tag: "@desktop" }, async ({ pag
   await expect(skip).toBeFocused()
   await page.keyboard.press("Enter")
   await expect(page).toHaveURL(/#content$/)
+  await expect(page.locator("main#content")).toBeFocused()
 })
 
 test("switching language keeps the page and flips direction", { tag: "@fr" }, async ({ page, step }) => {
