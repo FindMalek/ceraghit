@@ -16,7 +16,7 @@ const TABS = [
 ]
 
 /** Screens that have their own sticky save bar at the bottom of the phone. */
-const HIDDEN_ON = [/^\/products\/.+/, /^\/settings/, /^\/shipping/]
+const HIDDEN_ON = [/^\/products\/.+/, /^\/settings/, /^\/shipping/, /^\/payments/]
 
 /** The four screens the owner opens all day, one thumb away; everything else is behind Menu. */
 export function MobileTabBar() {
