@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { Product } from "@workspace/sdk"
-import { productJsonLd } from "./json-ld"
+import { productJsonLd } from "../../lib/json-ld"
 
 const product: Product = {
   id: "p1",

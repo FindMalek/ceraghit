@@ -7,7 +7,7 @@ globs: apps/web/**
 
 - next-intl, `fr` default (no URL prefix), `en` and `ar` (RTL) are live: `lib/locales.ts` `ENABLED_LOCALES` drives the
   switcher, hreflang alternates and the sitemap. Every key in `messages/fr.json` exists in `en.json` and `ar.json` with the
-  same ICU arguments and `<tags>`: `lib/messages.test.ts` fails otherwise, so add a string in all three.
+  same ICU arguments and `<tags>`: `test/lib/messages.test.ts` fails otherwise, so add a string in all three.
 - Arabic is right-to-left: logical utilities only (`ms-`, `ps-`, `start-`, `text-start`, never `ml-`/`left-`/`text-left`),
   `rtl:rotate-180` on directional icons, `useLocale() === "ar"` where behaviour flips (gallery keys and swipes). Amounts,
   refs, phones and emails stay left-to-right: `formatMoney(..., "ar")` isolates amounts, wrap refs/phones/emails in `<bdi>`.
@@ -20,4 +20,4 @@ globs: apps/web/**
 - Cart is a persisted zustand store; unique pieces cap at quantity 1; `quoteOnly` pieces link to `/custom?ref=`.
 - noindex and a disallow-all robots unless `APP_ENV=production`.
 - Cart lines are keyed by piece and variant (`lineKey` in `lib/cart-store.ts`); pieces with options need a chosen variant to be added.
-- Layout switches to the desktop header and the two-column hero at `lg` (1024px), not `md`: at tablet width the burger menu stays. Message fallbacks (`i18n/request.ts`) replace arrays whole, covered by `request.test.ts`.
+- Layout switches to the desktop header and the two-column hero at `lg` (1024px), not `md`: at tablet width the burger menu stays. Message fallbacks (`i18n/request.ts`) replace arrays whole, covered by `test/i18n/request.test.ts`.
