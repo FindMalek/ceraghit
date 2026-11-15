@@ -30,12 +30,15 @@ EUR checkout with foreign Visa/Mastercard and settlement currency; settlement de
 the patente; final rate for international cards; whether the amount field in `GET /payments/{ref}` is minor units (the
 sandbox test decides, `settleOrder` refuses to mark paid on a mismatch).
 
-## current mode (online payment off)
+## current mode (dashboard "Paiements" page)
 
-`ONLINE_PAYMENTS=false` on the api (the default): the storefront offers no card payment. Tunisia pays **cash on
-delivery**, every other country pays by **bank transfer**: the order page and the customer email carry the account from
-the dashboard settings and the order number as the transfer reference; the owner marks the order paid when the money
-arrives, then shipped. Turning card payment back on is `ONLINE_PAYMENTS=true` plus the Konnect keys, nothing else changes.
+The owner switches card (Konnect), cash on delivery and bank transfer on or off in the dashboard (`/payments`), stored in
+the `settings` row `payments` and enforced by `createOrder`. Fixed rules on top: cash on delivery is Tunisia + TND only,
+transfer is abroad only, and the page refuses a save that leaves Tunisia or abroad without any method. Card payment is
+only offered when the gateway can take real money: in production that means Konnect in `live` mode, the demo gateway
+never qualifies (`gatewayReady`). Until the page is saved once, card follows `ONLINE_PAYMENTS` (default `false`), so
+existing deployments keep their behaviour. Transfer orders carry the account from the dashboard settings and the order
+number as the reference; the owner marks the order paid when the money arrives, then shipped.
 
 ## payoneer
 

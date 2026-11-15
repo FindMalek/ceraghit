@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import type { Currency } from "@workspace/sdk"
+import type { AppEnv } from "../context"
 
 export interface InitPayment {
   orderNumber: string
@@ -25,6 +26,12 @@ export interface PaymentProvider {
   mode: "test" | "live"
   init(input: InitPayment): Promise<{ payUrl: string; ref: string }>
   check(ref: string): Promise<PaymentCheck>
+}
+
+/** Whether card payment may be offered: production only through live Konnect, never the demo gateway. */
+export function gatewayReady(services: { payments: PaymentProvider; config: { appEnv: AppEnv } }): boolean {
+  if (services.config.appEnv !== "production") return true
+  return services.payments.name === "konnect" && services.payments.mode === "live"
 }
 
 const KONNECT_HOSTS = { test: "https://api.preprod.konnect.network/api/v2", live: "https://api.konnect.network/api/v2" }

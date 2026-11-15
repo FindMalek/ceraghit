@@ -8,4 +8,5 @@ export const FALLBACK_SETTINGS: PublicSettings = {
   shippingRates: DEFAULT_SHIPPING_RATES,
   shippingNote: null,
   onlinePayments: false,
+  paymentMethods: { online: false, cod: true, transfer: true },
 }

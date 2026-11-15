@@ -8,20 +8,21 @@ import {
   productImages,
   products,
   productVariants,
+  settings,
   uploads,
 } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { asc, eq, inArray } from "drizzle-orm"
-import { type Context, createContext, type Services } from "./context"
-import { AdminAuth } from "./lib/auth"
-import { ConsoleMailer } from "./lib/mailer"
-import { cancelOrder, releaseExpiredHolds } from "./lib/orders"
-import { DemoProvider, KonnectProvider } from "./lib/payments"
-import { createStorage, type Storage } from "./lib/storage"
-import { cleanupUploads } from "./lib/uploads"
-import { appRouter } from "./routers"
-import { adminRouter } from "./routers/admin"
+import { type Context, createContext, type Services } from "../src/context"
+import { AdminAuth } from "../src/lib/auth"
+import { ConsoleMailer } from "../src/lib/mailer"
+import { cancelOrder, releaseExpiredHolds } from "../src/lib/orders"
+import { DemoProvider, KonnectProvider } from "../src/lib/payments"
+import { createStorage, type Storage } from "../src/lib/storage"
+import { cleanupUploads } from "../src/lib/uploads"
+import { appRouter } from "../src/routers"
+import { adminRouter } from "../src/routers/admin"
 
 const url = process.env.DATABASE_URL
 
@@ -51,6 +52,7 @@ describe.skipIf(!url)("router", () => {
   const tag = `t${Date.now()}`
   let categoryId = ""
   const ids: Record<string, string> = {}
+  let savedPayments: typeof settings.$inferSelect | undefined
 
   const customer = {
     currency: "TND" as const,
@@ -65,6 +67,7 @@ describe.skipIf(!url)("router", () => {
   beforeAll(async () => {
     await runMigrations(db)
     await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
+    ;[savedPayments] = await db.delete(settings).where(eq(settings.key, "payments")).returning()
     const [cat] = await db
       .insert(categories)
       .values({ slug: tag, name: { fr: "Test" } })
@@ -94,6 +97,7 @@ describe.skipIf(!url)("router", () => {
   })
 
   afterAll(async () => {
+    if (savedPayments) await db.insert(settings).values(savedPayments).onConflictDoNothing()
     const all = await db.select({ id: orders.id }).from(orders).where(eq(orders.email, customer.email))
     if (all.length)
       await db.delete(orders).where(
@@ -321,7 +325,7 @@ describe.skipIf(!url)("router", () => {
     const [order] = await db.select().from(orders).where(eq(orders.number, created.number))
     const wrong = new DemoProvider("https://web.test")
     wrong.check = async () => ({ status: "paid", amountMinor: 1, currency: "TND", orderNumber: order!.number })
-    const { settleOrder } = await import("./lib/orders")
+    const { settleOrder } = await import("../src/lib/orders")
     await settleOrder({ ...services, payments: wrong }, order!.paymentRef!)
     expect((await db.select().from(orders).where(eq(orders.id, order!.id)))[0]!.status).toBe("pending_payment")
   })

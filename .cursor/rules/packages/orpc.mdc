@@ -10,4 +10,4 @@ globs: packages/orpc/**
 - Business rules live in `lib/` (`orders.ts` stock holds and `settleOrder`, `payments.ts` providers, `storage.ts` S3,
   `settings.ts`), routers stay thin.
 - Stock is decremented when an order is created and returned on cancel/refund/expiry (`releaseExpiredHolds`, lazy, 45 min).
-- Tests: `router.test.ts` runs against a real Postgres (`DATABASE_URL`, skipped without).
+- Tests: `test/router.test.ts` runs against a real Postgres (`DATABASE_URL`, skipped without).

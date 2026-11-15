@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { loadEnv } from "./env"
+import { loadEnv } from "../src/env"
 
 const base = { DATABASE_URL: "postgres://x" }
 const production = {

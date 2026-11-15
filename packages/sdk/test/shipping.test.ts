@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { DEFAULT_SHIPPING_RATES, estimateShipping } from "./shipping"
+import { DEFAULT_SHIPPING_RATES, estimateShipping } from "../src/shipping"
 
 const lamp = { weightGrams: 1500, lengthCm: 24, widthCm: 24, heightCm: 24, quantity: 1 }
 

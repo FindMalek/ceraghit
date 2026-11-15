@@ -1,7 +1,17 @@
 import { count } from "drizzle-orm"
 import type { Db } from "../index"
 import { hashPassword } from "../password"
-import { admins, categories, locations, orderItems, orders, productImages, products, productVariants } from "../schema"
+import {
+  admins,
+  categories,
+  locations,
+  orderItems,
+  orders,
+  productImages,
+  products,
+  productVariants,
+  settings,
+} from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
 import { buildScenario } from "./scenario"
 import { localize } from "./translations"
@@ -151,6 +161,10 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
     )
     await tx.insert(orders).values(scenario.orders)
     await tx.insert(orderItems).values(scenario.items)
+    await tx
+      .insert(settings)
+      .values({ key: "payments", value: { methods: { online: true, cod: true, transfer: true } } })
+      .onConflictDoNothing()
     done.demo = true
   })
   return done

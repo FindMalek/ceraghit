@@ -15,7 +15,7 @@ import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
-import { getSettings } from "../../lib/settings"
+import { effectivePaymentMethods, getSettings } from "../../lib/settings"
 import { publicProcedure } from "../../procedures"
 
 const TAG = ["catalog"]
@@ -106,7 +106,8 @@ export const catalogRouter = {
     .output(publicSettingsSchema)
     .handler(async ({ context }) => {
       const { bank: _bank, ...settings } = await getSettings(context.db)
-      return { ...settings, onlinePayments: context.config.onlinePayments }
+      const paymentMethods = await effectivePaymentMethods(context)
+      return { ...settings, onlinePayments: paymentMethods.online, paymentMethods }
     }),
 
   shippingQuote: publicProcedure

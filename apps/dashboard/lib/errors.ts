@@ -19,6 +19,8 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^An order that is (\w+) cannot become (\w+)\.?$/, () => "Cette commande ne peut pas passer à ce statut."],
   [/^The storage space is full/, () => "L'espace de stockage (2,5 Go) est plein. Supprimez des photos inutilisées."],
   [/^Image storage is not configured/, () => "Le stockage des images n'est pas configuré ici."],
+  [/^Au moins un moyen de paiement doit rester actif/, (m) => m.input ?? ""],
+  [/^Card payment needs the Konnect live keys/, () => "Ajoutez d'abord vos clés Konnect pour activer la carte."],
   [/^Cash on delivery is only available/, () => "Le paiement à la livraison n'est disponible qu'en Tunisie."],
 ]
 

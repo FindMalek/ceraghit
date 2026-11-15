@@ -19,10 +19,37 @@ export const orderStatusSchema = z.enum(["pending_payment", "paid", "fulfilled",
 export const paymentMethodSchema = z.enum(["online", "cod", "transfer"])
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>
 
-/** Tunisia pays cash on delivery, everywhere else pays by bank transfer. Online card payment only when the api enables it. */
-export function availablePaymentMethods(country: string, onlinePayments: boolean): PaymentMethod[] {
-  const offline: PaymentMethod = country === "TN" ? "cod" : "transfer"
-  return onlinePayments ? ["online", offline] : [offline]
+export const paymentMethodFlagsSchema = z.object({ online: z.boolean(), cod: z.boolean(), transfer: z.boolean() })
+export type PaymentMethodFlags = z.infer<typeof paymentMethodFlagsSchema>
+
+export const paymentSettingsSchema = z.object({
+  methods: paymentMethodFlagsSchema.default({ online: false, cod: true, transfer: true }),
+})
+export type PaymentSettings = z.infer<typeof paymentSettingsSchema>
+
+/**
+ * Methods offered at checkout, in display order. Settings only switch methods off: cod stays Tunisia + TND,
+ * transfer stays abroad, and card needs a gateway that may take real money here.
+ */
+export function paymentMethodsFor(
+  order: { country: string; currency: Currency },
+  methods: PaymentMethodFlags,
+  gatewayReady: boolean,
+): PaymentMethod[] {
+  const list: PaymentMethod[] = []
+  if (methods.online && gatewayReady) list.push("online")
+  if (methods.cod && order.country === "TN" && order.currency === "TND") list.push("cod")
+  if (methods.transfer && order.country !== "TN") list.push("transfer")
+  return list
+}
+
+/** French message when a save would leave Tunisia (TND) or abroad (EUR) without any way to pay. */
+export function validatePaymentSettings(settings: PaymentSettings, gatewayReady: boolean): string | null {
+  if (paymentMethodsFor({ country: "TN", currency: "TND" }, settings.methods, gatewayReady).length === 0)
+    return "Au moins un moyen de paiement doit rester actif pour la Tunisie."
+  if (paymentMethodsFor({ country: "FR", currency: "EUR" }, settings.methods, gatewayReady).length === 0)
+    return "Au moins un moyen de paiement doit rester actif pour l'étranger."
+  return null
 }
 export const requestStatusSchema = z.enum(["new", "contacted", "done", "declined"])
 
@@ -160,8 +187,10 @@ export const studioSettingsSchema = z.object({
 })
 export type StudioSettings = z.infer<typeof studioSettingsSchema>
 
-/** What the storefront may read: no bank account, plus whether online payment is on. */
-export const publicSettingsSchema = studioSettingsSchema.omit({ bank: true }).extend({ onlinePayments: z.boolean() })
+/** What the storefront may read: no bank account, plus the payment methods in effect (after the gateway check). */
+export const publicSettingsSchema = studioSettingsSchema
+  .omit({ bank: true })
+  .extend({ onlinePayments: z.boolean(), paymentMethods: paymentMethodFlagsSchema })
 export type PublicSettings = z.infer<typeof publicSettingsSchema>
 
 export const cartItemSchema = z.object({
