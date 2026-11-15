@@ -6,6 +6,8 @@ globs: packages/db/**
 # packages/db
 
 - Schema in `src/schema.ts`; `pnpm db:generate` for migrations, never by hand. CI fails on drift.
+- Migrations are additive only, one open migration PR at a time: before `pnpm db:generate` check open PRs for changes in
+  `packages/db/drizzle/`; if there is one, wait, rebase, regenerate. Never edit or renumber a merged migration.
 - Localized text columns are `jsonb` `Localized` (`fr` required). Prices are integer minor units.
 - `src/seed/catalogue.ts` is the PDF catalogue (30 products; TND prices are placeholders = EUR x 3.4 rounded to 5 DT, stock
   is a placeholder). `scenario.ts` builds deterministic demo orders. `seed()` never overwrites a non-empty database.

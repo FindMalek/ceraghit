@@ -14,6 +14,7 @@ import { publicError } from "../errors"
 import { findProducts } from "./catalog"
 import { tryIssueInvoice } from "./invoices"
 import { sendOrderEmails, sendPaymentReceivedEmail } from "./order-emails"
+import type { PaymentCheck } from "./payments"
 import { unitMinor } from "./pricing"
 import { effectivePaymentMethods, getSettings } from "./settings"
 
@@ -26,7 +27,7 @@ type OrderStatus = typeof orders.$inferSelect.status
 export interface AuditRow {
   orderId: string
   adminId: string | null
-  action: "mark_paid_manually" | "set_status"
+  action: "mark_paid_manually" | "set_status" | "gateway_mismatch" | "late_payment"
   fromStatus: OrderStatus
   toStatus: OrderStatus
   method?: string | null
@@ -36,6 +37,30 @@ export interface AuditRow {
 
 export async function recordAudit(tx: Tx, row: AuditRow): Promise<void> {
   await tx.insert(orderAudit).values(row)
+}
+
+/**
+ * Once per order and action: the gateway is asked again on every webhook and page load, often at the same time.
+ * The advisory lock serialises the not-exists check, since there is no unique key to lean on.
+ */
+async function recordAuditOnce(db: Db, row: AuditRow): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`order_audit:${row.orderId}:${row.action}`}))`)
+    const [existing] = await tx
+      .select({ id: orderAudit.id })
+      .from(orderAudit)
+      .where(and(eq(orderAudit.orderId, row.orderId), eq(orderAudit.action, row.action)))
+      .limit(1)
+    if (!existing) await tx.insert(orderAudit).values(row)
+  })
+}
+
+function paymentMatches(order: { totalMinor: number; currency: string; number: string }, check: PaymentCheck): boolean {
+  return (
+    check.amountMinor === order.totalMinor &&
+    (check.currency === null || check.currency === (order.currency as Currency)) &&
+    (check.orderNumber === null || check.orderNumber === order.number)
+  )
 }
 
 async function restock(tx: Tx, orderId: string): Promise<void> {
@@ -331,16 +356,41 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
   const { db, payments, now } = services
   const [order] = await db.select().from(orders).where(eq(orders.paymentRef, ref)).limit(1)
   if (!order) return null
+  if (order.status === "cancelled" && order.paymentMethod === "online") {
+    const [seen] = await db
+      .select({ id: orderAudit.id })
+      .from(orderAudit)
+      .where(and(eq(orderAudit.orderId, order.id), eq(orderAudit.action, "late_payment")))
+      .limit(1)
+    // shortcut: once the row exists the gateway is not asked again
+    if (!seen) {
+      const late = await payments.check(ref)
+      if (late.status === "paid") {
+        await recordAuditOnce(db, {
+          orderId: order.id,
+          adminId: null,
+          action: "late_payment",
+          fromStatus: "cancelled",
+          toStatus: "cancelled",
+          note: `paiement reçu après l'annulation : ${late.amountMinor} ${late.currency ?? order.currency} (attendu ${order.totalMinor} ${order.currency})`,
+        })
+      }
+    }
+  }
   if (order.status !== "pending_payment") return { number: order.number, status: order.status }
 
   const check = await payments.check(ref)
   if (check.status === "paid") {
-    const matches =
-      check.amountMinor === order.totalMinor &&
-      (check.currency === null || check.currency === (order.currency as Currency)) &&
-      (check.orderNumber === null || check.orderNumber === order.number)
-    if (!matches) {
-      console.error(`[settle ${order.number}] payment does not match the order`, check)
+    if (!paymentMatches(order, check)) {
+      console.error(`[settle ${order.number}] payment does not match the order`)
+      await recordAuditOnce(db, {
+        orderId: order.id,
+        adminId: null,
+        action: "gateway_mismatch",
+        fromStatus: "pending_payment",
+        toStatus: "pending_payment",
+        note: `reçu ${check.amountMinor} ${check.currency ?? "?"} n° ${check.orderNumber ?? "?"}, attendu ${order.totalMinor} ${order.currency} n° ${order.number}`,
+      })
       return { number: order.number, status: order.status }
     }
     const [paid] = await db

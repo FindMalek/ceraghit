@@ -14,6 +14,7 @@ import {
   StorefrontIcon,
   TagIcon,
   TruckIcon,
+  WarningIcon,
 } from "@phosphor-icons/react"
 import { browserClient } from "@workspace/orpc/react"
 import { Logo } from "@workspace/ui/brand/logo"
@@ -34,6 +35,7 @@ import {
 } from "@workspace/ui/components/sidebar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useFailedMails } from "@/components/mail-banner"
 
 const NAV = [
   { href: "/", label: "Vue d'ensemble", icon: ChartLineUpIcon },
@@ -48,12 +50,16 @@ const NAV = [
   { href: "/settings", label: "Réglages", icon: GearIcon },
 ]
 
+const EMAILS_NAV = { href: "/emails", label: "Emails", icon: WarningIcon }
+
 const isActive = (href: string, pathname: string) =>
   href === "/" || href === "/settings" ? pathname === href : pathname.startsWith(href)
 
 export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: string }; webUrl: string }) {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
+  const failedMails = useFailedMails()
+  const nav = failedMails > 0 ? [...NAV.slice(0, 5), EMAILS_NAV, ...NAV.slice(5)] : NAV
   const signOut = async () => {
     await browserClient.admin.auth.logout().catch(() => {})
     window.location.assign("/login")
@@ -74,7 +80,7 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
           <SidebarGroupLabel>Atelier</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.map((item) => (
+              {nav.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     size="lg"
@@ -85,6 +91,11 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
                   >
                     <item.icon />
                     <span>{item.label}</span>
+                    {item.href === EMAILS_NAV.href && (
+                      <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground tabular-nums leading-5 group-data-[collapsible=icon]:hidden">
+                        {failedMails}
+                      </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
