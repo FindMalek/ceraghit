@@ -12,7 +12,7 @@ COPY --from=pruner /app/out/json/ .
 RUN pnpm install --frozen-lockfile --prod
 
 # Bun runs the TypeScript sources directly, there is no build step.
-FROM oven/bun:1.4.2-alpine AS runner
+FROM oven/bun:1.4.4-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production PORT=3001
 COPY --from=deps --chown=bun:bun /app ./
