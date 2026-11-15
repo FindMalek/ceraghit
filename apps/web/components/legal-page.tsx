@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
-import { LEGAL_DOCS, type LegalDoc, type LegalSection } from "@/lib/legal"
+import { getSettings } from "@/lib/api"
+import { LEGAL_DOCS, type LegalDoc, type LegalSection, publisherLines } from "@/lib/legal"
 
 export async function LegalPage({ doc }: { doc: LegalDoc }) {
-  const t = await getTranslations("legal")
+  const [t, settings] = await Promise.all([getTranslations("legal"), getSettings()])
+  const publisher = doc === "notice" ? publisherLines(settings.profile) : []
   const sections = t.raw(`docs.${doc}.sections`) as LegalSection[]
   return (
     <div className="mx-auto max-w-3xl space-y-10 px-4 py-10">
@@ -21,9 +23,13 @@ export async function LegalPage({ doc }: { doc: LegalDoc }) {
       </aside>
 
       <div className="space-y-8">
-        {sections.map((section) => (
+        {sections.map((section, index) => (
           <section key={section.title} className="space-y-3">
             <h2 className="font-heading text-2xl text-gold">{section.title}</h2>
+            {index === 0 &&
+              publisher.map(({ key, value }) => (
+                <p key={key}>{t.rich(`publisher.${key}`, { value, v: (chunks) => <bdi>{chunks}</bdi> })}</p>
+              ))}
             {section.body.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}

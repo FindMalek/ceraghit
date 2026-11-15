@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server"
 import Image from "@/components/photo"
 import { SectionHeading } from "@/components/section-heading"
 import { getLocations, getSettings } from "@/lib/api"
+import { formatAddress } from "@/lib/profile"
 import { pageMetadata } from "@/lib/seo"
 import { EDITO_KEYS, PROCESS_PHOTOS, STUDIO_PHOTOS } from "@/lib/site"
 
@@ -27,6 +28,7 @@ export default async function AtelierPage() {
     getLocations(),
     getSettings(),
   ])
+  const address = formatAddress(settings.profile)
   return (
     <div className="mx-auto max-w-6xl space-y-20 px-4 py-10">
       <header className="mx-auto max-w-2xl space-y-4 text-center">
@@ -118,6 +120,11 @@ export default async function AtelierPage() {
 
       <section className="space-y-3 text-center">
         <h2 className="text-4xl">{t("contact")}</h2>
+        {address && (
+          <address className="not-italic">
+            <bdi>{address}</bdi>
+          </address>
+        )}
         <a href={`mailto:${settings.contactEmail}`} className="block min-h-11 underline underline-offset-4">
           <bdi>{settings.contactEmail}</bdi>
         </a>
