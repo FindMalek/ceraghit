@@ -153,3 +153,38 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
     console.error("[order emails]", error)
   }
 }
+
+/** Tells the customer the owner confirmed their payment. Never throws. */
+export async function sendPaymentReceivedEmail(services: Services, orderId: string): Promise<void> {
+  const { db, mailer, config } = services
+  try {
+    const order = await db.query.orders.findFirst({ where: eq(orders.id, orderId), with: { items: true } })
+    if (!order) return
+    const locale = (order.locale in COPY ? order.locale : "fr") as keyof typeof COPY
+    const c = COPY[locale]
+    const money = (minor: number) => formatMoney(minor, order.currency as Currency, locale)
+    const profile = await getShopProfile(db)
+    await mailer.send({
+      to: order.email,
+      replyTo: profile.email ?? studioInbox(profile) ?? undefined,
+      subject: c.subject(order.number),
+      text: [
+        c.hello(order.customerName),
+        "",
+        c.paid,
+        "",
+        ...order.items.map((i) => `- ${i.ref} ${i.title} x ${i.quantity}  ${money(i.unitMinor * i.quantity)}`),
+        "",
+        `${c.subtotal}: ${money(order.subtotalMinor)}`,
+        `${c.shipping}: ${money(order.shippingMinor)}`,
+        `${c.total}: ${money(order.totalMinor)}`,
+        "",
+        `${c.link} ${config.webUrl}/${locale}/order/${order.number}?t=${order.publicToken}`,
+        "",
+        c.bye,
+      ].join("\n"),
+    })
+  } catch (error) {
+    console.error("[payment received email]", error)
+  }
+}

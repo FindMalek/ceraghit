@@ -22,7 +22,6 @@
       "dependsOn": ["^check-types"]
     },
     "test": {
-      "dependsOn": ["^build"],
       "env": ["DATABASE_URL"]
     },
     "dev": {

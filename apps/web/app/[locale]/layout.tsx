@@ -76,7 +76,7 @@ export default async function LocaleLayout({
               {t("skip")}
             </a>
             <SiteHeader />
-            <main id="content">
+            <main id="content" tabIndex={-1} className="outline-none">
               <ErrorHost />
               {children}
             </main>

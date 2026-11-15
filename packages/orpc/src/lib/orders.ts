@@ -1,11 +1,19 @@
-import { type Db, orderItems, orders, products, productVariants } from "@workspace/db"
-import { type Currency, estimateShipping, type OrderInput, paymentMethodsFor, pick } from "@workspace/sdk"
+import { ORPCError } from "@orpc/server"
+import { type Db, orderAudit, orderItems, orders, products, productVariants } from "@workspace/db"
+import {
+  type Currency,
+  estimateShipping,
+  type ManualPaymentMethod,
+  type OrderInput,
+  paymentMethodsFor,
+  pick,
+} from "@workspace/sdk"
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { publicError } from "../errors"
 import { findProducts } from "./catalog"
 import { tryIssueInvoice } from "./invoices"
-import { sendOrderEmails } from "./order-emails"
+import { sendOrderEmails, sendPaymentReceivedEmail } from "./order-emails"
 import { unitMinor } from "./pricing"
 import { effectivePaymentMethods, getSettings } from "./settings"
 
@@ -13,6 +21,22 @@ import { effectivePaymentMethods, getSettings } from "./settings"
 export const HOLD_MINUTES = 45
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0]
+type OrderStatus = typeof orders.$inferSelect.status
+
+export interface AuditRow {
+  orderId: string
+  adminId: string | null
+  action: "mark_paid_manually" | "set_status"
+  fromStatus: OrderStatus
+  toStatus: OrderStatus
+  method?: string | null
+  reference?: string | null
+  note?: string | null
+}
+
+export async function recordAudit(tx: Tx, row: AuditRow): Promise<void> {
+  await tx.insert(orderAudit).values(row)
+}
 
 async function restock(tx: Tx, orderId: string): Promise<void> {
   const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId))
@@ -211,22 +235,92 @@ export async function createOrder(services: Services, input: OrderInput) {
   }
 }
 
-/** Cancels an order that has not shipped and returns its pieces to stock. Safe to call twice. */
+/**
+ * Cancels an order that has not shipped and returns its pieces to stock. Safe to call twice.
+ * `audit` is written in the same transaction when the admin did it.
+ */
 export async function cancelOrder(
   db: Db,
   orderId: string,
   to: "cancelled" | "refunded" = "cancelled",
+  audit?: { adminId: string },
 ): Promise<boolean> {
   return db.transaction(async (tx) => {
+    const [before] = await tx.select({ status: orders.status }).from(orders).where(eq(orders.id, orderId)).for("update")
     const [order] = await tx
       .update(orders)
       .set({ status: to })
       .where(and(eq(orders.id, orderId), inArray(orders.status, ["pending_payment", "paid"])))
       .returning({ id: orders.id })
-    if (!order) return false
+    if (!order || !before) return false
     await restock(tx, orderId)
+    if (audit) {
+      await recordAudit(tx, {
+        orderId,
+        adminId: audit.adminId,
+        action: "set_status",
+        fromStatus: before.status,
+        toStatus: to,
+      })
+    }
     return true
   })
+}
+
+/**
+ * The owner confirms a payment the gateway never sees (bank transfer, Payoneer link, cash). Admin only, never
+ * called from a public procedure. One guarded update plus one audit row, so a double click pays and mails once.
+ */
+export async function markPaidManually(
+  services: Services,
+  input: {
+    orderId: string
+    adminId: string
+    method: ManualPaymentMethod
+    reference: string | null
+    note: string | null
+    expectedTotalMinor: number
+    expectedCurrency: Currency
+  },
+): Promise<{ status: "paid"; alreadyPaid: boolean }> {
+  const { db, now } = services
+  const [order] = await db.select().from(orders).where(eq(orders.id, input.orderId)).limit(1)
+  if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
+  if (order.paymentMethod === "online") {
+    throw new ORPCError("BAD_REQUEST", { message: "Card payments are confirmed by the gateway only." })
+  }
+  if (order.totalMinor !== input.expectedTotalMinor || order.currency !== input.expectedCurrency) {
+    throw new ORPCError("CONFLICT", { message: "The amount changed, reload the order." })
+  }
+
+  const paid = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .update(orders)
+      .set({ status: "paid", paidAt: now(), paymentProvider: sql`coalesce(${orders.paymentProvider}, 'manual')` })
+      .where(and(eq(orders.id, order.id), eq(orders.status, "pending_payment")))
+      .returning({ id: orders.id })
+    if (!row) return false
+    await recordAudit(tx, {
+      orderId: order.id,
+      adminId: input.adminId,
+      action: "mark_paid_manually",
+      fromStatus: "pending_payment",
+      toStatus: "paid",
+      method: input.method,
+      reference: input.reference,
+      note: input.note,
+    })
+    return true
+  })
+
+  if (!paid) {
+    const [current] = await db.select({ status: orders.status }).from(orders).where(eq(orders.id, order.id)).limit(1)
+    if (current?.status === "paid" || current?.status === "fulfilled") return { status: "paid", alreadyPaid: true }
+    throw new ORPCError("BAD_REQUEST", { message: "This order cannot be marked paid." })
+  }
+  await tryIssueInvoice(db, order.id, now())
+  await sendPaymentReceivedEmail(services, order.id)
+  return { status: "paid", alreadyPaid: false }
 }
 
 /**

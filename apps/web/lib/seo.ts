@@ -28,7 +28,10 @@ interface PageMeta {
 /** Title, description, canonical and language alternates for one page. Its card comes from the segment's opengraph-image. */
 export function pageMetadata({ locale, path, title, description }: PageMeta): Metadata {
   const canonical = absoluteUrl(localizedPath(locale, path))
-  const languages = Object.fromEntries(ENABLED_LOCALES.map((l) => [l, absoluteUrl(localizedPath(l, path))]))
+  const languages = {
+    ...Object.fromEntries(ENABLED_LOCALES.map((l) => [l, absoluteUrl(localizedPath(l, path))])),
+    "x-default": absoluteUrl(localizedPath("fr", path)),
+  }
   return {
     title,
     description,

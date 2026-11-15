@@ -1,7 +1,8 @@
-import type { Localized, locations, orderItems, orders, shopProfile } from "../schema"
+import type { Localized, locations, orderAudit, orderItems, orders, shopProfile } from "../schema"
 
 type NewOrder = typeof orders.$inferInsert
 type NewItem = typeof orderItems.$inferInsert
+type NewAudit = typeof orderAudit.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
 
@@ -194,10 +195,17 @@ function rng(seed: number) {
 }
 
 /** About 45 orders over the last 60 days, ~70% in TND from Tunisia and ~30% in EUR from abroad. */
-export function buildScenario(now: Date, products: ScenarioProduct[]): { orders: NewOrder[]; items: NewItem[] } {
+export function buildScenario(
+  now: Date,
+  products: ScenarioProduct[],
+): {
+  orders: NewOrder[]
+  items: NewItem[]
+  audit: NewAudit[]
+} {
   const rand = rng(2027)
   const pick = <T>(list: T[]): T => list[Math.floor(rand() * list.length)]!
-  const out: { orders: NewOrder[]; items: NewItem[] } = { orders: [], items: [] }
+  const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[] } = { orders: [], items: [], audit: [] }
 
   let abroadCount = 0
   for (let n = 0; n < 45; n++) {
@@ -247,6 +255,18 @@ export function buildScenario(now: Date, products: ScenarioProduct[]): { orders:
       paidAt: status === "paid" || status === "fulfilled" ? new Date(createdAt.getTime() + 5 * 60_000) : null,
       createdAt,
     })
+    if (transfer && (status === "paid" || status === "fulfilled")) {
+      out.audit.push({
+        orderId: id,
+        adminId: null,
+        action: "mark_paid_manually",
+        fromStatus: "pending_payment",
+        toStatus: "paid",
+        method: "transfer",
+        note: "démo",
+        createdAt: new Date(createdAt.getTime() + 5 * 60_000),
+      })
+    }
     for (const p of unique) {
       out.items.push({ orderId: id, productId: p.id, ref: p.ref, title: p.title, unitMinor: unit(p), quantity: 1 })
     }

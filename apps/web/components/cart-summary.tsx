@@ -23,13 +23,13 @@ export function CartSummary({ lines }: { lines: CartLine[] }) {
     currency,
   )
   return (
-    <dl className="space-y-2 text-sm">
-      <div className="flex justify-between font-heading text-lg">
+    <div className="space-y-2 text-sm">
+      <dl className="flex justify-between font-heading text-lg">
         <dt>{t("subtotal")}</dt>
         <dd className="tabular-nums">{formatMoney(sub, currency, locale)}</dd>
-      </div>
+      </dl>
       <p className="text-muted-foreground text-xs">{t("shippingNext")}</p>
       <ShippingNudge quote={quote} />
-    </dl>
+    </div>
   )
 }

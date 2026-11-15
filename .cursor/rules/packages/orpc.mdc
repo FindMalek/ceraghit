@@ -11,3 +11,5 @@ globs: packages/orpc/**
   `settings.ts`), routers stay thin.
 - Stock is decremented when an order is created and returned on cancel/refund/expiry (`releaseExpiredHolds`, lazy, 45 min).
 - Tests: `test/router.test.ts` runs against a real Postgres (`DATABASE_URL`, skipped without).
+- Payment status only comes from the gateway (`settleOrder`) or the owner (`markPaidManually`, admin only, audited in
+  `order_audit`). Every admin status change writes an `order_audit` row.
