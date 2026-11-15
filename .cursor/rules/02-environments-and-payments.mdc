@@ -32,6 +32,8 @@ holds live keys.
   back to `/order/<number>?t=<token>`; `orders.get` and the webhook both call `settleOrder`.
 - `settleOrder` re-fetches `GET /payments/{ref}` and only marks paid when status is completed **and** amount, currency and
   order number match. Webhook is unsigned: never trust its payload.
+- The only other way to paid is `markPaidManually` (admin only, audited in `order_audit`), for transfers and Payoneer links
+  the gateway never sees. It refuses card orders and an amount or currency the owner did not see.
 - Konnect: `POST /api/v2/payments/init-payment`, header `X-Api-Key`, sandbox host `api.preprod.konnect.network`. Amount in
   minor units, currency in `token`. Keep new gateways behind `PaymentProvider`.
 - Pieces are `quoteOnly` (no cart, "ask for a quote") when they are commissions or too expensive for card checkout.

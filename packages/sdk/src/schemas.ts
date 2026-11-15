@@ -393,6 +393,20 @@ export const orderSchema = z.object({
 /** What the customer sees on their order page: the bank account only while a transfer is still expected. */
 export const publicOrderSchema = orderSchema.extend({ bank: bankDetailsSchema.nullable() })
 
+export const manualPaymentMethodSchema = z.enum(["transfer", "payoneer", "cash", "other"])
+export type ManualPaymentMethod = z.infer<typeof manualPaymentMethodSchema>
+
+export const orderAuditSchema = z.object({
+  action: z.string(),
+  fromStatus: orderStatusSchema,
+  toStatus: orderStatusSchema,
+  method: z.string().nullable(),
+  reference: z.string().nullable(),
+  note: z.string().nullable(),
+  adminName: z.string().nullable(),
+  createdAt: z.string(),
+})
+
 export const adminOrderSchema = orderSchema.extend({
   id: z.string(),
   customerName: z.string(),

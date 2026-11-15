@@ -1,8 +1,11 @@
 import { ORPCError } from "@orpc/server"
-import { customRequests, orders } from "@workspace/db"
+import { admins, customRequests, orderAudit, orders } from "@workspace/db"
 import {
   adminOrderSchema,
+  currencySchema,
   customRequestSchema,
+  manualPaymentMethodSchema,
+  orderAuditSchema,
   orderExportInputSchema,
   orderListQuerySchema,
   orderStatusSchema,
@@ -12,7 +15,7 @@ import {
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
 import { z } from "zod"
 import { tryIssueInvoice } from "../../lib/invoices"
-import { cancelOrder, releaseExpiredHolds } from "../../lib/orders"
+import { cancelOrder, markPaidManually, recordAudit, releaseExpiredHolds } from "../../lib/orders"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -107,6 +110,64 @@ export const ordersRouter = {
       return rows.map(toAdminOrder)
     }),
 
+  markPaidManually: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/orders/{id}/mark-paid",
+      summary: "Confirm a payment received outside the site",
+      tags: TAG,
+    })
+    .input(
+      z.object({
+        id: z.string(),
+        method: manualPaymentMethodSchema,
+        reference: z.string().trim().max(120).nullable(),
+        note: z.string().trim().max(500).nullable(),
+        totalMinor: z.number().int(),
+        currency: currencySchema,
+      }),
+    )
+    .output(z.object({ status: z.literal("paid"), alreadyPaid: z.boolean() }))
+    .handler(({ context, input }) =>
+      markPaidManually(context, {
+        orderId: input.id,
+        adminId: context.admin.id,
+        method: input.method,
+        reference: input.reference || null,
+        note: input.note || null,
+        expectedTotalMinor: input.totalMinor,
+        expectedCurrency: input.currency,
+      }),
+    ),
+
+  audit: adminProcedure
+    .route({
+      method: "GET",
+      path: "/admin/orders/{id}/audit",
+      summary: "Who changed this order, newest first",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(z.array(orderAuditSchema))
+    .handler(async ({ context, input }) => {
+      const rows = await context.db
+        .select({ a: orderAudit, adminName: admins.name })
+        .from(orderAudit)
+        .leftJoin(admins, eq(admins.id, orderAudit.adminId))
+        .where(eq(orderAudit.orderId, input.id))
+        .orderBy(desc(orderAudit.createdAt))
+      return rows.map(({ a, adminName }) => ({
+        action: a.action,
+        fromStatus: a.fromStatus,
+        toStatus: a.toStatus,
+        method: a.method,
+        reference: a.reference,
+        note: a.note,
+        adminName,
+        createdAt: a.createdAt.toISOString(),
+      }))
+    }),
+
   setStatus: adminProcedure
     .route({
       method: "POST",
@@ -119,35 +180,59 @@ export const ordersRouter = {
     .handler(async ({ context, input }) => {
       const order = await context.db.query.orders.findFirst({ where: eq(orders.id, input.id) })
       if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
+      const adminId = context.admin.id
+      const move = (patch: Partial<typeof orders.$inferInsert>, from: (typeof order)["status"]) =>
+        context.db.transaction(async (tx) => {
+          const [row] = await tx
+            .update(orders)
+            .set(patch)
+            .where(and(eq(orders.id, order.id), eq(orders.status, from)))
+            .returning({ id: orders.id })
+          if (!row)
+            throw new ORPCError("BAD_REQUEST", {
+              message: `An order that is ${order.status} cannot become ${input.status}.`,
+            })
+          await recordAudit(tx, {
+            orderId: order.id,
+            adminId,
+            action: "set_status",
+            fromStatus: from,
+            toStatus: input.status,
+          })
+        })
       if (input.status === "refunded" && order.status === "fulfilled") {
-        await context.db.update(orders).set({ status: "refunded" }).where(eq(orders.id, order.id))
+        await move({ status: "refunded" }, "fulfilled")
       } else if (input.status === "cancelled" || input.status === "refunded") {
-        const changed = await cancelOrder(context.db, order.id, input.status)
+        const changed = await cancelOrder(context.db, order.id, input.status, { adminId })
         if (!changed) {
           throw new ORPCError("BAD_REQUEST", {
             message: `An order that is ${order.status} cannot become ${input.status}.`,
           })
         }
       } else if (input.status === "paid" && order.status === "pending_payment") {
-        await context.db
-          .update(orders)
-          .set({ status: "paid", paidAt: context.now(), paymentProvider: order.paymentProvider ?? "manual" })
-          .where(eq(orders.id, order.id))
+        await markPaidManually(context, {
+          orderId: order.id,
+          adminId,
+          method: order.paymentMethod === "transfer" ? "transfer" : "other",
+          reference: null,
+          note: null,
+          expectedTotalMinor: order.totalMinor,
+          expectedCurrency: order.currency,
+        })
       } else if (input.status === "fulfilled" && order.status === "paid") {
-        await context.db.update(orders).set({ status: "fulfilled" }).where(eq(orders.id, order.id))
+        await move({ status: "fulfilled" }, "paid")
       } else if (input.status === "fulfilled" && order.status === "pending_payment" && order.paymentMethod === "cod") {
         // cash on delivery: the sale counts once it ships, the cash is collected at the door
-        await context.db
-          .update(orders)
-          .set({ status: "fulfilled", paidAt: context.now(), paymentProvider: order.paymentProvider ?? "cod" })
-          .where(eq(orders.id, order.id))
+        await move(
+          { status: "fulfilled", paidAt: context.now(), paymentProvider: order.paymentProvider ?? "cod" },
+          "pending_payment",
+        )
       } else {
         throw new ORPCError("BAD_REQUEST", {
           message: `An order that is ${order.status} cannot become ${input.status}.`,
         })
       }
-      if (input.status === "paid" || input.status === "fulfilled")
-        await tryIssueInvoice(context.db, order.id, context.now())
+      if (input.status === "fulfilled") await tryIssueInvoice(context.db, order.id, context.now())
       return { ok: true as const }
     }),
 }

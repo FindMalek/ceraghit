@@ -20,6 +20,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { ExportOrdersDialog } from "@/components/export-orders-dialog"
+import { MANUAL_METHOD_LABEL, MarkPaidDialog } from "@/components/mark-paid-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
@@ -66,7 +67,7 @@ function actionsFor(status: Status, method: PaymentMethod): Action[] {
       {
         to: "paid",
         label: "Marquer payée",
-        confirm: "À utiliser pour un virement ou un paiement en main propre reçu hors du site.",
+        confirm: "À utiliser pour un virement, un lien Payoneer ou un paiement en main propre reçu hors du site.",
       },
       {
         to: "cancelled",
@@ -118,6 +119,33 @@ function Line({ label, value }: { label: string; value: React.ReactNode }) {
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="text-right">{value}</dd>
     </div>
+  )
+}
+
+function History({ orderId }: { orderId: string }) {
+  const audit = useQuery(orpc.admin.orders.audit.queryOptions({ input: { id: orderId } }))
+  if (!audit.data?.length) return null
+  return (
+    <section>
+      <h2 className="mb-1 font-heading text-2xl">Historique</h2>
+      <ul className="flex flex-col divide-y">
+        {audit.data.map((row) => {
+          const method = row.method
+            ? (MANUAL_METHOD_LABEL[row.method as keyof typeof MANUAL_METHOD_LABEL] ?? row.method)
+            : null
+          const detail = [method, row.reference ? `réf. ${row.reference}` : null].filter(Boolean).join(", ")
+          return (
+            <li key={`${row.createdAt}-${row.toStatus}`} className="py-2">
+              <span className="block text-muted-foreground text-sm">{formatDate(row.createdAt)}</span>
+              {row.adminName ?? "Démo"} : {ORDER_STATUS[row.fromStatus].toLowerCase()} →{" "}
+              {ORDER_STATUS[row.toStatus].toLowerCase()}
+              {detail && ` (${detail})`}
+              {row.note && <span className="block text-muted-foreground">« {row.note} »</span>}
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 
@@ -231,6 +259,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                     <Line label="Payée le" value={order.paidAt ? formatDate(order.paidAt) : "—"} />
                   </dl>
                 </section>
+                <History orderId={order.id} />
               </div>
               <SheetFooter className="sticky bottom-0 flex-row flex-wrap justify-end border-t bg-background/95 backdrop-blur">
                 <a
@@ -256,8 +285,16 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
           )}
         </SheetContent>
       </Sheet>
+      {order && (
+        <MarkPaidDialog
+          order={order}
+          open={pending?.to === "paid"}
+          onOpenChange={(open) => !open && setPending(null)}
+          onDone={onClose}
+        />
+      )}
       <ConfirmDialog
-        open={pending !== null}
+        open={pending !== null && pending.to !== "paid"}
         onOpenChange={(open) => !open && setPending(null)}
         title={`${pending?.label ?? ""} ?`}
         description={pending?.confirm ?? ""}

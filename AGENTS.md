@@ -13,8 +13,10 @@ then run `pnpm rules:check` (CI runs it too). Do not create other copies of the 
 2. **Environments never mix.** `APP_ENV` is `local` | `preview` | `production`. Live payment keys, the Cloudflare R2
    bucket and the Neon database exist only in production; previews use the homelab (Postgres per PR, Garage bucket,
    demo gateway or Konnect sandbox). `apps/api/src/env.ts` refuses a mismatch at boot. Don't weaken it.
-3. **Payment status only comes from the gateway.** The Konnect webhook is unsigned and is only a hint: `settleOrder`
-   re-asks Konnect and checks amount, currency and order number. Never set an order to paid from request data.
+3. **Payment status only comes from the gateway, or from the owner.** The Konnect webhook is unsigned and is only a hint:
+   `settleOrder` re-asks Konnect and checks amount, currency and order number. The only other way to paid is
+   `markPaidManually` (admin only, audited in `order_audit`), for transfers and Payoneer links the gateway never sees.
+   Never set an order to paid from request data.
 4. **Public and admin never share a procedure.** `packages/orpc/src/routers/public` vs `.../admin`, admin built only on
    `adminProcedure`. Each app's `/api` proxy only forwards its own namespace (`packages/sdk/src/proxy.ts`). A test
    walks the admin router and fails if any procedure answers a visitor.

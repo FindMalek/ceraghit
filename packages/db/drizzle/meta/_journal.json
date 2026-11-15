@@ -57,6 +57,13 @@
       "when": 1794766514519,
       "tag": "0007_majestic_yellowjacket",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794773779106,
+      "tag": "0008_abnormal_ironclad",
+      "breakpoints": true
     }
   ]
 }
