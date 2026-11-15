@@ -7,7 +7,7 @@ import { clearError, showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { useState } from "react"
-import { SectionCard } from "@/components/profile/section-card"
+import { SectionCard, type WizardMode } from "@/components/profile/section-card"
 import { errorMessage } from "@/lib/errors"
 import { compactAccount, formatAccount } from "@/lib/format-account"
 
@@ -21,7 +21,15 @@ const MESSAGES: Record<string, string> = {
   bankName: "Ce nom est trop long.",
 }
 
-export function BankSection({ initial, onSaved }: { initial: BankProfile; onSaved?: () => void }) {
+export function BankSection({
+  initial,
+  onSaved,
+  wizard,
+}: {
+  initial: BankProfile
+  onSaved?: () => void
+  wizard?: WizardMode
+}) {
   const [holder, setHolder] = useState(initial.bankHolder ?? "")
   const [bank, setBank] = useState(initial.bankName ?? "")
   const [rib, setRib] = useState(formatAccount(initial.bankRib ?? ""))
@@ -43,6 +51,7 @@ export function BankSection({ initial, onSaved }: { initial: BankProfile; onSave
 
   const edit = (set: (value: string) => void) => (value: string) => {
     set(value)
+    setErrors({})
     setSaved(false)
   }
 
@@ -71,6 +80,7 @@ export function BankSection({ initial, onSaved }: { initial: BankProfile; onSave
       pending={save.isPending}
       saved={saved}
       onSubmit={submit}
+      wizard={wizard}
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <Field data-invalid={Boolean(errors.bankHolder)}>
@@ -119,7 +129,11 @@ export function BankSection({ initial, onSaved }: { initial: BankProfile; onSave
           value={iban}
           onChange={(e) => edit(setIban)(formatAccount(e.target.value))}
         />
-        {errors.bankIban && <FieldError>{errors.bankIban}</FieldError>}
+        {errors.bankIban ? (
+          <FieldError>{errors.bankIban}</FieldError>
+        ) : (
+          <FieldDescription>Le numéro qui commence par TN59.</FieldDescription>
+        )}
       </Field>
       <Field data-invalid={Boolean(errors.bankBic)}>
         <FieldLabel htmlFor="bank-bic">BIC / SWIFT</FieldLabel>
