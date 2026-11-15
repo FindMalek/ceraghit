@@ -52,3 +52,6 @@ next-env.d.ts
 # agent worktrees
 .claude/
 apps/api/api/index.js
+
+# translation eval reports
+scripts/out/

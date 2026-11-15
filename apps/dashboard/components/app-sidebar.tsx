@@ -8,6 +8,7 @@ import {
   GearIcon,
   MapPinIcon,
   PackageIcon,
+  QuestionIcon,
   ReceiptIcon,
   SignOutIcon,
   TagIcon,
@@ -88,6 +89,18 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  size="lg"
+                  tooltip="Aide"
+                  isActive={pathname.startsWith("/help")}
+                  onClick={() => setOpenMobile(false)}
+                  render={<Link href="/help" />}
+                >
+                  <QuestionIcon />
+                  <span>Aide</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Voir la boutique"

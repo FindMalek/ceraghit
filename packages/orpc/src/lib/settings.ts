@@ -1,12 +1,15 @@
 import { type Db, settings } from "@workspace/db"
 import {
   DEFAULT_SHIPPING_RATES,
+  EMPTY_TUTORIAL_LINKS,
   type PaymentMethodFlags,
   type PaymentSettings,
   PLACEHOLDER_BANK,
   paymentSettingsSchema,
   type StudioSettings,
   studioSettingsSchema,
+  type TutorialLinks,
+  tutorialLinksSchema,
 } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
@@ -62,4 +65,19 @@ export async function effectivePaymentMethods(
   const online = methods.online && gatewayReady(services)
   if (online) return methods
   return { online, cod: methods.cod || methods.online, transfer: methods.transfer || methods.online }
+}
+
+const TUTORIALS_KEY = "tutorials"
+
+export async function getTutorialLinks(db: Db): Promise<TutorialLinks> {
+  const [row] = await db.select().from(settings).where(eq(settings.key, TUTORIALS_KEY)).limit(1)
+  const parsed = tutorialLinksSchema.safeParse(row?.value)
+  return parsed.success ? parsed.data : EMPTY_TUTORIAL_LINKS
+}
+
+export async function saveTutorialLinks(db: Db, value: TutorialLinks): Promise<void> {
+  await db
+    .insert(settings)
+    .values({ key: TUTORIALS_KEY, value })
+    .onConflictDoUpdate({ target: settings.key, set: { value } })
 }
