@@ -59,9 +59,7 @@ test(
     await step("leave the gateway without choosing", async () => {
       ;({ number, token } = await placeOrder(page, { locale: appLocale, method: "online", productSlug: piece.slug }))
       await page.goto(`${E2E.webUrl}/order/${number}?t=${token}`)
-      await expect(page.getByRole("status").first()).toContainText(
-        t(appLocale, "order.status.pending_payment").slice(0, 8),
-      )
+      await expect(page.getByRole("status").first()).toContainText(t(appLocale, "order.status.pending_payment"))
       expect((await orderRow(number)).status).toBe("pending_payment")
       expect(await stockOf(piece.id)).toBe(before - 1)
     })

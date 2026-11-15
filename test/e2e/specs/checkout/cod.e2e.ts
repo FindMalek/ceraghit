@@ -1,4 +1,4 @@
-import { expect, mailWithSubject, placeOrder, test } from "../../fixtures"
+import { expect, orderMails, placeOrder, test } from "../../fixtures"
 import { t } from "../../helpers/messages"
 import { pieceFor } from "../../support/catalogue"
 import { orderRow, stockOf } from "../../support/db"
@@ -35,8 +35,9 @@ test("cash on delivery in Tunisia: TND totals, stock held, both mails sent", asy
   })
 
   await step("the customer and the studio were told", async () => {
-    const mail = await mailWithSubject(number)
-    expect(mail.subject).toContain(number)
-    expect(mail.text).not.toContain("€")
+    const { buyer, studio } = await orderMails(number)
+    expect(buyer.text).not.toContain("€")
+    expect(studio.text).toContain("Paiement en espèces")
+    expect(studio.text).not.toContain("€")
   })
 })

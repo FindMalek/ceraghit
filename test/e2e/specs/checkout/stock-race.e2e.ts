@@ -36,7 +36,6 @@ test("two buyers, one unique piece: the second is refused", { tag: ["@desktop"] 
       await second.getByRole("button", { name: submit }).click()
       await expect(second.getByRole("alert").filter({ hasText: t(appLocale, "errors.api.out_of_stock") })).toBeVisible()
       await expect(second).toHaveURL(/\/checkout/)
-      await expect(second).toHaveURL(/\/checkout/)
       expect(await stockOf(piece.id)).toBe(0)
     },
     second,

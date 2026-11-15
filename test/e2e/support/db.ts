@@ -46,9 +46,3 @@ export async function setStock(productId: string, stock: number): Promise<void> 
 export async function ageOrder(number: string, minutes: number): Promise<void> {
   await sql`update orders set created_at = created_at - make_interval(mins => ${minutes}) where number = ${number}`
 }
-
-export async function orderItemQuantity(number: string): Promise<number> {
-  const [row] = await sql<{ n: number }[]>`
-    select coalesce(sum(i.quantity), 0)::int as n from order_items i join orders o on o.id = i.order_id where o.number = ${number}`
-  return row?.n ?? 0
-}

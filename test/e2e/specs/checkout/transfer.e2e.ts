@@ -1,4 +1,4 @@
-import { expect, mailWithSubject, placeOrder, test } from "../../fixtures"
+import { expect, orderMails, placeOrder, test } from "../../fixtures"
 import { t } from "../../helpers/messages"
 import { pieceFor } from "../../support/catalogue"
 import { orderRow, stockOf } from "../../support/db"
@@ -47,9 +47,10 @@ for (const country of ["FR", "BE"] as const) {
       await expect(page.locator("main")).not.toContainText("DT")
     })
 
-    await step("the confirmation mail carries the same reference", async () => {
-      const mail = await mailWithSubject(number)
-      expect(mail.subject).toContain(number)
+    await step("the buyer and studio mails carry the same reference", async () => {
+      const { buyer, studio } = await orderMails(number)
+      expect(buyer.text).toContain(`: ${number}`)
+      expect(studio.subject).toContain(number)
     })
   })
 }
