@@ -141,7 +141,6 @@
       "terms": "You must accept the terms and conditions of sale to pay."
     },
     "failed": "The order could not be created.",
-    "tooMany": "Too many attempts, try again in a few minutes.",
     "backToShop": "Back to the shop",
     "termsLabel": "I accept the <link>terms and conditions of sale</link>.",
     "methodTransfer": "Bank transfer",
@@ -218,7 +217,6 @@
       "description": "Describe your project in a few sentences (10 characters minimum)."
     },
     "failed": "The request could not be sent.",
-    "tooMany": "Too many requests, try again later.",
     "privacy": "Your information is only used to answer your request. <link>Privacy</link>",
     "photos": "Reference photos (optional)",
     "photosHint": "Up to 3 photos: an inspiration, a place, an existing piece. They are reduced before sending.",
@@ -416,14 +414,7 @@
         "sections": [
           {
             "title": "Site publisher",
-            "body": [
-              "Ceraghit Creation · [company name]",
-              "Legal form: [to be filled in]",
-              "Address: [studio address]",
-              "Trade licence (patente): [patente number] · Tax ID: [tax identification number]",
-              "Publication director: Sabri Ghit",
-              "Contact: details shown at the bottom of every page."
-            ]
+            "body": ["Publication director: Sabri Ghit", "Contact: details shown at the bottom of every page."]
           },
           {
             "title": "Hosting and technical services",
@@ -488,6 +479,12 @@
           }
         ]
       }
+    },
+    "publisher": {
+      "company": "Company name: <v>{value}</v>",
+      "form": "Legal form: <v>{value}</v>",
+      "address": "Address: <v>{value}</v>",
+      "taxId": "Tax ID (matricule fiscal): <v>{value}</v>"
     }
   },
   "seo": {
@@ -502,5 +499,29 @@
     "title": "Something went wrong",
     "text": "We had a problem on our side. Please try again in a moment.",
     "retry": "Try again"
+  },
+  "errors": {
+    "api": {
+      "payment_method_unavailable": "This payment method is not available for your country.",
+      "piece_not_found": "This piece does not exist.",
+      "piece_unavailable": "A piece in your cart is no longer available.",
+      "piece_quote_only": "This piece is sold on quote, please send us a request.",
+      "piece_unique": "This piece is unique, you can only order one.",
+      "option_unavailable": "An option in your cart is no longer available.",
+      "option_required": "Choose an option for every piece in your cart.",
+      "out_of_stock": "A piece in your cart is no longer in stock.",
+      "order_too_big": "This order is too big to ship online, please send us a request.",
+      "order_failed": "The order could not be created, please try again.",
+      "order_not_found": "Order not found.",
+      "payment_not_found": "Payment not found.",
+      "payment_service_down": "The payment service did not answer, please try again.",
+      "photos_unavailable": "Photo uploads are not available right now.",
+      "too_many_uploads": "Too many uploads, try again in a few minutes.",
+      "too_many_orders": "Too many orders, try again in a few minutes.",
+      "too_many_lookups": "Too many attempts, try again in a few minutes.",
+      "too_many_requests": "Too many requests, try again later.",
+      "photo_missing": "A photo was not uploaded, please add it again.",
+      "storage_full": "The storage space is full."
+    }
   }
 }

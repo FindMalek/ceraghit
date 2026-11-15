@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
-import type { Product } from "@workspace/sdk"
-import { productJsonLd } from "../../lib/json-ld"
+import { DEFAULT_SHIPPING_RATES, type Product, type PublicSettings } from "@workspace/sdk"
+import { organizationJsonLd, productJsonLd } from "../../lib/json-ld"
+import { publisherLines } from "../../lib/legal"
 
 const product: Product = {
   id: "p1",
@@ -53,4 +54,57 @@ test("a piece with variants publishes the price range and one offer per variant"
   }
   expect(offers).toMatchObject({ "@type": "AggregateOffer", lowPrice: 25, highPrice: 30, offerCount: 2 })
   expect(offers.offers[1]?.availability).toBe("https://schema.org/OutOfStock")
+})
+
+const settings: PublicSettings = {
+  contactEmail: "atelier@example.com",
+  phones: ["+216 70 000 000"],
+  whatsapp: null,
+  instagram: null,
+  shippingRates: DEFAULT_SHIPPING_RATES,
+  shippingNote: null,
+  onlinePayments: false,
+  paymentMethods: { online: false, cod: true, transfer: true },
+  profile: {
+    displayName: "Ceraghit",
+    legalName: "Ceraghit Creation SARL",
+    legalForm: "SARL",
+    taxId: "1234567/A/M/000",
+    address: "12 rue des Potiers",
+    postalCode: "2070",
+    city: "La Marsa",
+    country: "TN",
+    phones: ["+216 70 000 000"],
+    email: "atelier@example.com",
+  },
+}
+
+test("the organization carries the owner's address, and no address key without one", () => {
+  expect(organizationJsonLd(settings)).toMatchObject({
+    name: "Ceraghit",
+    legalName: "Ceraghit Creation SARL",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "12 rue des Potiers",
+      postalCode: "2070",
+      addressLocality: "La Marsa",
+      addressCountry: "TN",
+    },
+  })
+  const bare = organizationJsonLd({ ...settings, profile: { ...settings.profile, address: null, city: null } })
+  expect("address" in bare).toBe(false)
+})
+
+test("the legal notice lists only what the owner filled in", () => {
+  expect(publisherLines(settings.profile).map((l) => l.key)).toEqual(["company", "form", "address", "taxId"])
+  const sparse = publisherLines({
+    ...settings.profile,
+    legalName: null,
+    legalForm: null,
+    address: null,
+    postalCode: null,
+    city: null,
+    taxId: " ",
+  })
+  expect(sparse).toEqual([{ key: "company", value: "Ceraghit" }])
 })

@@ -1,6 +1,6 @@
-import { ORPCError } from "@orpc/server"
 import type { Currency } from "@workspace/sdk"
 import type { AppEnv } from "../context"
+import { publicError } from "../errors"
 
 export interface InitPayment {
   orderNumber: string
@@ -53,7 +53,7 @@ export class KonnectProvider implements PaymentProvider {
     })
     if (!res.ok) {
       console.error(`[konnect ${path}]`, res.status, await res.text().catch(() => ""))
-      throw new ORPCError("BAD_GATEWAY", { message: "The payment service did not answer. Please try again." })
+      throw publicError("BAD_GATEWAY", "payment_service_down", "The payment service did not answer. Please try again.")
     }
     return (await res.json()) as T
   }

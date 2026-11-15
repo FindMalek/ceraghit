@@ -1,4 +1,3 @@
-import { ORPCError } from "@orpc/server"
 import { categories, locations, products } from "@workspace/db"
 import {
   categorySchema,
@@ -12,6 +11,7 @@ import {
 } from "@workspace/sdk"
 import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
 import { z } from "zod"
+import { publicError } from "../../errors"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
@@ -91,7 +91,7 @@ export const catalogRouter = {
         where: and(eq(products.slug, input.slug), eq(products.status, "published")),
         limit: 1,
       })
-      if (!row) throw new ORPCError("NOT_FOUND", { message: "This piece does not exist." })
+      if (!row) throw publicError("NOT_FOUND", "piece_not_found", "This piece does not exist.")
       return toProduct(row)
     }),
 
@@ -143,7 +143,7 @@ export const catalogRouter = {
         return [{ ...row, variant, quantity: item.quantity }]
       })
       if (lines.length !== input.items.length)
-        throw new ORPCError("NOT_FOUND", { message: "A piece in your cart is no longer available." })
+        throw publicError("NOT_FOUND", "piece_unavailable", "A piece in your cart is no longer available.")
       const subtotalMinor = lines.reduce((sum, l) => sum + unitMinor(l, l.variant, input.currency) * l.quantity, 0)
       const settings = await getSettings(context.db)
       const { available, reason, zoneName, chargeableKg, amountMinor, freeApplied, freeOverMinor } = estimateShipping(

@@ -1,4 +1,12 @@
-import { type Currency, fromMinor, type Product, type PublicSettings, pick } from "@workspace/sdk"
+import {
+  type Currency,
+  fromMinor,
+  type Product,
+  type PublicSettings,
+  type PublicShopProfile,
+  pick,
+} from "@workspace/sdk"
+import { clean, shopName } from "./profile"
 import { absoluteImage, absoluteUrl, localizedPath } from "./seo"
 import { SITE } from "./site"
 
@@ -81,17 +89,36 @@ function instagramUrl(value: string): string {
   return /^https?:\/\//.test(value) ? value : `https://www.instagram.com/${value.replace(/^@/, "")}`
 }
 
+function postalAddressJsonLd(profile: PublicShopProfile): JsonLd | null {
+  const street = clean(profile.address)
+  const city = clean(profile.city)
+  if (!street || !city) return null
+  return {
+    "@type": "PostalAddress",
+    streetAddress: street,
+    ...(clean(profile.postalCode) ? { postalCode: clean(profile.postalCode) } : {}),
+    addressLocality: city,
+    ...(profile.country ? { addressCountry: profile.country } : {}),
+  }
+}
+
 export function organizationJsonLd(settings: PublicSettings): JsonLd {
+  const { profile } = settings
+  const address = postalAddressJsonLd(profile)
+  const telephone = profile.phones[0] ?? settings.phones[0]
+  const email = profile.email ?? settings.contactEmail
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: "Ceraghit Creation",
+    name: shopName(profile),
+    ...(clean(profile.legalName) ? { legalName: clean(profile.legalName) } : {}),
     url: SITE.url,
     logo: absoluteUrl("/logo.webp"),
     image: absoluteUrl("/logo.webp"),
     founder: { "@type": "Person", name: SITE.artist },
-    ...(settings.phones[0] ? { telephone: settings.phones[0] } : {}),
-    ...(settings.contactEmail ? { email: settings.contactEmail } : {}),
+    ...(address ? { address } : {}),
+    ...(telephone ? { telephone } : {}),
+    ...(email ? { email } : {}),
     ...(settings.instagram ? { sameAs: [instagramUrl(settings.instagram)] } : {}),
   }
 }

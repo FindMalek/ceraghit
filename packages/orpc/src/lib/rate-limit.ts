@@ -1,8 +1,9 @@
 import { timingSafeEqual } from "node:crypto"
-import { ORPCError } from "@orpc/server"
 import { type Db, rateLimits } from "@workspace/db"
+import type { PublicErrorReason } from "@workspace/sdk"
 import { CLIENT_IP_HEADER, PROXY_SECRET_HEADER } from "@workspace/sdk/proxy"
 import { eq, lt, sql } from "drizzle-orm"
+import { publicError } from "../errors"
 
 export interface Limit {
   max: number
@@ -85,9 +86,14 @@ interface LimitContext {
 }
 
 /** Counts a hit for this visitor on `name` and throws a guest-safe 429 once the limit is used up. */
-export async function enforceLimit(context: LimitContext, name: keyof typeof LIMITS, message: string): Promise<void> {
+export async function enforceLimit(
+  context: LimitContext,
+  name: keyof typeof LIMITS,
+  reason: PublicErrorReason,
+  message: string,
+): Promise<void> {
   const address = clientAddress(context.headers, context.config.proxySecret)
   if (!(await takeLimit(context.db, `${name}:${address}`, LIMITS[name], context.now()))) {
-    throw new ORPCError("TOO_MANY_REQUESTS", { message })
+    throw publicError("TOO_MANY_REQUESTS", reason, message)
   }
 }

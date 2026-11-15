@@ -12,6 +12,7 @@ import {
 import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 import type { Context } from "../../context"
+import { publicError } from "../../errors"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
@@ -28,7 +29,7 @@ export const ordersRouter = {
     .input(orderInputSchema)
     .output(checkoutSchema)
     .handler(async ({ context, input }) => {
-      await enforceLimit(context, "orderCreate", "Too many orders, try again in a few minutes.")
+      await enforceLimit(context, "orderCreate", "too_many_orders", "Too many orders, try again in a few minutes.")
       return createOrder(context, input)
     }),
 
@@ -37,12 +38,12 @@ export const ordersRouter = {
     .input(z.object({ number: z.string(), token: z.string() }))
     .output(publicOrderSchema)
     .handler(async ({ context, input }) => {
-      await enforceLimit(context, "orderGet", "Too many attempts, try again in a few minutes.")
+      await enforceLimit(context, "orderGet", "too_many_lookups", "Too many attempts, try again in a few minutes.")
       const order = await context.db.query.orders.findFirst({
         where: and(eq(orders.number, input.number), eq(orders.publicToken, input.token)),
         with: { items: true },
       })
-      if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
+      if (!order) throw publicError("NOT_FOUND", "order_not_found", "Order not found.")
       // The customer lands here right after paying, often before the webhook: ask the gateway now.
       const settled =
         order.status === "pending_payment" && order.paymentRef ? await settleOrder(context, order.paymentRef) : null
@@ -72,10 +73,10 @@ export const ordersRouter = {
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       if (!(context.payments instanceof DemoProvider) || context.config.appEnv === "production") {
-        throw new ORPCError("NOT_FOUND", { message: "Not found." })
+        throw publicError("NOT_FOUND", "payment_not_found", "Not found.")
       }
       if (!context.payments.resolve(input.ref, input.outcome))
-        throw new ORPCError("NOT_FOUND", { message: "Unknown payment." })
+        throw publicError("NOT_FOUND", "payment_not_found", "Unknown payment.")
       await settleOrder(context, input.ref)
       return { ok: true as const }
     }),
@@ -126,8 +127,9 @@ export const requestsRouter = {
     .output(z.object({ uploadUrl: z.string(), image: z.string() }))
     .handler(async ({ context, input }) => {
       const { storage } = context
-      if (!storage) throw new ORPCError("SERVICE_UNAVAILABLE", { message: "Photos are not available right now." })
-      await enforceLimit(context, "uploadUrl", "Too many uploads, try again in a few minutes.")
+      if (!storage)
+        throw publicError("SERVICE_UNAVAILABLE", "photos_unavailable", "Photos are not available right now.")
+      await enforceLimit(context, "uploadUrl", "too_many_uploads", "Too many uploads, try again in a few minutes.")
       const key = `${storage.prefix}requests/${crypto.randomUUID()}.${IMAGE_EXTENSIONS[input.contentType]}`
       await reserveUpload(context.db, {
         key,
@@ -136,7 +138,7 @@ export const requestsRouter = {
         bytes: input.size,
       }).catch((error) => {
         if (error instanceof ORPCError && error.code === "PAYLOAD_TOO_LARGE") {
-          throw new ORPCError("SERVICE_UNAVAILABLE", { message: "Photos are not available right now." })
+          throw publicError("SERVICE_UNAVAILABLE", "photos_unavailable", "Photos are not available right now.")
         }
         throw error
       })
@@ -148,13 +150,13 @@ export const requestsRouter = {
     .input(customRequestInputSchema)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      await enforceLimit(context, "requestCreate", "Too many requests, try again later.")
+      await enforceLimit(context, "requestCreate", "too_many_requests", "Too many requests, try again later.")
       const { storage } = context
       const required = `s3:${storage?.prefix ?? ""}requests/`
       for (const image of input.images) {
         const key = image.slice(3)
         const valid = storage && image.startsWith(required) && !key.includes("..") && (await storage.head(key))
-        if (!valid) throw new ORPCError("BAD_REQUEST", { message: "A photo was not uploaded, please add it again." })
+        if (!valid) throw publicError("BAD_REQUEST", "photo_missing", "A photo was not uploaded, please add it again.")
       }
       await context.db.insert(customRequests).values({ ...input, email: input.email.toLowerCase() })
       await notifyStudio(context, input)
