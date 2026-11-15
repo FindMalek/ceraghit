@@ -4,6 +4,9 @@ export interface CaughtMail {
   to: string[]
 }
 
+/** Arabic mails wrap numbers in bidi isolates and marks; assertions compare the text people read. */
+export const stripBidi = (text: string): string => text.replace(/[\u2066-\u2069\u200E\u200F\u061C]/g, "")
+
 interface MailpitUrl {
   base: string
   headers: Record<string, string>
@@ -37,7 +40,7 @@ async function waitForMails(query: string, count: number, timeoutMs: number): Pr
       return Promise.all(
         found.messages.map(async ({ ID }) => {
           const mail = await call<{ Subject: string; Text: string; To: { Address: string }[] }>(`/api/v1/message/${ID}`)
-          return { subject: mail.Subject, text: mail.Text, to: mail.To.map((a) => a.Address) }
+          return { subject: mail.Subject, text: stripBidi(mail.Text), to: mail.To.map((a) => a.Address) }
         }),
       )
     }
