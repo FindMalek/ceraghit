@@ -9,6 +9,7 @@ import {
   cleanupUploads,
   createContext,
   effectivePaymentMethods,
+  purgeMailLog,
   type Services,
   settleOrder,
   sweepRateLimits,
@@ -24,7 +25,7 @@ const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
  *   /rpc/*              oRPC, used by web + dashboard through their /api proxy (needs `x-csrf-token: orpc`)
  *   /v1/*               the same procedures as REST (OpenAPI), docs at /v1/docs, spec at /v1/openapi.json (not in production)
  *   /webhooks/konnect   payment gateway callback, only a hint: the order is settled by re-asking the gateway
- *   /cron/cleanup-uploads   daily job (GitHub Actions, bearer CRON_SECRET): deletes files unused for 30 days
+ *   /cron/cleanup-uploads   daily job (GitHub Actions, bearer CRON_SECRET): deletes files unused for 30 days and mail logs older than 90 days
  *   /files/<key>        redirect to the CDN or a signed url for an uploaded image
  *   /health             db + payment mode, for Dokploy and uptime checks
  */
@@ -105,10 +106,12 @@ export function createServer(services: Services) {
         return new Response("Unauthorized", { status: 401 })
       }
       const rateLimits = await sweepRateLimits(services.db, services.now())
-      if (!services.storage) return Response.json({ ok: true, rateLimits, skipped: "no storage" })
+      const mailsPurged = await purgeMailLog(services)
+      if (!services.storage) return Response.json({ ok: true, rateLimits, mailsPurged, skipped: "no storage" })
       return Response.json({
         ok: true,
         rateLimits,
+        mailsPurged,
         ...(await cleanupUploads(services.db, services.storage, services.now())),
       })
     }

@@ -15,6 +15,7 @@ import { z } from "zod"
 import type { Context } from "../../context"
 import { publicError } from "../../errors"
 import { invoiceView, issueInvoice } from "../../lib/invoices"
+import { deliverMail } from "../../lib/mail-log"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
@@ -115,14 +116,11 @@ export const ordersRouter = {
 const IMAGE_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const
 
 /** The studio answers requests by email, so it gets one the moment a request comes in. Never fails the request. */
-async function notifyStudio(
-  { db, mailer }: Pick<Context, "db" | "mailer">,
-  request: z.infer<typeof customRequestInputSchema>,
-) {
+async function notifyStudio(services: Context, request: z.infer<typeof customRequestInputSchema>) {
   try {
-    const studio = studioInbox(await getShopProfile(db))
+    const studio = studioInbox(await getShopProfile(services.db))
     if (!studio) return
-    await mailer.send({
+    await deliverMail(services, "request_studio", {
       to: studio,
       replyTo: request.email,
       subject: `Nouvelle demande de pièce unique : ${request.name}`,

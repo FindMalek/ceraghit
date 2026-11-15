@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { AppConfigProvider } from "@/components/app-config"
 import { AppSidebar } from "@/components/app-sidebar"
 import { ErrorHost } from "@/components/error-host"
+import { MailBanner } from "@/components/mail-banner"
 import { MobileTabBar } from "@/components/mobile-tab-bar"
 import { admin, webUrl } from "@/lib/api"
 
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <AppSidebar admin={me} webUrl={webUrl()} />
         <SidebarInset className="min-w-0 bg-transparent">
           <ErrorHost />
+          <MailBanner />
           <div className="pb-20 md:pb-0">{children}</div>
         </SidebarInset>
         <MobileTabBar />

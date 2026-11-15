@@ -55,7 +55,14 @@ export function MobileTabBar() {
         </Link>
       ))}
       <button type="button" onClick={() => setOpenMobile(true)} className={cn(item, "text-muted-foreground")}>
-        <ListIcon className="size-6" />
+        <span className="relative">
+          <ListIcon className="size-6" />
+          {stats.data && stats.data.failedMails > 0 && (
+            <span className="-top-1.5 -right-2.5 absolute grid min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] text-white tabular-nums leading-4">
+              {stats.data.failedMails}
+            </span>
+          )}
+        </span>
         Menu
       </button>
     </nav>

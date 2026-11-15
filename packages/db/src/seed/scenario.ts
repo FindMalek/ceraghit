@@ -1,8 +1,9 @@
-import type { Localized, locations, orderAudit, orderItems, orders, shopProfile } from "../schema"
+import type { Localized, locations, mailLog, orderAudit, orderItems, orders, shopProfile } from "../schema"
 
 type NewOrder = typeof orders.$inferInsert
 type NewItem = typeof orderItems.$inferInsert
 type NewAudit = typeof orderAudit.$inferInsert
+type NewMail = typeof mailLog.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
 
@@ -202,10 +203,16 @@ export function buildScenario(
   orders: NewOrder[]
   items: NewItem[]
   audit: NewAudit[]
+  mail: NewMail[]
 } {
   const rand = rng(2027)
   const pick = <T>(list: T[]): T => list[Math.floor(rand() * list.length)]!
-  const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[] } = { orders: [], items: [], audit: [] }
+  const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[]; mail: NewMail[] } = {
+    orders: [],
+    items: [],
+    audit: [],
+    mail: [],
+  }
 
   let abroadCount = 0
   for (let n = 0; n < 45; n++) {
@@ -270,6 +277,29 @@ export function buildScenario(
     for (const p of unique) {
       out.items.push({ orderId: id, productId: p.id, ref: p.ref, title: p.title, unitMinor: unit(p), quantity: 1 })
     }
+  }
+  const confirmed = out.orders.filter((o) => o.status === "paid" || o.status === "fulfilled")
+  const [sent, failed] = [confirmed[0], confirmed[1]]
+  for (const [order, ok] of [
+    [sent, true],
+    [failed, false],
+  ] as const) {
+    if (!order) continue
+    const subject = `Votre commande ${order.number} chez Ceraghit`
+    const at = new Date(now.getTime() - (ok ? 3 : 2) * 3600e3)
+    out.mail.push({
+      kind: "order_confirmation",
+      orderId: order.id,
+      to: order.email,
+      subject,
+      text: `Bonjour ${order.customerName},\n\nMerci, nous avons bien reçu votre paiement.\n\nCeraghit Creation`,
+      status: ok ? "sent" : "failed",
+      providerId: ok ? "demo-mail" : null,
+      error: ok ? null : "resend 503: service unavailable",
+      attempts: ok ? 1 : 3,
+      createdAt: at,
+      sentAt: ok ? at : null,
+    })
   }
   return out
 }

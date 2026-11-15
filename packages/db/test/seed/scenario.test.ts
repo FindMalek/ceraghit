@@ -51,3 +51,11 @@ test("every paid transfer order has exactly one manual payment audit row", () =>
   }
   expect(audit).toHaveLength(paidTransfers.length)
 })
+
+test("the demo has one sent and one failed mail on real orders, so the failures page is never empty", () => {
+  const { orders, mail } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  expect(mail.map((m) => m.status).sort()).toEqual(["failed", "sent"])
+  const failed = mail.find((m) => m.status === "failed")!
+  expect(failed.error).toBe("resend 503: service unavailable")
+  expect(orders.find((o) => o.id === failed.orderId)?.email).toBe(failed.to)
+})
