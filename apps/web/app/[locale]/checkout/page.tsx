@@ -10,11 +10,11 @@ export async function generateMetadata() {
 
 export default async function Checkout() {
   const t = await getTranslations("checkout")
-  const { paymentMethods } = await getSettings()
+  const { paymentMethods, contactEmail } = await getSettings()
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
       <h1 className="text-5xl md:text-6xl">{t("title")}</h1>
-      <CheckoutForm paymentMethods={paymentMethods} />
+      <CheckoutForm paymentMethods={paymentMethods} contactEmail={contactEmail} />
     </div>
   )
 }

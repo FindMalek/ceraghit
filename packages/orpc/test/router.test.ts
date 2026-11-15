@@ -20,6 +20,7 @@ import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { cancelOrder, releaseExpiredHolds } from "../src/lib/orders"
 import { DemoProvider } from "../src/lib/payments"
+import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
 import { createStorage, type Storage } from "../src/lib/storage"
 import { cleanupUploads } from "../src/lib/uploads"
 import { appRouter } from "../src/routers"
@@ -58,6 +59,7 @@ describe.skipIf(!url)("router", () => {
   let categoryId = ""
   const ids: Record<string, string> = {}
   let savedPayments: typeof settings.$inferSelect | undefined
+  let savedBank: Awaited<ReturnType<typeof getShopProfile>> | undefined
 
   const customer = {
     currency: "TND" as const,
@@ -73,6 +75,13 @@ describe.skipIf(!url)("router", () => {
     await runMigrations(db)
     await seed(db, { admin: { email: "owner@test.local", password: "clay-test-pass" } })
     ;[savedPayments] = await db.delete(settings).where(eq(settings.key, "payments")).returning()
+    savedBank = await getShopProfile(db)
+    await updateShopProfile(db, {
+      bankHolder: "Atelier Test",
+      bankName: "Banque Test",
+      bankIban: "TN5910006035183598478831",
+      bankBic: "BSTUTNTT",
+    })
     const [cat] = await db
       .insert(categories)
       .values({ slug: tag, name: { fr: "Test" } })
@@ -103,6 +112,13 @@ describe.skipIf(!url)("router", () => {
 
   afterAll(async () => {
     if (savedPayments) await db.insert(settings).values(savedPayments).onConflictDoNothing()
+    if (savedBank)
+      await updateShopProfile(db, {
+        bankHolder: savedBank.bankHolder,
+        bankName: savedBank.bankName,
+        bankIban: savedBank.bankIban,
+        bankBic: savedBank.bankBic,
+      })
     const all = await db.select({ id: orders.id }).from(orders).where(eq(orders.email, customer.email))
     if (all.length) {
       const ids = all.map((o) => o.id)
@@ -396,7 +412,7 @@ describe.skipIf(!url)("router", () => {
     const abroad = await off.public.orders.create({ ...customer, country: "BE", currency: "EUR", items })
     const placed = await off.public.orders.get({ number: abroad.number, token: abroad.token })
     expect(placed).toMatchObject({ paymentMethod: "transfer", status: "pending_payment" })
-    expect(placed.bank?.iban).toBeTruthy()
+    expect(placed.bank?.iban).toBe("TN5910006035183598478831")
     expect(sent.find((m) => m.to === customer.email && m.text.includes(abroad.number))?.text).toContain("IBAN")
     expect(await off.public.catalog.settings()).not.toHaveProperty("bank")
   })

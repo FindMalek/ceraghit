@@ -1,11 +1,11 @@
 import { ORPCError } from "@orpc/server"
 import { customRequests, orders } from "@workspace/db"
 import {
+  bankFromProfile,
   checkoutSchema,
   customRequestInputSchema,
   orderInputSchema,
   type PaymentMethod,
-  PLACEHOLDER_BANK,
   publicInvoiceViewSchema,
   publicOrderSchema,
   requestUploadInputSchema,
@@ -19,7 +19,6 @@ import { deliverMail } from "../../lib/mail-log"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
-import { getSettings } from "../../lib/settings"
 import { getShopProfile, studioInbox } from "../../lib/shop-profile"
 import { reserveUpload } from "../../lib/uploads"
 import { publicProcedure } from "../../procedures"
@@ -57,7 +56,7 @@ export const ordersRouter = {
         status,
         bank:
           order.paymentMethod === "transfer" && status === "pending_payment"
-            ? ((await getSettings(context.db)).bank ?? PLACEHOLDER_BANK)
+            ? bankFromProfile(await getShopProfile(context.db))
             : null,
         currency: order.currency,
         subtotalMinor: order.subtotalMinor,

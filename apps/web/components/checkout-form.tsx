@@ -37,7 +37,13 @@ type Field = (typeof FIELDS)[number]
 const METHOD_LABEL = { online: "methodOnline", cod: "methodCod", transfer: "methodTransfer" } as const
 const HINT_LABEL = { cod: "methodCodHint", transfer: "methodTransferHint" } as const
 
-export function CheckoutForm({ paymentMethods }: { paymentMethods: PaymentMethodFlags }) {
+export function CheckoutForm({
+  paymentMethods,
+  contactEmail,
+}: {
+  paymentMethods: PaymentMethodFlags
+  contactEmail: string
+}) {
   const t = useTranslations("checkout")
   const apiError = useApiErrorMessage()
   const router = useRouter()
@@ -184,7 +190,19 @@ export function CheckoutForm({ paymentMethods }: { paymentMethods: PaymentMethod
               </span>
             </label>
           ))}
-          {methods.length === 0 && <p className="text-muted-foreground text-sm">{t("noMethod")}</p>}
+          {methods.length === 0 &&
+            (country === "TN" ? (
+              <p className="text-muted-foreground text-sm">{t("noMethod")}</p>
+            ) : (
+              <p className="frame bg-card/60 p-4 text-muted-foreground text-sm">
+                {t("unavailableAbroad")}{" "}
+                {contactEmail && (
+                  <a href={`mailto:${contactEmail}`} className="text-foreground underline underline-offset-4" dir="ltr">
+                    {contactEmail}
+                  </a>
+                )}
+              </p>
+            ))}
         </fieldset>
       </div>
 

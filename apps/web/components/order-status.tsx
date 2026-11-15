@@ -77,10 +77,22 @@ export function OrderStatus({ number, token }: { number: string; token: string }
             <dd>{order.bank.holder}</dd>
             <dt className="text-muted-foreground">{t("bank")}</dt>
             <dd>{order.bank.bank}</dd>
-            <dt className="text-muted-foreground">{t("iban")}</dt>
-            <dd className="select-all break-all font-mono" dir="ltr">
-              {order.bank.iban}
-            </dd>
+            {order.bank.rib && (
+              <>
+                <dt className="text-muted-foreground">{t("rib")}</dt>
+                <dd className="select-all break-all font-mono" dir="ltr">
+                  {order.bank.rib}
+                </dd>
+              </>
+            )}
+            {order.bank.iban && (
+              <>
+                <dt className="text-muted-foreground">{t("iban")}</dt>
+                <dd className="select-all break-all font-mono" dir="ltr">
+                  {order.bank.iban}
+                </dd>
+              </>
+            )}
             {order.bank.bic && (
               <>
                 <dt className="text-muted-foreground">{t("bic")}</dt>
@@ -95,6 +107,10 @@ export function OrderStatus({ number, token }: { number: string; token: string }
             </dd>
           </dl>
         </section>
+      )}
+
+      {transferPending && !order.bank && (
+        <p className="frame bg-card/70 p-6 text-center text-muted-foreground">{t("bankMissing")}</p>
       )}
 
       <section className="space-y-3">
