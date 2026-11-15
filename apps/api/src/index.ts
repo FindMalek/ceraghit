@@ -1,7 +1,7 @@
 import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { AdminAuth, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
+import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
 import { CRON_JOBS } from "./cron"
 import { loadEnv } from "./env"
 import { createMailer, mailTransport } from "./mailer"
@@ -19,6 +19,8 @@ const payments =
   env.KONNECT_API_KEY && env.KONNECT_WALLET_ID
     ? new KonnectProvider(env.KONNECT_API_KEY, env.KONNECT_WALLET_ID, env.KONNECT_MODE)
     : new DemoProvider(env.WEB_URL)
+
+assertNoDemoInProduction({ appEnv: env.APP_ENV, onlinePayments: env.ONLINE_PAYMENTS }, payments)
 
 const fetch = createServer({
   db,
