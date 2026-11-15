@@ -6,10 +6,18 @@ import { clearError, showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
 import { useState } from "react"
-import { SectionCard } from "@/components/profile/section-card"
+import { SectionCard, type WizardMode } from "@/components/profile/section-card"
 import { errorMessage } from "@/lib/errors"
 
-export function OwnerSection({ initial, onSaved }: { initial: { name: string }; onSaved?: () => void }) {
+export function OwnerSection({
+  initial,
+  onSaved,
+  wizard,
+}: {
+  initial: { name: string }
+  onSaved?: () => void
+  wizard?: WizardMode
+}) {
   const [name, setName] = useState(initial.name)
   const [error, setError] = useState<string>()
   const [saved, setSaved] = useState(false)
@@ -42,6 +50,7 @@ export function OwnerSection({ initial, onSaved }: { initial: { name: string }; 
       pending={save.isPending}
       saved={saved}
       onSubmit={submit}
+      wizard={wizard}
     >
       <Field data-invalid={Boolean(error)}>
         <FieldLabel htmlFor="owner-name">Votre prénom et nom</FieldLabel>
@@ -53,6 +62,7 @@ export function OwnerSection({ initial, onSaved }: { initial: { name: string }; 
           value={name}
           onChange={(e) => {
             setName(e.target.value)
+            setError(undefined)
             setSaved(false)
           }}
         />

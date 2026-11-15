@@ -9,7 +9,7 @@ import { Input } from "@workspace/ui/components/input"
 import { type ReactNode, useState } from "react"
 import { LocalizedField } from "@/components/localized-field"
 import { PhoneListField } from "@/components/phone-list-field"
-import { SectionCard } from "@/components/profile/section-card"
+import { SectionCard, type WizardMode } from "@/components/profile/section-card"
 import { SimpleSelect } from "@/components/simple-select"
 import { EMAIL, PHONE } from "@/lib/contact"
 import { errorMessage } from "@/lib/errors"
@@ -49,7 +49,15 @@ const MESSAGES: Record<string, string> = {
   invoiceNote: "Le français est obligatoire si vous écrivez une mention.",
 }
 
-export function ShopSection({ initial, onSaved }: { initial: ShopProfile; onSaved?: () => void }) {
+export function ShopSection({
+  initial,
+  onSaved,
+  wizard,
+}: {
+  initial: ShopProfile
+  onSaved?: () => void
+  wizard?: WizardMode
+}) {
   const [draft, setDraft] = useState<Draft>(toDraft(initial))
   const [country, setCountry] = useState(initial.country || "TN")
   const [phones, setPhones] = useState(initial.phones)
@@ -135,6 +143,7 @@ export function ShopSection({ initial, onSaved }: { initial: ShopProfile; onSave
       pending={save.isPending}
       saved={saved}
       onSubmit={submit}
+      wizard={wizard}
     >
       <div className="grid gap-5 sm:grid-cols-2">{TEXT_FIELDS.map(([key, label, hint]) => text(key, label, hint))}</div>
       {text("address", "Adresse")}
