@@ -1,7 +1,6 @@
 "use client"
 
 import { useMutation } from "@tanstack/react-query"
-import { errorMessage } from "@workspace/orpc/errors"
 import { orpc } from "@workspace/orpc/react"
 import {
   formatMoney,
@@ -21,6 +20,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import { Link, useRouter } from "@/i18n/navigation"
 import { lineKey, useCartStore } from "@/lib/cart-store"
+import { useApiErrorMessage } from "@/lib/errors"
 import { rememberOrderToken } from "@/lib/order-tokens"
 import { useHydrated } from "@/lib/use-hydrated"
 import { useShippingQuote } from "@/lib/use-shipping-quote"
@@ -39,6 +39,7 @@ const HINT_LABEL = { cod: "methodCodHint", transfer: "methodTransferHint" } as c
 
 export function CheckoutForm({ paymentMethods }: { paymentMethods: PaymentMethodFlags }) {
   const t = useTranslations("checkout")
+  const apiError = useApiErrorMessage()
   const router = useRouter()
   const tc = useTranslations("cart")
   const locale = useLocale()
@@ -70,7 +71,7 @@ export function CheckoutForm({ paymentMethods }: { paymentMethods: PaymentMethod
         window.location.assign(checkout.payUrl)
       },
       onError: (error) => {
-        showError(errorMessage(error))
+        showError(apiError(error, t("failed")))
         router.refresh()
       },
     }),
