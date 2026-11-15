@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import ar from "../messages/ar.json"
-import en from "../messages/en.json"
-import fr from "../messages/fr.json"
+import ar from "../../messages/ar.json"
+import en from "../../messages/en.json"
+import fr from "../../messages/fr.json"
 
 /** Every leaf path: `home.title`, `legal.docs.terms.sections.0.body.1`. */
 function leaves(node: unknown, path = ""): Map<string, string> {

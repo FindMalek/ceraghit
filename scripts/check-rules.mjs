@@ -1,5 +1,6 @@
 // Keeps the agent rules in sync: every .cursor/rule is imported by CLAUDE.md and described, every pnpm command AGENTS.md
-// names exists, every app has its AGENTS.md. Run by CI (`pnpm rules:check`).
+// names exists, every app has its AGENTS.md, every test lives in a test/ folder. Run by CI (`pnpm rules:check`).
+import { execFileSync } from "node:child_process"
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 
@@ -33,6 +34,12 @@ for (const m of read("AGENTS.md").matchAll(/`pnpm (?:run )?([a-z][\w:-]*)/g)) {
 }
 for (const app of readdirSync("apps")) {
   if (!existsSync(join("apps", app, "AGENTS.md"))) errors.push(`apps/${app}/AGENTS.md is missing`)
+}
+
+const files = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard"], { encoding: "utf8" })
+for (const path of files.split("\n")) {
+  if (/\.(test|spec)\.tsx?$/.test(path) && !/^((apps|packages)\/[^/]+\/)?test\//.test(path))
+    errors.push(`move ${path} into the package's test/ folder`)
 }
 
 if (errors.length) {

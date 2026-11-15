@@ -1,5 +1,13 @@
 import { expect, test } from "bun:test"
-import { buildOrdersCsv, buildSalesCsv, type CsvOrder, csvField, decimalAmount, salesByDay, toCsv } from "./orders-csv"
+import {
+  buildOrdersCsv,
+  buildSalesCsv,
+  type CsvOrder,
+  csvField,
+  decimalAmount,
+  salesByDay,
+  toCsv,
+} from "../src/orders-csv"
 
 const order = (over: Partial<CsvOrder> = {}): CsvOrder => ({
   number: "CER-1",

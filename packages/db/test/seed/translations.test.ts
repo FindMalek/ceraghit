@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import { CATALOGUE, CATEGORIES } from "./catalogue"
-import { localize } from "./translations"
+import { CATALOGUE, CATEGORIES } from "../../src/seed/catalogue"
+import { localize } from "../../src/seed/translations"
 
 test("every catalogue text has an english and an arabic version", () => {
   const texts = [
