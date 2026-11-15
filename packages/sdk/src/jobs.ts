@@ -57,6 +57,21 @@ export const JOBS: JobSpec[] = [
   },
 ]
 
+/** French names for the counts a job reports; a count without a label here is not shown to the owner. */
+export const JOB_COUNT_LABELS: Record<string, string> = {
+  released: "commandes libérées",
+  deleted: "photos supprimées",
+  marked: "photos marquées inutilisées",
+  restored: "photos restaurées",
+  rateLimits: "limites purgées",
+  mailsPurged: "emails purgés",
+  updated: "colis mis à jour",
+  sent: "emails renvoyés",
+}
+
+/** A run that started this long ago without finishing was cut off (the function was killed), not still running. */
+export const JOB_INTERRUPTED_AFTER_MINUTES = 15
+
 export const jobStatusSchema = z.object({
   name: z.string(),
   label: z.string(),
@@ -78,3 +93,14 @@ export const jobStatusSchema = z.object({
   minutesSince: z.number().int().nullable(),
 })
 export type JobStatus = z.infer<typeof jobStatusSchema>
+
+export type JobRunState = "inactive" | "never" | "failed" | "interrupted" | "running" | "stale" | "ok"
+
+/** What the owner sees for a job. A run with no outcome is "running" for a while, then it was cut off. */
+export function jobRunState(job: Pick<JobStatus, "registered" | "lastRun" | "stale" | "minutesSince">): JobRunState {
+  if (!job.lastRun) return job.registered ? "never" : "inactive"
+  if (job.lastRun.ok === false) return "failed"
+  if (job.lastRun.ok === null)
+    return (job.minutesSince ?? 0) >= JOB_INTERRUPTED_AFTER_MINUTES ? "interrupted" : "running"
+  return job.stale ? "stale" : "ok"
+}

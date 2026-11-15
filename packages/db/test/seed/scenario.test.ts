@@ -74,5 +74,6 @@ test("demo job runs show a healthy job, a failed run behind a good one, and jobs
   const holds = byName("release-holds").sort((a, b) => a.startedAt!.getTime() - b.startedAt!.getTime())
   expect(holds.map((r) => r.ok)).toEqual([false, true])
   expect(holds[0]!.error).toBe("Délai dépassé")
+  expect(byName("track-shipments")).toMatchObject([{ ok: null, finishedAt: null }])
   expect(byName("retry-mail")).toHaveLength(0)
 })

@@ -196,7 +196,7 @@ function rng(seed: number) {
   }
 }
 
-/** What the settings card shows on previews: two healthy jobs, one failed run behind a good one, the rest never ran. */
+/** What the settings card shows on previews: two healthy jobs, one failed run behind a good one, one run cut off, the rest never ran. */
 export function demoJobRuns(now: Date): NewJobRun[] {
   const ago = (minutes: number) => new Date(now.getTime() - minutes * 60_000)
   const run = (name: string, minutes: number, rest: Partial<NewJobRun>): NewJobRun => ({
@@ -209,6 +209,7 @@ export function demoJobRuns(now: Date): NewJobRun[] {
     run("cleanup-uploads", 5 * 60, { ok: true, counts: { rateLimits: 12, mailsPurged: 0, deleted: 3 } }),
     run("release-holds", 80, { ok: false, error: "Délai dépassé" }),
     run("release-holds", 20, { ok: true, counts: { released: 1 } }),
+    { name: "track-shipments", startedAt: ago(150), finishedAt: null, ok: null },
   ]
 }
 
