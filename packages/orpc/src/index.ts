@@ -10,6 +10,7 @@ export {
 } from "./lib/mailer"
 export { settleOrder } from "./lib/orders"
 export { DemoProvider, KonnectProvider, type PaymentProvider } from "./lib/payments"
+export { sweepRateLimits } from "./lib/rate-limit"
 export { effectivePaymentMethods } from "./lib/settings"
 export { createStorage, type Storage } from "./lib/storage"
 export { cleanupUploads } from "./lib/uploads"

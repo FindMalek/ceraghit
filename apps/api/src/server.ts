@@ -11,6 +11,7 @@ import {
   effectivePaymentMethods,
   type Services,
   settleOrder,
+  sweepRateLimits,
 } from "@workspace/orpc"
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
@@ -101,8 +102,13 @@ export function createServer(services: Services) {
       if (given.length !== wanted.length || !timingSafeEqual(given, wanted)) {
         return new Response("Unauthorized", { status: 401 })
       }
-      if (!services.storage) return Response.json({ ok: true, skipped: "no storage" })
-      return Response.json({ ok: true, ...(await cleanupUploads(services.db, services.storage, services.now())) })
+      const rateLimits = await sweepRateLimits(services.db, services.now())
+      if (!services.storage) return Response.json({ ok: true, rateLimits, skipped: "no storage" })
+      return Response.json({
+        ok: true,
+        rateLimits,
+        ...(await cleanupUploads(services.db, services.storage, services.now())),
+      })
     }
     if (pathname === "/webhooks/konnect") {
       const ref = url.searchParams.get("payment_ref")

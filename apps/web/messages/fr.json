@@ -225,6 +225,7 @@
     "photoUploading": "Envoi de la photo en cours",
     "photoErrors": {
       "failed": "L'envoi a échoué, réessayez.",
+      "tooMany": "Trop d'envois, réessayez bientôt.",
       "type": "Format non pris en charge (JPEG, PNG ou WebP).",
       "tooLarge": "Photo trop lourde (5 Mo maximum)."
     }
@@ -540,6 +541,9 @@
       "payment_service_down": "Le service de paiement n'a pas répondu, réessayez.",
       "photos_unavailable": "L'envoi de photos n'est pas disponible pour le moment.",
       "too_many_uploads": "Trop d'envois, réessayez dans quelques minutes.",
+      "too_many_orders": "Trop de commandes, réessayez dans quelques minutes.",
+      "too_many_lookups": "Trop de tentatives, réessayez dans quelques minutes.",
+      "too_many_requests": "Trop de demandes, réessayez plus tard.",
       "photo_missing": "Une photo n'a pas été envoyée, ajoutez-la de nouveau.",
       "storage_full": "L'espace de stockage est plein."
     }

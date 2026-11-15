@@ -30,6 +30,8 @@ const schema = z
     ONLINE_PAYMENTS: flag.default(false),
     /** Lets the daily GitHub job delete files nothing uses any more, see .github/workflows/cleanup-uploads.yml. */
     CRON_SECRET: z.string().min(24).optional(),
+    /** Shared with the web and dashboard proxies so the api trusts the client address they forward. Required in production. */
+    PROXY_SECRET: z.string().min(24).optional(),
     /** Order emails go through Resend. Without a key they are only logged (local and previews). */
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().default("Ceraghit <onboarding@resend.dev>"),
@@ -55,6 +57,7 @@ const schema = z
       if (!env.S3_ENDPOINT || !env.S3_BUCKET || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
         fail("production needs the R2 S3_* settings")
       }
+      if (!env.PROXY_SECRET) fail("production needs PROXY_SECRET")
       if (!env.RESEND_API_KEY) fail("production needs RESEND_API_KEY")
       if (env.EMAIL_FROM.includes("resend.dev")) fail("production needs EMAIL_FROM on a verified domain")
       for (const key of ["WEB_URL", "API_PUBLIC_URL"] as const) {

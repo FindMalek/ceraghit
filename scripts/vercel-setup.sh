@@ -21,7 +21,7 @@ val() { grep -E "^$1=" "$ENV_FILE" | head -1 | cut -d= -f2-; }
 require() { [ -n "$(val "$1")" ] || { echo "$1 is empty in $ENV_FILE" >&2; exit 1; }; }
 
 # ALLOW_MISSING_S3=1: run before the R2 keys exist, empty S3_* values are skipped (re-run once they are filled in).
-SECRET_NAMES=" DATABASE_URL RESEND_API_KEY CRON_SECRET KONNECT_API_KEY S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY "
+SECRET_NAMES=" DATABASE_URL RESEND_API_KEY CRON_SECRET PROXY_SECRET KONNECT_API_KEY S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY "
 S3_NAMES=" S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_PUBLIC_URL "
 
 push() { # app NAME VALUE
@@ -33,7 +33,7 @@ push() { # app NAME VALUE
   echo "  $1: $2"
 }
 
-for v in WEB_URL API_PUBLIC_URL API_URL DATABASE_URL RESEND_API_KEY EMAIL_FROM CRON_SECRET \
+for v in WEB_URL API_PUBLIC_URL API_URL DATABASE_URL RESEND_API_KEY EMAIL_FROM CRON_SECRET PROXY_SECRET \
   S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_PUBLIC_URL; do
   [ "${ALLOW_MISSING_S3:-}" = 1 ] && [[ "$S3_NAMES" == *" $v "* ]] && continue
   require "$v"
@@ -58,7 +58,7 @@ push api SEED_DEMO false
 push api ONLINE_PAYMENTS false
 push api S3_REGION auto
 push api DB_POOL_MAX 5
-for n in DATABASE_URL WEB_URL API_PUBLIC_URL CRON_SECRET RESEND_API_KEY EMAIL_FROM S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID \
+for n in DATABASE_URL WEB_URL API_PUBLIC_URL CRON_SECRET PROXY_SECRET RESEND_API_KEY EMAIL_FROM S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID \
   S3_SECRET_ACCESS_KEY S3_PUBLIC_URL; do push api "$n" "$(val "$n")"; done
 # Online payment is off, so Konnect is not needed. To turn it on later: ONLINE_PAYMENTS=true, KONNECT_MODE=live and the two keys.
 if [ -n "$(val KONNECT_API_KEY)" ] && [ -n "$(val KONNECT_WALLET_ID)" ]; then
@@ -70,6 +70,7 @@ for app in web dashboard; do
   push "$app" APP_ENV production
   push "$app" API_URL "$(val API_URL)"
   push "$app" WEB_URL "$(val WEB_URL)"
+  push "$app" PROXY_SECRET "$(val PROXY_SECRET)"
 done
 
 echo

@@ -46,8 +46,12 @@ describe.skipIf(!url)("router", () => {
       onlinePayments: true,
     },
   }
+  let visitors = 0
+  /** A new address per call, so the per-address limits never trip across unrelated tests. */
+  const visit = (headers: Record<string, string> = {}) =>
+    new Headers({ "x-forwarded-for": `t${tag}-${visitors++}`, ...headers })
   const clientWith = (headers: Record<string, string> = {}) =>
-    createRouterClient(appRouter, { context: (): Context => createContext(services, new Headers(headers)) })
+    createRouterClient(appRouter, { context: (): Context => createContext(services, visit(headers)) })
   const guest = clientWith()
   const tag = `t${Date.now()}`
   let categoryId = ""
@@ -116,7 +120,7 @@ describe.skipIf(!url)("router", () => {
     const sent: { to: string; replyTo?: string; subject: string; text: string }[] = []
     const client = createRouterClient(appRouter, {
       context: (): Context =>
-        createContext({ ...services, mailer: { send: async (mail) => void sent.push(mail) } }, new Headers()),
+        createContext({ ...services, mailer: { send: async (mail) => void sent.push(mail) } }, visit()),
     })
     const name = `Mail ${tag}`
     await client.public.requests.create({
@@ -150,7 +154,7 @@ describe.skipIf(!url)("router", () => {
       list: async () => [],
     }
     const client = createRouterClient(appRouter, {
-      context: (): Context => createContext({ ...services, storage }, new Headers()),
+      context: (): Context => createContext({ ...services, storage }, visit()),
     })
     const request = {
       name: `Photo ${tag}`,
@@ -334,7 +338,7 @@ describe.skipIf(!url)("router", () => {
     const sent: string[] = []
     const cod = createRouterClient(appRouter, {
       context: (): Context =>
-        createContext({ ...services, mailer: { send: async (mail) => void sent.push(mail.to) } }, new Headers()),
+        createContext({ ...services, mailer: { send: async (mail) => void sent.push(mail.to) } }, visit()),
     })
     const items = [{ productId: ids.mug!, quantity: 1 }]
     await expect(
@@ -358,6 +362,16 @@ describe.skipIf(!url)("router", () => {
     )
   })
 
+  test("the eleventh order from one address in ten minutes gets a 429, another address still orders", async () => {
+    const buyer = createRouterClient(appRouter, {
+      context: (): Context => createContext(services, new Headers({ "x-forwarded-for": `burst-${tag}` })),
+    })
+    const order = () => buyer.public.orders.create({ ...customer, items: [{ productId: ids.bowl!, quantity: 1 }] })
+    for (let i = 0; i < 10; i++) await order()
+    await expect(order()).rejects.toMatchObject({ code: "TOO_MANY_REQUESTS" })
+    await guest.public.orders.create({ ...customer, items: [{ productId: ids.bowl!, quantity: 1 }] })
+  })
+
   test("with online payment off Tunisia gets cash on delivery, abroad gets a bank transfer with the account in the order and the email", async () => {
     const sent: { to: string; text: string }[] = []
     const off = createRouterClient(appRouter, {
@@ -368,7 +382,7 @@ describe.skipIf(!url)("router", () => {
             config: { ...services.config, onlinePayments: false },
             mailer: { send: async (mail) => void sent.push({ to: mail.to, text: mail.text }) },
           },
-          new Headers(),
+          visit(),
         ),
     })
     const items = [{ productId: ids.bowl!, quantity: 1 }]

@@ -225,6 +225,7 @@
     "photoUploading": "Uploading the photo",
     "photoErrors": {
       "failed": "The upload failed, try again.",
+      "tooMany": "Too many uploads, try again soon.",
       "type": "Unsupported format (JPEG, PNG or WebP).",
       "tooLarge": "Photo too large (5 MB maximum)."
     }
@@ -540,6 +541,9 @@
       "payment_service_down": "The payment service did not answer, please try again.",
       "photos_unavailable": "Photo uploads are not available right now.",
       "too_many_uploads": "Too many uploads, try again in a few minutes.",
+      "too_many_orders": "Too many orders, try again in a few minutes.",
+      "too_many_lookups": "Too many attempts, try again in a few minutes.",
+      "too_many_requests": "Too many requests, try again later.",
       "photo_missing": "A photo was not uploaded, please add it again.",
       "storage_full": "The storage space is full."
     }

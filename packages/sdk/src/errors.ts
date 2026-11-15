@@ -14,6 +14,9 @@ export const PUBLIC_ERROR_REASONS = [
   "payment_service_down",
   "photos_unavailable",
   "too_many_uploads",
+  "too_many_orders",
+  "too_many_lookups",
+  "too_many_requests",
   "photo_missing",
   "storage_full",
 ] as const
