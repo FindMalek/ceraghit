@@ -2,16 +2,7 @@ import { expect, test } from "bun:test"
 import ar from "../messages/ar.json"
 import en from "../messages/en.json"
 import fr from "../messages/fr.json"
-
-/** Every leaf path: `home.title`, `legal.docs.terms.sections.0.body.1`. */
-function leaves(node: unknown, path = ""): Map<string, string> {
-  if (typeof node === "string") return new Map([[path, node]])
-  const out = new Map<string, string>()
-  for (const [key, value] of Object.entries(node as object)) {
-    for (const [p, v] of leaves(value, path ? `${path}.${key}` : key)) out.set(p, v)
-  }
-  return out
-}
+import { leaves } from "../test/helpers/messages"
 
 /** ICU argument names and rich-text tags: `{count, plural, ...}` gives count, `<link>` gives <link>. */
 function placeholders(message: string): string[] {
