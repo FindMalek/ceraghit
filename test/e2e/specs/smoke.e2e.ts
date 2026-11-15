@@ -36,7 +36,10 @@ test("a cash on delivery order reaches the dashboard", { tag: "@fr" }, async ({ 
     "the owner sees it in the orders list",
     async () => {
       await ownerPage.goto(`${E2E.dashboardUrl}/orders`)
-      await expect(ownerPage.getByText(number).filter({ visible: true }).first()).toBeVisible()
+      await ownerPage.getByPlaceholder("Numéro, nom ou email").fill(number)
+      const rows = ownerPage.getByText(/^CER-\d+$/).filter({ visible: true })
+      await expect(rows).toHaveCount(1)
+      await expect(rows).toHaveText(number)
     },
     ownerPage,
   )
