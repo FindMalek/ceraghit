@@ -4,6 +4,7 @@ import {
   categories,
   createDb,
   customRequests,
+  invoices,
   orders,
   productImages,
   products,
@@ -103,13 +104,11 @@ describe.skipIf(!url)("router", () => {
   afterAll(async () => {
     if (savedPayments) await db.insert(settings).values(savedPayments).onConflictDoNothing()
     const all = await db.select({ id: orders.id }).from(orders).where(eq(orders.email, customer.email))
-    if (all.length)
-      await db.delete(orders).where(
-        inArray(
-          orders.id,
-          all.map((o) => o.id),
-        ),
-      )
+    if (all.length) {
+      const ids = all.map((o) => o.id)
+      await db.delete(invoices).where(inArray(invoices.orderId, ids))
+      await db.delete(orders).where(inArray(orders.id, ids))
+    }
     await db.delete(customRequests).where(eq(customRequests.email, "photos@example.com"))
     await db.delete(products).where(eq(products.categoryId, categoryId))
     await db.delete(categories).where(eq(categories.id, categoryId))
