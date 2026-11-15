@@ -81,6 +81,8 @@ describe.skipIf(!url)("order mails", () => {
   afterAll(async () => {
     if (savedPayments) await db.insert(settings).values(savedPayments).onConflictDoNothing()
     await updateShopProfile(db, {
+      notifyEmail: saved.notifyEmail,
+      email: saved.email,
       bankHolder: saved.bankHolder,
       bankName: saved.bankName,
       bankIban: saved.bankIban,
@@ -103,5 +105,12 @@ describe.skipIf(!url)("order mails", () => {
     const [order] = await db.select().from(orders).where(eq(orders.number, placed.number))
     const logged = await db.select().from(mailLog).where(eq(mailLog.orderId, order!.id))
     expect(logged.map((l) => l.kind).sort()).toEqual(["order_confirmation", "order_studio"])
+  })
+
+  test("the studio mail falls back to the contact email when there is no notify email", async () => {
+    await updateShopProfile(db, { notifyEmail: null, email: "contact@studio.test" })
+    const placed = await guest.public.orders.create({ ...buyer, country: "TN", currency: "TND", items: items() })
+    const studio = sent.find((m) => m.subject.includes(placed.number) && m.to !== email)
+    expect(studio?.to).toBe("contact@studio.test")
   })
 })

@@ -1,5 +1,4 @@
 import type { Mail } from "../lib/mailer"
-import { join } from "./layout"
 
 export interface StudioRequest {
   name: string
@@ -18,7 +17,7 @@ export function renderStudioRequest(request: StudioRequest, studio: string): Mai
     to: studio,
     replyTo: request.email,
     subject: `Nouvelle demande de pièce unique : ${request.name}`,
-    text: join([
+    text: [
       `${request.name} <${request.email}>${request.phone ? ` ${request.phone}` : ""}${request.country ? ` (${request.country})` : ""}`,
       "",
       request.description,
@@ -29,6 +28,6 @@ export function renderStudioRequest(request: StudioRequest, studio: string): Mai
       ...(request.images.length ? [`${request.images.length} photo(s) à voir dans le dashboard.`] : []),
       "",
       "Répondez directement à cet email pour écrire au client.",
-    ]),
+    ].join("\n"),
   }
 }
