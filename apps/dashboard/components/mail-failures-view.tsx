@@ -15,6 +15,18 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { formatDate, MAIL_KIND } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
+function frenchError(error: string | null): string {
+  if (!error) return "Erreur inconnue."
+  if (/network error|timeout|abort/i.test(error)) return "Service d'envoi injoignable."
+  const status = error.match(/^(?:resend|mailpit) (\d{3})/)?.[1]
+  if (status === "429") return "Trop d'envois, limite atteinte."
+  if (status && Number(status) >= 500) return "Service d'envoi indisponible."
+  if (status === "403") return "Domaine d'envoi non vérifié."
+  if (status === "401") return "Clé d'envoi refusée."
+  if (status === "422") return "Adresse ou contenu refusé."
+  return error
+}
+
 function OrderLink({ number }: { number: string | null }) {
   if (!number) return <span className="text-muted-foreground">—</span>
   return (
@@ -97,7 +109,9 @@ export function MailFailuresView() {
                       <TableCell>{MAIL_KIND[item.kind] ?? item.kind}</TableCell>
                       <TableCell className="break-all">{item.to}</TableCell>
                       <TableCell className="max-w-56 whitespace-normal">{item.subject}</TableCell>
-                      <TableCell className="max-w-56 whitespace-normal text-destructive">{item.error}</TableCell>
+                      <TableCell className="max-w-56 whitespace-normal text-destructive">
+                        {frenchError(item.error)}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums">{item.attempts}</TableCell>
                       <TableCell>
                         <OrderLink number={item.orderNumber} />
@@ -117,7 +131,7 @@ export function MailFailuresView() {
                   </span>
                   <span className="break-all">{item.to}</span>
                   <span className="text-muted-foreground">{item.subject}</span>
-                  <span className="break-words text-destructive text-sm">{item.error}</span>
+                  <span className="break-words text-destructive text-sm">{frenchError(item.error)}</span>
                   <span className="text-sm">
                     Commande : <OrderLink number={item.orderNumber} />
                   </span>

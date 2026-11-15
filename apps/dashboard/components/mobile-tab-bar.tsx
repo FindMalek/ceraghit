@@ -58,7 +58,7 @@ export function MobileTabBar() {
         <span className="relative">
           <ListIcon className="size-6" />
           {stats.data && stats.data.failedMails > 0 && (
-            <span className="-top-1.5 -right-2.5 absolute grid min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] text-white tabular-nums leading-4">
+            <span className="-top-1.5 -right-2.5 absolute grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground tabular-nums leading-4">
               {stats.data.failedMails}
             </span>
           )}

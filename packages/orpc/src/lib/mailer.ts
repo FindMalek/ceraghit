@@ -3,6 +3,8 @@ export interface Mail {
   subject: string
   text: string
   replyTo?: string
+  /** Same value across the retries of one mail, so a retry after an accepted send cannot deliver twice. */
+  idempotencyKey?: string
 }
 
 export interface Mailer {
@@ -73,6 +75,8 @@ export class MailpitMailer implements Mailer {
   }
 }
 
+const RESEND_TIMEOUT_MS = 4000
+
 export class ResendMailer implements Mailer {
   constructor(
     private apiKey: string,
@@ -80,13 +84,18 @@ export class ResendMailer implements Mailer {
     private http: typeof fetch = fetch,
   ) {}
 
-  async send({ to, subject, text, replyTo }: Mail) {
+  async send({ to, subject, text, replyTo, idempotencyKey }: Mail) {
     let res: Response
     try {
       res = await this.http("https://api.resend.com/emails", {
         method: "POST",
-        headers: { authorization: `Bearer ${this.apiKey}`, "content-type": "application/json" },
+        headers: {
+          authorization: `Bearer ${this.apiKey}`,
+          "content-type": "application/json",
+          ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
+        },
         body: JSON.stringify({ from: this.from, to, subject, text, reply_to: replyTo }),
+        signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
       })
     } catch {
       throw new MailError("resend: network error", true, 0)
@@ -116,12 +125,13 @@ export class RedirectMailer implements Mailer {
     private label: string,
   ) {}
 
-  async send({ to, subject, text, replyTo }: Mail) {
+  async send({ to, subject, text, replyTo, idempotencyKey }: Mail) {
     const header = [`Destinataire d'origine : ${to}`, ...(replyTo ? [`Répondre à : ${replyTo}`] : [])]
     return this.inner.send({
       to: this.redirectTo,
       subject: `[${this.label} → ${to}] ${subject}`,
       text: `${header.join("\n")}\n\n${text}`,
+      idempotencyKey,
     })
   }
 }

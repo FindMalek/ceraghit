@@ -3,10 +3,10 @@ import { createRouterClient } from "@orpc/server"
 import { categories, createDb, mailLog, orders, products } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { eq, inArray } from "drizzle-orm"
+import { eq, like } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
-import { deliverMail, purgeMailLog } from "../src/lib/mail-log"
+import { deliverMail, purgeMailLog, resendMail } from "../src/lib/mail-log"
 import { type Mail, MailError, type Mailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
 import { adminRouter } from "../src/routers/admin"
@@ -66,7 +66,7 @@ describe.skipIf(!url)("mail log", () => {
     owner = ownerFor(new Headers({ cookie: `ceraghit_admin=${session!.token}`, "x-csrf-token": "orpc" }))
   })
   afterAll(async () => {
-    await db.delete(mailLog).where(inArray(mailLog.kind, ["test"]))
+    await db.delete(mailLog).where(like(mailLog.subject, `${tag}%`))
   })
 
   test("a 503 then success is one sent row with two attempts and a pause in between", async () => {
@@ -115,8 +115,9 @@ describe.skipIf(!url)("mail log", () => {
         status: "published",
       })
       .returning()
-    const refused = () => new MailError("resend 403: domain not verified", false, 403)
-    const { mailer } = scripted([refused(), refused()])
+    waits.length = 0
+    const down = () => new MailError("resend 503: down", true, 503)
+    const { mailer, sent } = scripted([down(), down()])
     const visitor = createRouterClient(publicRouter, {
       context: (): Context => createContext({ ...base, mailer }, new Headers()),
     })
@@ -134,10 +135,13 @@ describe.skipIf(!url)("mail log", () => {
     const [order] = await db.select().from(orders).where(eq(orders.number, created.number))
     expect(order?.status).toBe("pending_payment")
     const log = await db.select().from(mailLog).where(eq(mailLog.orderId, order!.id))
-    expect(log.map((r) => [r.kind, r.status])).toEqual([
-      ["order_confirmation", "failed"],
-      ["order_studio", "failed"],
+    expect(log.map((r) => [r.kind, r.status, r.attempts]).sort()).toEqual([
+      ["order_confirmation", "failed", 1],
+      ["order_studio", "failed", 1],
     ])
+    expect(sent).toHaveLength(2)
+    expect(waits).toEqual([])
+    await db.delete(mailLog).where(eq(mailLog.orderId, order!.id))
     await db.delete(orders).where(eq(orders.id, order!.id))
     await db.delete(products).where(eq(products.id, product!.id))
     await db.delete(categories).where(eq(categories.id, cat!.id))
@@ -160,10 +164,38 @@ describe.skipIf(!url)("mail log", () => {
         ),
     })
     expect(await client.mail.resend({ id: failed!.id })).toEqual({ ok: true })
-    expect(working.sent).toEqual([{ to: failed!.to, subject: failed!.subject, text: "corps", replyTo: undefined }])
-    expect((await rows(4)).map((r) => r.status).sort()).toEqual(["resent", "sent"])
+    expect(working.sent[0]).toMatchObject({ to: failed!.to, subject: failed!.subject, text: "corps" })
+    expect((await rows(4)).map((r) => r.status)).toEqual(["resent"])
     expect((await owner.mail.failures({})).items.map((i) => i.id)).not.toContain(failed!.id)
     await expect(client.mail.resend({ id: failed!.id })).rejects.toThrow("Email introuvable.")
+  })
+
+  test("a resend that fails again keeps one failed row and adds its attempts", async () => {
+    await deliverMail(
+      { ...base, mailer: scripted([new MailError("resend 403: domain", false, 403)]).mailer },
+      "test",
+      mail(8),
+    )
+    const [failed] = await rows(8)
+    const stillDown = scripted([new MailError("resend 403: domain", false, 403)])
+    expect(await resendMail({ ...base, mailer: stillDown.mailer }, failed!.id)).toBe(false)
+    const after = await rows(8)
+    expect(after).toHaveLength(1)
+    expect(after[0]).toMatchObject({ id: failed!.id, status: "failed", attempts: 2 })
+  })
+
+  test("the same idempotency key is sent on every attempt of one mail", async () => {
+    const keys: (string | undefined)[] = []
+    const mailer: Mailer = {
+      async send(m) {
+        keys.push(m.idempotencyKey)
+        if (keys.length < 2) throw new MailError("resend 503: down", true, 503)
+        return { id: null }
+      },
+    }
+    await deliverMail({ ...base, mailer }, "test", mail(9))
+    expect(keys[0]).toBeTruthy()
+    expect(keys[1]).toBe(keys[0]!)
   })
 
   test("dismiss closes a failure without sending", async () => {
@@ -184,7 +216,13 @@ describe.skipIf(!url)("mail log", () => {
       .update(mailLog)
       .set({ createdAt: new Date("2096-05-01T00:00:00Z") })
       .where(eq(mailLog.subject, `${tag} 7`))
+    await deliverMail({ ...base, mailer: scripted([new MailError("x", false, 401)]).mailer }, "test", mail(10))
+    await db
+      .update(mailLog)
+      .set({ createdAt: new Date("2096-01-01T00:00:00Z") })
+      .where(eq(mailLog.subject, `${tag} 10`))
     await purgeMailLog(base)
+    expect(await rows(10)).toHaveLength(1)
     expect(await rows(6)).toHaveLength(0)
     expect(await rows(7)).toHaveLength(1)
   })

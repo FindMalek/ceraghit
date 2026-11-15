@@ -106,7 +106,10 @@ export function createServer(services: Services) {
         return new Response("Unauthorized", { status: 401 })
       }
       const rateLimits = await sweepRateLimits(services.db, services.now())
-      const mailsPurged = await purgeMailLog(services)
+      const mailsPurged = await purgeMailLog(services).catch((error) => {
+        console.error("[cron] mail purge", error instanceof Error ? error.message : "failed")
+        return -1
+      })
       if (!services.storage) return Response.json({ ok: true, rateLimits, mailsPurged, skipped: "no storage" })
       return Response.json({
         ok: true,

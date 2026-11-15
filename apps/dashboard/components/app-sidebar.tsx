@@ -92,7 +92,7 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
                     <item.icon />
                     <span>{item.label}</span>
                     {item.href === EMAILS_NAV.href && (
-                      <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-destructive px-1.5 text-[11px] text-white tabular-nums leading-5 group-data-[collapsible=icon]:hidden">
+                      <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-primary px-1.5 text-[11px] text-primary-foreground tabular-nums leading-5 group-data-[collapsible=icon]:hidden">
                         {failedMails}
                       </span>
                     )}

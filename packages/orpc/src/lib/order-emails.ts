@@ -132,8 +132,8 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
         .filter((l, i, all) => l !== "" || all[i - 1] !== "")
         .join("\n"),
     }
-    await deliverMail(services, "order_confirmation", toCustomer, { orderId })
-    if (studio) await deliverMail(services, "order_studio", { ...toStudio, to: studio }, { orderId })
+    await deliverMail(services, "order_confirmation", toCustomer, { orderId, inline: true })
+    if (studio) await deliverMail(services, "order_studio", { ...toStudio, to: studio }, { orderId, inline: true })
   } catch (error) {
     console.error("[order emails]", error)
   }
@@ -172,7 +172,7 @@ export async function sendPaymentReceivedEmail(services: Services, orderId: stri
           c.bye,
         ].join("\n"),
       },
-      { orderId },
+      { orderId, inline: true },
     )
   } catch (error) {
     console.error("[payment received email]", error)

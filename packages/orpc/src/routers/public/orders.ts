@@ -120,23 +120,28 @@ async function notifyStudio(services: Context, request: z.infer<typeof customReq
   try {
     const studio = studioInbox(await getShopProfile(services.db))
     if (!studio) return
-    await deliverMail(services, "request_studio", {
-      to: studio,
-      replyTo: request.email,
-      subject: `Nouvelle demande de pièce unique : ${request.name}`,
-      text: [
-        `${request.name} <${request.email}>${request.phone ? ` ${request.phone}` : ""}${request.country ? ` (${request.country})` : ""}`,
-        "",
-        request.description,
-        "",
-        ...(request.dimensions ? [`Dimensions : ${request.dimensions}`] : []),
-        ...(request.budget ? [`Budget : ${request.budget}`] : []),
-        ...(request.references ? [`Références : ${request.references}`] : []),
-        ...(request.images.length ? [`${request.images.length} photo(s) à voir dans le dashboard.`] : []),
-        "",
-        "Répondez directement à cet email pour écrire au client.",
-      ].join("\n"),
-    })
+    await deliverMail(
+      services,
+      "request_studio",
+      {
+        to: studio,
+        replyTo: request.email,
+        subject: `Nouvelle demande de pièce unique : ${request.name}`,
+        text: [
+          `${request.name} <${request.email}>${request.phone ? ` ${request.phone}` : ""}${request.country ? ` (${request.country})` : ""}`,
+          "",
+          request.description,
+          "",
+          ...(request.dimensions ? [`Dimensions : ${request.dimensions}`] : []),
+          ...(request.budget ? [`Budget : ${request.budget}`] : []),
+          ...(request.references ? [`Références : ${request.references}`] : []),
+          ...(request.images.length ? [`${request.images.length} photo(s) à voir dans le dashboard.`] : []),
+          "",
+          "Répondez directement à cet email pour écrire au client.",
+        ].join("\n"),
+      },
+      { inline: true },
+    )
   } catch (error) {
     console.error("[request mail]", error)
   }
