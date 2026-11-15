@@ -3,10 +3,10 @@ import { customRequests, orders } from "@workspace/db"
 import {
   checkoutSchema,
   customRequestInputSchema,
-  invoiceViewSchema,
   orderInputSchema,
   type PaymentMethod,
   PLACEHOLDER_BANK,
+  publicInvoiceViewSchema,
   publicOrderSchema,
   requestUploadInputSchema,
 } from "@workspace/sdk"
@@ -76,19 +76,24 @@ export const ordersRouter = {
       tags: TAG,
     })
     .input(z.object({ number: z.string(), token: z.string() }))
-    .output(invoiceViewSchema)
+    .output(publicInvoiceViewSchema)
     .handler(async ({ context, input }) => {
       await enforceLimit(context, "orderGet", "too_many_lookups", "Too many attempts, try again in a few minutes.")
       const order = await context.db.query.orders.findFirst({
         where: and(eq(orders.number, input.number), eq(orders.publicToken, input.token)),
         with: { items: true },
       })
-      if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
+      if (!order) throw publicError("NOT_FOUND", "order_not_found", "Order not found.")
       if (order.status !== "paid" && order.status !== "fulfilled") {
-        throw new ORPCError("NOT_FOUND", { message: "Invoice not available yet." })
+        throw publicError("NOT_FOUND", "order_not_found", "Invoice not available yet.")
       }
       const invoice = await issueInvoice(context.db, order.id, context.now())
-      return { ...invoiceView(order, invoice, await getShopProfile(context.db)), canIssue: false }
+      const {
+        orderId: _orderId,
+        canIssue: _canIssue,
+        ...view
+      } = invoiceView(order, invoice, await getShopProfile(context.db))
+      return view
     }),
 
   /** Only exists with the demo provider (local and preview without gateway keys). */

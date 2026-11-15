@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { createRouterClient } from "@orpc/server"
 import { createDb, invoiceCounters, invoices, orders } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
-import { inArray, like } from "drizzle-orm"
+import { eq, inArray, like } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
@@ -48,25 +48,35 @@ test.skipIf(!url)("a customer gets the invoice of a paid order only with its tok
     address: "1 rue Test",
     locale: "ar",
   }
-  const [paid, pending] = await db
+  const [paid, pending, fulfilled, cancelled] = await db
     .insert(orders)
     .values([
       { ...base, number: `${PREFIX}PAID`, status: "paid" },
       { ...base, number: `${PREFIX}PEND`, status: "pending_payment" },
+      { ...base, number: `${PREFIX}FULF`, status: "fulfilled" },
+      { ...base, number: `${PREFIX}CANC`, status: "paid" },
     ])
     .returning()
+  const ask = (o: { number: string }, token = "secret-token") =>
+    guest.public.orders.invoice({ number: o.number, token })
 
-  const wrong = guest.public.orders.invoice({ number: paid!.number, token: "nope" })
-  await expect(wrong).rejects.toMatchObject({ code: "NOT_FOUND" })
-  await expect(guest.public.orders.invoice({ number: pending!.number, token: "secret-token" })).rejects.toMatchObject({
-    code: "NOT_FOUND",
-  })
+  await expect(ask(paid!, "nope")).rejects.toMatchObject({ code: "NOT_FOUND", data: { reason: "order_not_found" } })
+  await expect(ask({ number: `${PREFIX}NONE` })).rejects.toMatchObject({ code: "NOT_FOUND" })
+  await expect(ask(pending!)).rejects.toMatchObject({ code: "NOT_FOUND" })
 
-  const view = await guest.public.orders.invoice({ number: paid!.number, token: "secret-token" })
+  const view = await ask(paid!)
   expect(view.number).toMatch(/^2095-\d{4}$/)
   expect(view.locale).toBe("ar")
   const json = JSON.stringify(view)
-  for (const leak of ["notifyEmail", "paymentRef", "paymentProvider"]) expect(json).not.toContain(leak)
+  expect(json).not.toContain(paid!.id)
+  expect(view).not.toHaveProperty("orderId")
+  expect(view).not.toHaveProperty("canIssue")
+  expect((await ask(paid!)).number).toBe(view.number)
+  expect((await ask(fulfilled!)).number).not.toBe(view.number)
+
+  await ask(cancelled!)
+  await db.update(orders).set({ status: "cancelled" }).where(eq(orders.id, cancelled!.id))
+  await expect(ask(cancelled!)).rejects.toMatchObject({ code: "NOT_FOUND" })
 
   const ids = (
     await db

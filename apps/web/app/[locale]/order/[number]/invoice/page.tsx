@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/client"
 import { createServerClient } from "@workspace/orpc/server"
 import { InvoiceDocument } from "@workspace/ui/brand/invoice-document"
 import type { Metadata } from "next"
@@ -14,8 +15,10 @@ export default async function InvoicePage({ params, searchParams }: Props) {
   const [{ number }, { t: token }] = await Promise.all([params, searchParams])
   const view = await createServerClient()
     .public.orders.invoice({ number, token: token ?? "" })
-    .catch(() => null)
-  if (!view) notFound()
+    .catch((error: unknown) => {
+      if (error instanceof ORPCError && error.code === "NOT_FOUND") notFound()
+      throw error
+    })
   return (
     <div className="space-y-6 px-4 py-8 print:p-0">
       <div className="mx-auto flex max-w-[210mm] justify-end print:hidden">

@@ -147,3 +147,7 @@ export const invoiceViewSchema = z.object({
   seller: invoiceSellerSchema,
 })
 export type InvoiceView = z.infer<typeof invoiceViewSchema>
+
+/** What a customer gets: no internal id, nothing to issue. */
+export const publicInvoiceViewSchema = invoiceViewSchema.omit({ orderId: true, canIssue: true })
+export type PublicInvoiceView = z.infer<typeof publicInvoiceViewSchema>

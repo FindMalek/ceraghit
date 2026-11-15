@@ -1,4 +1,4 @@
-import { countryName, formatMoney, INVOICE_COPY, type InvoiceView, pick } from "@workspace/sdk"
+import { countryName, formatMoney, INVOICE_COPY, type PublicInvoiceView, pick } from "@workspace/sdk"
 import { LogoMark } from "./logo"
 
 const dateFormat = (iso: string, locale: string) =>
@@ -7,7 +7,7 @@ const dateFormat = (iso: string, locale: string) =>
     timeZone: "Africa/Tunis",
   }).format(new Date(iso))
 
-export function InvoiceDocument({ view }: { view: InvoiceView }) {
+export function InvoiceDocument({ view }: { view: PublicInvoiceView }) {
   const { locale, seller, customer } = view
   const t = INVOICE_COPY[locale]
   const money = (minor: number) => formatMoney(minor, view.currency, locale)
