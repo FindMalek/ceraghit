@@ -1,4 +1,4 @@
-import { count } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 import type { Db } from "../index"
 import { hashPassword } from "../password"
 import {
@@ -11,9 +11,10 @@ import {
   products,
   productVariants,
   settings,
+  shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
-import { buildScenario } from "./scenario"
+import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS } from "./scenario"
 import { localize } from "./translations"
 
 export { buildScenario } from "./scenario"
@@ -41,9 +42,13 @@ export interface SeedOptions {
   catalog?: boolean
   /** Fake orders and placeholder locations so previews have numbers to show. Implies the catalogue. */
   demo?: boolean
+  /** Demo only. "complete" is an onboarded shop, "empty" leaves the profile blank so the onboarding starts. Default "complete". */
+  profile?: "complete" | "empty"
 }
 
 export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean; catalog: boolean; demo: boolean }> {
+  if (opts.demo && process.env.APP_ENV === "production")
+    throw new Error("the demo seed is refused when APP_ENV=production")
   const done = { admin: false, catalog: false, demo: false }
   if (opts.admin?.email && opts.admin.password) {
     const passwordHash = await hashPassword(opts.admin.password)
@@ -79,7 +84,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
             .replace(/^-|-$/g, "")}-${p.ref}`,
           categoryId: categoryId.get(p.category)!,
           title: localize(p.title),
-          description: p.description ? localize(p.description) : null,
+          description: p.description ? localize(p.description) : opts.demo ? (DEMO_DESCRIPTIONS[p.ref] ?? null) : null,
           material: localize(p.material),
           technique: localize(p.technique),
           dimensions: p.dimensions,
@@ -139,21 +144,15 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
     done.catalog = true
 
     if (!opts.demo) return
-    await tx.insert(locations).values([
-      {
-        name: "Atelier Ceraghit (exemple)",
-        address: "Adresse à renseigner dans le dashboard",
-        city: "Tunis",
-        position: 0,
-      },
-      {
-        name: "Atelier Bruxelles (exemple)",
-        address: "Adresse à renseigner dans le dashboard",
-        city: "Bruxelles",
-        country: "Belgique",
-        position: 1,
-      },
-    ])
+    await tx.insert(locations).values(DEMO_LOCATIONS)
+    if ((opts.profile ?? "complete") === "complete") {
+      const now = new Date()
+      const profile = buildDemoProfile(now)
+      await tx.insert(shopProfile).values(profile).onConflictDoUpdate({ target: shopProfile.id, set: profile })
+      if (opts.admin?.email) {
+        await tx.update(admins).set({ nameConfirmedAt: now }).where(eq(admins.email, opts.admin.email.toLowerCase()))
+      }
+    }
     const scenario = buildScenario(
       new Date(),
       rows

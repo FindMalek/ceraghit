@@ -1,12 +1,27 @@
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { getSettings } from "@/lib/api"
-import { LEGAL_DOCS, type LegalDoc, type LegalSection, publisherLines } from "@/lib/legal"
+import {
+  fillIdentity,
+  IDENTITY_TOKENS,
+  type IdentityToken,
+  identity,
+  isDraft,
+  LEGAL_DOCS,
+  type LegalDoc,
+  type LegalSection,
+  publisherLines,
+} from "@/lib/legal"
 
 export async function LegalPage({ doc }: { doc: LegalDoc }) {
   const [t, settings] = await Promise.all([getTranslations("legal"), getSettings()])
   const publisher = doc === "notice" ? publisherLines(settings.profile) : []
   const sections = t.raw(`docs.${doc}.sections`) as LegalSection[]
+  const values = identity(settings)
+  const missing = Object.fromEntries(IDENTITY_TOKENS.map((token) => [token, t(`missing.${token}`)])) as Record<
+    IdentityToken,
+    string
+  >
   return (
     <div className="mx-auto max-w-3xl space-y-10 px-4 py-10">
       <header className="space-y-4 text-center">
@@ -17,10 +32,12 @@ export async function LegalPage({ doc }: { doc: LegalDoc }) {
         <p className="text-muted-foreground">{t(`docs.${doc}.intro`)}</p>
       </header>
 
-      <aside role="note" className="frame space-y-1 bg-card/60 p-4 text-center">
-        <p className="font-heading text-gold">{t("draft")}</p>
-        <p className="text-muted-foreground text-sm">{t("draftNote")}</p>
-      </aside>
+      {isDraft(doc, sections, values) && (
+        <aside role="note" className="frame space-y-1 bg-card/60 p-4 text-center">
+          <p className="font-heading text-gold">{t("draft")}</p>
+          <p className="text-muted-foreground text-sm">{t("draftNote")}</p>
+        </aside>
+      )}
 
       <div className="space-y-8">
         {sections.map((section, index) => (
@@ -31,7 +48,11 @@ export async function LegalPage({ doc }: { doc: LegalDoc }) {
                 <p key={key}>{t.rich(`publisher.${key}`, { value, v: (chunks) => <bdi>{chunks}</bdi> })}</p>
               ))}
             {section.body.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
+              <p key={paragraph}>
+                {fillIdentity(paragraph, values, missing).map((segment, i) =>
+                  segment.token ? <bdi key={`${segment.token}-${i}`}>{segment.text}</bdi> : segment.text,
+                )}
+              </p>
             ))}
           </section>
         ))}

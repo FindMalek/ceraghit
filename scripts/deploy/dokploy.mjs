@@ -225,6 +225,7 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
     WEB_URL: urls.web,
     APP_ENV: "preview",
     PROXY_SECRET: proxySecret,
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
   }
   const web = await deployApp(environment, {
     name: `ceraghit-web${suffix}`,

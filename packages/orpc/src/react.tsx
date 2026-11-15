@@ -3,7 +3,11 @@
 import { createTanstackQueryUtils } from "@orpc/tanstack-query"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { type ReactNode, useState } from "react"
+import { z } from "zod"
 import { createORPCClientUtils } from "./client"
+
+/** zod probes `new Function` to compile validators, which the apps' CSP reports as a violation. */
+z.config({ jitless: true })
 
 /** Browser client: same-origin `/api/rpc`, which the app's route handler proxies to the api. */
 export const { client: browserClient } = createORPCClientUtils({ url: () => `${window.location.origin}/api/rpc` })
