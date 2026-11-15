@@ -38,6 +38,20 @@ Every `step()` leaves `test/e2e/artifacts/screenshots/<project>/<spec>/<test>/<N
 PR with `pnpm pr:screenshots`. The HTML report is in `test/e2e/artifacts/report`, traces and videos of failures in
 `test/e2e/artifacts/test-results`. `artifacts/` is gitignored.
 
+### In CI
+
+The `e2e` job in `.github/workflows/ci.yml` runs the whole suite on every PR and on `main`, in parallel with `lint`,
+`types`, `test` and `build`. It uploads `test/e2e/artifacts/` as the artifact `e2e-artifacts` (screenshots, report,
+`results.json`, traces and videos of failures; 14 days) and writes totals per project and the flaky tests to the job
+summary. Browsers are cached on the Playwright version.
+
+Screenshots of a run for a PR body:
+
+```bash
+gh run download <run-id> -n e2e-artifacts -D /tmp/e2e-<pr>
+pnpm pr:screenshots /tmp/e2e-<pr>/screenshots
+```
+
 ### Writing a spec
 
 - One file per feature: `test/e2e/specs/<feature>.e2e.ts`. Import `test` and `expect` from `../fixtures`.
@@ -54,4 +68,5 @@ PR with `pnpm pr:screenshots`. The HTML report is in `test/e2e/artifacts/report`
 ### Flaky policy
 
 A test that passes only on retry is a bug in the product or in the test and is fixed in the same lane. No `test.skip`
-or `test.fixme` without an open issue number in the reason. Nothing is quarantined at delivery.
+or `test.fixme` without an open issue number in the reason. Nothing is quarantined at delivery. A test listed as flaky in
+the CI job summary is fixed before the PR merges.
