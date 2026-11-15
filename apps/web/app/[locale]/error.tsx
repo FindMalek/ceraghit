@@ -2,9 +2,13 @@
 
 import { Button } from "@workspace/ui/components/button"
 import { useTranslations } from "next-intl"
+import { useEffect } from "react"
 
-export default function ErrorPage({ reset }: { error: Error; reset: () => void }) {
+export default function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
   const t = useTranslations("error")
+  useEffect(() => {
+    console.error("[error]", error)
+  }, [error])
   return (
     <section className="mx-auto flex max-w-xl flex-col items-center gap-6 px-4 py-24 text-center">
       <h1 className="text-4xl">{t("title")}</h1>
