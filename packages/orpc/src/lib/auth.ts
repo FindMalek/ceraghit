@@ -50,10 +50,12 @@ export class AdminAuth {
     return { token, expires }
   }
 
-  async admin(token: string | undefined): Promise<{ id: string; email: string; name: string } | null> {
+  async admin(
+    token: string | undefined,
+  ): Promise<{ id: string; email: string; name: string; nameConfirmedAt: Date | null } | null> {
     if (!token) return null
     const row = await this.db
-      .select({ id: admins.id, email: admins.email, name: admins.name })
+      .select({ id: admins.id, email: admins.email, name: admins.name, nameConfirmedAt: admins.nameConfirmedAt })
       .from(adminSessions)
       .innerJoin(admins, eq(admins.id, adminSessions.adminId))
       .where(and(eq(adminSessions.tokenHash, await sha256(token)), gt(adminSessions.expiresAt, new Date())))

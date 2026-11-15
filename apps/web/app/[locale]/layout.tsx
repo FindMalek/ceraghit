@@ -1,7 +1,6 @@
 import "@workspace/ui/globals.css"
 import { cn } from "@workspace/ui/lib/utils"
 import type { Metadata, Viewport } from "next"
-import { Amiri, Cinzel, Cormorant_Unicase, EB_Garamond, Mrs_Saint_Delafield } from "next/font/google"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { hasLocale, NextIntlClientProvider } from "next-intl"
@@ -14,23 +13,8 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { routing } from "@/i18n/routing"
 import { getCurrency } from "@/lib/currency-server"
+import { FONT_VARIABLES } from "@/lib/fonts"
 import { SITE } from "@/lib/site"
-
-const display = Cormorant_Unicase({
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600"],
-  variable: "--font-display-face",
-  display: "swap",
-})
-const serif = Cinzel({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "600"],
-  variable: "--font-serif-face",
-  display: "swap",
-})
-const body = EB_Garamond({ subsets: ["latin"], variable: "--font-body-face" })
-const script = Mrs_Saint_Delafield({ subsets: ["latin"], weight: "400", variable: "--font-script-face" })
-const arabic = Amiri({ subsets: ["arabic"], weight: ["400", "700"], variable: "--font-arabic-face" })
 
 /** Every page carries the per-request CSP nonce, so none of them can be prerendered. */
 export const dynamic = "force-dynamic"
@@ -81,12 +65,7 @@ export default async function LocaleLayout({
   ])
   const rtl = locale === "ar"
   return (
-    <html
-      lang={locale}
-      dir={rtl ? "rtl" : "ltr"}
-      className={cn(display.variable, serif.variable, body.variable, script.variable, arabic.variable)}
-      suppressHydrationWarning
-    >
+    <html lang={locale} dir={rtl ? "rtl" : "ltr"} className={cn(FONT_VARIABLES)} suppressHydrationWarning>
       <body className="min-h-dvh text-[1.0625rem] leading-relaxed">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers currency={currency} nonce={nonce}>

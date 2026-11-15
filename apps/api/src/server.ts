@@ -87,7 +87,7 @@ export function createServer(services: Services) {
     }
     if (pathname === "/cron/cleanup-uploads") {
       const secret = services.config.cronSecret
-      if (!secret || request.method !== "POST") return new Response("Not found", { status: 404 })
+      if (!secret || request.method !== "POST") return Response.json({ message: "Not found." }, { status: 404 })
       const given = Buffer.from(request.headers.get("authorization") ?? "")
       const wanted = Buffer.from(`Bearer ${secret}`)
       if (given.length !== wanted.length || !timingSafeEqual(given, wanted)) {

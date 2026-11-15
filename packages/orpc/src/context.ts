@@ -25,6 +25,8 @@ export interface Services {
     onlinePayments: boolean
     /** Bearer token of the daily GitHub job that calls /cron/cleanup-uploads. Unset: the route does not exist. */
     cronSecret?: string
+    /** The From header of outgoing mail, read by the setup check for a verified sending domain. */
+    emailFrom?: string
   }
 }
 

@@ -5,7 +5,7 @@ import { ADMIN_COOKIE } from "../../lib/auth"
 import { readCookie, serializeCookie } from "../../lib/cookies"
 import { adminProcedure, publicProcedure } from "../../procedures"
 
-const adminSchema = z.object({ id: z.string(), email: z.string(), name: z.string() })
+const adminSchema = z.object({ id: z.string(), email: z.string(), name: z.string(), nameConfirmed: z.boolean() })
 
 function clientAddress(headers: Headers): string {
   return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip") || "local"
@@ -48,5 +48,8 @@ export const authRouter = {
   me: adminProcedure
     .route({ method: "GET", path: "/admin/me", summary: "The signed-in admin", tags: ["admin"] })
     .output(adminSchema)
-    .handler(({ context }) => context.admin),
+    .handler(({ context }) => {
+      const { nameConfirmedAt, ...admin } = context.admin
+      return { ...admin, nameConfirmed: !!nameConfirmedAt }
+    }),
 }
