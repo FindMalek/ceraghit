@@ -8,6 +8,7 @@ export interface EmailCopy {
     total: string
     link: string
     bye: string
+    reason: string
   }
   confirmation: {
     subject: (orderNumber: string) => string
@@ -31,6 +32,7 @@ export const EMAIL_COPY = {
       total: "Total",
       link: "Suivre votre commande :",
       bye: "Ceraghit Creation",
+      reason: "Vous recevez cet email car vous avez commandé chez Ceraghit Creation.",
     },
     confirmation: {
       subject: (n) => `Votre commande ${n} chez Ceraghit`,
@@ -52,6 +54,7 @@ export const EMAIL_COPY = {
       total: "Total",
       link: "Follow your order:",
       bye: "Ceraghit Creation",
+      reason: "You are receiving this email because you ordered from Ceraghit Creation.",
     },
     confirmation: {
       subject: (n) => `Your Ceraghit order ${n}`,
@@ -73,6 +76,7 @@ export const EMAIL_COPY = {
       total: "المجموع",
       link: "يمكنك متابعة طلبك من هنا:",
       bye: "Ceraghit Creation",
+      reason: "وصلتك هذه الرسالة لأنك طلبت من Ceraghit Creation.",
     },
     confirmation: {
       subject: (n) => `طلبك ${n} من سيراغيت`,

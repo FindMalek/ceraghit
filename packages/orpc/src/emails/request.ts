@@ -1,4 +1,5 @@
 import type { Mail } from "../lib/mailer"
+import { requestHtml } from "./templates"
 
 export interface StudioRequest {
   name: string
@@ -12,11 +13,12 @@ export interface StudioRequest {
   images: unknown[]
 }
 
-export function renderStudioRequest(request: StudioRequest, studio: string): Mail {
+export async function renderStudioRequest(request: StudioRequest, studio: string, webUrl: string): Promise<Mail> {
   return {
     to: studio,
     replyTo: request.email,
     subject: `Nouvelle demande de pièce unique : ${request.name}`,
+    html: await requestHtml(request, webUrl, studio),
     text: [
       `${request.name} <${request.email}>${request.phone ? ` ${request.phone}` : ""}${request.country ? ` (${request.country})` : ""}`,
       "",

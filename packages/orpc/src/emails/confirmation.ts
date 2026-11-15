@@ -3,6 +3,7 @@ import type { Mail } from "../lib/mailer"
 import { asLocale, EMAIL_COPY } from "./copy"
 import { bankBlock, greeting, itemLines, join, type MailOrder, orderFooter, totalLines } from "./layout"
 import { orderUrl } from "./order-url"
+import { confirmationHtml, paymentReceivedHtml, studioOrderHtml } from "./templates"
 
 export interface ConfirmationOrder extends MailOrder {
   locale: string
@@ -26,7 +27,7 @@ export interface MailContext {
   studio: string | null
 }
 
-export function renderOrderConfirmation(order: ConfirmationOrder, ctx: MailContext): Mail {
+export async function renderOrderConfirmation(order: ConfirmationOrder, ctx: MailContext): Promise<Mail> {
   const locale = asLocale(order.locale)
   const c = EMAIL_COPY[locale]
   const k = c.confirmation
@@ -35,6 +36,7 @@ export function renderOrderConfirmation(order: ConfirmationOrder, ctx: MailConte
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
     subject: k.subject(order.number),
+    html: await confirmationHtml(order, ctx),
     text: join(
       [
         ...greeting(c, order.customerName),
@@ -52,14 +54,21 @@ export function renderOrderConfirmation(order: ConfirmationOrder, ctx: MailConte
 }
 
 /** Studio mails stay in French. */
-export function renderStudioNewOrder(order: ConfirmationOrder, studio: string): Mail {
+export async function renderStudioNewOrder(order: ConfirmationOrder, ctx: MailContext, studio: string): Promise<Mail> {
   const c = EMAIL_COPY.fr
   const cod = order.paymentMethod === "cod"
   const transfer = order.paymentMethod === "transfer"
+  const subject = `Nouvelle commande ${order.number}${cod ? " (paiement à la livraison)" : transfer ? " (virement à recevoir)" : ""}`
+  const status = cod
+    ? "Paiement en espèces à la livraison."
+    : transfer
+      ? "Virement bancaire à recevoir, contactez le client pour le suivi."
+      : "Payée en ligne."
   return {
     to: studio,
     replyTo: order.email,
-    subject: `Nouvelle commande ${order.number}${cod ? " (paiement à la livraison)" : transfer ? " (virement à recevoir)" : ""}`,
+    subject,
+    html: await studioOrderHtml(order, { ...ctx, contactEmail: ctx.contactEmail || studio }, subject, status),
     text: join([
       `${order.customerName} <${order.email}> ${order.phone}`,
       `${order.address}, ${[order.postalCode, order.city].filter(Boolean).join(" ")}, ${order.country}`,
@@ -68,23 +77,20 @@ export function renderStudioNewOrder(order: ConfirmationOrder, studio: string): 
       ...itemLines(order, "fr"),
       "",
       ...totalLines(order, "fr", c),
-      cod
-        ? "Paiement en espèces à la livraison."
-        : transfer
-          ? "Virement bancaire à recevoir, contactez le client pour le suivi."
-          : "Payée en ligne.",
+      status,
     ]),
   }
 }
 
 /** Sent when the owner confirms the payment. */
-export function renderPaymentReceived(order: ConfirmationOrder, ctx: MailContext): Mail {
+export async function renderPaymentReceived(order: ConfirmationOrder, ctx: MailContext): Promise<Mail> {
   const locale = asLocale(order.locale)
   const c = EMAIL_COPY[locale]
   return {
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
     subject: c.confirmation.subject(order.number),
+    html: await paymentReceivedHtml(order, ctx),
     text: join(
       [
         ...greeting(c, order.customerName),

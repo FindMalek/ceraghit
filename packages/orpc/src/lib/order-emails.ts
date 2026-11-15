@@ -30,9 +30,15 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
     const loaded = await loadMail(services, orderId)
     if (!loaded) return
     const { order, ctx, studio } = loaded
-    await deliverMail(services, "order_confirmation", renderOrderConfirmation(order, ctx), { orderId, inline: true })
+    await deliverMail(services, "order_confirmation", await renderOrderConfirmation(order, ctx), {
+      orderId,
+      inline: true,
+    })
     if (studio) {
-      await deliverMail(services, "order_studio", renderStudioNewOrder(order, studio), { orderId, inline: true })
+      await deliverMail(services, "order_studio", await renderStudioNewOrder(order, ctx, studio), {
+        orderId,
+        inline: true,
+      })
     }
   } catch (error) {
     console.error("[order emails]", error)
@@ -44,7 +50,7 @@ export async function sendPaymentReceivedEmail(services: Services, orderId: stri
   try {
     const loaded = await loadMail(services, orderId)
     if (!loaded) return
-    await deliverMail(services, "payment_received", renderPaymentReceived(loaded.order, loaded.ctx), {
+    await deliverMail(services, "payment_received", await renderPaymentReceived(loaded.order, loaded.ctx), {
       orderId,
       inline: true,
     })
