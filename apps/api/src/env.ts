@@ -23,7 +23,10 @@ const schema = z
     KONNECT_API_KEY: z.string().optional(),
     KONNECT_WALLET_ID: z.string().optional(),
     KONNECT_MODE: z.enum(["test", "live"]).default("test"),
-    /** Card payment through the gateway. Off: Tunisia pays cash on delivery, the rest by bank transfer. */
+    /**
+     * Default for card payment while the DB has no "payments" settings row. Once the owner saves the payments page in
+     * the dashboard, that row wins. Production still offers card only through live Konnect (gatewayReady).
+     */
     ONLINE_PAYMENTS: flag.default(false),
     /** Lets the daily GitHub job delete files nothing uses any more, see .github/workflows/cleanup-uploads.yml. */
     CRON_SECRET: z.string().min(24).optional(),

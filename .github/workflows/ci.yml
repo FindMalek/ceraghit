@@ -35,6 +35,8 @@ jobs:
       - run: pnpm lint
       - name: AI rules are in sync
         run: pnpm rules:check
+      - name: Script tests
+        run: node --test 'scripts/test/*.test.mjs'
       - name: Schema changes have a migration
         run: |
           pnpm db:generate

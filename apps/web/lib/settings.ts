@@ -23,4 +23,5 @@ export const FALLBACK_SETTINGS: PublicSettings = {
     phones: PHONES,
     email: EMAIL,
   },
+  paymentMethods: { online: false, cod: true, transfer: true },
 }

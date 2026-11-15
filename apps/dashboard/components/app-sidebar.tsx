@@ -3,10 +3,12 @@
 import {
   ArrowSquareOutIcon,
   ChartLineUpIcon,
+  CreditCardIcon,
   EnvelopeSimpleIcon,
   GearIcon,
   MapPinIcon,
   PackageIcon,
+  QuestionIcon,
   ReceiptIcon,
   SignOutIcon,
   TagIcon,
@@ -39,6 +41,7 @@ const NAV = [
   { href: "/orders", label: "Commandes", icon: ReceiptIcon },
   { href: "/requests", label: "Demandes", icon: EnvelopeSimpleIcon },
   { href: "/shipping", label: "Livraison", icon: TruckIcon },
+  { href: "/payments", label: "Paiements", icon: CreditCardIcon },
   { href: "/locations", label: "Ateliers", icon: MapPinIcon },
   { href: "/settings", label: "Réglages", icon: GearIcon },
 ]
@@ -86,6 +89,18 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  size="lg"
+                  tooltip="Aide"
+                  isActive={pathname.startsWith("/help")}
+                  onClick={() => setOpenMobile(false)}
+                  render={<Link href="/help" />}
+                >
+                  <QuestionIcon />
+                  <span>Aide</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Voir la boutique"

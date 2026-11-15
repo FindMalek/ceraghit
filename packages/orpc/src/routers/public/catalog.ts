@@ -15,7 +15,7 @@ import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
-import { getSettings } from "../../lib/settings"
+import { effectivePaymentMethods, getSettings } from "../../lib/settings"
 import { getShopProfile, publicShopProfile } from "../../lib/shop-profile"
 import { publicProcedure } from "../../procedures"
 
@@ -107,12 +107,16 @@ export const catalogRouter = {
     .output(publicSettingsSchema)
     .handler(async ({ context }) => {
       const { bank: _bank, contactEmail: _email, phones: _phones, ...settings } = await getSettings(context.db)
-      const profile = await getShopProfile(context.db)
+      const [profile, paymentMethods] = await Promise.all([
+        getShopProfile(context.db),
+        effectivePaymentMethods(context),
+      ])
       return {
         ...settings,
         contactEmail: profile.email ?? "",
         phones: profile.phones,
-        onlinePayments: context.config.onlinePayments,
+        onlinePayments: paymentMethods.online,
+        paymentMethods,
         profile: publicShopProfile(profile),
       }
     }),

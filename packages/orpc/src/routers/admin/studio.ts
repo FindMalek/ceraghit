@@ -3,15 +3,18 @@ import { locations } from "@workspace/db"
 import {
   locationInputSchema,
   locationSchema,
+  paymentSettingsSchema,
   type ShopProfileInput,
   storageUsageSchema,
   studioSettingsSchema,
   uploadSignSchema,
   uploadTargetSchema,
+  validatePaymentSettings,
 } from "@workspace/sdk"
 import { asc, desc, eq } from "drizzle-orm"
 import { z } from "zod"
-import { getSettings, saveSettings } from "../../lib/settings"
+import { gatewayReady } from "../../lib/payments"
+import { getPaymentSettings, getSettings, savePaymentSettings, saveSettings } from "../../lib/settings"
 import { getShopProfile, updateShopProfile } from "../../lib/shop-profile"
 import { reserveUpload, storageUsage } from "../../lib/uploads"
 import { adminProcedure } from "../../procedures"
@@ -90,6 +93,43 @@ export const settingsRouter = {
       if (input.phones !== undefined) patch.phones = input.phones
       if (Object.keys(patch).length > 0) await updateShopProfile(context.db, patch)
       await saveSettings(context.db, input)
+      return { ok: true as const }
+    }),
+
+  getPayments: adminProcedure
+    .route({
+      method: "GET",
+      path: "/admin/settings/payments",
+      summary: "Payment methods offered at checkout",
+      tags: TAG,
+    })
+    .output(
+      z.object({
+        settings: paymentSettingsSchema,
+        gatewayReady: z.boolean(),
+        gateway: z.object({ name: z.enum(["konnect", "demo"]), mode: z.enum(["test", "live"]) }),
+        appEnv: z.enum(["local", "preview", "production"]),
+      }),
+    )
+    .handler(async ({ context }) => ({
+      settings: await getPaymentSettings(context.db, context.config),
+      gatewayReady: gatewayReady(context),
+      gateway: { name: context.payments.name, mode: context.payments.mode },
+      appEnv: context.config.appEnv,
+    })),
+
+  savePayments: adminProcedure
+    .route({ method: "PUT", path: "/admin/settings/payments", summary: "Switch payment methods on or off", tags: TAG })
+    .input(paymentSettingsSchema)
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      const ready = gatewayReady(context)
+      if (input.methods.online && !ready) {
+        throw new ORPCError("BAD_REQUEST", { message: "Card payment needs the Konnect live keys." })
+      }
+      const invalid = validatePaymentSettings(input, ready)
+      if (invalid) throw new ORPCError("BAD_REQUEST", { message: invalid })
+      await savePaymentSettings(context.db, input)
       return { ok: true as const }
     }),
 }

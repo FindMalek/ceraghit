@@ -1,0 +1,34 @@
+# Every merge to main migrates Neon before the new code ships, so migrations must be additive and only one open PR may
+# add one at a time (the lowest PR number goes first). See scripts/check-migrations.mjs and docs/deploy.md.
+# `labeled`/`unlabeled` re-run it when the owner adds or removes `migration:destructive`.
+
+name: Migrations
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+concurrency:
+  group: migrations-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Additive only, one open migration PR at a time
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALLOW_DESTRUCTIVE: ${{ contains(github.event.pull_request.labels.*.name, 'migration:destructive') }}
+        run: node scripts/check-migrations.mjs --base origin/${{ github.base_ref }} --head HEAD --pr ${{ github.event.pull_request.number }}

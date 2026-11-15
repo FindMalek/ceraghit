@@ -144,7 +144,8 @@
     "backToShop": "Voir la boutique",
     "termsLabel": "J'accepte les <link>conditions générales de vente</link>.",
     "methodTransfer": "Virement bancaire",
-    "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement."
+    "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement.",
+    "noMethod": "Aucun moyen de paiement pour ce pays dans cette devise. Changez de devise ou écrivez-nous."
   },
   "order": {
     "title": "Commande {number}",
