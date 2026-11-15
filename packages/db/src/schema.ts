@@ -221,6 +221,20 @@ export const orders = pgTable(
 )
 
 /** Who moved an order to which status, and why. Written for every admin status change. */
+/** One row per provider. Secrets are AES-256-GCM encrypted (packages/orpc/src/lib/secrets.ts), never plaintext. */
+export const integrationCredentials = pgTable("integration_credentials", {
+  /** "konnect" | "aramex" | "groq" | ...; one row per provider. */
+  provider: text("provider").primaryKey(),
+  /** Non-secret settings (wallet id, mode, account number...). Safe to show. */
+  config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),
+  /** `v1.<iv>.<tag>.<ciphertext>` of a JSON object of secret fields. Null: no secret saved. */
+  secretsEnc: text("secrets_enc"),
+  keyVersion: integer("key_version"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  /** Who last saved or cleared a secret. */
+  updatedBy: uuid("updated_by").references(() => admins.id, { onDelete: "set null" }),
+})
+
 export const orderAudit = pgTable(
   "order_audit",
   {

@@ -39,6 +39,12 @@ holds live keys.
   minor units, currency in `token`. Keep new gateways behind `PaymentProvider`.
 - Pieces are `quoteOnly` (no cart, "ask for a quote") when they are commissions or too expensive for card checkout.
 
+# Provider secrets
+
+- Gateway and carrier keys saved in the dashboard live AES-256-GCM encrypted in `integration_credentials`, master key
+  `SECRETS_KEY` (differs per environment, api only). They are never returned to a client or logged: read them server side
+  with `getSecret(services, provider)`, show only `admin.integrations.*` masks. Details in `docs/secrets.md`.
+
 # Scheduled jobs
 
 - Job shape is in `AGENTS.md`. The scheduler holds only the api URL and `CRON_SECRET` and calls production; previews have

@@ -1,3 +1,4 @@
+import { parseKeyEntry } from "@workspace/orpc/secrets"
 import { z } from "zod"
 
 const flag = z.enum(["true", "false"]).transform((v) => v === "true")
@@ -39,6 +40,10 @@ const schema = z
     MAIL_REDIRECT_TO: z.email().optional(),
     /** Mailpit catcher (pnpm db:up locally, one per preview). Mails go there instead of Resend. Refused in production. */
     MAILPIT_URL: z.url().optional(),
+    /** Master key of the credentials vault: `<version>:<base64 of 32 bytes>`. Differs per environment, never shared. */
+    SECRETS_KEY: z.string().optional(),
+    /** The key being rotated away from (lower version), set only while `secrets:rotate` runs. */
+    SECRETS_KEY_PREVIOUS: z.string().optional(),
     S3_ENDPOINT: z.string().optional(),
     S3_REGION: z.string().default("auto"),
     S3_BUCKET: z.string().optional(),
@@ -48,7 +53,25 @@ const schema = z
   })
   .superRefine((env, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message })
+    const keys: Partial<Record<"SECRETS_KEY" | "SECRETS_KEY_PREVIOUS", { version: number }>> = {}
+    for (const name of ["SECRETS_KEY", "SECRETS_KEY_PREVIOUS"] as const) {
+      const raw = env[name]
+      if (!raw) continue
+      const parsed = parseKeyEntry(raw)
+      if (parsed) keys[name] = parsed
+      else fail(`${name} must be "<version>:<base64 32 bytes>"`)
+    }
+    if (env.SECRETS_KEY_PREVIOUS) {
+      if (!env.SECRETS_KEY) fail("SECRETS_KEY_PREVIOUS needs SECRETS_KEY")
+      else if (
+        keys.SECRETS_KEY &&
+        keys.SECRETS_KEY_PREVIOUS &&
+        keys.SECRETS_KEY_PREVIOUS.version >= keys.SECRETS_KEY.version
+      )
+        fail("SECRETS_KEY_PREVIOUS must have a lower version than SECRETS_KEY")
+    }
     if (env.APP_ENV === "production") {
+      if (!env.SECRETS_KEY) fail("production needs SECRETS_KEY")
       if (env.ONLINE_PAYMENTS) {
         if (env.KONNECT_MODE !== "live") fail("production needs KONNECT_MODE=live")
         if (!env.KONNECT_API_KEY || !env.KONNECT_WALLET_ID)
