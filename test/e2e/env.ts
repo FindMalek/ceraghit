@@ -11,11 +11,19 @@ const s3Port = num("E2E_S3_PORT", 9100)
 const mailUiPort = num("E2E_MAILPIT_UI_PORT", 8025)
 const mailSmtpPort = num("E2E_MAILPIT_SMTP_PORT", 1025)
 
+/** `docker compose down -v` runs on this project, so it must never be the dev project (`ceraghit`). */
+function composeProject(): string {
+  const name = str("E2E_COMPOSE_PROJECT", "ceraghit-e2e")
+  if (!name.startsWith("ceraghit-e2e"))
+    throw new Error(`E2E_COMPOSE_PROJECT must start with "ceraghit-e2e", got "${name}"`)
+  return name
+}
+
 /** Everything the e2e stack needs. Test-only values, never real secrets. Every one can be overridden from the shell. */
 export const E2E = {
   repoRoot: fileURLToPath(new URL("../../", import.meta.url)),
   composeFile: fileURLToPath(new URL("./docker-compose.e2e.yml", import.meta.url)),
-  composeProject: str("E2E_COMPOSE_PROJECT", "ceraghit-e2e"),
+  composeProject: composeProject(),
   ports: {
     web: webPort,
     dashboard: dashboardPort,
@@ -25,7 +33,7 @@ export const E2E = {
     mailUi: mailUiPort,
     mailSmtp: mailSmtpPort,
   },
-  databaseUrl: str("E2E_DATABASE_URL", `postgres://ceraghit:ceraghit@localhost:${dbPort}/ceraghit_e2e`),
+  databaseUrl: `postgres://ceraghit:ceraghit@localhost:${dbPort}/ceraghit_e2e`,
   webUrl: `http://localhost:${webPort}`,
   dashboardUrl: `http://localhost:${dashboardPort}`,
   apiUrl: `http://localhost:${apiPort}`,

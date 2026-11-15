@@ -91,7 +91,7 @@ rmSync(`${E2E.artifacts}screenshots`, { recursive: true, force: true })
 rmSync(`${E2E.artifacts}.auth`, { recursive: true, force: true })
 
 console.info(`e2e prepare: resetting ${E2E.composeProject}`)
-compose("down", "-v", "--remove-orphans")
+compose("down", "-v")
 compose("up", "-d", "--wait")
 
 const dbEnv = {

@@ -27,7 +27,7 @@ bucket. Playwright then starts the api (3001), the storefront (3000) and the das
 - Ports are free by default; prepare fails if 3000, 3001 or 3100 are taken. `E2E_REUSE=1` tests the apps that are
   already running instead, `E2E_SKIP_PREPARE=1` keeps the current database. Every port can be changed with
   `E2E_WEB_PORT`, `E2E_DASHBOARD_PORT`, `E2E_API_PORT`, `E2E_DB_PORT`, `E2E_S3_PORT`, `E2E_MAILPIT_UI_PORT`,
-  `E2E_MAILPIT_SMTP_PORT` and `E2E_COMPOSE_PROJECT` (see `test/e2e/env.ts`).
+  `E2E_MAILPIT_SMTP_PORT` and `E2E_COMPOSE_PROJECT` (must start with `ceraghit-e2e`, it is torn down with `-v`; see `test/e2e/env.ts`).
 - Demo payments live in the api's memory: never restart the api mid-run.
 - Seeded pending online orders auto-cancel when opened: a spec creates its own orders.
 - iPhone 14 runs webkit, so fonts and `-webkit-text-stroke` differ from chromium.

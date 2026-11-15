@@ -20,6 +20,7 @@ test("a product from the shop shows its price", async ({ page, home, step }) => 
   })
   await step("open the first product", async () => {
     await page.getByRole("article").first().getByRole("link").first().click()
+    await expect(page).toHaveURL(/\/product\//)
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
     await expect(page.getByText(PRICE).first()).toBeVisible()
   })

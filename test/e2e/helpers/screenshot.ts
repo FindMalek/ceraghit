@@ -23,6 +23,7 @@ export async function shot(page: Page, testInfo: TestInfo, name: string): Promis
   counters.set(id, n)
   const spec = basename(testInfo.file).replace(/\.e2e\.ts$|\.ts$/, "")
   const file = `${E2E.artifacts}screenshots/${testInfo.project.name}/${spec}/${slug(testInfo.title)}/${String(n).padStart(2, "0")}-${slug(name)}.png`
+  await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: file, fullPage: true })
   await testInfo.attach(name, { path: file, contentType: "image/png" })
   return file
