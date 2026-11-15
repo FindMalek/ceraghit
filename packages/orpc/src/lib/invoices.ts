@@ -64,6 +64,14 @@ export async function issueInvoice(db: Db, orderId: string, now: Date): Promise<
 
   try {
     return await db.transaction(async (tx) => {
+      const [locked] = await tx
+        .select({ status: orders.status })
+        .from(orders)
+        .where(eq(orders.id, orderId))
+        .for("update")
+      if (!locked || !isIssuable(locked.status)) {
+        throw new ORPCError("PRECONDITION_FAILED", { message: "Only paid orders get an invoice." })
+      }
       const [counter] = await tx
         .insert(invoiceCounters)
         .values({ year, last: 1 })

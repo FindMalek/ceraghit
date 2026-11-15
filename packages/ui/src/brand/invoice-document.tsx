@@ -127,7 +127,11 @@ export function InvoiceDocument({ view }: { view: InvoiceView }) {
 
       <p className="invoice-block text-sm">
         {t.paymentMethod} : {t[view.paymentMethod]}.{" "}
-        {view.paidAt ? `${t.paidOn} ${dateFormat(view.paidAt, locale)}.` : `${t.notPaid}.`}
+        {view.paymentMethod === "cod"
+          ? `${t.codDue}.`
+          : view.paidAt
+            ? `${t.paidOn} ${dateFormat(view.paidAt, locale)}.`
+            : `${t.notPaid}.`}
       </p>
 
       {view.paymentMethod === "transfer" && seller.bank && (

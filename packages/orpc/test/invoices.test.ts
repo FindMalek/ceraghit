@@ -70,6 +70,36 @@ describe.skipIf(!url)("invoices", () => {
     expect(await db.select().from(invoices).where(eq(invoices.year, 2092))).toEqual([])
   })
 
+  test("an order cancelled while the invoice waits on its lock gets no invoice and burns no number", async () => {
+    const o = await order("paid")
+    let release!: () => void
+    const held = new Promise<void>((r) => {
+      release = r
+    })
+    let locked!: () => void
+    const ready = new Promise<void>((r) => {
+      locked = r
+    })
+    const canceller = db.transaction(async (tx) => {
+      await tx.select().from(orders).where(eq(orders.id, o.id)).for("update")
+      locked()
+      await held
+      await tx.update(orders).set({ status: "cancelled" }).where(eq(orders.id, o.id))
+    })
+    await ready
+    const issuing = issueInvoice(db, o.id, at("2093-03-01T10:00:00Z"))
+    const outcome = issuing.then(
+      () => "issued",
+      (e: { code?: string }) => e.code,
+    )
+    await new Promise((r) => setTimeout(r, 200))
+    release()
+    await canceller
+    expect(await outcome).toBe("PRECONDITION_FAILED")
+    expect(await db.select().from(invoices).where(eq(invoices.orderId, o.id))).toEqual([])
+    expect(await db.select().from(invoiceCounters).where(eq(invoiceCounters.year, 2093))).toEqual([])
+  })
+
   test("the seller is frozen at issue time and numbers restart each year", async () => {
     const original = await getShopProfile(db)
     try {
