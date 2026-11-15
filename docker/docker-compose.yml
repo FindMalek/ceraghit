@@ -11,6 +11,11 @@ services:
       - "5435:5432"
     volumes:
       - ceraghit-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ceraghit -d ceraghit"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
 volumes:
   ceraghit-pg:
