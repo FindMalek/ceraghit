@@ -63,9 +63,11 @@ export async function createOrder(services: Services, input: OrderInput) {
   const { db, payments, config, now } = services
   const allowed = paymentMethodsFor(input, await effectivePaymentMethods(services), true)
   if (allowed.length === 0) {
-    throw new ORPCError("PRECONDITION_FAILED", {
-      message: "Orders from your country are not available right now. Please contact us.",
-    })
+    throw publicError(
+      "PRECONDITION_FAILED",
+      "country_unavailable",
+      "Orders from your country are not available right now. Please contact us.",
+    )
   }
   const method = input.paymentMethod ?? allowed[0]
   if (!method || !allowed.includes(method)) {

@@ -508,6 +508,7 @@
   "errors": {
     "api": {
       "payment_method_unavailable": "Ce mode de paiement n'est pas disponible pour votre pays.",
+      "country_unavailable": "Les commandes depuis votre pays ne sont pas disponibles pour le moment. Écrivez-nous.",
       "piece_not_found": "Cette pièce n'existe pas.",
       "piece_unavailable": "Une pièce de votre panier n'est plus disponible.",
       "piece_quote_only": "Cette pièce est vendue sur devis, envoyez-nous une demande.",

@@ -501,6 +501,7 @@
   "errors": {
     "api": {
       "payment_method_unavailable": "وسيلة الدفع هذه غير متاحة في بلدك.",
+      "country_unavailable": "الطلبات من بلدك غير متاحة حاليا. راسلنا.",
       "piece_not_found": "هذه القطعة غير موجودة.",
       "piece_unavailable": "قطعة في سلتك لم تعد متاحة.",
       "piece_quote_only": "هذه القطعة تُباع بناءً على عرض سعر، أرسل لنا طلبًا.",

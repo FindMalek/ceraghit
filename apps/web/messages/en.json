@@ -505,6 +505,7 @@
   "errors": {
     "api": {
       "payment_method_unavailable": "This payment method is not available for your country.",
+      "country_unavailable": "Orders from your country are not available right now. Please contact us.",
       "piece_not_found": "This piece does not exist.",
       "piece_unavailable": "A piece in your cart is no longer available.",
       "piece_quote_only": "This piece is sold on quote, please send us a request.",
