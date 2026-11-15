@@ -11,6 +11,7 @@ import {
 import { asc, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 import { getSettings, saveSettings } from "../../lib/settings"
+import { ensureShopProfile } from "../../lib/shop-profile"
 import { reserveUpload, storageUsage } from "../../lib/uploads"
 import { adminProcedure } from "../../procedures"
 
@@ -76,6 +77,7 @@ export const settingsRouter = {
     .input(studioSettingsSchema)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
+      await ensureShopProfile(context.db)
       await saveSettings(context.db, input)
       return { ok: true as const }
     }),
