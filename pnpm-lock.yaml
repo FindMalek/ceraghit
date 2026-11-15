@@ -355,6 +355,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@workspace/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -415,6 +418,10 @@ importers:
         version: 5.9.3
 
   test/e2e:
+    dependencies:
+      postgres:
+        specifier: 'catalog:'
+        version: 3.4.9
     devDependencies:
       '@axe-core/playwright':
         specifier: 4.11.0
@@ -425,6 +432,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6
+      '@workspace/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@workspace/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
@@ -434,9 +444,9 @@ importers:
       aws4fetch:
         specifier: 1.0.20
         version: 1.0.20
-      postgres:
+      drizzle-orm:
         specifier: 'catalog:'
-        version: 3.4.9
+        version: 0.45.4(bun-types@1.4.3)(postgres@3.4.9)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

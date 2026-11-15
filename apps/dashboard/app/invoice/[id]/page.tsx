@@ -1,89 +1,75 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { countryName, formatMoney } from "@workspace/sdk"
+import { type InvoiceLocale, invoiceLocaleSchema } from "@workspace/sdk"
+import { InvoiceDocument } from "@workspace/ui/brand/invoice-document"
 import { Button } from "@workspace/ui/components/button"
-import { use, useEffect } from "react"
-import { formatDate, PAYMENT_TEXT } from "@/lib/copy"
+import { use, useEffect, useState } from "react"
 import { isUnauthorized } from "@/lib/errors"
+
+const LANGUAGES: { id: InvoiceLocale; label: string }[] = [
+  { id: "fr", label: "Français" },
+  { id: "en", label: "English" },
+  { id: "ar", label: "العربية" },
+]
 
 export default function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { data: order, isError, error } = useQuery(orpc.admin.orders.get.queryOptions({ input: { id } }))
+  const queryClient = useQueryClient()
+  const [lang, setLang] = useState<InvoiceLocale | undefined>()
+  useEffect(() => {
+    const asked = invoiceLocaleSchema.safeParse(new URLSearchParams(window.location.search).get("lang"))
+    if (asked.success) setLang(asked.data)
+  }, [])
+  const input = { id, lang }
+  const { data: view, isError, error } = useQuery(orpc.admin.invoices.get.queryOptions({ input }))
+  const issue = useMutation({
+    ...orpc.admin.invoices.issue.mutationOptions(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: orpc.admin.invoices.get.key() }),
+  })
   const expired = isError && isUnauthorized(error)
   useEffect(() => {
     if (expired) window.location.assign("/login")
   }, [expired])
   if (expired) return null
   if (isError) return <p className="p-8">Facture introuvable.</p>
-  if (!order) return <p className="p-8 text-muted-foreground">Chargement…</p>
-  const money = (minor: number) => formatMoney(minor, order.currency, "fr")
+  if (!view) return <p className="p-8 text-muted-foreground">Chargement…</p>
+
+  const current = lang ?? view.orderLocale
   return (
-    <main className="mx-auto max-w-3xl space-y-8 bg-background p-8 print:p-0">
-      <header className="flex justify-between gap-6">
-        <div>
-          <h1 className="text-4xl">Facture {order.number}</h1>
-          <p className="text-muted-foreground">{formatDate(order.createdAt)}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-heading text-xl">Ceraghit Creation</p>
-          <p className="text-muted-foreground">Sabri Ghit</p>
-        </div>
-      </header>
-      <section>
-        <p className="text-muted-foreground text-sm">Facturé à</p>
-        <p>{order.customerName}</p>
-        <p>{order.email}</p>
-        <p>{order.phone}</p>
-        <p>
-          {order.address}, {[order.postalCode, order.city].filter(Boolean).join(" ")},{" "}
-          {countryName(order.country, "fr")}
-        </p>
-      </section>
-      <table className="w-full text-left">
-        <thead className="border-b text-muted-foreground text-sm">
-          <tr>
-            <th className="py-2">Pièce</th>
-            <th className="text-right">Qté</th>
-            <th className="text-right">Prix</th>
-            <th className="text-right">Total</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y">
-          {order.items.map((item) => (
-            <tr key={`${item.ref}-${item.title}`}>
-              <td className="py-2">
-                {item.ref} {item.title}
-              </td>
-              <td className="text-right tabular-nums">{item.quantity}</td>
-              <td className="text-right tabular-nums">{money(item.unitMinor)}</td>
-              <td className="text-right tabular-nums">{money(item.unitMinor * item.quantity)}</td>
-            </tr>
+    <main className="space-y-6 p-4 sm:p-8 print:p-0">
+      <div className="mx-auto flex max-w-[210mm] flex-wrap items-center justify-between gap-3 print:hidden">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-sm">Langue de la facture</span>
+          {LANGUAGES.map((l) => (
+            <Button
+              key={l.id}
+              size="sm"
+              variant={current === l.id ? "default" : "outline"}
+              onClick={() => setLang(l.id)}
+            >
+              {l.label}
+            </Button>
           ))}
-        </tbody>
-      </table>
-      <dl className="ml-auto max-w-xs space-y-1 tabular-nums">
-        <div className="flex justify-between">
-          <dt>Sous-total</dt>
-          <dd>{money(order.subtotalMinor)}</dd>
         </div>
-        <div className="flex justify-between">
-          <dt>Livraison</dt>
-          <dd>{money(order.shippingMinor)}</dd>
+        <div className="flex gap-2">
+          {view.canIssue && (
+            <Button className="h-11" disabled={issue.isPending} onClick={() => issue.mutate({ id, lang })}>
+              Émettre la facture
+            </Button>
+          )}
+          <Button className="h-11" variant="outline" onClick={() => window.print()}>
+            Imprimer ou enregistrer en PDF
+          </Button>
         </div>
-        <div className="flex justify-between border-t pt-1 font-heading text-lg">
-          <dt>Total</dt>
-          <dd>{money(order.totalMinor)}</dd>
-        </div>
-      </dl>
-      <p className="text-muted-foreground text-sm">
-        {PAYMENT_TEXT[order.paymentMethod]}
-        {order.paidAt ? `Payée le ${formatDate(order.paidAt)}.` : "Non encore payée."}
-      </p>
-      <Button className="h-11 print:hidden" onClick={() => window.print()}>
-        Imprimer
-      </Button>
+      </div>
+      {issue.isError && (
+        <p className="mx-auto max-w-[210mm] text-destructive text-sm">Impossible d’émettre la facture.</p>
+      )}
+      <div className="overflow-x-auto print:overflow-visible">
+        <InvoiceDocument view={view} />
+      </div>
     </main>
   )
 }

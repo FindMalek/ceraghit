@@ -11,6 +11,7 @@ import {
 } from "@workspace/sdk"
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
 import { z } from "zod"
+import { tryIssueInvoice } from "../../lib/invoices"
 import { cancelOrder, releaseExpiredHolds } from "../../lib/orders"
 import { adminProcedure } from "../../procedures"
 
@@ -145,6 +146,8 @@ export const ordersRouter = {
           message: `An order that is ${order.status} cannot become ${input.status}.`,
         })
       }
+      if (input.status === "paid" || input.status === "fulfilled")
+        await tryIssueInvoice(context.db, order.id, context.now())
       return { ok: true as const }
     }),
 }

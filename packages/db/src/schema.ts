@@ -275,6 +275,47 @@ export const shopProfile = pgTable("shop_profile", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 })
 
+export type InvoiceSeller = {
+  displayName: string | null
+  legalName: string | null
+  legalForm: string | null
+  taxId: string | null
+  registryNumber: string | null
+  address: string | null
+  postalCode: string | null
+  city: string | null
+  country: string
+  phone: string | null
+  email: string | null
+  invoiceNote: Localized | null
+  bank: { holder: string; bank: string; iban: string; bic: string; rib?: string } | null
+}
+
+/** Gapless yearly counter: the row is locked by the UPDATE, so two issues never get the same number. */
+export const invoiceCounters = pgTable("invoice_counters", {
+  year: integer("year").primaryKey(),
+  last: integer("last").notNull().default(0),
+})
+
+export const invoices = pgTable(
+  "invoices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .unique()
+      .references(() => orders.id, { onDelete: "restrict" }),
+    /** "2026-0001": year and a 4-digit sequence. */
+    number: text("number").notNull().unique(),
+    year: integer("year").notNull(),
+    seq: integer("seq").notNull(),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    /** Seller identity frozen at issue time. */
+    seller: jsonb("seller").$type<InvoiceSeller>().notNull(),
+  },
+  (t) => [uniqueIndex("invoices_year_seq_idx").on(t.year, t.seq)],
+)
+
 export const categoriesRelations = relations(categories, ({ many }) => ({ products: many(products) }))
 export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, { fields: [products.categoryId], references: [categories.id] }),
