@@ -6,6 +6,9 @@ onlyBuiltDependencies:
   - esbuild
   - sharp
 
+overrides:
+  "body-parser@<2.4.0": ">=2.4.0"
+
 catalog:
   "@orpc/client": 1.15.7
   "@orpc/openapi": 1.15.7
