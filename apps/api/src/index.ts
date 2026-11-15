@@ -2,6 +2,7 @@ import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
+import { CRON_JOBS } from "./cron"
 import { loadEnv } from "./env"
 import { createMailer, mailTransport } from "./mailer"
 import { createServer } from "./server"
@@ -44,6 +45,7 @@ const fetch = createServer({
     secureCookies: env.APP_ENV !== "local",
     onlinePayments: env.ONLINE_PAYMENTS,
     cronSecret: env.CRON_SECRET,
+    cronJobs: Object.keys(CRON_JOBS),
     proxySecret: env.PROXY_SECRET,
     emailFrom: env.EMAIL_FROM,
   },

@@ -1,5 +1,6 @@
 export { type AppEnv, type Context, createContext, type Services } from "./context"
 export { AdminAuth } from "./lib/auth"
+export { type JobCounts, type JobOutcome, runJob } from "./lib/jobs"
 export { purgeMailLog } from "./lib/mail-log"
 export {
   ConsoleMailer,
@@ -9,7 +10,7 @@ export {
   RedirectMailer,
   ResendMailer,
 } from "./lib/mailer"
-export { settleOrder } from "./lib/orders"
+export { releaseExpiredHolds, settleOrder } from "./lib/orders"
 export { assertNoDemoInProduction, DemoProvider, KonnectProvider, type PaymentProvider } from "./lib/payments"
 export { sweepRateLimits } from "./lib/rate-limit"
 export { effectivePaymentMethods } from "./lib/settings"

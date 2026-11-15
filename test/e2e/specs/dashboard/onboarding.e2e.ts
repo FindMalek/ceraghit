@@ -153,6 +153,103 @@ test("a required step cannot be skipped", async ({ page, step }) => {
   })
 })
 
+async function signOut(page: Page) {
+  const out = page.getByRole("button", { name: E2E.adminEmail })
+  if (!(await out.isVisible())) await page.getByRole("button", { name: "Menu" }).click()
+  await out.click()
+  await expect(page).toHaveURL(/\/login$/)
+}
+
+const left = (n: number) => new RegExp(`${n} ${n > 1 ? "étapes" : "étape"} à terminer`)
+
+test("the name question does not come back after logout and login, and the name shows in the menu", async ({
+  page,
+  step,
+}) => {
+  await step("answer the name question", async () => {
+    await page.goto(`${E2E.dashboardUrl}/onboarding?step=owner`)
+    await page.getByLabel("Votre prénom et nom").fill(OWNER)
+    await next(page, /profile\/updateOwner/)
+    await expect(page.getByRole("heading", { name: "Votre atelier" })).toBeVisible()
+  })
+  await step("sign out and back in: the wizard resumes after the name", async () => {
+    await page.context().clearCookies()
+    await loginAsOwnerAndWait(page)
+    await page.goto(`${E2E.dashboardUrl}/products`)
+    await expect(page).toHaveURL(/\/onboarding/)
+    await expect(page.getByRole("heading", { name: "Votre atelier" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Comment vous appelez-vous ?" })).toHaveCount(0)
+    expect((await owner())?.name).toBe(OWNER)
+  })
+  await step("the dashboard shows the name", async () => {
+    await completeSetup(db)
+    await page.goto(`${E2E.dashboardUrl}/`)
+    await expect(page.getByRole("heading", { name: "Vue d'ensemble" })).toBeVisible()
+    if (!(await page.getByRole("button", { name: E2E.adminEmail }).isVisible()))
+      await page.getByRole("button", { name: "Menu" }).click()
+    await expect(page.getByRole("button", { name: E2E.adminEmail })).toContainText(OWNER)
+    await signOut(page)
+    await loginAsOwnerAndWait(page)
+    await expect(page.getByRole("heading", { name: "Vue d'ensemble" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Comment vous appelez-vous ?" })).toHaveCount(0)
+  })
+})
+
+test("the progress card and the badges count down as optional steps are skipped", async ({ page, step }) => {
+  await completeSetup(db)
+  const rows = page.getByRole("button", { name: /^Ignorer / })
+  await step("the card and the badge show what is left", async () => {
+    await page.goto(`${E2E.dashboardUrl}/`)
+    await expect(page.getByRole("heading", { name: "Vue d'ensemble" })).toBeVisible()
+    await expect(page.getByText("Terminer la configuration")).toBeVisible()
+    const open = await rows.count()
+    expect(open).toBeGreaterThan(2)
+    await expect(page.getByText(left(open)).locator("visible=true")).toHaveCount(1)
+  })
+  let open = await rows.count()
+  for (const n of [1, 2]) {
+    await step(`skip an optional step (${n})`, async () => {
+      await Promise.all([
+        page.waitForResponse((r) => /setup\/skip/.test(r.url()) && r.request().method() === "POST"),
+        rows.first().click(),
+      ])
+      open -= 1
+      await expect(rows).toHaveCount(open)
+      await expect(page.getByText(left(open)).locator("visible=true")).toHaveCount(1)
+      expect((await shop())?.skippedSteps.length).toBe(n)
+    })
+  }
+  await step("skip them all: the card and the badge are gone", async () => {
+    while ((await rows.count()) > 0) {
+      const before = await rows.count()
+      await Promise.all([
+        page.waitForResponse((r) => /setup\/skip/.test(r.url()) && r.request().method() === "POST"),
+        rows.first().click(),
+      ])
+      await expect(rows).toHaveCount(before - 1)
+    }
+    await expect(page.getByText("Terminer la configuration")).toHaveCount(0)
+    await expect(page.getByText(/à terminer/)).toHaveCount(0)
+  })
+})
+
+test("the gate hides the tab bar and every wizard step fits the screen", async ({ page, step }) => {
+  await step("the gate shows no navigation", async () => {
+    await page.goto(`${E2E.dashboardUrl}/orders`)
+    await expect(page).toHaveURL(/\/onboarding/)
+    await expect(page.getByRole("heading", { name: "Bienvenue dans votre atelier en ligne" })).toBeVisible()
+    await expect(page.getByRole("navigation", { name: "Navigation principale" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0)
+  })
+  for (const name of ["welcome", "owner", "profile", "bank", "shipping", "integrations", "done"]) {
+    await step(`${name} fits without horizontal scroll`, async () => {
+      await page.goto(`${E2E.dashboardUrl}/onboarding?step=${name}`)
+      await expect(page.getByRole("heading").first()).toBeVisible()
+      expect(await page.evaluate(NO_OVERFLOW)).toBe(true)
+    })
+  }
+})
+
 test("re-running the seed keeps the owner name and the shop profile", async ({ page }) => {
   test.setTimeout(180_000)
   await page.goto(`${E2E.dashboardUrl}/onboarding?step=owner`)

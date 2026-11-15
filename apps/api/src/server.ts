@@ -4,18 +4,10 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ResponseHeadersPlugin, SimpleCsrfProtectionHandlerPlugin } from "@orpc/server/plugins"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
-import {
-  appRouter,
-  cleanupUploads,
-  createContext,
-  effectivePaymentMethods,
-  purgeMailLog,
-  type Services,
-  settleOrder,
-  sweepRateLimits,
-} from "@workspace/orpc"
+import { appRouter, createContext, effectivePaymentMethods, runJob, type Services, settleOrder } from "@workspace/orpc"
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
+import { CRON_JOBS, type CronJob } from "./cron"
 
 const DOCS_REDIRECTS = ["/", "/docs"]
 const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
@@ -25,13 +17,13 @@ const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
  *   /rpc/*              oRPC, used by web + dashboard through their /api proxy (needs `x-csrf-token: orpc`)
  *   /v1/*               the same procedures as REST (OpenAPI), docs at /v1/docs, spec at /v1/openapi.json (not in production)
  *   /webhooks/konnect   payment gateway callback, only a hint: the order is settled by re-asking the gateway
- *   /cron/cleanup-uploads   daily job (GitHub Actions, bearer CRON_SECRET): deletes files unused for 30 days and mail logs older than 90 days
+ *   /cron/<name>        scheduled job from `cron.ts` (bearer CRON_SECRET), each run recorded in `job_runs`
  *   /files/<key>        redirect to the CDN or a signed url for an uploaded image
  *   /health             db + payment mode, for Dokploy and uptime checks
  */
 const PAYMENT_REF = /^[A-Za-z0-9_-]{1,100}$/
 
-export function createServer(services: Services) {
+export function createServer(services: Services, jobs: Record<string, CronJob> = CRON_JOBS) {
   const rpc = new RPCHandler(appRouter, {
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
   })
@@ -97,26 +89,18 @@ export function createServer(services: Services) {
         { status: db ? 200 : 503 },
       )
     }
-    if (pathname === "/cron/cleanup-uploads") {
+    if (pathname.startsWith("/cron/")) {
       const secret = services.config.cronSecret
-      if (!secret || request.method !== "POST") return Response.json({ message: "Not found." }, { status: 404 })
+      const name = pathname.slice("/cron/".length)
+      const job = Object.hasOwn(jobs, name) ? jobs[name] : undefined
+      if (!secret || request.method !== "POST" || !job) return Response.json({ message: "Not found." }, { status: 404 })
       const given = Buffer.from(request.headers.get("authorization") ?? "")
       const wanted = Buffer.from(`Bearer ${secret}`)
       if (given.length !== wanted.length || !timingSafeEqual(given, wanted)) {
         return new Response("Unauthorized", { status: 401 })
       }
-      const rateLimits = await sweepRateLimits(services.db, services.now())
-      const mailsPurged = await purgeMailLog(services).catch((error) => {
-        console.error("[cron] mail purge", error instanceof Error ? error.message : "failed")
-        return -1
-      })
-      if (!services.storage) return Response.json({ ok: true, rateLimits, mailsPurged, skipped: "no storage" })
-      return Response.json({
-        ok: true,
-        rateLimits,
-        mailsPurged,
-        ...(await cleanupUploads(services.db, services.storage, services.now())),
-      })
+      const outcome = await runJob(services, name, (now) => job.run(services, now))
+      return Response.json(outcome, { status: outcome.ok ? 200 : 500 })
     }
     if (pathname === "/webhooks/konnect") {
       const ref = url.searchParams.get("payment_ref")

@@ -10,7 +10,7 @@ const TONE = {
   info: "border-gold/60 bg-gold/10 text-primary",
 } as const
 
-function Tone({ tone, children }: { tone: keyof typeof TONE; children: React.ReactNode }) {
+export function Tone({ tone, children }: { tone: keyof typeof TONE; children: React.ReactNode }) {
   return (
     <Badge variant="outline" className={cn("h-6 px-2.5 text-sm", TONE[tone])}>
       {children}

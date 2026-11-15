@@ -10,6 +10,7 @@ import {
 } from "@workspace/sdk"
 import { and, eq, inArray, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
+import { orderUrl } from "../emails/order-url"
 import { publicError } from "../errors"
 import { findProducts } from "./catalog"
 import { tryIssueInvoice } from "./invoices"
@@ -36,7 +37,7 @@ export interface AuditRow {
 }
 
 export async function recordAudit(tx: Tx, row: AuditRow): Promise<void> {
-  await tx.insert(orderAudit).values(row)
+  await tx.insert(orderAudit).values({ ...row, createdAt: sql`clock_timestamp()` })
 }
 
 /**
@@ -51,7 +52,7 @@ async function recordAuditOnce(db: Db, row: AuditRow): Promise<void> {
       .from(orderAudit)
       .where(and(eq(orderAudit.orderId, row.orderId), eq(orderAudit.action, row.action)))
       .limit(1)
-    if (!existing) await tx.insert(orderAudit).values(row)
+    if (!existing) await tx.insert(orderAudit).values({ ...row, createdAt: sql`clock_timestamp()` })
   })
 }
 
@@ -231,11 +232,11 @@ export async function createOrder(services: Services, input: OrderInput) {
     throw publicError("INTERNAL_SERVER_ERROR", "order_failed", "Could not create the order.")
   })
 
-  const orderUrl = `${config.webUrl}/${input.locale}/order/${created.number}?t=${created.publicToken}`
+  const payPageUrl = orderUrl(config.webUrl, { ...created, locale: input.locale })
   if (created.paymentMethod === "cod" || created.paymentMethod === "transfer") {
     await db.update(orders).set({ paymentProvider: created.paymentMethod }).where(eq(orders.id, created.id))
     await sendOrderEmails(services, created.id)
-    return { number: created.number, token: created.publicToken, payUrl: orderUrl }
+    return { number: created.number, token: created.publicToken, payUrl: payPageUrl }
   }
 
   try {
@@ -245,8 +246,8 @@ export async function createOrder(services: Services, input: OrderInput) {
       currency: created.currency,
       customer: { name: created.customerName, email: created.email, phone: created.phone },
       description: `Ceraghit ${created.number}`,
-      successUrl: orderUrl,
-      failUrl: orderUrl,
+      successUrl: payPageUrl,
+      failUrl: payPageUrl,
       webhookUrl: `${config.apiPublicUrl}/webhooks/${payments.name}`,
     })
     await db

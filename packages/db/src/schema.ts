@@ -261,6 +261,21 @@ export const mailLog = pgTable(
   (t) => [index("mail_log_status_idx").on(t.status, t.createdAt)],
 )
 
+/** One row per scheduled job run (`POST /cron/<name>`), kept 90 days. `error` is a short message, never a stack. */
+export const jobRuns = pgTable(
+  "job_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    finishedAt: timestamp("finished_at", { withTimezone: true }),
+    ok: boolean("ok"),
+    counts: jsonb("counts").$type<Record<string, number | string>>().notNull().default({}),
+    error: text("error"),
+  },
+  (t) => [index("job_runs_name_started_idx").on(t.name, t.startedAt.desc())],
+)
+
 /** Every file sent to the bucket (dashboard images, customer photos): what the owner's storage counter adds up. */
 export const uploads = pgTable(
   "uploads",

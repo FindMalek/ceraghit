@@ -1,10 +1,11 @@
 import { demoRef } from "../demo-ref"
-import type { Localized, locations, mailLog, orderAudit, orderItems, orders, shopProfile } from "../schema"
+import type { jobRuns, Localized, locations, mailLog, orderAudit, orderItems, orders, shopProfile } from "../schema"
 
 type NewOrder = typeof orders.$inferInsert
 type NewItem = typeof orderItems.$inferInsert
 type NewAudit = typeof orderAudit.$inferInsert
 type NewMail = typeof mailLog.$inferInsert
+type NewJobRun = typeof jobRuns.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
 
@@ -196,6 +197,24 @@ function rng(seed: number) {
   }
 }
 
+/** What the settings card shows on previews: one stale job, one whose latest run failed, one cut off, one healthy, one that never ran. */
+export function demoJobRuns(now: Date): NewJobRun[] {
+  const ago = (minutes: number) => new Date(now.getTime() - minutes * 60_000)
+  const run = (name: string, minutes: number, rest: Partial<NewJobRun>): NewJobRun => ({
+    name,
+    startedAt: ago(minutes),
+    finishedAt: ago(minutes - 1),
+    ...rest,
+  })
+  return [
+    run("cleanup-uploads", 30 * 60, { ok: true, counts: { rateLimits: 12, mailsPurged: 0, deleted: 3 } }),
+    run("release-holds", 80, { ok: true, counts: { released: 1 } }),
+    run("release-holds", 20, { ok: false, error: "Délai dépassé" }),
+    { name: "track-shipments", startedAt: ago(150), finishedAt: null, ok: null },
+    run("retry-mail", 8, { ok: true, counts: { sent: 2 } }),
+  ]
+}
+
 /** About 45 orders over the last 60 days, ~70% in TND from Tunisia and ~30% in EUR from abroad. */
 export function buildScenario(
   now: Date,
@@ -205,14 +224,16 @@ export function buildScenario(
   items: NewItem[]
   audit: NewAudit[]
   mail: NewMail[]
+  jobRuns: NewJobRun[]
 } {
   const rand = rng(2027)
   const pick = <T>(list: T[]): T => list[Math.floor(rand() * list.length)]!
-  const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[]; mail: NewMail[] } = {
+  const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[]; mail: NewMail[]; jobRuns: NewJobRun[] } = {
     orders: [],
     items: [],
     audit: [],
     mail: [],
+    jobRuns: demoJobRuns(now),
   }
 
   let abroadCount = 0

@@ -157,14 +157,16 @@ describe.skipIf(!url)("manual payment confirmation", () => {
   })
 
   test("paying and cancelling at the same time never leaves a state the audit does not explain", async () => {
-    const o = await order()
-    await Promise.allSettled([
-      owner.orders.markPaidManually(echo(o)),
-      owner.orders.setStatus({ id: o.id, status: "cancelled" }),
-    ])
-    const [row] = await db.select().from(orders).where(eq(orders.id, o.id))
-    const audit = await owner.orders.audit({ id: o.id })
-    expect(audit[0]!.toStatus).toBe(row!.status)
-    expect(audit.filter((a) => a.action === "mark_paid_manually")).toHaveLength(row!.paidAt ? 1 : 0)
+    for (let round = 0; round < 30; round++) {
+      const o = await order()
+      await Promise.allSettled([
+        owner.orders.markPaidManually(echo(o)),
+        owner.orders.setStatus({ id: o.id, status: "cancelled" }),
+      ])
+      const [row] = await db.select().from(orders).where(eq(orders.id, o.id))
+      const audit = await owner.orders.audit({ id: o.id })
+      expect(audit[0]!.toStatus).toBe(row!.status)
+      expect(audit.filter((a) => a.action === "mark_paid_manually")).toHaveLength(row!.paidAt ? 1 : 0)
+    }
   })
 })
