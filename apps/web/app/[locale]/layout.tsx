@@ -1,7 +1,7 @@
 import "@workspace/ui/globals.css"
 import { cn } from "@workspace/ui/lib/utils"
 import type { Metadata, Viewport } from "next"
-import { Almendra_Display, Amiri, Baskervville, EB_Garamond, Mrs_Saint_Delafield } from "next/font/google"
+import { Amiri, Cinzel, Cormorant_Unicase, EB_Garamond, Mrs_Saint_Delafield } from "next/font/google"
 import { notFound } from "next/navigation"
 import { hasLocale, NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server"
@@ -15,8 +15,18 @@ import { routing } from "@/i18n/routing"
 import { getCurrency } from "@/lib/currency-server"
 import { SITE } from "@/lib/site"
 
-const display = Almendra_Display({ subsets: ["latin"], weight: "400", variable: "--font-display-face" })
-const serif = Baskervville({ subsets: ["latin"], variable: "--font-serif-face" })
+const display = Cormorant_Unicase({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600"],
+  variable: "--font-display-face",
+  display: "swap",
+})
+const serif = Cinzel({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "600"],
+  variable: "--font-serif-face",
+  display: "swap",
+})
 const body = EB_Garamond({ subsets: ["latin"], variable: "--font-body-face" })
 const script = Mrs_Saint_Delafield({ subsets: ["latin"], weight: "400", variable: "--font-script-face" })
 const arabic = Amiri({ subsets: ["arabic"], weight: ["400", "700"], variable: "--font-arabic-face" })

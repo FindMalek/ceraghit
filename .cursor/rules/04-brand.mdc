@@ -11,8 +11,8 @@ value there only. The final brand style may replace these values later, so never
 - Dark only: near-black `--brand-ink` with the smoke texture (`/texture.webp`, fixed behind the page).
 - One antique gold `--brand-gold` (#87775e) for rules, headings and decoration; body copy uses `--brand-gold-bright` so
   small text passes AA. Glaze accents (jade, terracotta, ochre) only for charts and status.
-- Fonts: display = Almendra Display (stand-in for the PDF's BlackGothics demo font), headings = Baskervville (Baskerville
-  Old Face), body = EB Garamond (Minion Pro), script = Mrs Saint Delafield (Brittany Signature), Arabic = Amiri.
+- Fonts match the logo's Roman caps: display = Cormorant Unicase 500/600, headings = Cinzel 400/600 (caps only and wide,
+  check 360px), body = EB Garamond, script = Mrs Saint Delafield, Arabic = Amiri. No text stroke on any face.
 - Shapes: sharp corners (`--brand-radius` 2px), thin gold `frame` borders, `ornament` divider, gold-bordered price box,
   small "Référence: 0010" line above the title, numbered sections 01-04.
 - Photos are dark-backed; keep their aspect ratio and frame them, never crop faces of the sculptures.

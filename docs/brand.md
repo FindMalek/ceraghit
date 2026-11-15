@@ -12,12 +12,13 @@ Taken from `Catalogue Ceraghit, Collection 2027`. The only file to edit when the
 | `--brand-radius` | `2px` | the PDF has square frames |
 | `--brand-texture` | `/texture.webp` | the PDF background, fixed behind the page |
 
-Fonts in the PDF and the web stand-ins (the PDF's are demo or paid fonts, not licensed for web):
+Fonts in the PDF and on the web. Titles and headings follow the logo (Roman capitals with an uncial "a"), not the PDF's
+demo fonts:
 
 | PDF | web |
 | :-- | :-- |
-| BlackGothics Demo (titles) | Almendra Display |
-| Baskerville Old Face (product names, prices) | Baskervville |
+| BlackGothics Demo (titles) | Cormorant Unicase 500/600 |
+| Baskerville Old Face (product names, prices) | Cinzel 400/600 |
 | Minion Pro (body) | EB Garamond |
 | Brittany Signature ("Collection 2027") | Mrs Saint Delafield |
 | Lucida Sans Typewriter (section numbers) | tabular figures of the display font |
