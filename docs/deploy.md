@@ -5,8 +5,8 @@ Nothing is shared between the two: see `.cursor/rules/02-environments-and-paymen
 
 ## CI runners
 
-The heavy workflows (CI, preview, staging, deploy) run on self-hosted runners on the-keep (`runs-on: [self-hosted, the-keep]`);
-the small bookkeeping ones (commit lint, project board, PR auto-assign) use GitHub-hosted runners. Three runners, `the-keep-ceraghit-1..3`, live in `/opt/actions-runner/FindMalek/ceraghit-<n>` as
+CI (`ci.yml`) runs on GitHub-hosted `ubuntu-latest`. Preview, staging and deploy run on self-hosted runners on the-keep
+(`runs-on: [self-hosted, the-keep]`); the small bookkeeping ones (commit lint, project board, PR auto-assign) use GitHub-hosted runners. Three runners, `the-keep-ceraghit-1..3`, live in `/opt/actions-runner/FindMalek/ceraghit-<n>` as
 systemd services (`actions.runner.FindMalek-ceraghit.the-keep-ceraghit-<n>`); each runs one job at a time, so three
 keep lint, types, test and build parallel. Node, pnpm and Bun come from the setup actions and are cached on the host.
 
@@ -54,6 +54,10 @@ Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Va
    integration is **disconnected**, so Vercel posts no preview comments; deploys come only from this workflow)
 3. `smoke`: `/health` must report `env:production` (and `konnect:live` if `onlinePayments` is true), storefront and dashboard must answer
 
+Git integration stays disconnected and each `apps/<app>/vercel.json` also sets `git.deploymentEnabled` (`"**": false, "main": true`),
+so only `main` could ever build, even if Git is reconnected by mistake. `migrate` only runs on `refs/heads/main`, so a manual
+"Deploy" run from another branch skips all three jobs.
+
 The api does not migrate itself in production (`BOOTSTRAP=false`). The first real catalogue is loaded once with
 `DATABASE_URL=<neon> pnpm db:seed:catalog`; after that the owner edits everything in the dashboard.
 
@@ -75,7 +79,7 @@ project. The long way, by hand:
 
 **Vercel** (team: yours, Pro): create three projects (`ceraghit-api|web|dashboard`) and set **Root Directory** to `apps/<app>` (with "include source files outside the root directory" on): `deploy.yml` runs the
 CLI from the repo root, and running it inside `apps/<app>` breaks the monorepo file paths (`File does not exist: apps/api/node_modules/...`). `scripts/vercel-setup.sh` sets this for you. Settings → Git →
-never connect (or set "Ignored Build Step" to `exit 0`); add the env vars below to each.
+never connect (`git.deploymentEnabled` in each `apps/<app>/vercel.json` limits builds to `main` anyway); add the env vars below to each.
 Domains: `ceraghit.com` (web, `www` redirects to it), `dashboard.ceraghit.com`, `api.ceraghit.com`.
 
 **DNS for ceraghit.com** (Cloudflare, registrar and nameservers): add each domain in its Vercel project, then create the
