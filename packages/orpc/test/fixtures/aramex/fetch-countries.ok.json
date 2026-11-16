@@ -1,0 +1,25 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "Countries": [
+    {
+      "Code": "TN",
+      "Name": "Tunisia",
+      "IsoCode": "TN",
+      "StateRequired": false,
+      "PostCodeRequired": false,
+      "PostCodeRegex": [],
+      "InternationalCallingNumber": "216"
+    },
+    {
+      "Code": "FR",
+      "Name": "France",
+      "IsoCode": "FR",
+      "StateRequired": false,
+      "PostCodeRequired": true,
+      "PostCodeRegex": ["^\\d{5}$"],
+      "InternationalCallingNumber": "33"
+    }
+  ]
+}

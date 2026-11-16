@@ -1,0 +1,19 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "Shipments": [
+    {
+      "ID": null,
+      "Reference1": "CG-1001",
+      "HasErrors": true,
+      "Notifications": [
+        {
+          "Code": "ERR61",
+          "Message": "Consignee.PartyAddress.City is required"
+        }
+      ],
+      "ShipmentLabel": null
+    }
+  ]
+}

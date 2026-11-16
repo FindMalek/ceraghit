@@ -1,0 +1,10 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "ShipmentNumber": "44001234567",
+  "ShipmentLabel": {
+    "LabelURL": "https://labels.example.test/44001234567.pdf",
+    "LabelFileContents": [37, 80, 68, 70]
+  }
+}

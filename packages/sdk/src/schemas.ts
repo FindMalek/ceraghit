@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { carrierIdSchema } from "./carriers"
 import { SHIPPING_COUNTRIES } from "./countries"
 
 export const currencySchema = z.enum(["TND", "EUR"])
@@ -400,6 +401,15 @@ export const orderItemSchema = z.object({
   quantity: z.number().int(),
 })
 
+export const orderShippingSchema = z.object({
+  carrier: carrierIdSchema,
+  carrierName: z.string().nullable(),
+  trackingNumber: z.string().nullable(),
+  trackingUrl: z.string().nullable(),
+  /** Null on orders shipped before tracking existed: show no date. */
+  shippedAt: z.string().nullable(),
+})
+
 export const orderSchema = z.object({
   number: z.string(),
   status: orderStatusSchema,
@@ -416,6 +426,8 @@ export const orderSchema = z.object({
 /** What the customer sees on their order page: the bank account only while a transfer is still expected. */
 export const publicOrderSchema = orderSchema.extend({
   bank: bankDetailsSchema.nullable(),
+  /** Only once the order is shipped. */
+  shipping: orderShippingSchema.nullable(),
   /** ISO instant an unpaid transfer or cash order is released, null when it never is. */
   payBefore: z.string().nullable(),
 })
@@ -452,6 +464,7 @@ export const adminOrderSchema = orderSchema.extend({
   locale: z.string(),
   paymentProvider: z.string().nullable(),
   paymentRef: z.string().nullable(),
+  shipping: orderShippingSchema.nullable(),
 })
 
 /** Dates are studio days (Africa/Tunis), `YYYY-MM-DD`, both ends included. Filters on the payment date, like the overview. */

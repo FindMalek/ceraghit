@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { formatMoney } from "@workspace/sdk"
+import { carrierDisplayName, formatMoney } from "@workspace/sdk"
 import { buttonVariants } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { cn } from "@workspace/ui/lib/utils"
@@ -68,6 +68,43 @@ export function OrderStatus({ number, token }: { number: string; token: string }
         </p>
         {waiting && !stillWaiting && <Spinner className="mx-auto" />}
       </div>
+
+      {order.shipping && (
+        <section className="frame space-y-3 bg-card/70 p-6">
+          <h2 className="text-3xl">{t("shipping")}</h2>
+          <p>
+            {order.shipping.shippedAt ? (
+              t("shippedOn", {
+                date: new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Africa/Tunis" }).format(
+                  new Date(order.shipping.shippedAt),
+                ),
+                carrier: `\u2066${carrierDisplayName(order.shipping)}\u2069`,
+              })
+            ) : (
+              <bdi dir="ltr">{carrierDisplayName(order.shipping)}</bdi>
+            )}
+          </p>
+          {order.shipping.trackingNumber && (
+            <p className="text-sm">
+              <span className="text-muted-foreground">{t("trackingNo")} </span>
+              <span className="select-all font-mono" dir="ltr">
+                {order.shipping.trackingNumber}
+              </span>
+            </p>
+          )}
+          {order.shipping.trackingUrl && (
+            <a
+              href={order.shipping.trackingUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              dir="ltr"
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }), "h-11")}
+            >
+              {t("trackParcel")}
+            </a>
+          )}
+        </section>
+      )}
 
       {transferPending && order.payBefore && (
         <p className="text-center text-gold">

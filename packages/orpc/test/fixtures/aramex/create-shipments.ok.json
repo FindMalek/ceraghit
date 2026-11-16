@@ -1,0 +1,26 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "Shipments": [
+    {
+      "ID": "44001234567",
+      "Reference1": "CG-1001",
+      "Reference2": "",
+      "HasErrors": false,
+      "Notifications": [],
+      "ShipmentLabel": {
+        "LabelURL": "https://labels.example.test/44001234567.pdf",
+        "LabelFileContents": "JVBERi0xLjQ="
+      },
+      "ShipmentAttachments": [
+        {
+          "Name": "CI",
+          "Type": "CommercialInvoice",
+          "Url": "https://labels.example.test/ci-44001234567.pdf"
+        }
+      ],
+      "SortCode": "TUN"
+    }
+  ]
+}

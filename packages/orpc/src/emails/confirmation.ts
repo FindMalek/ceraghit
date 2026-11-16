@@ -1,10 +1,11 @@
-import type { BankDetails } from "@workspace/sdk"
+import type { CarrierId } from "@workspace/sdk"
+import { type BankDetails, type Currency, carrierDisplayName, formatMoney } from "@workspace/sdk"
 import { invoiceUrl } from "../lib/invoices"
 import type { Mail } from "../lib/mailer"
 import { asLocale, EMAIL_COPY } from "./copy"
-import { bankBlock, greeting, itemLines, join, type MailOrder, orderFooter, totalLines } from "./layout"
+import { bankBlock, greeting, itemLines, join, ltr, type MailOrder, orderFooter, totalLines } from "./layout"
 import { orderUrl } from "./order-url"
-import { confirmationHtml, orderExpiredHtml, paymentReceivedHtml, studioOrderHtml } from "./templates"
+import { confirmationHtml, orderExpiredHtml, paymentReceivedHtml, shippedHtml, studioOrderHtml } from "./templates"
 
 export interface ConfirmationOrder extends MailOrder {
   locale: string
@@ -124,6 +125,44 @@ export async function renderOrderExpired(order: ConfirmationOrder, ctx: MailCont
         "",
         ...itemLines(order, locale),
         ...(ctx.contactEmail ? ["", ctx.contactEmail] : []),
+      ],
+      locale,
+    ),
+  }
+}
+
+export interface MailShipment {
+  carrier: CarrierId
+  carrierName: string | null
+  trackingNumber: string | null
+  trackingUrl: string | null
+}
+
+/** Sent once when the order ships. The carrier is printed as typed, the tracking number and link stay left to right. */
+export async function renderShipped(order: ConfirmationOrder, shipment: MailShipment, ctx: MailContext): Promise<Mail> {
+  const locale = asLocale(order.locale)
+  const c = EMAIL_COPY[locale]
+  const k = c.shipped
+  const cod =
+    order.paymentMethod === "cod" ? k.cod(formatMoney(order.totalMinor, order.currency as Currency, locale)) : null
+  return {
+    to: order.email,
+    replyTo: ctx.contactEmail || undefined,
+    subject: k.subject(order.number),
+    html: await shippedHtml(order, shipment, ctx),
+    text: join(
+      [
+        ...greeting(c, order.customerName),
+        k.intro,
+        "",
+        `${k.carrier}: ${carrierDisplayName(shipment)}`,
+        ...(shipment.trackingNumber ? [`${k.trackingNumber}: ${ltr(shipment.trackingNumber, locale)}`] : []),
+        ...(shipment.trackingUrl ? [`${k.track} ${ltr(shipment.trackingUrl, locale)}`] : []),
+        ...(shipment.trackingNumber || shipment.trackingUrl ? [] : [k.noTracking]),
+        ...(cod ? ["", cod] : []),
+        "",
+        ...itemLines(order, locale),
+        ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order) }, locale),
       ],
       locale,
     ),
