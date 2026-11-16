@@ -1,9 +1,13 @@
+import type { CarrierId } from "@workspace/sdk"
 import { AramexClient, type AramexCredentials } from "./aramex/client"
 import { ARAMEX_HOSTS } from "./aramex/endpoints"
 import { type AramexConfig, AramexShippingProvider, DEFAULT_ARAMEX_CONFIG } from "./aramex/provider"
 import { ShippingError } from "./errors"
 import { ManualShippingProvider } from "./manual"
 import type { ShippingProvider, ShippingProviderId } from "./types"
+
+/** Which carrier an order is recorded under (`CARRIERS`, tracking links via `trackingUrlFor`). Manual has none: the owner picks it. */
+export const PROVIDER_CARRIER: Record<ShippingProviderId, CarrierId | null> = { aramex: "aramex", manual: null }
 
 export interface ShippingDeps {
   aramex?: {

@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
+import { trackingUrlFor } from "@workspace/sdk"
 import {
   type CreateShipmentRequest,
   createShippingProvider,
   ManualShippingProvider,
+  PROVIDER_CARRIER,
   type ShipAddress,
   ShippingError,
 } from "../src/lib/shipping"
@@ -253,4 +255,11 @@ describe("provider factory and safety", () => {
       step: "rate",
     })
   })
+})
+
+test("aramex maps to the aramex carrier and its tracking link", () => {
+  const carrier = PROVIDER_CARRIER.aramex
+  expect(carrier).toBe("aramex")
+  expect(trackingUrlFor(carrier ?? "other", "44001234567")).toContain("ShipmentNumber=44001234567")
+  expect(PROVIDER_CARRIER.manual).toBeNull()
 })
