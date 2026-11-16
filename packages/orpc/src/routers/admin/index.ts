@@ -9,6 +9,7 @@ import { mediaRouter } from "./media"
 import { ordersRouter, requestsRouter } from "./orders"
 import { overview } from "./overview"
 import { profileRouter, setupRouter } from "./profile"
+import { shippingRouter } from "./shipping"
 import { locationsRouter, settingsRouter, uploadsRouter } from "./studio"
 
 /** Every procedure here is built on `adminProcedure` (the `auth` login/logout excepted), see router.test.ts. */
@@ -25,6 +26,7 @@ export const adminRouter = {
   requests: requestsRouter,
   locations: locationsRouter,
   settings: settingsRouter,
+  shipping: shippingRouter,
   uploads: uploadsRouter,
   media: mediaRouter,
   help: helpRouter,

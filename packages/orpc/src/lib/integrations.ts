@@ -20,6 +20,8 @@ export interface ResolvedIntegration {
 type Row = typeof integrationCredentials.$inferSelect
 
 export const UNREADABLE = "Les clés enregistrées sont illisibles. Effacez-les puis saisissez-les à nouveau."
+export const VAULT_KEY_REQUIRED =
+  "Les identifiants enregistrés ne peuvent pas être lus : la clé du coffre (SECRETS_KEY) est absente de ce serveur."
 export const VAULT_UNAVAILABLE = "Le coffre des clés n'est pas configuré sur ce serveur."
 
 const secretFields = (provider: IntegrationProvider): readonly string[] => INTEGRATIONS[provider].secretFields
@@ -190,4 +192,28 @@ export async function rotateSecrets(db: Db, keyring: Keyring): Promise<{ rotated
     }
     return { rotated }
   })
+}
+
+/** True when a row holds sealed secrets, which nothing can read without a key. */
+export async function hasSealedSecrets(db: Db): Promise<boolean> {
+  const rows = await db
+    .select({ provider: integrationCredentials.provider, enc: integrationCredentials.secretsEnc })
+    .from(integrationCredentials)
+  return rows.some((r) => !!r.enc)
+}
+
+/** Boot guard: no key but saved secrets means every provider call would silently fall back, so refuse to start. */
+export async function assertVaultKeyForRows(db: Db, keyring: Keyring | null): Promise<void> {
+  if (!keyring && (await hasSealedSecrets(db))) {
+    throw new Error(
+      "integration_credentials holds secrets but SECRETS_KEY is not set: set the key this data was saved with",
+    )
+  }
+}
+
+/** Using saved credentials without the key is refused with a clear message instead of a silent env fallback. */
+export async function assertVaultReadable(services: Services): Promise<void> {
+  if (!services.secrets && (await hasSealedSecrets(services.db))) {
+    throw new ORPCError("PRECONDITION_FAILED", { message: VAULT_KEY_REQUIRED })
+  }
 }

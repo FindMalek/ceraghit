@@ -4,7 +4,15 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ResponseHeadersPlugin, SimpleCsrfProtectionHandlerPlugin } from "@orpc/server/plugins"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
-import { appRouter, createContext, effectivePaymentMethods, runJob, type Services, settleOrder } from "@workspace/orpc"
+import {
+  appRouter,
+  createContext,
+  effectivePaymentMethods,
+  runJob,
+  type Services,
+  settleOrder,
+  shippingHealth,
+} from "@workspace/orpc"
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
 import { CRON_JOBS, type CronJob } from "./cron"
@@ -83,6 +91,7 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
           ok: db,
           db,
           payments: `${services.payments.name}:${services.payments.mode}`,
+          shipping: db ? await shippingHealth(services) : null,
           onlinePayments: db ? (await effectivePaymentMethods(services)).online : null,
           env: services.config.deployEnv,
         },

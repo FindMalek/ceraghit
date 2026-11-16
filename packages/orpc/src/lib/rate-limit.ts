@@ -20,6 +20,7 @@ export const LIMITS = {
   requestCreate: { max: 5, windowMs: 60 * MINUTE },
   mailDomain: { max: 6, windowMs: 10 * MINUTE },
   mailTest: { max: 5, windowMs: 10 * MINUTE },
+  shippingTest: { max: 10, windowMs: 10 * MINUTE },
   uploadUrl: { max: 12, windowMs: 10 * MINUTE },
   mediaSign: { max: 60, windowMs: 10 * MINUTE },
   mediaConfirm: { max: 60, windowMs: 10 * MINUTE },

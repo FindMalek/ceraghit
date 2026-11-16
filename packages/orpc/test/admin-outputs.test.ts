@@ -11,6 +11,8 @@ const ALLOWED: Record<string, string[]> = {
   "integrations.get": ["secrets"],
   "integrations.list": ["secrets"],
   "integrations.save": ["secrets"],
+  "shipping.getSettings": ["secrets"],
+  "shipping.saveSettings": ["secrets"],
 }
 
 type Procedure = { "~orpc": { outputSchema?: z.ZodType } }
