@@ -169,4 +169,12 @@ describe.skipIf(!url)("manual shipping", () => {
     expect((await guest.public.orders.get({ number: other.number, token: `${token}-b` })).shipping).toBeNull()
     expect(await owner.orders.updateTracking({ id: other.id, carrier: "dhl" }).catch((e) => e.code)).toBe("BAD_REQUEST")
   })
+
+  test("editing the tracking of an order shipped before tracking existed keeps its date empty", async () => {
+    const o = await order({ status: "fulfilled", paymentMethod: "online", paidAt: services.now() })
+    await owner.orders.updateTracking({ id: o.id, carrier: "dhl", trackingNumber: "999" })
+    const after = await row(o.id)
+    expect(after.trackingNumber).toBe("999")
+    expect(after.shippedAt).toBeNull()
+  })
 })

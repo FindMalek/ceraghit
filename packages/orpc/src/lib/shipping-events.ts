@@ -37,6 +37,7 @@ export async function markOrderShipped(
   opts: { adminId?: string | null } = {},
 ): Promise<{ status: "fulfilled" }> {
   const columns = trackingColumns(input)
+  let number = ""
   await services.db.transaction(async (tx) => {
     const [before] = await tx.select({ status: orders.status }).from(orders).where(eq(orders.id, orderId)).for("update")
     if (!before) throw new ORPCError("NOT_FOUND", { message: "Commande introuvable." })
@@ -55,8 +56,9 @@ export async function markOrderShipped(
           or(eq(orders.status, "paid"), and(eq(orders.status, "pending_payment"), eq(orders.paymentMethod, "cod"))),
         ),
       )
-      .returning({ id: orders.id })
+      .returning({ id: orders.id, number: orders.number })
     if (!row) throw new ORPCError("BAD_REQUEST", { message: CANNOT_SHIP })
+    number = row.number
     await recordAudit(tx, {
       orderId,
       adminId: opts.adminId ?? null,
@@ -67,9 +69,8 @@ export async function markOrderShipped(
   })
   try {
     await onOrderShipped(services, orderId)
-  } catch (error) {
-    const number = (await services.db.select({ n: orders.number }).from(orders).where(eq(orders.id, orderId)))[0]?.n
-    console.error("[shipped-hook]", number, error instanceof Error ? error.message : "failed")
+  } catch {
+    console.error("[shipped-hook] failed", number)
   }
   return { status: "fulfilled" }
 }
@@ -84,19 +85,19 @@ export async function updateOrderTracking(services: Services, orderId: string, i
   const columns = trackingColumns(input)
   const [row] = await services.db
     .update(orders)
-    .set({ ...columns, shippedAt: sql`coalesce(${orders.shippedAt}, clock_timestamp())` })
+    .set(columns)
     .where(and(eq(orders.id, orderId), eq(orders.status, "fulfilled")))
     .returning({ id: orders.id })
   if (!row) throw new ORPCError("BAD_REQUEST", { message: "Seule une commande expédiée peut changer de suivi." })
 }
 
 export function toShipping(o: typeof orders.$inferSelect) {
-  if (!o.carrier || !o.shippedAt) return null
+  if (!o.carrier) return null
   return {
     carrier: o.carrier as CarrierId,
     carrierName: o.carrierName,
     trackingNumber: o.trackingNumber,
     trackingUrl: o.trackingUrl,
-    shippedAt: o.shippedAt.toISOString(),
+    shippedAt: o.shippedAt?.toISOString() ?? null,
   }
 }

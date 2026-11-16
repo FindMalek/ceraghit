@@ -1,6 +1,13 @@
 "use client"
 
-import { CopyIcon, EnvelopeSimpleIcon, MagnifyingGlassIcon, PhoneIcon, WhatsappLogoIcon } from "@phosphor-icons/react"
+import {
+  CheckIcon,
+  CopyIcon,
+  EnvelopeSimpleIcon,
+  MagnifyingGlassIcon,
+  PhoneIcon,
+  WhatsappLogoIcon,
+} from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { carrierDisplayName, countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
@@ -170,6 +177,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
   const queryClient = useQueryClient()
   const [pending, setPending] = useState<Action | null>(null)
   const [editTracking, setEditTracking] = useState(false)
+  const [copied, setCopied] = useState(false)
   const setStatus = useMutation(
     orpc.admin.orders.setStatus.mutationOptions({
       onSuccess: () => {
@@ -297,17 +305,23 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                                 <span className="break-all tabular-nums">{order.shipping.trackingNumber}</span>
                                 <Button
                                   variant="ghost"
-                                  size="icon"
-                                  aria-label="Copier le numéro de suivi"
-                                  onClick={() => navigator.clipboard?.writeText(order.shipping!.trackingNumber!)}
+                                  className="size-11"
+                                  aria-label={copied ? "Numéro copié" : "Copier le numéro de suivi"}
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(order.shipping!.trackingNumber!)
+                                    setCopied(true)
+                                    setTimeout(() => setCopied(false), 1500)
+                                  }}
                                 >
-                                  <CopyIcon />
+                                  {copied ? <CheckIcon /> : <CopyIcon />}
                                 </Button>
                               </span>
                             }
                           />
                         )}
-                        <Line label="Expédiée le" value={formatDate(order.shipping.shippedAt)} />
+                        {order.shipping.shippedAt && (
+                          <Line label="Expédiée le" value={formatDate(order.shipping.shippedAt)} />
+                        )}
                       </dl>
                     ) : (
                       <p className="text-muted-foreground">Expédiée, sans suivi enregistré.</p>

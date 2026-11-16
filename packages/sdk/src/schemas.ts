@@ -406,7 +406,8 @@ export const orderShippingSchema = z.object({
   carrierName: z.string().nullable(),
   trackingNumber: z.string().nullable(),
   trackingUrl: z.string().nullable(),
-  shippedAt: z.string(),
+  /** Null on orders shipped before tracking existed: show no date. */
+  shippedAt: z.string().nullable(),
 })
 
 export const orderSchema = z.object({

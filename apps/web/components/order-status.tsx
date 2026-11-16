@@ -73,12 +73,16 @@ export function OrderStatus({ number, token }: { number: string; token: string }
         <section className="frame space-y-3 bg-card/70 p-6">
           <h2 className="text-3xl">{t("shipping")}</h2>
           <p>
-            {t("shippedOn", {
-              date: new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Africa/Tunis" }).format(
-                new Date(order.shipping.shippedAt),
-              ),
-              carrier: carrierDisplayName(order.shipping),
-            })}
+            {order.shipping.shippedAt ? (
+              t("shippedOn", {
+                date: new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Africa/Tunis" }).format(
+                  new Date(order.shipping.shippedAt),
+                ),
+                carrier: `\u2066${carrierDisplayName(order.shipping)}\u2069`,
+              })
+            ) : (
+              <bdi dir="ltr">{carrierDisplayName(order.shipping)}</bdi>
+            )}
           </p>
           {order.shipping.trackingNumber && (
             <p className="text-sm">
