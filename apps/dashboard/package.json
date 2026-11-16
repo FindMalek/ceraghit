@@ -17,6 +17,7 @@
     "@orpc/client": "catalog:",
     "@orpc/tanstack-query": "catalog:",
     "@phosphor-icons/react": "^2.1.10",
+    "@react-pdf/renderer": "^4.9.0",
     "@tanstack/react-query": "catalog:",
     "@workspace/orpc": "workspace:*",
     "@workspace/sdk": "workspace:*",
