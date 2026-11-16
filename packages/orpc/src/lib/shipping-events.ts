@@ -3,6 +3,7 @@ import { orders } from "@workspace/db"
 import { type CarrierId, isHttpsUrl, trackingUrlFor } from "@workspace/sdk"
 import { and, eq, or, sql } from "drizzle-orm"
 import type { Services } from "../context"
+import { sendShippedEmail } from "./order-emails"
 import { recordAudit } from "./orders"
 
 export interface ShipInput {
@@ -75,8 +76,9 @@ export async function markOrderShipped(
   return { status: "fulfilled" }
 }
 
-/** The one place the shipped email plugs in. */
+/** The one place the shipped email plugs in; `hooks` is for tests to observe the call. */
 export async function onOrderShipped(services: Services, orderId: string): Promise<void> {
+  await sendShippedEmail(services, orderId)
   await services.hooks?.orderShipped?.(orderId)
 }
 

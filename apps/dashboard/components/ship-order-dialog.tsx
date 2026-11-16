@@ -112,6 +112,7 @@ export function ShipOrderDialog({
           <DialogTitle>{editing ? "Modifier le suivi" : "Marquer expédiée"}</DialogTitle>
           <DialogDescription>
             Commande {order.number}, {order.customerName}
+            {editing ? null : ". Le client recevra un email avec le suivi."}
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">

@@ -13,11 +13,11 @@ import {
   Text,
 } from "@react-email/components"
 import { render } from "@react-email/render"
-import { type Currency, formatMoney } from "@workspace/sdk"
+import { type Currency, carrierDisplayName, formatMoney } from "@workspace/sdk"
 import type { CSSProperties, ReactNode } from "react"
 import { invoiceUrl } from "../lib/invoices"
 import { mailColors as c, MAIL_SERIF } from "./brand"
-import type { ConfirmationOrder, MailContext } from "./confirmation"
+import type { ConfirmationOrder, MailContext, MailShipment } from "./confirmation"
 import { asLocale, EMAIL_COPY, type Locale } from "./copy"
 import { ltr, type MailOrder } from "./layout"
 import { orderUrl } from "./order-url"
@@ -232,6 +232,50 @@ export function PaymentReceivedEmail({ order, ctx }: { order: ConfirmationOrder;
   )
 }
 
+export function ShippedEmail({
+  order,
+  shipment,
+  ctx,
+}: {
+  order: ConfirmationOrder
+  shipment: MailShipment
+  ctx: MailContext
+}) {
+  const locale = asLocale(order.locale)
+  const c1 = EMAIL_COPY[locale]
+  const k = c1.shipped
+  const tracked = Boolean(shipment.trackingNumber || shipment.trackingUrl)
+  return (
+    <EmailLayout
+      locale={locale}
+      preview={k.subject(order.number)}
+      webUrl={ctx.webUrl}
+      contactEmail={ctx.contactEmail}
+      reason={c1.common.reason}
+    >
+      <Text style={title}>{c1.common.hello(order.customerName)}</Text>
+      <Text style={para}>{k.intro}</Text>
+      <Section
+        dir={locale === "ar" ? "rtl" : "ltr"}
+        style={{ backgroundColor: c.inkSoft, padding: "12px 16px", margin: "16px 0" }}
+      >
+        <Line locale={locale} left={k.carrier} right={carrierDisplayName(shipment)} />
+        {shipment.trackingNumber ? (
+          <Line locale={locale} left={k.trackingNumber} right={ltr(shipment.trackingNumber, locale)} />
+        ) : null}
+        {shipment.trackingUrl ? <TrackLink href={shipment.trackingUrl} locale={locale} label={k.track} /> : null}
+        {tracked ? null : <Text style={para}>{k.noTracking}</Text>}
+      </Section>
+      {order.paymentMethod === "cod" ? (
+        <Text style={para}>{k.cod(formatMoney(order.totalMinor, order.currency as Currency, locale))}</Text>
+      ) : null}
+      <Items order={order} locale={locale} />
+      <TrackLink href={orderUrl(ctx.webUrl, order)} locale={locale} />
+      <Text style={para}>{c1.common.bye}</Text>
+    </EmailLayout>
+  )
+}
+
 export function OrderExpiredEmail({ order, ctx, days }: { order: ConfirmationOrder; ctx: MailContext; days: number }) {
   const k = EMAIL_COPY[asLocale(order.locale)].expired
   return (
@@ -318,6 +362,8 @@ export const confirmationHtml = (order: ConfirmationOrder, ctx: MailContext) =>
   render(<ConfirmationEmail order={order} ctx={ctx} />)
 export const paymentReceivedHtml = (order: ConfirmationOrder, ctx: MailContext) =>
   render(<PaymentReceivedEmail order={order} ctx={ctx} />)
+export const shippedHtml = (order: ConfirmationOrder, shipment: MailShipment, ctx: MailContext) =>
+  render(<ShippedEmail order={order} shipment={shipment} ctx={ctx} />)
 export const studioOrderHtml = (order: ConfirmationOrder, ctx: MailContext, headline: string, status: string) =>
   render(<StudioOrderEmail order={order} ctx={ctx} headline={headline} status={status} />)
 export const requestHtml = (request: StudioRequest, webUrl: string, contactEmail: string) =>
