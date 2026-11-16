@@ -1,5 +1,5 @@
 import type { Db } from "@workspace/db"
-import type { Category, Product } from "@workspace/sdk"
+import { type Category, mediaSrc, type Product } from "@workspace/sdk"
 
 export type ProductRow = Awaited<ReturnType<typeof findProducts>>[number]
 
@@ -9,7 +9,7 @@ export function findProducts(db: Db, opts: Parameters<Db["query"]["products"]["f
     ...opts,
     with: {
       category: true,
-      images: { orderBy: (i, { asc }) => [asc(i.position)] },
+      images: { with: { media: true }, orderBy: (i, { asc, desc }) => [desc(i.isMain), asc(i.position)] },
       variants: { orderBy: (v, { asc }) => [asc(v.position)] },
     },
   })
@@ -47,7 +47,16 @@ export function toProduct(row: ProductRow): Product {
     quoteOnly: row.quoteOnly,
     featured: row.featured,
     status: row.status,
-    images: row.images.map((i) => ({ id: i.id, image: i.image, alt: i.alt })),
+    images: row.images.map((i) => ({
+      id: i.id,
+      mediaId: i.mediaId,
+      image: i.media ? mediaSrc(i.media) : i.image,
+      alt: i.altText ?? i.media?.alt ?? (i.alt ? { fr: i.alt } : null),
+      altOverride: i.altText,
+      isMain: i.isMain,
+      width: i.media?.width ?? null,
+      height: i.media?.height ?? null,
+    })),
     variants,
   }
 }

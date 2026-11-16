@@ -18,7 +18,7 @@ function grepInvert(locale: AppLocale, device: "desktop" | "mobile"): RegExp | u
  * Dashboard specs reset the shop profile, the lockout counters and sessions, which every other spec relies on,
  * so each file runs alone, after the storefront projects, desktop before mobile.
  */
-const DASHBOARD_SPECS = ["auth", "onboarding"] as const
+const DASHBOARD_SPECS = ["auth", "onboarding", "product-gallery"] as const
 const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) =>
   DASHBOARD_SPECS.map((spec, s) => {
     const index = d * DASHBOARD_SPECS.length + s
@@ -31,7 +31,7 @@ const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) 
       use: {
         ...(device === "desktop"
           ? { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }
-          : devices["iPhone 14"]),
+          : devices["Pixel 7"]),
         locale: "fr-FR",
         appLocale: "fr" as AppLocale,
       },
@@ -86,7 +86,7 @@ export default defineConfig<E2EOptions>({
       testIgnore: /dashboard\//,
       grepInvert: grepInvert(locale, "mobile"),
       dependencies: ["setup"],
-      use: { ...devices["iPhone 14"], locale: browserLocale, appLocale: locale },
+      use: { ...devices["Pixel 7"], locale: browserLocale, appLocale: locale },
     })),
     ...DASHBOARD_PROJECTS,
   ],
