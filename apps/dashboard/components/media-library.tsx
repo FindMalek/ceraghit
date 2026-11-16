@@ -92,6 +92,7 @@ export function MediaBrowser({
             <MagnifyingGlassIcon />
           </InputGroupAddon>
           <InputGroupInput
+            className="h-11"
             type="search"
             aria-label="Rechercher une photo"
             placeholder="Rechercher par nom, mot-clé ou description"

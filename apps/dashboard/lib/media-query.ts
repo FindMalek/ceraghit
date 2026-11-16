@@ -56,3 +56,11 @@ export function addTag(tags: string[], raw: string): string[] {
   const tag = raw.trim().toLowerCase().slice(0, 30)
   return !tag || tags.includes(tag) || tags.length >= 12 ? tags : [...tags, tag]
 }
+
+export type TileAction = "choose" | "toggle" | "open"
+
+/** What Enter (or a double click) does on a tile: single picker chooses, multiple picker toggles, the page opens. */
+export function tileEnterAction(mode: { selectable: boolean; multiple: boolean }): TileAction {
+  if (!mode.selectable) return "open"
+  return mode.multiple ? "toggle" : "choose"
+}

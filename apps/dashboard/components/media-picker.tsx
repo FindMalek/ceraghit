@@ -86,9 +86,7 @@ function PickerBody({
             selectable
             onActivate={toggle}
             onToggle={toggle}
-            onChoose={
-              multiple ? (media) => (ids.length ? choose(resolve()) : toggle(media)) : (media) => choose([media])
-            }
+            onChoose={multiple ? undefined : (media) => choose([media])}
             onItems={onItems}
           />
         </TabsContent>

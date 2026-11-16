@@ -7,7 +7,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
 import { type KeyboardEvent, useRef, useState } from "react"
 import { useAppConfig } from "@/components/app-config"
-import { formatDay } from "@/lib/media-query"
+import { formatDay, tileEnterAction } from "@/lib/media-query"
 
 export function MediaGrid({
   items,
@@ -43,8 +43,9 @@ export function MediaGrid({
     if (move(index, event.key)) return event.preventDefault()
     if (event.key === "Enter") {
       event.preventDefault()
-      if (onChoose) onChoose(media)
-      else if (selectable) onToggle(media)
+      const action = tileEnterAction({ selectable, multiple: !onChoose })
+      if (action === "choose") onChoose?.(media)
+      else if (action === "toggle") onToggle(media)
       else onActivate(media)
     }
   }
