@@ -1,0 +1,19 @@
+{
+  "name": "jobs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trigger.dev/sdk": "4.7.3",
+    "@workspace/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@workspace/typescript-config": "workspace:*",
+    "trigger.dev": "4.7.3",
+    "typescript": "catalog:"
+  }
+}

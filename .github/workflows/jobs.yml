@@ -1,0 +1,54 @@
+# Deploys the schedules in apps/jobs to the self-hosted Trigger.dev on the-keep. The tasks only call
+# `POST /cron/<name>` on the api (bearer CRON_SECRET), so the schedule dying never stops the api from serving.
+# Needs the repository variable TRIGGER_PROJECT_REF and the `production` secret TRIGGER_ACCESS_TOKEN, see docs/deploy.md.
+# Skipped until both exist, and never from another branch than main.
+
+name: Deploy jobs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/jobs/**"
+      - "packages/sdk/src/jobs.ts"
+      - "packages/sdk/package.json"
+      - ".github/workflows/jobs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-jobs
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    if: vars.TRIGGER_PROJECT_REF != '' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, the-keep]
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      # The CLI builds the task image here and the webapp pulls it from the registry it was configured with (ghcr.io).
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - run: pnpm install --frozen-lockfile --filter jobs...
+      - name: Deploy the schedules
+        env:
+          TRIGGER_API_URL: https://trigger.findmalek.engineer
+          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+          TRIGGER_PROJECT_REF: ${{ vars.TRIGGER_PROJECT_REF }}
+        # A personal access token, not an environment secret key: `trigger deploy` reads TRIGGER_ACCESS_TOKEN.
+        run: pnpm --filter jobs exec trigger deploy --env prod
