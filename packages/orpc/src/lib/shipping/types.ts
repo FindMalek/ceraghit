@@ -105,7 +105,7 @@ export interface PickupRequest {
   comments?: string
 }
 
-export type ConnectionResult = { ok: true } | { ok: false; code: string; message: string }
+export type ConnectionResult = { ok: true; steps?: string[] } | { ok: false; code: string; message: string }
 
 /** What manual carriers and Aramex both implement; callers never see a provider's wire format. */
 export interface ShippingProvider {
@@ -116,6 +116,10 @@ export interface ShippingProvider {
   getLabel(waybill: string, productGroup: ProductGroup): Promise<ShipmentLabel>
   track(waybills: string[]): Promise<TrackResult[]>
   cancel(waybill: string, reason: string): Promise<{ held: boolean; message: string }>
+  /** Asks whether a pickup window is acceptable before booking it. */
+  validatePickup(
+    req: Pick<PickupRequest, "pickupDate" | "readyTime" | "lastPickupTime" | "closingTime">,
+  ): Promise<{ valid: boolean; message: string | null }>
   createPickup(req: PickupRequest): Promise<{ id: string; guid: string }>
   cancelPickup(guid: string, reason: string): Promise<void>
   testConnection(): Promise<ConnectionResult>

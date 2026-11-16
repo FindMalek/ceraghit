@@ -64,6 +64,39 @@ describe("aramex client", () => {
     expect(error.message).not.toContain("SENTINEL")
   })
 
+  test("raw notifications are redacted too, url-encoded and for known codes, short secrets are left alone", async () => {
+    const body = JSON.stringify({
+      Notifications: [{ Code: "ERR75", Message: "p%40ss%26word and SENTINEL-PASSWORD" }],
+      HasErrors: true,
+    })
+    const http = fake(body).http
+    const odd = new AramexClient({
+      host: "https://ws.dev.aramex.net",
+      credentials: { ...CREDS, password: "p@ss&word", accountPin: "12" },
+      fetch: http,
+      sleep: async () => {},
+    })
+    const error = await odd.fetchCities({}).catch((e) => e)
+    expect(JSON.stringify(error.notifications)).not.toContain("p%40ss%26word")
+    expect(error.notifications[0].message).toContain("SENTINEL-PASSWORD")
+    const short = fake(JSON.stringify({ Notifications: [{ Code: "X", Message: "city 12 unknown" }], HasErrors: true }))
+    const e2 = await new AramexClient({
+      host: "https://ws.dev.aramex.net",
+      credentials: { ...CREDS, accountPin: "12" },
+      fetch: short.http,
+      sleep: async () => {},
+    })
+      .fetchCities({})
+      .catch((e) => e)
+    expect(e2.message).toContain("city 12 unknown")
+    const known = await client(
+      fake(JSON.stringify({ Notifications: [{ Code: "ERR75", Message: "SENTINEL-PIN" }], HasErrors: true })).http,
+    )
+      .fetchCities({})
+      .catch((e) => e)
+    expect(JSON.stringify(known.notifications)).not.toContain("SENTINEL")
+  })
+
   test("a failed shipment inside a HasErrors:false response is still an error", async () => {
     const error = await client(fake(fixture("create-shipments.error")).http)
       .createShipments({ Shipments: [] })

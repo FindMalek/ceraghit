@@ -16,11 +16,15 @@ import type {
 } from "../types"
 import type { AramexClient, AramexRequest } from "./client"
 import { fromWcfDate, toWcfDate } from "./dates"
+import { isAramexUrl } from "./endpoints"
 import { AramexError } from "./errors"
 
 export interface AramexConfig {
   /** Country of the Aramex account: DOM when both ends are in it, EXP otherwise. */
   accountCountry: string
+  /** Aramex account entity (e.g. TUN), sent as OriginEntity. Not the country. */
+  accountEntity: string
+  pickupLocation: string
   productTypes: Record<ProductGroup, string>
   labelReportId: number
   labelReportType: string
@@ -32,6 +36,8 @@ export interface AramexConfig {
 
 export const DEFAULT_ARAMEX_CONFIG: AramexConfig = {
   accountCountry: "TN",
+  accountEntity: "TUN",
+  pickupLocation: "Atelier",
   productTypes: { DOM: "ONP", EXP: "PPX" },
   labelReportId: 9201,
   labelReportType: "URL",
@@ -123,7 +129,7 @@ export class AramexShippingProvider implements ShippingProvider {
     const res = await this.client.calculateRate({
       OriginAddress: address(req.from),
       DestinationAddress: address(req.to),
-      ShipmentDetails: this.details(group, req.parcel, "Ceramics", req.from.country),
+      ShipmentDetails: this.details(group, req.parcel, "Handmade ceramics", req.from.country),
       PreferredCurrencyCode: req.currency,
     })
     // Never convert: an answer in another currency is no answer
@@ -197,12 +203,12 @@ export class AramexShippingProvider implements ShippingProvider {
     const res = await this.client.printLabel({
       ShipmentNumber: waybill,
       ProductGroup: productGroup,
-      OriginEntity: this.config.accountCountry,
+      OriginEntity: this.config.accountEntity,
       LabelInfo: { ReportID: this.config.labelReportId, ReportType: this.config.labelReportType },
     })
     const url = res.ShipmentLabel?.LabelURL ?? null
     let pdf = decodeLabel(res.ShipmentLabel?.LabelFileContents)
-    if (!pdf && url) pdf = await this.download(url)
+    if (!pdf && url && isAramexUrl(url)) pdf = await this.download(url)
     return { url, pdf }
   }
 
@@ -248,12 +254,22 @@ export class AramexShippingProvider implements ShippingProvider {
     return { held: true, message: HOLD_MESSAGE }
   }
 
+  async validatePickup(req: Parameters<ShippingProvider["validatePickup"]>[0]) {
+    const res = await this.client.validatePickup({
+      PickupDate: toWcfDate(req.pickupDate),
+      ReadyTime: toWcfDate(req.readyTime),
+      LastPickupTime: toWcfDate(req.lastPickupTime),
+      ClosingTime: toWcfDate(req.closingTime),
+    })
+    return { valid: true, message: res.Notifications[0]?.Message ?? null }
+  }
+
   async createPickup(req: PickupRequest) {
     const res = await this.client.createPickup({
       Pickup: {
         PickupAddress: address(req.address),
         PickupContact: contact(req.address),
-        PickupLocation: "Reception",
+        PickupLocation: this.config.pickupLocation,
         PickupDate: toWcfDate(req.pickupDate),
         ReadyTime: toWcfDate(req.readyTime),
         LastPickupTime: toWcfDate(req.lastPickupTime),
@@ -274,7 +290,7 @@ export class AramexShippingProvider implements ShippingProvider {
         ],
         ExistingShipments: req.waybills.map((number) => ({
           Number: number,
-          OriginEntity: this.config.accountCountry,
+          OriginEntity: this.config.accountEntity,
           ProductGroup: req.productGroup,
         })),
       },
@@ -289,9 +305,23 @@ export class AramexShippingProvider implements ShippingProvider {
   }
 
   async testConnection() {
+    const steps: string[] = []
     try {
-      await this.client.fetchCities({ CountryCode: this.config.accountCountry, NameStartsWith: "Tun" })
-      return { ok: true as const }
+      await this.client.fetchCountries()
+      steps.push("FetchCountries")
+      await this.client.calculateRate({
+        OriginAddress: { City: "Tunis", CountryCode: "TN" },
+        DestinationAddress: { City: "Sousse", CountryCode: "TN" },
+        ShipmentDetails: this.details(
+          "DOM",
+          { weightGrams: 500, lengthCm: 10, widthCm: 10, heightCm: 10, pieces: 1 },
+          "Handmade ceramics",
+          "TN",
+        ),
+        PreferredCurrencyCode: "TND",
+      })
+      steps.push("CalculateRate")
+      return { ok: true as const, steps }
     } catch (error) {
       if (error instanceof AramexError) return { ok: false as const, code: error.code, message: error.message }
       throw error

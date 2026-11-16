@@ -18,3 +18,19 @@ export type AramexService = "Shipping" | "RateCalculator" | "Tracking" | "Locati
 export function serviceUrl(host: string, service: AramexService, operation: string): string {
   return `${host.replace(/\/+$/, "")}/ShippingAPI.V2/${service}/Service_1_0.svc/json/${operation}`
 }
+
+const ALLOWED_HOSTS = new Set(Object.values(ARAMEX_HOSTS).map((h) => new URL(h).hostname))
+
+/** Label URLs come from a provider response: only https on an Aramex host is ever fetched. */
+export function isAramexUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return (
+      url.protocol === "https:" &&
+      url.port === "" &&
+      (ALLOWED_HOSTS.has(url.hostname) || url.hostname.endsWith(".aramex.net"))
+    )
+  } catch {
+    return false
+  }
+}

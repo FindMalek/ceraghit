@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import {
   type CreateShipmentRequest,
+  createShippingProvider,
   ManualShippingProvider,
   type ShipAddress,
   ShippingError,
@@ -143,5 +144,87 @@ describe("aramex provider", () => {
     expect(await m.quote()).toBeNull()
     expect(await m.track()).toEqual([])
     expect((await m.createShipment().catch((e) => e)).code).toBe("unsupported")
+  })
+})
+
+describe("provider factory and safety", () => {
+  const deps = (mode: "test" | "live", config = {}, f?: typeof fetch) => ({
+    aramex: {
+      credentials: { ...CREDS, accountCountryCode: "FR", accountEntity: "PAR" },
+      mode,
+      config,
+      ...(f ? { fetch: f } : {}),
+    },
+  })
+
+  test("live refuses to build on unverified defaults, test does not", () => {
+    expect(() => createShippingProvider("aramex", deps("live"))).toThrow()
+    const explicit = {
+      productTypes: { DOM: "ONP", EXP: "PPX" },
+      labelReportId: 9201,
+      paymentType: "P",
+      deliveredCodes: ["SH005"],
+    }
+    expect(createShippingProvider("aramex", deps("live", explicit)).id).toBe("aramex")
+    expect(createShippingProvider("aramex", deps("test")).id).toBe("aramex")
+  })
+
+  test("account country and entity come from the credentials", async () => {
+    const calls: any[] = []
+    const f = (async (_: unknown, init?: RequestInit) => {
+      calls.push(JSON.parse(String(init?.body)))
+      return new Response(fixture("print-label.ok"))
+    }) as typeof fetch
+    const p = createShippingProvider("aramex", deps("test", {}, f))
+    await p.getLabel("1", "DOM")
+    expect(calls[0].OriginEntity).toBe("PAR")
+    const q = await createShippingProvider("aramex", deps("test", {}, f)).validatePickup({
+      pickupDate: new Date(0),
+      readyTime: new Date(0),
+      lastPickupTime: new Date(0),
+      closingTime: new Date(0),
+    })
+    expect(q.valid).toBe(true)
+  })
+
+  test("label urls are only fetched over https on an aramex host", async () => {
+    const fetched: string[] = []
+    const label = (url: string) =>
+      JSON.stringify({ HasErrors: false, Notifications: [], ShipmentLabel: { LabelURL: url } })
+    for (const url of [
+      "http://labels.aramex.net/a.pdf",
+      "https://evil.example.test/a.pdf",
+      "https://169.254.169.254/a.pdf",
+      "https://127.0.0.1/a.pdf",
+    ]) {
+      const f = (async (input: RequestInfo | URL) => {
+        if (String(input) !== "https://ws.dev.aramex.net/ShippingAPI.V2/Shipping/Service_1_0.svc/json/PrintLabel")
+          fetched.push(String(input))
+        return new Response(label(url))
+      }) as typeof fetch
+      await createShippingProvider("aramex", deps("test", {}, f)).getLabel("1", "DOM")
+    }
+    expect(fetched).toEqual([])
+    const f = (async (input: RequestInfo | URL) => {
+      if (String(input).includes("PrintLabel")) return new Response(label("https://labels.aramex.net/a.pdf"))
+      fetched.push(String(input))
+      return new Response("PDF")
+    }) as typeof fetch
+    const res = await createShippingProvider("aramex", deps("test", {}, f)).getLabel("1", "DOM")
+    expect(fetched).toEqual(["https://labels.aramex.net/a.pdf"])
+    expect(res.pdf).not.toBeNull()
+  })
+
+  test("per-call timeout and retries reach the client", async () => {
+    let n = 0
+    const f = (async () => {
+      n++
+      throw Object.assign(new Error("t"), { name: "TimeoutError" })
+    }) as unknown as typeof fetch
+    const p = createShippingProvider("aramex", {
+      aramex: { ...deps("test", {}, f).aramex, retries: 0, timeoutMs: 4000 },
+    })
+    await p.track(["1"]).catch(() => {})
+    expect(n).toBe(1)
   })
 })

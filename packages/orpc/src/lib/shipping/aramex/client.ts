@@ -64,6 +64,13 @@ export const OPERATIONS = {
   ),
   printLabel: op("Shipping", "PrintLabel", s.labelPrintingRequestSchema, s.labelPrintingResponseSchema, true),
   createPickup: op("Shipping", "CreatePickup", s.pickupCreationRequestSchema, s.pickupCreationResponseSchema, false),
+  validatePickup: op(
+    "Shipping",
+    "ValidatePickup",
+    s.pickupValidationRequestSchema,
+    s.pickupValidationResponseSchema,
+    true,
+  ),
   cancelPickup: op(
     "Shipping",
     "CancelPickup",
@@ -214,6 +221,7 @@ export class AramexClient {
   createShipments = (b: AramexRequest<"createShipments">) => this.call("createShipments", b)
   printLabel = (b: AramexRequest<"printLabel">) => this.call("printLabel", b)
   createPickup = (b: AramexRequest<"createPickup">) => this.call("createPickup", b)
+  validatePickup = (b: AramexRequest<"validatePickup">) => this.call("validatePickup", b)
   cancelPickup = (b: AramexRequest<"cancelPickup">) => this.call("cancelPickup", b)
   holdShipments = (b: AramexRequest<"holdShipments">) => this.call("holdShipments", b)
   printCommercialInvoice = (b: AramexRequest<"printCommercialInvoice">) => this.call("printCommercialInvoice", b)

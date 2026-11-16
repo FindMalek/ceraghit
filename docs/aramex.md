@@ -23,3 +23,13 @@ country code. Password and PIN go in the vault (`docs/secrets.md`), the rest are
 Test host (`ws.dev.aramex.net`), WCF date format, `LabelFileContents` shape, `Version`/`Source`, label and invoice
 `ReportID`, ProductType codes, PaymentType, `CODS`/`INSR` service codes, tracking `UpdateCode` values (`SH005` delivered),
 Contact `Type`, unit strings. All of them live in `endpoints.ts` and `aramex/provider.ts` (`AramexConfig`).
+
+## Live guard and limits
+
+- `createShippingProvider` refuses `mode: "live"` unless `productTypes`, `labelReportId`, `paymentType` and `deliveredCodes`
+  are passed explicitly: the defaults are unverified guesses and only apply in `test` mode (until #198 verifies them).
+- `accountCountry` and `accountEntity` (sent as `OriginEntity`, e.g. `TUN`) come from the saved credentials.
+- Per call `timeoutMs` and `retries` (e.g. 4 s and 0 for checkout quotes, 20 s and 0 for creating a shipment).
+- A `LabelURL` is only downloaded over `https` from an Aramex host, never an arbitrary address.
+- `testConnection` runs FetchCountries then a Tunis to Sousse CalculateRate and returns the steps it passed.
+- Tracking URLs are not part of `ShippingProvider` (carrier registry, #274).

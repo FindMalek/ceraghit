@@ -262,3 +262,12 @@ export const addressServiceabilityRequestSchema = z.object({
 export const addressServiceabilityResponseSchema = z
   .object({ ...base, IsServiced: z.boolean().nullish() })
   .passthrough()
+
+export const pickupValidationRequestSchema = z.object({
+  PickupDate: z.string(),
+  ReadyTime: z.string(),
+  LastPickupTime: z.string(),
+  ClosingTime: z.string(),
+  Vehicle: z.string().optional(),
+})
+export const pickupValidationResponseSchema = z.object({ ...base }).passthrough()

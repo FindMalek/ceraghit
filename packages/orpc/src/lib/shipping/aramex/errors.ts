@@ -12,6 +12,18 @@ const KNOWN: Record<string, string> = {
 const BAD_RESPONSE = "Réponse inattendue d'Aramex. Réessayez dans un instant."
 const UNREACHABLE = "Aramex ne répond pas. Réessayez dans un instant."
 
+/** Secrets shorter than this would blank out ordinary words, so they are not masked. */
+const MIN_SECRET = 4
+
+export function redact(text: string, secrets: string[]): string {
+  let out = text
+  for (const secret of secrets) {
+    if (secret.length < MIN_SECRET) continue
+    for (const form of new Set([secret, encodeURIComponent(secret)])) out = out.split(form).join("***")
+  }
+  return out
+}
+
 /** Owner-facing. `message` never holds the request body or a credential. */
 export class AramexError extends Error {
   readonly code: string
@@ -26,8 +38,11 @@ export class AramexError extends Error {
     httpStatus?: number | null
     secrets?: string[]
   }) {
-    const notifications = init.notifications ?? []
-    super(AramexError.describe(init.code, notifications, init.secrets ?? []))
+    const notifications = (init.notifications ?? []).map((n) => ({
+      code: redact(n.code, init.secrets ?? []),
+      message: redact(n.message, init.secrets ?? []),
+    }))
+    super(AramexError.describe(init.code, notifications))
     this.name = "AramexError"
     this.code = init.code
     this.notifications = notifications
@@ -39,15 +54,14 @@ export class AramexError extends Error {
     return GUEST_MESSAGE
   }
 
-  private static describe(code: string, notifications: AramexNotification[], secrets: string[]): string {
+  private static describe(code: string, notifications: AramexNotification[]): string {
     if (KNOWN[code]) return KNOWN[code]
     if (code === "BAD_RESPONSE") return BAD_RESPONSE
     if (code === "UNREACHABLE" || code === "TIMEOUT") return UNREACHABLE
-    let text = notifications
+    const text = notifications
       .map((n) => n.message)
       .join(" ")
       .trim()
-    for (const secret of secrets) if (secret) text = text.split(secret).join("***")
     return text ? `Aramex a refusé la demande : ${text}` : "Aramex a refusé la demande."
   }
 }

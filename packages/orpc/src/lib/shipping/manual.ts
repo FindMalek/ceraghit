@@ -19,6 +19,9 @@ export class ManualShippingProvider implements ShippingProvider {
   async cancel(): Promise<never> {
     throw new ShippingError("unsupported")
   }
+  async validatePickup(): Promise<never> {
+    throw new ShippingError("unsupported")
+  }
   async createPickup(): Promise<never> {
     throw new ShippingError("unsupported")
   }
