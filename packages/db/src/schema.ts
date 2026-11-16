@@ -15,6 +15,17 @@ import {
 /** French is the base language, `en` and `ar` fill in as translations are added. */
 export type Localized = { fr: string; en?: string; ar?: string }
 
+export const siteImageSlot = pgEnum("site_image_slot", [
+  "hero",
+  "studio",
+  "process",
+  "logo",
+  "og-home",
+  "og-shop",
+  "og-atelier",
+  "og-custom",
+  "texture",
+])
 export const currency = pgEnum("currency", ["TND", "EUR"])
 export const productStatus = pgEnum("product_status", ["draft", "published", "archived"])
 export const orderStatus = pgEnum("order_status", ["pending_payment", "paid", "fulfilled", "cancelled", "refunded"])
@@ -144,6 +155,24 @@ export const productImages = pgTable(
     index("product_images_product_idx").on(t.productId),
     uniqueIndex("product_images_main_idx").on(t.productId).where(sql`${t.isMain}`),
   ],
+)
+
+/** The named pictures of the storefront (hero slides, logo, share images...). `SITE_SLOTS` in the sdk describes each slot. */
+export const siteImages = pgTable(
+  "site_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slot: siteImageSlot("slot").notNull(),
+    mediaId: uuid("media_id")
+      .notNull()
+      .references(() => media.id, { onDelete: "restrict" }),
+    position: integer("position").notNull().default(0),
+    /** Override, falls back to `media.alt`. */
+    alt: jsonb("alt").$type<Localized>(),
+    visible: boolean("visible").notNull().default(true),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("site_images_slot_idx").on(t.slot, t.position)],
 )
 
 /**

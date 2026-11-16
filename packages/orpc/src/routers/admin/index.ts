@@ -10,6 +10,7 @@ import { ordersRouter, requestsRouter } from "./orders"
 import { overview } from "./overview"
 import { profileRouter, setupRouter } from "./profile"
 import { shippingRouter } from "./shipping"
+import { siteRouter } from "./site"
 import { locationsRouter, settingsRouter, uploadsRouter } from "./studio"
 
 /** Every procedure here is built on `adminProcedure` (the `auth` login/logout excepted), see router.test.ts. */
@@ -29,6 +30,7 @@ export const adminRouter = {
   shipping: shippingRouter,
   uploads: uploadsRouter,
   media: mediaRouter,
+  site: siteRouter,
   help: helpRouter,
   profile: profileRouter,
   setup: setupRouter,
