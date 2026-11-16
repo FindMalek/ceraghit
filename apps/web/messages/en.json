@@ -181,6 +181,7 @@
     "codText": "Thank you, your order is confirmed. You pay in cash on delivery, the studio will contact you to arrange it.",
     "transferTitle": "Order reserved",
     "transferText": "Thank you. Make the transfer with the reference below, we ship as soon as it arrives. You also get these details by email.",
+    "payBefore": "Please pay before {date}",
     "bankTitle": "Bank details",
     "holder": "Account holder",
     "bank": "Bank",

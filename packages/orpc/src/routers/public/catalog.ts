@@ -50,7 +50,7 @@ export const catalogRouter = {
     .input(productQuerySchema)
     .output(z.array(productSchema))
     .handler(async ({ context, input }) => {
-      await sweepExpiredHolds(context.db, context.now())
+      await sweepExpiredHolds(context, context.now())
       const [category] = input.category
         ? await context.db
             .select({ id: categories.id })
@@ -86,7 +86,7 @@ export const catalogRouter = {
     .input(z.object({ slug: z.string() }))
     .output(productSchema)
     .handler(async ({ context, input }) => {
-      await sweepExpiredHolds(context.db, context.now())
+      await sweepExpiredHolds(context, context.now())
       const [row] = await findProducts(context.db, {
         where: and(eq(products.slug, input.slug), eq(products.status, "published")),
         limit: 1,

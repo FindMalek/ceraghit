@@ -95,3 +95,13 @@ test("demo job runs cover stale, failed, interrupted, healthy and never run", ()
   expect(latest("retry-mail")).toMatchObject({ ok: true })
   expect(latest("ai-usage-rollover")).toBeUndefined()
 })
+
+test("unpaid offline orders are younger than the default 7 day window, one is about to expire", () => {
+  const now = new Date("2026-10-22T12:00:00Z")
+  const pending = buildScenario(now, products).orders.filter(
+    (o) => o.status === "pending_payment" && o.paymentMethod !== "online",
+  )
+  const ages = pending.map((o) => (now.getTime() - o.createdAt!.getTime()) / 864e5)
+  expect(ages.every((age) => age < 7)).toBe(true)
+  expect(ages.some((age) => age >= 5)).toBe(true)
+})

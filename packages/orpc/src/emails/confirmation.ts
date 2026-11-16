@@ -4,7 +4,7 @@ import type { Mail } from "../lib/mailer"
 import { asLocale, EMAIL_COPY } from "./copy"
 import { bankBlock, greeting, itemLines, join, type MailOrder, orderFooter, totalLines } from "./layout"
 import { orderUrl } from "./order-url"
-import { confirmationHtml, paymentReceivedHtml, studioOrderHtml } from "./templates"
+import { confirmationHtml, orderExpiredHtml, paymentReceivedHtml, studioOrderHtml } from "./templates"
 
 export interface ConfirmationOrder extends MailOrder {
   locale: string
@@ -101,6 +101,29 @@ export async function renderPaymentReceived(order: ConfirmationOrder, ctx: MailC
         "",
         ...totalLines(order, locale, c),
         ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order), invoiceUrl: invoiceUrl(ctx.webUrl, order) }, locale),
+      ],
+      locale,
+    ),
+  }
+}
+
+/** Sent when an unpaid order is released after its payment window. */
+export async function renderOrderExpired(order: ConfirmationOrder, ctx: MailContext, days: number): Promise<Mail> {
+  const locale = asLocale(order.locale)
+  const c = EMAIL_COPY[locale]
+  return {
+    to: order.email,
+    replyTo: ctx.contactEmail || undefined,
+    subject: c.expired.subject(order.number),
+    html: await orderExpiredHtml(order, ctx, days),
+    text: join(
+      [
+        ...greeting(c, order.customerName),
+        c.expired.body(days),
+        c.expired.again,
+        "",
+        ...itemLines(order, locale),
+        ...(ctx.contactEmail ? ["", ctx.contactEmail] : []),
       ],
       locale,
     ),

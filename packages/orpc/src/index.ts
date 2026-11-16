@@ -10,7 +10,7 @@ export {
   RedirectMailer,
   ResendMailer,
 } from "./lib/mailer"
-export { releaseExpiredHolds, settleOrder } from "./lib/orders"
+export { releaseExpiredHolds, sendExpiryMails, settleOrder } from "./lib/orders"
 export { assertNoDemoInProduction, DemoProvider, KonnectProvider, type PaymentProvider } from "./lib/payments"
 export { sweepRateLimits } from "./lib/rate-limit"
 export { effectivePaymentMethods } from "./lib/settings"

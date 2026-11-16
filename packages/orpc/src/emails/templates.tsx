@@ -232,6 +232,19 @@ export function PaymentReceivedEmail({ order, ctx }: { order: ConfirmationOrder;
   )
 }
 
+export function OrderExpiredEmail({ order, ctx, days }: { order: ConfirmationOrder; ctx: MailContext; days: number }) {
+  const k = EMAIL_COPY[asLocale(order.locale)].expired
+  return (
+    <CustomerOrder
+      order={order}
+      ctx={ctx}
+      preview={k.subject(order.number)}
+      intro={`${k.body(days)} ${k.again}`}
+      withBank={false}
+    />
+  )
+}
+
 /** Studio mails stay in French. */
 export function StudioOrderEmail({
   order,
@@ -309,6 +322,8 @@ export const studioOrderHtml = (order: ConfirmationOrder, ctx: MailContext, head
   render(<StudioOrderEmail order={order} ctx={ctx} headline={headline} status={status} />)
 export const requestHtml = (request: StudioRequest, webUrl: string, contactEmail: string) =>
   render(<RequestEmail request={request} webUrl={webUrl} contactEmail={contactEmail} />)
+export const orderExpiredHtml = (order: ConfirmationOrder, ctx: MailContext, days: number) =>
+  render(<OrderExpiredEmail order={order} ctx={ctx} days={days} />)
 
 export function TestEmail({
   env,

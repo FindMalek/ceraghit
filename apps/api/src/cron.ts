@@ -4,6 +4,7 @@ import {
   purgeMailLog,
   releaseExpiredHolds,
   type Services,
+  sendExpiryMails,
   sweepRateLimits,
 } from "@workspace/orpc"
 
@@ -31,7 +32,8 @@ export const CRON_JOBS: Record<string, CronJob> = {
   },
   "release-holds": {
     async run(services, now) {
-      return { released: await releaseExpiredHolds(services.db, now) }
+      const released = await releaseExpiredHolds(services, now)
+      return { released, mailed: await sendExpiryMails(services) }
     },
   },
 }
