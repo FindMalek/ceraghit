@@ -25,6 +25,15 @@ export interface EmailCopy {
   paymentReceived: {
     subject: (orderNumber: string) => string
   }
+  shipped: {
+    subject: (orderNumber: string) => string
+    intro: string
+    carrier: string
+    trackingNumber: string
+    track: string
+    noTracking: string
+    cod: (total: string) => string
+  }
   expired: {
     subject: (orderNumber: string) => string
     body: (days: number) => string
@@ -58,6 +67,15 @@ export const EMAIL_COPY = {
     paymentReceived: {
       subject: (n) => `Paiement reçu pour votre commande ${n}`,
     },
+    shipped: {
+      subject: (n) => `Votre commande ${n} est en route`,
+      intro: "Bonne nouvelle, votre commande a été expédiée.",
+      carrier: "Transporteur",
+      trackingNumber: "Numéro de suivi",
+      track: "Suivre le colis :",
+      noTracking: "Le transporteur vous contactera pour la livraison.",
+      cod: (total) => `Prévoyez ${total} en espèces à la livraison.`,
+    },
     expired: {
       subject: (n) => `Votre commande ${n} a été annulée`,
       body: (days) =>
@@ -90,6 +108,15 @@ export const EMAIL_COPY = {
     paymentReceived: {
       subject: (n) => `Payment received for your order ${n}`,
     },
+    shipped: {
+      subject: (n) => `Your order ${n} is on its way`,
+      intro: "Good news, your order has shipped.",
+      carrier: "Carrier",
+      trackingNumber: "Tracking number",
+      track: "Track your parcel:",
+      noTracking: "The carrier will contact you for the delivery.",
+      cod: (total) => `Please have ${total} in cash ready on delivery.`,
+    },
     expired: {
       subject: (n) => `Your order ${n} was cancelled`,
       body: (days) =>
@@ -121,6 +148,15 @@ export const EMAIL_COPY = {
     },
     paymentReceived: {
       subject: (n) => `تم استلام الدفع لطلبك ${n}`,
+    },
+    shipped: {
+      subject: (n) => `طلبك ${n} في الطريق إليك`,
+      intro: "أخبار سارة، تم شحن طلبك.",
+      carrier: "شركة الشحن",
+      trackingNumber: "رقم التتبع",
+      track: "تتبع الطرد:",
+      noTracking: "ستتصل بك شركة الشحن لترتيب التسليم.",
+      cod: (total) => `يرجى تجهيز ${total} نقدا عند التسليم.`,
     },
     expired: {
       subject: (n) => `تم إلغاء طلبك ${n}`,

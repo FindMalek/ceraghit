@@ -1,11 +1,12 @@
-import { orders } from "@workspace/db"
-import { bankFromProfile } from "@workspace/sdk"
-import { eq } from "drizzle-orm"
+import { mailLog, orders } from "@workspace/db"
+import { bankFromProfile, type CarrierId } from "@workspace/sdk"
+import { and, eq } from "drizzle-orm"
 import type { Services } from "../context"
 import {
   renderOrderConfirmation,
   renderOrderExpired,
   renderPaymentReceived,
+  renderShipped,
   renderStudioNewOrder,
 } from "../emails/confirmation"
 import { deliverMail } from "./mail-log"
@@ -75,5 +76,31 @@ export async function sendOrderExpiredEmail(services: Services, orderId: string,
     })
   } catch (error) {
     console.error("[order expired email]", error)
+  }
+}
+
+/**
+ * Tells the customer the order shipped. One mail per order: a logged mail (even a failed one, which the owner resends
+ * from the dashboard) blocks a second. Never throws.
+ */
+export async function sendShippedEmail(services: Services, orderId: string): Promise<void> {
+  try {
+    const loaded = await loadMail(services, orderId)
+    if (!loaded) return
+    const { carrier, carrierName, trackingNumber, trackingUrl } = loaded.order
+    if (!carrier) return
+    const shipment = { carrier: carrier as CarrierId, carrierName, trackingNumber, trackingUrl }
+    const sent = await services.db
+      .select({ id: mailLog.id })
+      .from(mailLog)
+      .where(and(eq(mailLog.orderId, orderId), eq(mailLog.kind, "shipped")))
+      .limit(1)
+    if (sent.length) return
+    await deliverMail(services, "shipped", await renderShipped(loaded.order, shipment, loaded.ctx), {
+      orderId,
+      inline: true,
+    })
+  } catch (error) {
+    console.error("[shipped email]", error)
   }
 }
