@@ -1,23 +1,18 @@
 "use client"
 
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react"
-import { imageSrc } from "@workspace/sdk"
+import { imageSrc, type ProductImage, pick } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
 import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react"
 import Image from "@/components/photo"
 
-interface GalleryImage {
-  id: string
-  image: string
-  alt: string | null
-}
-
-export function ProductGallery({ images, title }: { images: GalleryImage[]; title: string }) {
+export function ProductGallery({ images, title }: { images: ProductImage[]; title: string }) {
   const t = useTranslations("product")
   /** In right-to-left languages "next" is on the left: arrows and swipes flip. */
-  const step = useLocale() === "ar" ? -1 : 1
+  const locale = useLocale()
+  const step = locale === "ar" ? -1 : 1
   const [index, setIndex] = useState(0)
   const touchStart = useRef<number | null>(null)
   const count = images.length
@@ -56,7 +51,7 @@ export function ProductGallery({ images, title }: { images: GalleryImage[]; titl
           <Image
             key={img.id}
             src={imageSrc(img.image)}
-            alt={img.alt ?? `${title} ${i + 1}`}
+            alt={pick(img.alt, locale) || `${title} ${i + 1}`}
             fill
             sizes="(min-width: 1024px) 50vw, 100vw"
             priority={i === 0}

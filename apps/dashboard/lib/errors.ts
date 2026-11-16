@@ -10,6 +10,11 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   ],
   [/^Media not found\.?$/, () => "Image introuvable."],
   [
+    /^A photo is no longer available\.?$/,
+    () => "Une photo n'existe plus dans la médiathèque. Retirez-la puis enregistrez.",
+  ],
+  [/^Each photo can only be added once\.?$/, () => "Chaque photo ne peut être ajoutée qu'une fois."],
+  [
     /^This image is still in use\.?$/,
     () => "Cette image est encore utilisée. Retirez-la d'abord des pages qui l'affichent.",
   ],

@@ -1,7 +1,7 @@
 "use client"
 
 import { ORPCError } from "@orpc/client"
-import { ArrowDownIcon, ArrowUpIcon, ImageIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react"
+import { ImageIcon, TrashIcon, UploadSimpleIcon } from "@phosphor-icons/react"
 import { browserClient } from "@workspace/orpc/react"
 import { imageSrc, UPLOAD_MAX_BYTES } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -154,97 +154,6 @@ export function ImageField({
       <details className="text-muted-foreground text-sm">
         <summary className="flex min-h-11 cursor-pointer items-center">Avancé : utiliser une adresse d'image</summary>
         <PathInput onAdd={onChange} />
-      </details>
-    </div>
-  )
-}
-
-export interface ImageItem {
-  image: string
-  alt?: string | null
-}
-
-/** The product gallery: first image is the cover, reorder with the arrows. */
-export function ImageListField({ value, onChange }: { value: ImageItem[]; onChange: (value: ImageItem[]) => void }) {
-  const input = useRef<HTMLInputElement>(null)
-  const { busy, upload } = useUploader("products")
-  const move = (index: number, delta: number) => {
-    const next = [...value]
-    const [item] = next.splice(index, 1)
-    next.splice(index + delta, 0, item as ImageItem)
-    onChange(next)
-  }
-  return (
-    <div className="flex flex-col gap-3">
-      {value.length === 0 && <p className="text-muted-foreground text-sm">Aucune photo pour le moment.</p>}
-      <ul className="flex flex-col gap-2">
-        {value.map((item, index) => (
-          <li key={`${item.image}-${index}`} className="frame flex items-center gap-3 bg-card/60 p-2">
-            <Thumb image={item.image} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm">{item.image}</p>
-              {index === 0 && <p className="text-gold text-sm">Photo principale</p>}
-            </div>
-            <div className="flex shrink-0 gap-1">
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                aria-label="Monter"
-                disabled={index === 0}
-                onClick={() => move(index, -1)}
-              >
-                <ArrowUpIcon />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                aria-label="Descendre"
-                disabled={index === value.length - 1}
-                onClick={() => move(index, 1)}
-              >
-                <ArrowDownIcon />
-              </Button>
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                aria-label="Retirer la photo"
-                onClick={() => onChange(value.filter((_, i) => i !== index))}
-              >
-                <TrashIcon />
-              </Button>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <Button
-        type="button"
-        variant="outline"
-        className="h-11 w-full sm:w-fit"
-        disabled={busy}
-        onClick={() => input.current?.click()}
-      >
-        {busy ? <Spinner /> : <UploadSimpleIcon />}
-        Ajouter des photos
-      </Button>
-      <input
-        ref={input}
-        type="file"
-        multiple
-        accept={TYPES.join(",")}
-        hidden
-        onChange={async (event) => {
-          const files = Array.from(event.target.files ?? [])
-          event.target.value = ""
-          const uploaded = await upload(files)
-          if (uploaded.length) onChange([...value, ...uploaded.map((image) => ({ image }))])
-        }}
-      />
-      <details className="text-muted-foreground text-sm">
-        <summary className="flex min-h-11 cursor-pointer items-center">Avancé : ajouter une adresse d'image</summary>
-        <PathInput onAdd={(image) => onChange([...value, { image }])} />
       </details>
     </div>
   )

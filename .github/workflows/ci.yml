@@ -131,7 +131,7 @@ jobs:
         run: pnpm e2e:install
       - name: Install browser system dependencies
         if: steps.browsers.outputs.cache-hit == 'true'
-        run: pnpm --filter @workspace/e2e exec playwright install-deps chromium webkit
+        run: pnpm --filter @workspace/e2e exec playwright install-deps chromium
       - run: pnpm e2e
       - name: Summary
         if: always()

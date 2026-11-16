@@ -101,7 +101,21 @@ export const categorySchema = z.object({
   productCount: z.number().int(),
 })
 
-export const productImageSchema = z.object({ id: z.string(), image: z.string(), alt: z.string().nullable() })
+export const PRODUCT_MAX_IMAGES = 12
+
+export const productImageSchema = z.object({
+  id: z.string(),
+  mediaId: z.string().nullable(),
+  image: z.string(),
+  /** The photo's own text, else the library's. Null when neither is written. */
+  alt: localizedSchema.nullable(),
+  /** Only the owner's override, so the editor can show the library text as a placeholder. */
+  altOverride: localizedSchema.nullable(),
+  isMain: z.boolean(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+})
+export type ProductImage = z.infer<typeof productImageSchema>
 
 export const productVariantSchema = z.object({
   id: z.string(),
@@ -534,9 +548,21 @@ export const productInputSchema = z.object({
   featured: z.boolean().default(false),
   status: productStatusSchema.default("draft"),
   images: z
-    .array(z.object({ image: z.string(), alt: z.string().nullable().optional() }))
-    .max(12)
-    .default([]),
+    .array(
+      z.object({
+        mediaId: z.string().uuid(),
+        isMain: z.boolean().default(false),
+        alt: localizedInput(200).nullable().optional(),
+      }),
+    )
+    .max(PRODUCT_MAX_IMAGES)
+    .default([])
+    .superRefine((images, ctx) => {
+      if (images.filter((i) => i.isMain).length > 1)
+        ctx.addIssue({ code: "custom", message: "Only one photo can be the main one." })
+      if (new Set(images.map((i) => i.mediaId)).size !== images.length)
+        ctx.addIssue({ code: "custom", message: "Each photo can only be added once." })
+    }),
   variants: z.array(productVariantInputSchema).max(8).default([]),
 })
 export type ProductInput = z.infer<typeof productInputSchema>
