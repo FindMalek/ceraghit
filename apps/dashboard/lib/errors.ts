@@ -9,6 +9,13 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
     () => "Envoi pas encore vérifiable. Réessayez dans un instant.",
   ],
   [/^Media not found\.?$/, () => "Image introuvable."],
+  [
+    /^This image is still in use\.?$/,
+    () => "Cette image est encore utilisée. Retirez-la d'abord des pages qui l'affichent.",
+  ],
+  [/^This image ships with the site/, () => "Cette image fait partie du site et ne peut pas être supprimée."],
+  [/^Invalid file name\.?$/, () => "Nom de fichier invalide."],
+  [/^Too many deletions/, () => "Trop de suppressions, réessayez dans quelques minutes."],
   [/^Email introuvable\.?$/, () => "Email introuvable."],
   [/^Wrong email or password\.?$/, () => "Email ou mot de passe incorrect."],
   [/^Too many attempts\. Try again in 1 hour/, () => "Trop de tentatives. Réessayez dans 1 heure."],

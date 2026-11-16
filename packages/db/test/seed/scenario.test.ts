@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
+import { DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
 import { buildScenario, DEMO_DESCRIPTIONS } from "../../src/seed/scenario"
 
 const products = [
@@ -104,4 +105,16 @@ test("unpaid offline orders are younger than the default 7 day window, one is ab
   const ages = pending.map((o) => (now.getTime() - o.createdAt!.getTime()) / 864e5)
   expect(ages.every((age) => age < 7)).toBe(true)
   expect(ages.some((age) => age >= 5)).toBe(true)
+})
+
+test("demo media describe their own product and include a tagged and an unused picture", () => {
+  for (const ref of Object.keys(DEMO_MEDIA_BY_REF)) {
+    const product = CATALOGUE.find((p) => p.ref === ref)
+    expect(product?.images[0]).toBeDefined()
+    expect(DEMO_MEDIA_BY_REF[ref]?.alt.fr.toLowerCase()).toContain(
+      product!.title.toLowerCase().split(" ")[0]!.slice(0, 4),
+    )
+  }
+  expect(Object.values(DEMO_MEDIA_BY_REF).some((m) => m.tags.length > 0)).toBe(true)
+  expect(CATALOGUE.flatMap((p) => p.images)).not.toContain(DEMO_UNUSED_MEDIA.key)
 })
