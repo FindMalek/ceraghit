@@ -4,6 +4,7 @@ import {
   bankFromProfile,
   checkoutSchema,
   customRequestInputSchema,
+  holdExpiresAt,
   orderInputSchema,
   type PaymentMethod,
   publicInvoiceViewSchema,
@@ -20,6 +21,7 @@ import { deliverMail } from "../../lib/mail-log"
 import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
+import { getPaymentSettings } from "../../lib/settings"
 import { toShipping } from "../../lib/shipping-events"
 import { getShopProfile, studioInbox } from "../../lib/shop-profile"
 import { reserveUpload } from "../../lib/uploads"
@@ -52,7 +54,12 @@ export const ordersRouter = {
       const settled =
         order.status === "pending_payment" && order.paymentRef ? await settleOrder(context, order.paymentRef) : null
       const status = (settled?.status ?? order.status) as typeof order.status
+      const payBefore =
+        status === "pending_payment" && order.paymentMethod === "transfer"
+          ? holdExpiresAt(order, (await getPaymentSettings(context.db, context.config)).holds)
+          : null
       return {
+        payBefore: payBefore?.toISOString() ?? null,
         number: order.number,
         paymentMethod: order.paymentMethod as PaymentMethod,
         status,

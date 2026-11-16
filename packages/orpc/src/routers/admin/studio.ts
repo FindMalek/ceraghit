@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { locations } from "@workspace/db"
 import {
+  holdSettingsSchema,
   locationInputSchema,
   locationSchema,
   paymentSettingsSchema,
@@ -120,7 +121,7 @@ export const settingsRouter = {
 
   savePayments: adminProcedure
     .route({ method: "PUT", path: "/admin/settings/payments", summary: "Switch payment methods on or off", tags: TAG })
-    .input(paymentSettingsSchema)
+    .input(paymentSettingsSchema.extend({ holds: holdSettingsSchema.optional() }))
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       const ready = gatewayReady(context)
@@ -129,7 +130,9 @@ export const settingsRouter = {
       }
       const invalid = validatePaymentSettings(input, ready)
       if (invalid) throw new ORPCError("BAD_REQUEST", { message: invalid })
-      await savePaymentSettings(context.db, input)
+      // An older dashboard tab saves without `holds`: keep the owner's windows instead of resetting them.
+      const holds = input.holds ?? (await getPaymentSettings(context.db, context.config)).holds
+      await savePaymentSettings(context.db, { ...input, holds })
       return { ok: true as const }
     }),
 }

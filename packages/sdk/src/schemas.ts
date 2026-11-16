@@ -23,10 +23,38 @@ export type PaymentMethod = z.infer<typeof paymentMethodSchema>
 export const paymentMethodFlagsSchema = z.object({ online: z.boolean(), cod: z.boolean(), transfer: z.boolean() })
 export type PaymentMethodFlags = z.infer<typeof paymentMethodFlagsSchema>
 
+/** Days an unpaid offline order keeps its pieces, per method; `null` = never expires. */
+export const holdSettingsSchema = z.object({
+  transferDays: z.number().int().min(1).max(60).nullable().default(7),
+  codDays: z.number().int().min(1).max(60).nullable().default(null),
+  warnDays: z.number().int().min(0).max(14).default(2),
+})
+export type HoldSettings = z.infer<typeof holdSettingsSchema>
+export const DEFAULT_HOLDS: HoldSettings = { transferDays: 7, codDays: null, warnDays: 2 }
+
 export const paymentSettingsSchema = z.object({
   methods: paymentMethodFlagsSchema.default({ online: false, cod: true, transfer: true }),
+  holds: holdSettingsSchema.default(DEFAULT_HOLDS),
 })
 export type PaymentSettings = z.infer<typeof paymentSettingsSchema>
+
+/** Days an unpaid order of this method may wait before it is released, or null when it never is. */
+export function holdDays(paymentMethod: string, holds: HoldSettings): number | null {
+  if (paymentMethod === "transfer") return holds.transferDays
+  if (paymentMethod === "cod") return holds.codDays
+  return null
+}
+
+/** When an unpaid offline order is released; null for card orders (45 min hold) or a method set to never. */
+export function holdExpiresAt(order: { paymentMethod: string; createdAt: Date }, holds: HoldSettings): Date | null {
+  const days = holdDays(order.paymentMethod, holds)
+  return days === null ? null : new Date(order.createdAt.getTime() + days * 864e5)
+}
+
+/** True when the release is at most `warnDays` away. */
+export function holdExpiresSoon(expiresAt: Date, now: Date, holds: HoldSettings): boolean {
+  return expiresAt.getTime() - now.getTime() <= holds.warnDays * 864e5
+}
 
 /**
  * Methods offered at checkout, in display order. Settings only switch methods off: cod stays Tunisia + TND,
@@ -45,7 +73,10 @@ export function paymentMethodsFor(
 }
 
 /** French message when a save would leave Tunisia (TND) or abroad (EUR) without any way to pay. */
-export function validatePaymentSettings(settings: PaymentSettings, gatewayReady: boolean): string | null {
+export function validatePaymentSettings(
+  settings: Pick<PaymentSettings, "methods">,
+  gatewayReady: boolean,
+): string | null {
   if (paymentMethodsFor({ country: "TN", currency: "TND" }, settings.methods, gatewayReady).length === 0)
     return "Au moins un moyen de paiement doit rester actif pour la Tunisie."
   if (paymentMethodsFor({ country: "FR", currency: "EUR" }, settings.methods, gatewayReady).length === 0)
@@ -396,6 +427,8 @@ export const publicOrderSchema = orderSchema.extend({
   bank: bankDetailsSchema.nullable(),
   /** Only once the order is shipped. */
   shipping: orderShippingSchema.nullable(),
+  /** ISO instant an unpaid transfer or cash order is released, null when it never is. */
+  payBefore: z.string().nullable(),
 })
 
 export const manualPaymentMethodSchema = z.enum(["transfer", "payoneer", "cash", "other"])
@@ -415,6 +448,10 @@ export const orderAuditSchema = z.object({
 
 export const adminOrderSchema = orderSchema.extend({
   id: z.string(),
+  /** ISO instant the unpaid order is released; null when paid, cancelled or never released. */
+  holdExpiresAt: z.string().nullable(),
+  /** The release is within the owner's warning window. */
+  holdWarning: z.boolean(),
   customerName: z.string(),
   email: z.string(),
   phone: z.string(),
@@ -580,7 +617,15 @@ export type EmailDomain = z.infer<typeof emailDomainSchema>
 
 /** What the studio's plan stores: dashboard images and customer photos together. */
 export const STORAGE_QUOTA_BYTES = 2_500_000_000
-/** The dashboard shrinks every image first, so anything past this is not a normal photo. */
+
+/** Long side of a stored picture; the dashboard shrinks to it and the api refuses anything larger. */
+export const MEDIA_MAX_SIDE = 2400
+/** A smaller picture is a mistake for a ceramics shop. */
+export const MEDIA_MIN_SIDE = 200
+export const MEDIA_MAX_BYTES = 5 * 1024 * 1024
+export const MEDIA_CONTENT_TYPE = "image/webp"
+
+/** Legacy `admin.uploads.sign` only: the dashboard shrinks images first, but Safari may fall back to the original. */
 export const UPLOAD_MAX_BYTES = 12 * 1024 * 1024
 
 export const uploadSignSchema = z.object({
@@ -636,3 +681,19 @@ export const mediaSchema = z.object({
   createdAt: z.string(),
 })
 export type Media = z.infer<typeof mediaSchema>
+
+const mediaSide = z.number().int().min(MEDIA_MIN_SIDE).max(MEDIA_MAX_SIDE)
+export const mediaSignSchema = z.object({
+  originalName: z.string().trim().min(1).max(200),
+  contentType: z.literal(MEDIA_CONTENT_TYPE),
+  size: z.number().int().min(1).max(MEDIA_MAX_BYTES),
+  width: mediaSide,
+  height: mediaSide,
+  /** sha-256 hex of the compressed file. */
+  hash: z.string().regex(/^[a-f0-9]{64}$/),
+  tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+})
+export const mediaSignResultSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("existing"), media: mediaSchema }),
+  z.object({ status: z.literal("upload"), mediaId: z.string(), uploadUrl: z.string() }),
+])

@@ -6,6 +6,9 @@ import {
   carrierIdSchema,
   currencySchema,
   customRequestSchema,
+  type HoldSettings,
+  holdExpiresAt,
+  holdExpiresSoon,
   manualPaymentMethodSchema,
   orderAuditSchema,
   orderExportInputSchema,
@@ -17,7 +20,8 @@ import {
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
 import { z } from "zod"
 import { tryIssueInvoice } from "../../lib/invoices"
-import { cancelOrder, markPaidManually, recordAudit, releaseExpiredHolds } from "../../lib/orders"
+import { cancelOrder, LAZY_SWEEP_LIMIT, markPaidManually, recordAudit, releaseExpiredHolds } from "../../lib/orders"
+import { getPaymentSettings } from "../../lib/settings"
 import { markOrderShipped, toShipping, updateOrderTracking } from "../../lib/shipping-events"
 import { adminProcedure } from "../../procedures"
 
@@ -27,8 +31,11 @@ type OrderRow = typeof orders.$inferSelect & {
   items: { ref: string; title: string; unitMinor: number; quantity: number }[]
 }
 
-function toAdminOrder(o: OrderRow) {
+function toAdminOrder(o: OrderRow, holds: HoldSettings, now: Date) {
+  const expires = o.status === "pending_payment" ? holdExpiresAt(o, holds) : null
   return {
+    holdExpiresAt: expires?.toISOString() ?? null,
+    holdWarning: expires ? holdExpiresSoon(expires, now, holds) : false,
     id: o.id,
     number: o.number,
     paymentMethod: o.paymentMethod as PaymentMethod,
@@ -74,7 +81,8 @@ export const ordersRouter = {
     .input(orderListQuerySchema)
     .output(z.array(adminOrderSchema))
     .handler(async ({ context, input }) => {
-      await releaseExpiredHolds(context.db, context.now())
+      await releaseExpiredHolds(context, context.now(), { limit: LAZY_SWEEP_LIMIT })
+      const { holds } = await getPaymentSettings(context.db, context.config)
       const search = input.q ? `%${input.q.replace(/[%_]/g, "")}%` : null
       const rows = await context.db.query.orders.findMany({
         where: and(
@@ -87,7 +95,7 @@ export const ordersRouter = {
         orderBy: [desc(orders.createdAt)],
         limit: input.limit,
       })
-      return rows.map(toAdminOrder)
+      return rows.map((row) => toAdminOrder(row, holds, context.now()))
     }),
 
   get: adminProcedure
@@ -97,7 +105,7 @@ export const ordersRouter = {
     .handler(async ({ context, input }) => {
       const order = await context.db.query.orders.findFirst({ where: eq(orders.id, input.id), with: { items: true } })
       if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
-      return toAdminOrder(order)
+      return toAdminOrder(order, (await getPaymentSettings(context.db, context.config)).holds, context.now())
     }),
 
   /** Every paid or shipped order paid in the range, in one currency, oldest first. Not capped: it feeds the accountant's CSV. */
@@ -111,6 +119,7 @@ export const ordersRouter = {
     .input(orderExportInputSchema)
     .output(z.array(adminOrderSchema))
     .handler(async ({ context, input }) => {
+      const { holds } = await getPaymentSettings(context.db, context.config)
       const rows = await context.db.query.orders.findMany({
         where: and(
           eq(orders.currency, input.currency),
@@ -121,7 +130,7 @@ export const ordersRouter = {
         with: { items: true },
         orderBy: [asc(orders.paidAt)],
       })
-      return rows.map(toAdminOrder)
+      return rows.map((row) => toAdminOrder(row, holds, context.now()))
     }),
 
   markPaidManually: adminProcedure

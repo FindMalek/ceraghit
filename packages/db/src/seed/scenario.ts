@@ -324,6 +324,39 @@ export function buildScenario(
       out.items.push({ orderId: id, productId: p.id, ref: p.ref, title: p.title, unitMinor: unit(p), quantity: 1 })
     }
   }
+  // Unpaid transfer six days old: inside the default 7 day window, so the "Expire le" badge shows on previews.
+  const waiting = products[0]!
+  const waitingId = crypto.randomUUID()
+  out.orders.push({
+    id: waitingId,
+    number: "CER-10099",
+    publicToken: "demo-waiting",
+    status: "pending_payment",
+    currency: "EUR",
+    subtotalMinor: waiting.priceEur,
+    shippingMinor: 0,
+    totalMinor: waiting.priceEur,
+    customerName: "Claire Dubois",
+    email: "claire.dubois.waiting@example.com",
+    phone: "+32 470 00 00 00",
+    country: "BE",
+    city: "Bruxelles",
+    address: "12 rue Haute",
+    locale: "fr",
+    paymentMethod: "transfer",
+    paymentProvider: "transfer",
+    paymentRef: null,
+    paidAt: null,
+    createdAt: new Date(now.getTime() - 6 * 864e5),
+  })
+  out.items.push({
+    orderId: waitingId,
+    productId: waiting.id,
+    ref: waiting.ref,
+    title: waiting.title,
+    unitMinor: waiting.priceEur,
+    quantity: 1,
+  })
   const confirmed = out.orders.filter((o) => o.status === "paid" || o.status === "fulfilled")
   const [sent, failed] = [confirmed[0], confirmed[1]]
   for (const [order, ok] of [

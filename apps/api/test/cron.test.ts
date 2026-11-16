@@ -1,8 +1,8 @@
 // `bun test` in apps/api alone needs an already migrated DB: turbo runs it after the orpc tests, which migrate.
 import { afterAll, describe, expect, test } from "bun:test"
-import { createDb, jobRuns, orders } from "@workspace/db"
+import { createDb, jobRuns, orderAudit, orders } from "@workspace/db"
 import { AdminAuth, ConsoleMailer, DemoProvider, type Services } from "@workspace/orpc"
-import { and, count, eq, lt } from "drizzle-orm"
+import { and, count, eq, lt, sql } from "drizzle-orm"
 import { CRON_JOBS } from "../src/cron"
 import { createServer } from "../src/server"
 
@@ -93,19 +93,30 @@ describe.skipIf(!url)("cron endpoints", () => {
         ),
       )
     expect(expired).toBeGreaterThanOrEqual(1)
+    // the job also mails customers of already released orders that have no mail yet (none for the online fixture)
+    const [{ unmailed = 0 } = {}] = await db
+      .select({ unmailed: count() })
+      .from(orderAudit)
+      .where(
+        and(
+          eq(orderAudit.action, "hold_expired"),
+          sql`not exists (select 1 from mail_log m where m.order_id = ${orderAudit.orderId} and m.kind = 'order_expired')`,
+        ),
+      )
+    const mailed = Math.min(unmailed, 50)
 
     const first = await call(`/cron/${JOB}`, { bearer: SECRET })
     expect(first.status).toBe(200)
-    expect(await first.json()).toEqual({ ok: true, released: expired })
+    expect(await first.json()).toEqual({ ok: true, released: expired, mailed })
     const [order] = await db.select().from(orders).where(eq(orders.number, holdNumber))
     expect(order!.status).toBe("cancelled")
 
     const second = await call(`/cron/${JOB}`, { bearer: SECRET })
-    expect(await second.json()).toEqual({ ok: true, released: 0 })
+    expect(await second.json()).toEqual({ ok: true, released: 0, mailed: 0 })
     const rows = await runs(JOB)
     expect(rows.map((r) => [r.ok, r.counts])).toEqual([
-      [true, { released: expired }],
-      [true, { released: 0 }],
+      [true, { released: expired, mailed }],
+      [true, { released: 0, mailed: 0 }],
     ])
   })
 

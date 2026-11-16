@@ -163,6 +163,7 @@ describe.skipIf(!url)("router", () => {
         return `https://s3.test/${key}?size=${size}`
       },
       head: async (key) => stored.has(key),
+      read: async () => null,
       readUrl: async (key) => key,
       publicUrl: () => null,
       remove: async () => {},
@@ -424,6 +425,7 @@ describe.skipIf(!url)("router", () => {
       prefix: "pr-1/",
       presignPut: async (key, _type, size) => `https://s3.test/${key}?size=${size}`,
       head: async () => true,
+      read: async () => null,
       readUrl: async (key) => key,
       publicUrl: () => null,
       remove: async (key) => void removed.push(key),

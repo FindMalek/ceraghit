@@ -184,6 +184,7 @@
     "codText": "Merci, votre commande est confirmée. Vous réglez en espèces à la livraison, l'atelier vous contactera pour l'organiser.",
     "transferTitle": "Commande réservée",
     "transferText": "Merci. Effectuez le virement avec la référence ci-dessous, nous expédions dès réception. Vous recevrez aussi ces informations par email.",
+    "payBefore": "À régler avant le {date}",
     "bankTitle": "Coordonnées bancaires",
     "holder": "Titulaire",
     "bank": "Banque",

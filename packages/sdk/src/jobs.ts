@@ -66,6 +66,7 @@ export const JOB_COUNT_LABELS: Record<string, [one: string, other: string]> = {
   rateLimits: ["limite purgée", "limites purgées"],
   mailsPurged: ["email purgé", "emails purgés"],
   updated: ["colis mis à jour", "colis mis à jour"],
+  mailed: ["client prévenu", "clients prévenus"],
   sent: ["email renvoyé", "emails renvoyés"],
 }
 

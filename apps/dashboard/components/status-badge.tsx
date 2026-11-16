@@ -1,6 +1,6 @@
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
-import { ORDER_STATUS, PRODUCT_STATUS, REQUEST_STATUS } from "@/lib/copy"
+import { formatDay, ORDER_STATUS, PRODUCT_STATUS, REQUEST_STATUS } from "@/lib/copy"
 
 const TONE = {
   good: "border-jade/60 bg-jade/15 text-jade",
@@ -32,4 +32,10 @@ export function OrderStatusBadge({ status }: { status: keyof typeof ORDER_STATUS
 export function RequestStatusBadge({ status }: { status: keyof typeof REQUEST_STATUS }) {
   const tone = status === "new" ? "warn" : status === "done" ? "good" : status === "declined" ? "quiet" : "info"
   return <Tone tone={tone}>{REQUEST_STATUS[status]}</Tone>
+}
+
+/** Amber "Expire le 18/11" while an unpaid order is close to its release. */
+export function HoldBadge({ order }: { order: { holdExpiresAt: string | null; holdWarning: boolean } }) {
+  if (!order.holdExpiresAt || !order.holdWarning) return null
+  return <Tone tone="warn">Expire le {formatDay(order.holdExpiresAt)}</Tone>
 }

@@ -3,6 +3,7 @@ import { type Db, orderAudit, orderItems, orders, products, productVariants } fr
 import {
   type Currency,
   estimateShipping,
+  holdDays,
   type ManualPaymentMethod,
   type OrderInput,
   paymentMethodsFor,
@@ -14,10 +15,10 @@ import { orderUrl } from "../emails/order-url"
 import { publicError } from "../errors"
 import { findProducts } from "./catalog"
 import { tryIssueInvoice } from "./invoices"
-import { sendOrderEmails, sendPaymentReceivedEmail } from "./order-emails"
+import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentReceivedEmail } from "./order-emails"
 import type { PaymentCheck } from "./payments"
 import { unitMinor } from "./pricing"
-import { effectivePaymentMethods, getSettings } from "./settings"
+import { effectivePaymentMethods, getPaymentSettings, getSettings } from "./settings"
 
 /** A pending order holds its stock this long, then the pieces go back on sale. */
 export const HOLD_MINUTES = 45
@@ -28,7 +29,7 @@ type OrderStatus = typeof orders.$inferSelect.status
 export interface AuditRow {
   orderId: string
   adminId: string | null
-  action: "mark_paid_manually" | "set_status" | "gateway_mismatch" | "late_payment"
+  action: "mark_paid_manually" | "set_status" | "gateway_mismatch" | "late_payment" | "hold_expired"
   fromStatus: OrderStatus
   toStatus: OrderStatus
   method?: string | null
@@ -81,29 +82,103 @@ async function restock(tx: Tx, orderId: string): Promise<void> {
   }
 }
 
-/** Cancels unpaid orders past their hold and puts the pieces back. Called lazily, there is no cron on previews. */
-export async function releaseExpiredHolds(db: Db, now: Date): Promise<number> {
+/** One lazy sweep (a page load) releases at most this many offline orders; the cron has no such cap. */
+export const LAZY_SWEEP_LIMIT = 20
+
+/**
+ * Cancels unpaid orders past their hold and puts the pieces back. Card orders hold 45 minutes; transfer and cash on
+ * delivery orders hold the days the owner set (never for a method set to null). Each release goes through
+ * `cancelOrder` (row lock, restock, audit). It never sends mail: `sendExpiryMails` does, from the cron.
+ * `limit` caps the offline releases of one call, `only` (tests) restricts it to those orders.
+ */
+export async function releaseExpiredHolds(
+  services: Services,
+  now: Date,
+  opts: { limit?: number; only?: string[] } = {},
+): Promise<number> {
+  const { db } = services
+  const { only } = opts
   const cutoff = new Date(now.getTime() - HOLD_MINUTES * 60_000)
-  return db.transaction(async (tx) => {
+  const online = await db.transaction(async (tx) => {
     const stale = await tx
       .update(orders)
       .set({ status: "cancelled" })
       .where(
-        and(eq(orders.status, "pending_payment"), eq(orders.paymentMethod, "online"), lt(orders.createdAt, cutoff)),
+        and(
+          eq(orders.status, "pending_payment"),
+          eq(orders.paymentMethod, "online"),
+          lt(orders.createdAt, cutoff),
+          only ? inArray(orders.id, only) : undefined,
+        ),
       )
       .returning({ id: orders.id })
     for (const { id } of stale) await restock(tx, id)
     return stale.length
   })
+
+  const { holds } = await getPaymentSettings(db, services.config)
+  let offline = 0
+  for (const method of ["transfer", "cod"] as const) {
+    const days = holdDays(method, holds)
+    if (days === null) continue
+    const room = opts.limit === undefined ? undefined : opts.limit - offline
+    if (room !== undefined && room <= 0) break
+    const due = await db
+      .select({ id: orders.id })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.status, "pending_payment"),
+          eq(orders.paymentMethod, method),
+          lt(orders.createdAt, new Date(now.getTime() - days * 864e5)),
+          only ? inArray(orders.id, only) : undefined,
+        ),
+      )
+      .orderBy(orders.createdAt)
+      .limit(room ?? 1000)
+    for (const { id } of due) {
+      const released = await cancelOrder(db, id, "cancelled", {
+        adminId: null,
+        action: "hold_expired",
+        note: `délai de paiement dépassé (${days} j)`,
+        onlyPending: true,
+      })
+      if (released) offline++
+    }
+  }
+  return online + offline
+}
+
+/** Tells the customer of every released order not mailed yet. Best effort, called by the cron only. */
+export async function sendExpiryMails(services: Services, limit = 50): Promise<number> {
+  const { db } = services
+  const rows = await db
+    .select({ orderId: orderAudit.orderId, note: orderAudit.note })
+    .from(orderAudit)
+    .where(
+      and(
+        eq(orderAudit.action, "hold_expired"),
+        sql`not exists (select 1 from mail_log m where m.order_id = ${orderAudit.orderId} and m.kind = 'order_expired')`,
+      ),
+    )
+    .orderBy(orderAudit.createdAt)
+    .limit(limit)
+  for (const { orderId, note } of rows) {
+    const days = Number(/\((\d+) j\)/.exec(note ?? "")?.[1] ?? 0)
+    await sendOrderExpiredEmail(services, orderId, days)
+  }
+  return rows.length
 }
 
 let lastSweep = 0
 
-/** Catalogue reads free expired holds too (there is no cron), at most once a minute per instance. */
-export async function sweepExpiredHolds(db: Db, now: Date): Promise<void> {
+/** Catalogue reads free expired holds too, at most once a minute per instance and 20 offline orders at a time. */
+export async function sweepExpiredHolds(services: Services, now: Date): Promise<void> {
   if (now.getTime() - lastSweep < 60_000) return
   lastSweep = now.getTime()
-  await releaseExpiredHolds(db, now).catch((error) => console.error("[holds] sweep failed", error))
+  await releaseExpiredHolds(services, now, { limit: LAZY_SWEEP_LIMIT }).catch((error) =>
+    console.error("[holds] sweep failed", error),
+  )
 }
 
 function newNumber(): string {
@@ -128,7 +203,7 @@ export async function createOrder(services: Services, input: OrderInput) {
       "This payment method is not available for your country.",
     )
   }
-  await releaseExpiredHolds(db, now())
+  await releaseExpiredHolds(services, now(), { limit: LAZY_SWEEP_LIMIT })
 
   const ids = [...new Set(input.items.map((i) => i.productId))]
   const rows = await findProducts(db, {
@@ -269,14 +344,19 @@ export async function cancelOrder(
   db: Db,
   orderId: string,
   to: "cancelled" | "refunded" = "cancelled",
-  audit?: { adminId: string },
+  audit?: { adminId: string | null; action?: AuditRow["action"]; note?: string; onlyPending?: boolean },
 ): Promise<boolean> {
   return db.transaction(async (tx) => {
     const [before] = await tx.select({ status: orders.status }).from(orders).where(eq(orders.id, orderId)).for("update")
     const [order] = await tx
       .update(orders)
       .set({ status: to })
-      .where(and(eq(orders.id, orderId), inArray(orders.status, ["pending_payment", "paid"])))
+      .where(
+        and(
+          eq(orders.id, orderId),
+          inArray(orders.status, audit?.onlyPending ? ["pending_payment"] : ["pending_payment", "paid"]),
+        ),
+      )
       .returning({ id: orders.id })
     if (!order || !before) return false
     await restock(tx, orderId)
@@ -284,9 +364,10 @@ export async function cancelOrder(
       await recordAudit(tx, {
         orderId,
         adminId: audit.adminId,
-        action: "set_status",
+        action: audit.action ?? "set_status",
         fromStatus: before.status,
         toStatus: to,
+        note: audit.note,
       })
     }
     return true
