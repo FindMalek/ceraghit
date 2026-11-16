@@ -113,7 +113,15 @@ function Tile({
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<Button type="button" size="icon" variant="ghost" className="size-11" aria-label={`Actions pour la photo ${n}`} />}
+            render={
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-11"
+                aria-label={`Actions pour la photo ${n}`}
+              />
+            }
           >
             <DotsThreeIcon />
           </DropdownMenuTrigger>
