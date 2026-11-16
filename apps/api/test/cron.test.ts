@@ -1,6 +1,6 @@
-// `bun test` in apps/api alone needs an already migrated DB: turbo runs it after the orpc tests, which migrate.
-import { afterAll, describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createDb, jobRuns, orders } from "@workspace/db"
+import { runMigrations } from "@workspace/db/migrate"
 import { AdminAuth, ConsoleMailer, DemoProvider, type Services } from "@workspace/orpc"
 import { and, count, eq, lt } from "drizzle-orm"
 import { CRON_JOBS } from "../src/cron"
@@ -43,6 +43,9 @@ describe.skipIf(!url)("cron endpoints", () => {
     )
   const runs = (name: string) => db.select().from(jobRuns).where(eq(jobRuns.name, name))
   const holdNumber = `CER-HOLD-${Date.now()}`
+
+  // turbo runs the package tests in parallel on one DB: do not rely on another package having migrated yet.
+  beforeAll(() => runMigrations(db))
 
   afterAll(async () => {
     await db.delete(jobRuns).where(eq(jobRuns.name, JOB))
@@ -96,16 +99,17 @@ describe.skipIf(!url)("cron endpoints", () => {
 
     const first = await call(`/cron/${JOB}`, { bearer: SECRET })
     expect(first.status).toBe(200)
-    expect(await first.json()).toEqual({ ok: true, released: expired })
+    expect(await first.json()).toMatchObject({ ok: true, released: expired })
     const [order] = await db.select().from(orders).where(eq(orders.number, holdNumber))
     expect(order!.status).toBe("cancelled")
 
     const second = await call(`/cron/${JOB}`, { bearer: SECRET })
-    expect(await second.json()).toEqual({ ok: true, released: 0 })
+    expect(await second.json()).toMatchObject({ ok: true, released: 0 })
     const rows = await runs(JOB)
-    expect(rows.map((r) => [r.ok, r.counts])).toEqual([
-      [true, { released: expired }],
-      [true, { released: 0 }],
+    // `mailed` depends on other released orders still waiting for their mail in a shared DB
+    expect(rows.map((r) => [r.ok, (r.counts as { released: number }).released])).toEqual([
+      [true, expired],
+      [true, 0],
     ])
   })
 
