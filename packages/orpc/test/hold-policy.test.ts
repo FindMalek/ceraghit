@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { categories, createDb, orderAudit, orderItems, orders, products, settings } from "@workspace/db"
+import { categories, createDb, mailLog, orderAudit, orderItems, orders, products, settings } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { DEFAULT_HOLDS, type HoldSettings } from "@workspace/sdk"
 import { eq, inArray } from "drizzle-orm"
@@ -229,6 +229,8 @@ describe.skipIf(!url)("unpaid offline order expiry", () => {
     }
     await expect(sendExpiryMails(failing)).resolves.toBeGreaterThanOrEqual(1)
     expect((await state(late)).status).toBe("cancelled")
+    const [row] = await db.select().from(mailLog).where(eq(mailLog.orderId, late.order.id))
+    expect(row).toMatchObject({ kind: "order_expired", status: "failed" })
   })
 
   test("a stored row from before holds existed reads as the defaults", async () => {

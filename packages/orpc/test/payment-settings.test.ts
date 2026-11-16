@@ -106,6 +106,18 @@ describe.skipIf(!url)("payment settings", () => {
     ).rejects.toMatchObject({ code: "BAD_REQUEST", message: "Card payment needs the Konnect live keys." })
   })
 
+  test("saving without holds (an older dashboard tab) keeps the stored windows", async () => {
+    const client = owner()
+    const methods = { online: false, cod: true, transfer: true }
+    await client.admin.settings.savePayments({ methods, holds: { transferDays: 12, codDays: 5, warnDays: 3 } })
+    await client.admin.settings.savePayments({ methods })
+    expect((await client.admin.settings.getPayments()).settings.holds).toEqual({
+      transferDays: 12,
+      codDays: 5,
+      warnDays: 3,
+    })
+  })
+
   test("a method switched off disappears from the storefront and createOrder refuses it", async () => {
     const client = owner()
     await client.admin.settings.savePayments({ methods: { online: true, cod: false, transfer: true } })
