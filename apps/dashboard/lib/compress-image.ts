@@ -4,10 +4,17 @@ import { fitWithin, MEDIA_MAX_SIDE, MEDIA_MIN_SIDE } from "@workspace/sdk"
 export const MAX_SIDE = MEDIA_MAX_SIDE
 const QUALITY = 0.86
 
+/** Media library only (the legacy upload accepts small icons): refuses a picture under `MEDIA_MIN_SIDE`. */
+export function assertMediaSize(width: number, height: number): void {
+  if (Math.min(width, height) < MEDIA_MIN_SIDE) {
+    throw new Error(`Cette image est trop petite : ${MEDIA_MIN_SIDE} px minimum sur le petit côté.`)
+  }
+}
+
 /**
  * Re-encodes a photo as WebP in the browser before it is uploaded: at most 2400px on the long side, quality 0.86, which
  * is visually the same and typically 5 to 10 times smaller. Keeps the original when it is already smaller or the browser
- * cannot encode WebP (Safari), until the wasm fallback ships. Throws a French message for a picture under 200px.
+ * cannot encode WebP (Safari), until the wasm fallback ships.
  */
 export async function compressImage(file: File): Promise<File> {
   let bitmap: ImageBitmap
@@ -15,10 +22,6 @@ export async function compressImage(file: File): Promise<File> {
     bitmap = await createImageBitmap(file, { imageOrientation: "from-image" })
   } catch {
     return file
-  }
-  if (Math.min(bitmap.width, bitmap.height) < MEDIA_MIN_SIDE) {
-    bitmap.close()
-    throw new Error(`Cette image est trop petite : ${MEDIA_MIN_SIDE} px minimum sur le petit côté.`)
   }
   try {
     const source = { width: bitmap.width, height: bitmap.height }
