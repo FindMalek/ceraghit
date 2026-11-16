@@ -23,6 +23,7 @@ export const LIMITS = {
   uploadUrl: { max: 12, windowMs: 10 * MINUTE },
   mediaSign: { max: 60, windowMs: 10 * MINUTE },
   mediaConfirm: { max: 60, windowMs: 10 * MINUTE },
+  mediaRemove: { max: 60, windowMs: 10 * MINUTE },
 } as const satisfies Record<string, Limit>
 
 /** Rows older than this are dead for every limit above. */

@@ -7,6 +7,7 @@ import {
   jobRuns,
   locations,
   mailLog,
+  media,
   orderAudit,
   orderItems,
   orders,
@@ -17,6 +18,7 @@ import {
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
+import { DEMO_MEDIA_TAGS } from "./media"
 import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS } from "./scenario"
 import { localize } from "./translations"
 
@@ -113,13 +115,31 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
         priceEur: products.priceEur,
       })
     const byRef = new Map(CATALOGUE.map((p) => [p.ref, p]))
-    await tx
-      .insert(productImages)
+    const paths = [...new Set(CATALOGUE.flatMap((p) => p.images))]
+    const mediaRows = await tx
+      .insert(media)
       .values(
-        rows.flatMap((row) =>
-          byRef.get(row.ref)!.images.map((image, position) => ({ productId: row.id, image, position })),
-        ),
+        paths.map((path, i) => ({
+          key: path,
+          source: "bundled" as const,
+          filename: path.split("/").pop() ?? "image.webp",
+          confirmedAt: new Date(),
+          ...(i < DEMO_MEDIA_TAGS.length ? DEMO_MEDIA_TAGS[i] : {}),
+        })),
       )
+      .onConflictDoNothing({ target: media.key })
+      .returning({ id: media.id, key: media.key })
+    const mediaByKey = new Map(mediaRows.map((m) => [m.key, m.id]))
+    await tx.insert(productImages).values(
+      rows.flatMap((row) =>
+        byRef.get(row.ref)!.images.map((image, position) => ({
+          productId: row.id,
+          image,
+          position,
+          mediaId: mediaByKey.get(image) ?? null,
+        })),
+      ),
+    )
     await tx.insert(productVariants).values(
       rows.flatMap((row) => {
         if (!UNGLAZED_VARIANT_REFS.has(row.ref)) return []
