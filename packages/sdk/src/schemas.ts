@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { carrierIdSchema } from "./carriers"
 import { SHIPPING_COUNTRIES } from "./countries"
 
 export const currencySchema = z.enum(["TND", "EUR"])
@@ -400,6 +401,15 @@ export const orderItemSchema = z.object({
   quantity: z.number().int(),
 })
 
+export const orderShippingSchema = z.object({
+  carrier: carrierIdSchema,
+  carrierName: z.string().nullable(),
+  trackingNumber: z.string().nullable(),
+  trackingUrl: z.string().nullable(),
+  /** Null on orders shipped before tracking existed: show no date. */
+  shippedAt: z.string().nullable(),
+})
+
 export const orderSchema = z.object({
   number: z.string(),
   status: orderStatusSchema,
@@ -416,6 +426,8 @@ export const orderSchema = z.object({
 /** What the customer sees on their order page: the bank account only while a transfer is still expected. */
 export const publicOrderSchema = orderSchema.extend({
   bank: bankDetailsSchema.nullable(),
+  /** Only once the order is shipped. */
+  shipping: orderShippingSchema.nullable(),
   /** ISO instant an unpaid transfer or cash order is released, null when it never is. */
   payBefore: z.string().nullable(),
 })
@@ -452,6 +464,7 @@ export const adminOrderSchema = orderSchema.extend({
   locale: z.string(),
   paymentProvider: z.string().nullable(),
   paymentRef: z.string().nullable(),
+  shipping: orderShippingSchema.nullable(),
 })
 
 /** Dates are studio days (Africa/Tunis), `YYYY-MM-DD`, both ends included. Filters on the payment date, like the overview. */
@@ -681,6 +694,37 @@ export const mediaSignSchema = z.object({
   hash: z.string().regex(/^[a-f0-9]{64}$/),
   tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
 })
+export const mediaSortSchema = z.enum(["newest", "oldest", "name", "size", "usage"])
+export const mediaListQuerySchema = z.object({
+  q: z.string().trim().max(80).optional(),
+  sort: mediaSortSchema.default("newest"),
+  unused: z.boolean().optional(),
+  tag: z.string().trim().max(30).optional(),
+  offset: z.number().int().min(0).default(0),
+  limit: z.number().int().min(1).max(60).default(40),
+})
+export const mediaListSchema = z.object({
+  items: z.array(mediaSchema),
+  total: z.number().int(),
+  nextOffset: z.number().int().nullable(),
+})
+export const mediaUsageSchema = z.object({
+  kind: z.enum(["product", "category", "location", "site"]),
+  id: z.string(),
+  label: z.string(),
+  /** Dashboard path of the owner, e.g. `/products/<id>`. */
+  href: z.string(),
+})
+export const mediaDetailSchema = mediaSchema.extend({ usage: z.array(mediaUsageSchema) })
+export const mediaUpdateSchema = z.object({
+  id: z.string().uuid(),
+  filename: z.string().trim().min(1).max(80).optional(),
+  alt: localizedInput(200).nullable().optional(),
+  tags: z.array(z.string().trim().toLowerCase().min(1).max(30)).max(12).optional(),
+  keep: z.boolean().optional(),
+})
+export const mediaTagSchema = z.object({ tag: z.string(), count: z.number().int() })
+
 export const mediaSignResultSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("existing"), media: mediaSchema }),
   z.object({ status: z.literal("upload"), mediaId: z.string(), uploadUrl: z.string() }),

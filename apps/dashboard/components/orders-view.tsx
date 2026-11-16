@@ -1,9 +1,16 @@
 "use client"
 
-import { EnvelopeSimpleIcon, MagnifyingGlassIcon, PhoneIcon, WhatsappLogoIcon } from "@phosphor-icons/react"
+import {
+  CheckIcon,
+  CopyIcon,
+  EnvelopeSimpleIcon,
+  MagnifyingGlassIcon,
+  PhoneIcon,
+  WhatsappLogoIcon,
+} from "@phosphor-icons/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
+import { carrierDisplayName, countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
 import { showError } from "@workspace/ui/components/error-banner"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group"
@@ -23,6 +30,7 @@ import { ExportOrdersDialog } from "@/components/export-orders-dialog"
 import { MANUAL_METHOD_LABEL, MarkPaidDialog } from "@/components/mark-paid-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
+import { ShipOrderDialog } from "@/components/ship-order-dialog"
 import { SimpleSelect } from "@/components/simple-select"
 import { HoldBadge, OrderStatusBadge } from "@/components/status-badge"
 import { formatDate, formatDayYear, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
@@ -168,6 +176,8 @@ function History({ orderId }: { orderId: string }) {
 function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [pending, setPending] = useState<Action | null>(null)
+  const [editTracking, setEditTracking] = useState(false)
+  const [copied, setCopied] = useState(false)
   const setStatus = useMutation(
     orpc.admin.orders.setStatus.mutationOptions({
       onSuccess: () => {
@@ -281,6 +291,58 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                     <Line label="Payée le" value={order.paidAt ? formatDate(order.paidAt) : "—"} />
                   </dl>
                 </section>
+                {order.status === "fulfilled" && (
+                  <section>
+                    <h2 className="mb-1 font-heading text-2xl">Livraison</h2>
+                    {order.shipping ? (
+                      <dl>
+                        <Line label="Transporteur" value={carrierDisplayName(order.shipping)} />
+                        {order.shipping.trackingNumber && (
+                          <Line
+                            label="N° de suivi"
+                            value={
+                              <span className="inline-flex items-center gap-1">
+                                <span className="break-all tabular-nums">{order.shipping.trackingNumber}</span>
+                                <Button
+                                  variant="ghost"
+                                  className="size-11"
+                                  aria-label={copied ? "Numéro copié" : "Copier le numéro de suivi"}
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(order.shipping!.trackingNumber!)
+                                    setCopied(true)
+                                    setTimeout(() => setCopied(false), 1500)
+                                  }}
+                                >
+                                  {copied ? <CheckIcon /> : <CopyIcon />}
+                                </Button>
+                              </span>
+                            }
+                          />
+                        )}
+                        {order.shipping.shippedAt && (
+                          <Line label="Expédiée le" value={formatDate(order.shipping.shippedAt)} />
+                        )}
+                      </dl>
+                    ) : (
+                      <p className="text-muted-foreground">Expédiée, sans suivi enregistré.</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {order.shipping?.trackingUrl && (
+                        <a
+                          href={order.shipping.trackingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(buttonVariants({ variant: "outline" }), "h-11")}
+                        >
+                          Suivre le colis
+                        </a>
+                      )}
+                      <Button variant="outline" className="h-11" onClick={() => setEditTracking(true)}>
+                        Modifier le suivi
+                      </Button>
+                    </div>
+                  </section>
+                )}
                 <History orderId={order.id} />
               </div>
               <SheetFooter className="sticky bottom-0 flex-row flex-wrap justify-end border-t bg-background/95 backdrop-blur">
@@ -308,6 +370,21 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
         </SheetContent>
       </Sheet>
       {order && (
+        <ShipOrderDialog
+          order={order}
+          editing={editTracking}
+          current={editTracking ? order.shipping : null}
+          open={pending?.to === "fulfilled" || editTracking}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPending(null)
+              setEditTracking(false)
+            }
+          }}
+          onDone={onClose}
+        />
+      )}
+      {order && (
         <MarkPaidDialog
           order={order}
           open={pending?.to === "paid"}
@@ -316,7 +393,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
         />
       )}
       <ConfirmDialog
-        open={pending !== null && pending.to !== "paid"}
+        open={pending !== null && pending.to !== "paid" && pending.to !== "fulfilled"}
         onOpenChange={(open) => !open && setPending(null)}
         title={`${pending?.label ?? ""} ?`}
         description={pending?.confirm ?? ""}

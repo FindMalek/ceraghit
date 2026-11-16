@@ -7,6 +7,7 @@ import {
   jobRuns,
   locations,
   mailLog,
+  media,
   orderAudit,
   orderItems,
   orders,
@@ -17,6 +18,7 @@ import {
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
+import { DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "./media"
 import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS } from "./scenario"
 import { localize } from "./translations"
 
@@ -113,13 +115,43 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
         priceEur: products.priceEur,
       })
     const byRef = new Map(CATALOGUE.map((p) => [p.ref, p]))
-    await tx
-      .insert(productImages)
+    const demoByPath = new Map(
+      opts.demo
+        ? CATALOGUE.flatMap((p) =>
+            DEMO_MEDIA_BY_REF[p.ref] && p.images[0] ? [[p.images[0], DEMO_MEDIA_BY_REF[p.ref]]] : [],
+          )
+        : [],
+    )
+    const paths = [...new Set(CATALOGUE.flatMap((p) => p.images))]
+    const mediaRows = await tx
+      .insert(media)
       .values(
-        rows.flatMap((row) =>
-          byRef.get(row.ref)!.images.map((image, position) => ({ productId: row.id, image, position })),
-        ),
+        paths.map((path) => ({
+          key: path,
+          source: "bundled" as const,
+          filename: path.split("/").pop() ?? "image.webp",
+          confirmedAt: new Date(),
+          ...demoByPath.get(path),
+        })),
       )
+      .onConflictDoNothing({ target: media.key })
+      .returning({ id: media.id, key: media.key })
+    if (opts.demo)
+      await tx
+        .insert(media)
+        .values({ ...DEMO_UNUSED_MEDIA, bytes: 1, confirmedAt: new Date(), unusedSince: new Date() })
+        .onConflictDoNothing({ target: media.key })
+    const mediaByKey = new Map(mediaRows.map((m) => [m.key, m.id]))
+    await tx.insert(productImages).values(
+      rows.flatMap((row) =>
+        byRef.get(row.ref)!.images.map((image, position) => ({
+          productId: row.id,
+          image,
+          position,
+          mediaId: mediaByKey.get(image) ?? null,
+        })),
+      ),
+    )
     await tx.insert(productVariants).values(
       rows.flatMap((row) => {
         if (!UNGLAZED_VARIANT_REFS.has(row.ref)) return []
