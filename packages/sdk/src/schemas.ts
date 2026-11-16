@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { carrierIdSchema } from "./carriers"
 import { SHIPPING_COUNTRIES } from "./countries"
 
 export const currencySchema = z.enum(["TND", "EUR"])
@@ -369,6 +370,14 @@ export const orderItemSchema = z.object({
   quantity: z.number().int(),
 })
 
+export const orderShippingSchema = z.object({
+  carrier: carrierIdSchema,
+  carrierName: z.string().nullable(),
+  trackingNumber: z.string().nullable(),
+  trackingUrl: z.string().nullable(),
+  shippedAt: z.string(),
+})
+
 export const orderSchema = z.object({
   number: z.string(),
   status: orderStatusSchema,
@@ -383,7 +392,11 @@ export const orderSchema = z.object({
 })
 
 /** What the customer sees on their order page: the bank account only while a transfer is still expected. */
-export const publicOrderSchema = orderSchema.extend({ bank: bankDetailsSchema.nullable() })
+export const publicOrderSchema = orderSchema.extend({
+  bank: bankDetailsSchema.nullable(),
+  /** Only once the order is shipped. */
+  shipping: orderShippingSchema.nullable(),
+})
 
 export const manualPaymentMethodSchema = z.enum(["transfer", "payoneer", "cash", "other"])
 export type ManualPaymentMethod = z.infer<typeof manualPaymentMethodSchema>
@@ -413,6 +426,7 @@ export const adminOrderSchema = orderSchema.extend({
   locale: z.string(),
   paymentProvider: z.string().nullable(),
   paymentRef: z.string().nullable(),
+  shipping: orderShippingSchema.nullable(),
 })
 
 /** Dates are studio days (Africa/Tunis), `YYYY-MM-DD`, both ends included. Filters on the payment date, like the overview. */

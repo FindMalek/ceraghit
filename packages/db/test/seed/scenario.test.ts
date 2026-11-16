@@ -95,3 +95,17 @@ test("demo job runs cover stale, failed, interrupted, healthy and never run", ()
   expect(latest("retry-mail")).toMatchObject({ ok: true })
   expect(latest("ai-usage-rollover")).toBeUndefined()
 })
+
+test("only fulfilled orders carry shipping, shipped after payment", () => {
+  const { orders } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const fulfilled = orders.filter((o) => o.status === "fulfilled")
+  expect(fulfilled.length).toBeGreaterThan(0)
+  for (const o of fulfilled) {
+    expect(o.carrier).toBeTruthy()
+    expect(o.shippedAt!.getTime()).toBeGreaterThanOrEqual(o.paidAt!.getTime())
+  }
+  expect(fulfilled.some((o) => o.carrier === "aramex" && o.trackingUrl?.startsWith("https://"))).toBe(true)
+  for (const o of orders.filter((o) => o.status !== "fulfilled")) {
+    expect([o.carrier, o.carrierName, o.trackingNumber, o.trackingUrl, o.shippedAt].every((v) => v == null)).toBe(true)
+  }
+})

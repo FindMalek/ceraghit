@@ -264,6 +264,7 @@ export function buildScenario(
     const unique = [...new Map(lines.map((p) => [p.id, p])).values()]
     const unit = (p: ScenarioProduct) => (currency === "TND" ? p.priceTnd : p.priceEur)
     const subtotal = unique.reduce((sum, p) => sum + unit(p), 0)
+    const paidAt = status === "paid" || status === "fulfilled" ? new Date(createdAt.getTime() + 5 * 60_000) : null
     out.orders.push({
       id,
       number: `CER-${10_000 + n}`,
@@ -291,8 +292,9 @@ export function buildScenario(
             currency,
             nonce: n.toString(16).padStart(32, "0"),
           }),
-      paidAt: status === "paid" || status === "fulfilled" ? new Date(createdAt.getTime() + 5 * 60_000) : null,
+      paidAt,
       createdAt,
+      ...(status === "fulfilled" && paidAt ? demoShipping(n, paidAt) : {}),
     })
     if (transfer && (status === "paid" || status === "fulfilled")) {
       out.audit.push({
@@ -346,4 +348,21 @@ export function buildScenario(
     })
   }
   return out
+}
+
+/** Fulfilled demo orders: ~60% Aramex with a waybill, ~25% Rapid-Poste with a number only, ~15% hand delivery. */
+function demoShipping(n: number, paidAt: Date) {
+  const shippedAt = new Date(paidAt.getTime() + (3 + ((n * 5) % 45)) * 3600e3)
+  const k = n % 20
+  if (k < 12) {
+    const waybill = String(40_000_000_000 + n * 7_919)
+    return {
+      carrier: "aramex",
+      trackingNumber: waybill,
+      trackingUrl: `https://www.aramex.com/track/results?ShipmentNumber=${waybill}`,
+      shippedAt,
+    }
+  }
+  if (k < 17) return { carrier: "rapid-poste", trackingNumber: `RP${900_000 + n * 131}TN`, shippedAt }
+  return { carrier: "other", carrierName: "Livraison en main propre", shippedAt }
 }

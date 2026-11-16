@@ -211,6 +211,14 @@ export const orders = pgTable(
     paymentProvider: text("payment_provider"),
     paymentRef: text("payment_ref"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    /** "aramex" | "rapid-poste" | "dhl" | "other"; null until shipped. */
+    carrier: text("carrier"),
+    /** Free text when carrier is "other", e.g. "Transporteur local". */
+    carrierName: text("carrier_name"),
+    trackingNumber: text("tracking_number"),
+    /** https only, built from the carrier template or typed by the owner. */
+    trackingUrl: text("tracking_url"),
+    shippedAt: timestamp("shipped_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
