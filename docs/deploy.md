@@ -112,6 +112,55 @@ function, so the proxy forwards the real address in `x-ceraghit-client-ip` with 
 the matching secret. The daily cleanup also deletes counters older than a day. To unlock the owner right away:
 `delete from rate_limits where key like 'login:%'`. Optional on top: Vercel WAF rate limiting rules.
 
+## scheduled jobs
+
+Every job is `POST /cron/<name>` on the api (bearer `CRON_SECRET`), idempotent, and records each run in `job_runs`;
+Réglages shows the last run of each job and warns when one is stale. The endpoint doesn't care who calls it, so the
+scheduler can change without touching the api.
+
+| job | schedule (Africa/Tunis) | stale after |
+| :-- | :-- | :-- |
+| `cleanup-uploads` (abandoned uploads, unused library, rate limits, mail log) | daily 03:15 | 26 h |
+| `media-cleanup` (the same cleanup without the aliases) | daily 03:30 | 26 h |
+| `release-holds` (stock held by abandoned checkouts) | hourly :05 | 2 h |
+| `track-shipments` (Aramex poll) | every 3 h | 4 h |
+| `retry-mail` (failed Resend sends) | every 10 min | 30 min |
+| `ai-usage-rollover` (closes the AI quota, monthly) | 1st, 00:05 | 32 days |
+
+The schedule still calls `cleanup-uploads` and not `media-cleanup`, because the alias is what also sweeps `rate_limits`
+and the mail log; moving the daily call to `media-cleanup` is a separate change.
+
+Scheduled today: `cleanup-uploads` and `release-holds`. `media-cleanup` has a handler but no task yet; `track-shipments`,
+`retry-mail` and `ai-usage-rollover` are catalogued so Réglages lists them, and get their task when their lane registers a
+handler in `apps/api/src/cron.ts`.
+
+`apps/jobs` is the scheduler: a Trigger.dev project on the self-hosted instance https://trigger.findmalek.engineer,
+part of the Lyterion stack on the-keep (its `infra/` owns the compose file, its CI upgrades it). One `schedules.task`
+per job, which only calls the endpoint; the api keeps the body, the advisory lock and the `job_runs` row. `trigger.dev`
+and `@trigger.dev/sdk` are pinned to the server version (`4.7.3`) in `apps/jobs/package.json`: upgrade them with the
+stack, never alone. `.github/workflows/jobs.yml` deploys `--env prod` on a merge to `main` that touches `apps/jobs/**`
+or `packages/sdk/src/jobs.ts`.
+
+To add a job: register the handler in `apps/api/src/cron.ts`, list it in `packages/sdk/src/jobs.ts`, then add its
+`schedules.task` in `apps/jobs/src/schedules.ts` **once the endpoint answers** (a task calling a missing endpoint gets a
+404 and aborts every run).
+
+Owner setup, once:
+
+1. Create the project "ceraghit" on https://trigger.findmalek.engineer, with a `prod` and a `staging` environment.
+2. Set two variables per environment, in the Trigger webapp, nothing else: `CERAGHIT_API_URL` and `CRON_SECRET`. `prod`
+   is `https://api.ceraghit.com` with the production secret; `staging` is `https://api.ceraghit.findmalek.engineer`
+   with a different one. No database, bucket, mail, payment or vault credential ever reaches the homelab.
+3. A personal access token (Trigger profile → access tokens) as the `production` environment secret
+   `TRIGGER_ACCESS_TOKEN`, and the project ref (`proj_…`) as the repository variable `TRIGGER_PROJECT_REF`. Without
+   both, `jobs.yml` skips.
+4. Run each task once from the Trigger dashboard and check the `job_runs` row on Réglages.
+
+The-keep down means no job runs: the stale warning makes it visible. The fallback is Vercel Cron, which sends `GET`
+with `authorization: Bearer $CRON_SECRET`: add `crons: [{ path, schedule }]` to `apps/api/vercel.json` and accept `GET`
+on `/cron/*` only when the `user-agent` is `vercel-cron/1.0`. Not enabled, and never alongside Trigger.dev: one
+scheduler at a time.
+
 ## one-time setup
 
 **Vercel, the short way**: `cp docs/production.env.example .env.production.local`, fill it in, `npx vercel@65.9.0 login`, then
@@ -158,8 +207,8 @@ Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_P
 `PREVIEW_S3_SECRET_ACCESS_KEY`, optional `KONNECT_TEST_API_KEY` / `KONNECT_TEST_WALLET_ID`, optional `GHCR_READ_TOKEN`
 (classic PAT `read:packages`), `PROJECT_TOKEN` (classic PAT `project`, for `project.yml`).
 `production` environment variables: `PRODUCTION_WEB_HOST`,
-`PRODUCTION_API_HOST`, `PRODUCTION_DASHBOARD_HOST`, `ADMIN_EMAIL`. `production` environment secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API|WEB|DASHBOARD`, `CRON_SECRET`,
-`DATABASE_URL` (Neon, direct url for migrations), `ADMIN_PASSWORD`.
+`PRODUCTION_API_HOST`, `PRODUCTION_DASHBOARD_HOST`, `ADMIN_EMAIL`, `TRIGGER_PROJECT_REF` (see "scheduled jobs"). `production` environment secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API|WEB|DASHBOARD`, `CRON_SECRET`,
+`DATABASE_URL` (Neon, direct url for migrations), `ADMIN_PASSWORD`, `TRIGGER_ACCESS_TOKEN`.
 
 ## check before the first production deploy
 
