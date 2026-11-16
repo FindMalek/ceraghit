@@ -14,7 +14,6 @@ import {
 } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { MEDIA_MAX_BYTES } from "@workspace/sdk"
 import { asc, eq, inArray } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
@@ -459,11 +458,11 @@ describe.skipIf(!url)("router", () => {
     expect(left.map((r) => r.key)).toEqual([kept.image.slice(3)])
 
     await db.insert(uploads).values([
-      { key: "full-a", folder: "test", contentType: "image/webp", bytes: 1_248_000_000 },
-      { key: "full-b", folder: "test", contentType: "image/webp", bytes: 1_248_000_000 },
+      { key: "full-a", folder: "test", contentType: "image/webp", bytes: 1_245_000_000 },
+      { key: "full-b", folder: "test", contentType: "image/webp", bytes: 1_245_000_000 },
     ])
     await expect(
-      owner.uploads.sign({ folder: "products", contentType: "image/webp", size: MEDIA_MAX_BYTES }),
+      owner.uploads.sign({ folder: "products", contentType: "image/webp", size: 12_000_000 }),
     ).rejects.toMatchObject({ code: "PAYLOAD_TOO_LARGE" })
     await db.delete(uploads).where(inArray(uploads.key, ["full-a", "full-b"]))
     await db.delete(productImages).where(eq(productImages.image, kept.image))

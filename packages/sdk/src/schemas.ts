@@ -574,10 +574,13 @@ export const MEDIA_MIN_SIDE = 200
 export const MEDIA_MAX_BYTES = 5 * 1024 * 1024
 export const MEDIA_CONTENT_TYPE = "image/webp"
 
+/** Legacy `admin.uploads.sign` only: the dashboard shrinks images first, but Safari may fall back to the original. */
+export const UPLOAD_MAX_BYTES = 12 * 1024 * 1024
+
 export const uploadSignSchema = z.object({
   folder: z.enum(["products", "categories", "locations"]),
-  contentType: z.literal(MEDIA_CONTENT_TYPE),
-  size: z.number().int().min(1).max(MEDIA_MAX_BYTES),
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp", "image/avif"]),
+  size: z.number().int().min(1).max(UPLOAD_MAX_BYTES),
 })
 export const storageUsageSchema = z.object({
   usedBytes: z.number().int(),

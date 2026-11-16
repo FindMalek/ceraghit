@@ -16,7 +16,7 @@ import {
 import { type AnyColumn, eq, getTableColumns, sql } from "drizzle-orm"
 import type { PgTable } from "drizzle-orm/pg-core"
 import type { z } from "zod"
-import type { Storage } from "./storage"
+import { type Storage, TOO_LARGE } from "./storage"
 import { reserveUpload } from "./uploads"
 
 type MediaSignInput = z.output<typeof mediaSignSchema>
@@ -98,7 +98,12 @@ async function dropMedia(db: Db, storage: Storage, row: { id: string; key: strin
 }
 
 /** An existing confirmed image for this hash, or a presigned upload for a new one. */
-export async function signMedia(db: Db, storage: Storage, input: MediaSignInput): Promise<MediaSignResult> {
+export async function signMedia(
+  db: Db,
+  storage: Storage,
+  input: MediaSignInput,
+  attempt = 1,
+): Promise<MediaSignResult> {
   const [found] = await db.select().from(media).where(eq(media.hash, input.hash))
   if (found?.confirmedAt) {
     const existing = await getMedia(db, found.id)
@@ -127,7 +132,8 @@ export async function signMedia(db: Db, storage: Storage, input: MediaSignInput)
   if (!row) {
     // Lost a race with a parallel sign of the same bytes.
     await db.delete(uploads).where(eq(uploads.key, key))
-    return signMedia(db, storage, input)
+    if (attempt >= 2) throw new ORPCError("CONFLICT", { message: "Upload already in progress, try again." })
+    return signMedia(db, storage, input, attempt + 1)
   }
   return { status: "upload", mediaId: row.id, uploadUrl: await storage.presignPut(key, MEDIA_CONTENT_TYPE, input.size) }
 }
@@ -145,10 +151,12 @@ export async function confirmMedia(db: Db, storage: Storage, id: string): Promis
   let bytes: Uint8Array | null = null
   try {
     bytes = await storage.read(row.key, MEDIA_MAX_BYTES)
-  } catch {
-    return reject()
+  } catch (error) {
+    // Past the byte cap is a real mismatch; anything else (network, bucket error) may pass on a retry.
+    if (error instanceof Error && error.message === TOO_LARGE) return reject()
+    throw new ORPCError("SERVICE_UNAVAILABLE", { message: "Could not check the upload, try again." })
   }
-  if (!bytes) return reject()
+  if (!bytes) throw new ORPCError("CONFLICT", { message: "The upload has not arrived yet, try again." })
   const size = readWebpSize(bytes)
   const valid =
     size !== null &&

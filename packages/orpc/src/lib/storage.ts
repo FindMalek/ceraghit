@@ -1,5 +1,7 @@
 import { AwsClient } from "aws4fetch"
 
+export const TOO_LARGE = "object is larger than the limit"
+
 export interface StorageConfig {
   endpoint?: string
   region: string
@@ -80,7 +82,7 @@ export function createStorage(config: StorageConfig): Storage | null {
         total += chunk.length
         if (total > maxBytes) {
           await res.body.cancel()
-          throw new Error("object is larger than the limit")
+          throw new Error(TOO_LARGE)
         }
         chunks.push(chunk)
       }

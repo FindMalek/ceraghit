@@ -127,6 +127,15 @@ describe.skipIf(!url)("media upload", () => {
     expect(objects.size).toBe((await rows()).length)
   })
 
+  test("confirming before the file landed is retryable and keeps the reservation", async () => {
+    const bytes = webp(800, 600)
+    const signed = await owner.media.sign(input(bytes))
+    if (signed.status !== "upload") throw new Error("expected an upload")
+    await expect(owner.media.confirm({ id: signed.mediaId })).rejects.toMatchObject({ code: "CONFLICT" })
+    objects.set(new URL(signed.uploadUrl).pathname.slice(1), bytes)
+    expect((await owner.media.confirm({ id: signed.mediaId })).id).toBe(signed.mediaId)
+  })
+
   test("a header that says 4000px, or sizes different from the signed ones, is refused", async () => {
     const huge = webp(4000, 600)
     await expect(owner.media.confirm({ id: await upload(huge) })).rejects.toMatchObject({ code: "BAD_REQUEST" })
