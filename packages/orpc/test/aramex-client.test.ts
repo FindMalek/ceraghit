@@ -97,6 +97,14 @@ describe("aramex client", () => {
     expect(JSON.stringify(known.notifications)).not.toContain("SENTINEL")
   })
 
+  test("a code that echoes a secret is redacted", async () => {
+    const body = JSON.stringify({ Notifications: [{ Code: "SENTINEL-PIN", Message: "x" }], HasErrors: true })
+    const error = await client(fake(body).http)
+      .fetchCities({})
+      .catch((e) => e)
+    expect(error.code).not.toContain("SENTINEL")
+  })
+
   test("a failed shipment inside a HasErrors:false response is still an error", async () => {
     const error = await client(fake(fixture("create-shipments.error")).http)
       .createShipments({ Shipments: [] })

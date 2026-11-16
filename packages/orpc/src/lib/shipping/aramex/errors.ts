@@ -42,9 +42,10 @@ export class AramexError extends Error {
       code: redact(n.code, init.secrets ?? []),
       message: redact(n.message, init.secrets ?? []),
     }))
-    super(AramexError.describe(init.code, notifications))
+    const code = redact(init.code, init.secrets ?? [])
+    super(AramexError.describe(code, notifications))
     this.name = "AramexError"
-    this.code = init.code
+    this.code = code
     this.notifications = notifications
     this.retriable = init.retriable ?? false
     this.httpStatus = init.httpStatus ?? null

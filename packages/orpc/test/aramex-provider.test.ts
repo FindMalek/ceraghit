@@ -136,7 +136,7 @@ describe("aramex provider", () => {
 
   test("testConnection reports a login refusal without throwing", async () => {
     const res = await setup(fixture("login-error")).provider.testConnection()
-    expect(res).toMatchObject({ ok: false, code: "ERR75" })
+    expect(res).toMatchObject({ ok: false, step: "login", code: "ERR75" })
   })
 
   test("manual provider quotes nothing and refuses to create", async () => {
@@ -226,5 +226,31 @@ describe("provider factory and safety", () => {
     })
     await p.track(["1"]).catch(() => {})
     expect(n).toBe(1)
+  })
+
+  test("a label redirect is never followed, a failing rate step is reported as rate", async () => {
+    const seen: (RequestRedirect | undefined)[] = []
+    const label = JSON.stringify({
+      HasErrors: false,
+      Notifications: [],
+      ShipmentLabel: { LabelURL: "https://labels.aramex.net/a.pdf" },
+    })
+    const f = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes("PrintLabel")) return new Response(label)
+      seen.push(init?.redirect)
+      return new Response(null, { status: 302, headers: { location: "http://127.0.0.1/x" } })
+    }) as typeof fetch
+    const res = await createShippingProvider("aramex", deps("test", {}, f)).getLabel("1", "DOM")
+    expect(seen).toEqual(["manual"])
+    expect(res.pdf).toBeNull()
+
+    const g = (async (input: RequestInfo | URL) =>
+      new Response(
+        String(input).includes("FetchCountries") ? fixture("fetch-countries.ok") : fixture("login-error"),
+      )) as typeof fetch
+    expect(await createShippingProvider("aramex", deps("test", {}, g)).testConnection()).toMatchObject({
+      ok: false,
+      step: "rate",
+    })
   })
 })

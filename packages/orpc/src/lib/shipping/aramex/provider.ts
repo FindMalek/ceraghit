@@ -214,7 +214,8 @@ export class AramexShippingProvider implements ShippingProvider {
 
   private async download(url: string): Promise<Uint8Array | null> {
     try {
-      const res = await this.http(url, { signal: AbortSignal.timeout(this.timeoutMs) })
+      // A redirect could leave the Aramex hosts: never follow one
+      const res = await this.http(url, { redirect: "manual", signal: AbortSignal.timeout(this.timeoutMs) })
       return res.ok ? new Uint8Array(await res.arrayBuffer()) : null
     } catch {
       return null
@@ -306,9 +307,11 @@ export class AramexShippingProvider implements ShippingProvider {
 
   async testConnection() {
     const steps: string[] = []
+    let step: "login" | "rate" = "login"
     try {
       await this.client.fetchCountries()
       steps.push("FetchCountries")
+      step = "rate"
       await this.client.calculateRate({
         OriginAddress: { City: "Tunis", CountryCode: "TN" },
         DestinationAddress: { City: "Sousse", CountryCode: "TN" },
@@ -323,7 +326,7 @@ export class AramexShippingProvider implements ShippingProvider {
       steps.push("CalculateRate")
       return { ok: true as const, steps }
     } catch (error) {
-      if (error instanceof AramexError) return { ok: false as const, code: error.code, message: error.message }
+      if (error instanceof AramexError) return { ok: false as const, step, code: error.code, message: error.message }
       throw error
     }
   }

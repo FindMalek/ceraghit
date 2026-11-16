@@ -105,7 +105,9 @@ export interface PickupRequest {
   comments?: string
 }
 
-export type ConnectionResult = { ok: true; steps?: string[] } | { ok: false; code: string; message: string }
+export type ConnectionResult =
+  | { ok: true; steps?: string[] }
+  | { ok: false; step: "login" | "rate"; code: string; message: string }
 
 /** What manual carriers and Aramex both implement; callers never see a provider's wire format. */
 export interface ShippingProvider {
