@@ -63,6 +63,7 @@ export function VariantsField({
               value={variant.label}
               onChange={(label) => update(index, { label })}
               error={error("label.fr") ? "Le français est obligatoire." : undefined}
+              translateField="variant.label"
             />
             <div className="grid gap-4 sm:grid-cols-3">
               <MoneyInput

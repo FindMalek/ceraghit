@@ -258,6 +258,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
             value={draft.title}
             onChange={(v) => set("title", v)}
             error={errors["title.fr"] ?? errors.title}
+            translateField="product.title"
           />
           <LocalizedField
             id="description"
@@ -266,6 +267,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
             value={draft.description}
             onChange={(v) => set("description", v)}
             error={errors["description.fr"]}
+            translateField="product.description"
           />
         </FieldSet>
 
@@ -325,6 +327,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
             value={draft.material}
             onChange={(v) => set("material", v)}
             error={errors["material.fr"]}
+            translateField="product.material"
           />
           <LocalizedField
             id="technique"
@@ -332,6 +335,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
             value={draft.technique}
             onChange={(v) => set("technique", v)}
             error={errors["technique.fr"]}
+            translateField="product.technique"
           />
           <Field>
             <FieldLabel htmlFor="dimensions">Dimensions</FieldLabel>
