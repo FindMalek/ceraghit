@@ -15,6 +15,17 @@ import {
 /** French is the base language, `en` and `ar` fill in as translations are added. */
 export type Localized = { fr: string; en?: string; ar?: string }
 
+export const siteImageSlot = pgEnum("site_image_slot", [
+  "hero",
+  "studio",
+  "process",
+  "logo",
+  "og-home",
+  "og-shop",
+  "og-atelier",
+  "og-custom",
+  "texture",
+])
 export const currency = pgEnum("currency", ["TND", "EUR"])
 export const productStatus = pgEnum("product_status", ["draft", "published", "archived"])
 export const orderStatus = pgEnum("order_status", ["pending_payment", "paid", "fulfilled", "cancelled", "refunded"])
@@ -144,6 +155,24 @@ export const productImages = pgTable(
     index("product_images_product_idx").on(t.productId),
     uniqueIndex("product_images_main_idx").on(t.productId).where(sql`${t.isMain}`),
   ],
+)
+
+/** The named pictures of the storefront (hero slides, logo, share images...). `SITE_SLOTS` in the sdk describes each slot. */
+export const siteImages = pgTable(
+  "site_images",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slot: siteImageSlot("slot").notNull(),
+    mediaId: uuid("media_id")
+      .notNull()
+      .references(() => media.id, { onDelete: "restrict" }),
+    position: integer("position").notNull().default(0),
+    /** Override, falls back to `media.alt`. */
+    alt: jsonb("alt").$type<Localized>(),
+    visible: boolean("visible").notNull().default(true),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("site_images_slot_idx").on(t.slot, t.position)],
 )
 
 /**
@@ -441,6 +470,17 @@ export const invoices = pgTable(
   },
   (t) => [uniqueIndex("invoices_year_seq_idx").on(t.year, t.seq)],
 )
+
+/** Monthly AI usage, keyed by the studio month ("2026-11", Africa/Tunis). One row per month. */
+export const aiUsage = pgTable("ai_usage", {
+  month: text("month").primaryKey(),
+  requests: integer("requests").notNull().default(0),
+  tokensIn: integer("tokens_in").notNull().default(0),
+  tokensOut: integer("tokens_out").notNull().default(0),
+  /** Micro USD, so cents survive as integers. */
+  costMicroUsd: integer("cost_micro_usd").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+})
 
 export const mediaRelations = relations(media, ({ many }) => ({ productImages: many(productImages) }))
 export const categoriesRelations = relations(categories, ({ one, many }) => ({

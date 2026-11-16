@@ -15,8 +15,25 @@ settings (wallet id, mode) sit in the `config` column in clear. The row also kee
 ## Environments never mix
 
 `SECRETS_KEY` is generated per environment: production has its own, every preview/local run has a different one (or none).
-A production row is unreadable with any other key, and previews never receive production data. Set it only on the api
-Vercel project (never `NEXT_PUBLIC_*`, never web or dashboard). Optional at boot for now (nothing reads the vault yet): without it saving keys is refused and env values keep working. The first issue that reads the vault (#167, #187) makes it required in production.
+A production row is unreadable with any other key, and previews never receive production data. Set it only on the api Vercel project (never `NEXT_PUBLIC_*`, never web or dashboard).
+
+## When the key is required
+
+`SECRETS_KEY` stays optional at boot, so a missing key never takes the api down by itself. Instead:
+
+- Saving credentials without a key is refused with `PRECONDITION_FAILED` ("Le coffre des clés n'est pas configuré sur ce serveur.").
+- Using saved credentials without a key (Aramex test, provider resolution) is refused with `PRECONDITION_FAILED` in French,
+  instead of silently falling back to env values.
+- The api refuses to boot only when an `integration_credentials` row holds secrets while no key is configured
+  (`assertVaultKeyForRows`): the data would be unreadable and every provider call would degrade. Set the key the data was
+  saved with, or clear the row from the database.
+
+## Owner checklist (production, Vercel api project)
+
+1. `SECRETS_KEY`: generate with the command below, store a copy in the password manager (a lost key means re-entering secrets).
+2. Optional env fallback for Aramex (it always talks to the Aramex test host: live is only enabled by saving the settings in the dashboard), only if the owner does not enter credentials in the dashboard: `ARAMEX_USERNAME`,
+   `ARAMEX_PASSWORD`, `ARAMEX_ACCOUNT_NUMBER`, `ARAMEX_ACCOUNT_PIN`, `ARAMEX_ACCOUNT_ENTITY`, `ARAMEX_ACCOUNT_COUNTRY_CODE`.
+3. Redeploy the api, then open Livraison in the dashboard and use "Tester la connexion".
 
 ## Generate a key
 

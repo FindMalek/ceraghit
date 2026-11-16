@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 import { ORPCError } from "@orpc/server"
-import { categories, type Db, locations, media, productImages, products, uploads } from "@workspace/db"
+import { categories, type Db, locations, media, productImages, products, siteImages, uploads } from "@workspace/db"
 import {
   MEDIA_CONTENT_TYPE,
   MEDIA_MAX_BYTES,
@@ -14,6 +14,7 @@ import {
   type mediaUpdateSchema,
   type mediaUsageSchema,
   readWebpSize,
+  SITE_SLOTS,
   slugify,
 } from "@workspace/sdk"
 import { type AnyColumn, and, asc, desc, eq, getTableColumns, type SQL, sql } from "drizzle-orm"
@@ -28,7 +29,7 @@ type MediaSignResult = z.output<typeof mediaSignResultSchema>
 export interface MediaReference {
   table: PgTable
   column: AnyColumn
-  kind: "product" | "category" | "location"
+  kind: "product" | "category" | "location" | "site"
 }
 
 /** Every foreign key to `media.id`. Usage counts, the delete guard and cleanup all read this list. */
@@ -36,6 +37,7 @@ export const MEDIA_REFERENCES: readonly MediaReference[] = [
   { table: productImages, column: productImages.mediaId, kind: "product" },
   { table: categories, column: categories.imageMediaId, kind: "category" },
   { table: locations, column: locations.imageMediaId, kind: "location" },
+  { table: siteImages, column: siteImages.mediaId, kind: "site" },
 ]
 
 /** `(select count(*) ...) + ...` of the pictures' references, for a query on `media`. */
@@ -154,6 +156,10 @@ export async function mediaUsage(db: Db, id: string): Promise<MediaUsage[]> {
         .from(categories)
         .where(eq(categories.imageMediaId, id))
       for (const r of rows) out.push({ kind: "category", id: r.id, label: r.name.fr, href: "/categories" })
+    } else if (ref.kind === "site") {
+      const rows = await db.selectDistinct({ slot: siteImages.slot }).from(siteImages).where(eq(siteImages.mediaId, id))
+      for (const r of rows)
+        out.push({ kind: "site", id: r.slot, label: SITE_SLOTS[r.slot].label, href: `/site-images#${r.slot}` })
     } else {
       const rows = await db
         .select({ id: locations.id, name: locations.name })

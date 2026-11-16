@@ -269,6 +269,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@workspace/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.4(bun-types@1.4.3)(postgres@3.4.9)

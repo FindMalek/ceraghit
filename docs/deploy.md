@@ -87,10 +87,17 @@ runs `pnpm db:generate` again. `node scripts/check-migrations.mjs --base origin/
 
 Every file sent to the bucket is a row in `uploads` (key, folder, bytes). The dashboard compresses each photo to WebP
 (2400px long side, quality 0.86) before the direct upload, refuses an upload past `STORAGE_QUOTA_BYTES` (2.5 GB, in
-`packages/sdk`) and shows the usage in Réglages. `.github/workflows/cleanup-uploads.yml` calls `POST /cron/cleanup-uploads`
-(bearer `CRON_SECRET`) every day: a photo no product, category, location or request uses is marked unused, and deleted
-from R2 and the counter after 30 days unused. `cleanup-dev-bucket.yml` does the homelab bucket: files of closed PRs and
-anything older than 14 days.
+`packages/sdk`) and shows the usage in Réglages. `POST /cron/media-cleanup` (bearer `CRON_SECRET`, daily, `cleanup-uploads` is an alias until the schedule moves) runs two tiers:
+
+- abandoned: an upload in an image folder (`media/`, `products/`, `categories/`, `locations/`) never confirmed as media is deleted 48 h after signing
+- unused: a confirmed library image nothing shows (no product, category or location, no `s3:` string, not pinned with `keep`) is marked `unused_since`, shown with a warning for its last 7 days and deleted 30 days after the mark; used again it is unmarked. Customer request photos follow the same 30 days
+- never touched: referenced or pinned files, bundled images, anything outside the image folders, keys in any `s3:` setting or registered in `STORAGE_REFERENCES` (`packages/orpc/src/lib/cleanup.ts`; other features that keep files in an image folder add their keys there)
+- at most 200 files per run; rows go first (usage re-counted under a row lock), the R2 object after the commit, a failed removal is logged and counted in `errors`
+
+Manual dry run, nothing is written or deleted (counts in the response and the `job_runs` row, keys in the api log):
+`curl -X POST -H "authorization: Bearer $CRON_SECRET" "https://<api>/cron/media-cleanup?dryRun=1"`.
+`cleanup-dev-bucket.yml` does the homelab bucket: files of closed PRs and anything older than 14 days except `staging/`
+(staging is cleaned by the staging api's own run).
 
 Jobs are `POST /cron/<name>` (bearer `CRON_SECRET`), each run is a row in `job_runs` and Réglages shows the last run of
 every job with a stale warning. To add one, register it in `apps/api/src/cron.ts` and list it in

@@ -28,7 +28,7 @@ before the visitor accepts), and updating the cookie section of the privacy page
 | --- | --- | --- |
 | orders and their invoices | 10 years (accounting) | anonymise the customer fields, below |
 | custom requests and their photos | 12 months after the last exchange | delete the request, below |
-| uploads no row uses | 30 days unused | the daily `cleanup-uploads` cron deletes the file |
+| uploads no row uses | 48 h if never confirmed, 30 days unused (warning the last 7) | the daily `media-cleanup` cron deletes the file |
 
 Nothing deletes requests automatically: the 12 months are applied by hand, once a month. `custom_requests` has no
 last-exchange column, so `created_at` is the closest date; before deleting, check in the shop mailbox that the

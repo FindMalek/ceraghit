@@ -18,7 +18,7 @@ import {
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
-import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "./media"
+import { DEMO_HIDDEN_HERO, DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA, ensureSiteImages } from "./media"
 import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS } from "./scenario"
 import { localize } from "./translations"
 
@@ -64,6 +64,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
       .onConflictDoUpdate({ target: admins.email, set: { passwordHash } })
     done.admin = true
   }
+  await ensureSiteImages(db, { demo: opts.demo })
   if (!opts.catalog && !opts.demo) return done
 
   const [existing] = await db.select({ n: count() }).from(categories)

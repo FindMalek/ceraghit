@@ -1,5 +1,7 @@
 import { type Db, settings } from "@workspace/db"
 import {
+  type AiSettings,
+  aiSettingsSchema,
   bankFromProfile,
   DEFAULT_HOLDS,
   DEFAULT_SHIPPING_RATES,
@@ -82,6 +84,18 @@ export async function effectivePaymentMethods(
   if (!effective.transfer) return effective
   const hasBank = bankFromProfile(await getShopProfile(services.db)) !== null
   return { ...effective, transfer: hasBank }
+}
+
+const AI_KEY = "ai"
+
+export async function getAiSettings(db: Db): Promise<AiSettings> {
+  const [row] = await db.select().from(settings).where(eq(settings.key, AI_KEY)).limit(1)
+  const parsed = aiSettingsSchema.safeParse(row?.value)
+  return parsed.success ? parsed.data : aiSettingsSchema.parse({})
+}
+
+export async function saveAiSettings(db: Db, value: AiSettings): Promise<void> {
+  await db.insert(settings).values({ key: AI_KEY, value }).onConflictDoUpdate({ target: settings.key, set: { value } })
 }
 
 const TUTORIALS_KEY = "tutorials"
