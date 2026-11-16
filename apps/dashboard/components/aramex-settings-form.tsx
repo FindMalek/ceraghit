@@ -15,6 +15,7 @@ import { type FormEvent, useState } from "react"
 import { IntegrationSourceBadge } from "@/components/integration-source-badge"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { SecretInput } from "@/components/secret-input"
+import { aramexTouched, validateAramex } from "@/lib/aramex-form"
 import { errorMessage } from "@/lib/errors"
 
 type Secrets = { password?: string | null; accountPin?: string | null }
@@ -42,6 +43,7 @@ function TextField({
   onChange,
   type = "text",
   inputMode,
+  error,
 }: {
   id: string
   label: string
@@ -50,6 +52,7 @@ function TextField({
   onChange: (value: string) => void
   type?: string
   inputMode?: "numeric" | "tel" | "email"
+  error?: string | undefined
 }) {
   return (
     <Field>
@@ -61,9 +64,11 @@ function TextField({
         autoComplete="off"
         className="h-11"
         value={value}
+        aria-invalid={Boolean(error)}
         onChange={(e) => onChange(e.target.value)}
       />
       {help && <FieldDescription>{help}</FieldDescription>}
+      {error && <FieldError>{error}</FieldError>}
     </Field>
   )
 }
@@ -128,6 +133,20 @@ function Body({
     productTypes: { DOM: dom.trim(), EXP: exp.trim() },
     ...(shipper.companyName ? { shipper } : {}),
   }
+  const values = {
+    userName,
+    accountNumber,
+    accountEntity,
+    accountCountryCode: country,
+    productTypes: { DOM: dom, EXP: exp },
+    shipper,
+    passwordSet: secrets.password === undefined ? (aramex.secrets.password?.configured ?? false) : !!secrets.password,
+    pinSet: secrets.accountPin === undefined ? (aramex.secrets.accountPin?.configured ?? false) : !!secrets.accountPin,
+  }
+  const touched = aramexTouched(values)
+  const errors = touched ? validateAramex(values) : {}
+  const invalid = Object.keys(errors).length > 0
+  const needsAramex = mode.provider === "aramex" && !touched
   const liveLocked = !production || !confirmed
   const touch = () => {
     setSaved(false)
@@ -165,11 +184,13 @@ function Body({
   const submit = (event: FormEvent) => {
     event.preventDefault()
     setResult(null)
-    save.mutate({ mode, aramex: { config, secrets } })
+    if (invalid || needsAramex) return
+    save.mutate({ mode, ...(touched ? { aramex: { config, secrets } } : {}) })
   }
   const runTest = () => {
     setError(null)
     setResult(null)
+    if (!touched || invalid) return
     test.mutate({ config, secrets })
   }
 
@@ -284,6 +305,7 @@ function Body({
           </Field>
           <TextField
             id="aramex-user"
+            error={errors["userName"]}
             label="Nom d'utilisateur"
             inputMode="email"
             value={userName}
@@ -305,9 +327,11 @@ function Body({
               Le mot de passe de cet utilisateur API (pas celui de votre compte aramex.com si Aramex vous en a donné un
               autre).
             </FieldDescription>
+            {errors.password && <FieldError>{errors.password}</FieldError>}
           </div>
           <TextField
             id="aramex-account"
+            error={errors["accountNumber"]}
             label="Numéro de compte"
             inputMode="numeric"
             value={accountNumber}
@@ -328,9 +352,11 @@ function Body({
             <FieldDescription className="mt-2">
               Code PIN associé au compte, fourni par Aramex avec l'accès API.
             </FieldDescription>
+            {errors.accountPin && <FieldError>{errors.accountPin}</FieldError>}
           </div>
           <TextField
             id="aramex-entity"
+            error={errors["accountEntity"]}
             label="Entité du compte"
             value={accountEntity}
             onChange={bind(setAccountEntity)}
@@ -338,14 +364,27 @@ function Body({
           />
           <TextField
             id="aramex-country"
+            error={errors["accountCountryCode"]}
             label="Pays du compte"
             value={country}
             onChange={bind(setCountry)}
             help="Code pays du compte (TN pour la Tunisie)."
           />
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextField id="aramex-dom" label="Type de produit national" value={dom} onChange={bind(setDom)} />
-            <TextField id="aramex-exp" label="Type de produit international" value={exp} onChange={bind(setExp)} />
+            <TextField
+              id="aramex-dom"
+              error={errors["dom"]}
+              label="Type de produit national"
+              value={dom}
+              onChange={bind(setDom)}
+            />
+            <TextField
+              id="aramex-exp"
+              error={errors["exp"]}
+              label="Type de produit international"
+              value={exp}
+              onChange={bind(setExp)}
+            />
           </div>
           <FieldDescription>
             Codes de service Aramex. Demandez « les ProductType autorisés sur notre compte pour le national (DOM) et
@@ -369,24 +408,51 @@ function Body({
           <h2 id="shipper-title" className="font-heading text-2xl">
             Adresse d'expédition
           </h2>
-          <TextField id="sh-company" label="Société" value={shipper.companyName} onChange={setShip("companyName")} />
+          <TextField
+            id="sh-company"
+            error={errors["shipper.companyName"]}
+            label="Société"
+            value={shipper.companyName}
+            onChange={setShip("companyName")}
+          />
           <TextField
             id="sh-person"
+            error={errors["shipper.personName"]}
             label="Nom du contact"
             value={shipper.personName}
             onChange={setShip("personName")}
           />
           <TextField
             id="sh-phone"
+            error={errors["shipper.phone"]}
             label="Téléphone"
             inputMode="tel"
             value={shipper.phone}
             onChange={setShip("phone")}
           />
-          <TextField id="sh-email" label="E-mail" inputMode="email" value={shipper.email} onChange={setShip("email")} />
-          <TextField id="sh-line1" label="Adresse" value={shipper.line1} onChange={setShip("line1")} />
+          <TextField
+            id="sh-email"
+            error={errors["shipper.email"]}
+            label="E-mail"
+            inputMode="email"
+            value={shipper.email}
+            onChange={setShip("email")}
+          />
+          <TextField
+            id="sh-line1"
+            error={errors["shipper.line1"]}
+            label="Adresse"
+            value={shipper.line1}
+            onChange={setShip("line1")}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextField id="sh-city" label="Ville" value={shipper.city} onChange={setShip("city")} />
+            <TextField
+              id="sh-city"
+              error={errors["shipper.city"]}
+              label="Ville"
+              value={shipper.city}
+              onChange={setShip("city")}
+            />
             <TextField
               id="sh-postal"
               label="Code postal"
@@ -398,14 +464,24 @@ function Body({
 
         <section className="flex flex-col gap-3">
           <div>
-            <Button type="button" variant="outline" className="h-11" disabled={test.isPending} onClick={runTest}>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={test.isPending || !touched || invalid}
+              onClick={runTest}
+            >
               {test.isPending && <Spinner />}
               Tester la connexion
             </Button>
           </div>
+          {(!touched || invalid) && (
+            <FieldDescription>Renseignez les identifiants ci-dessus pour tester la connexion.</FieldDescription>
+          )}
           {result && <TestResult result={result} />}
         </section>
 
+        {needsAramex && <FieldError>Renseignez les identifiants Aramex avant de choisir Aramex.</FieldError>}
         {error && <FieldError>{error}</FieldError>}
         {saved && (
           <p role="status" className="text-primary text-sm">
@@ -417,7 +493,7 @@ function Body({
         </Badge>
       </FieldGroup>
       <div className="sticky bottom-0 z-10 mt-auto flex justify-end border-t bg-background/95 px-4 py-3 backdrop-blur md:px-6">
-        <Button type="submit" className="h-11 min-w-40" disabled={save.isPending}>
+        <Button type="submit" className="h-11 min-w-40" disabled={save.isPending || invalid || needsAramex}>
           {save.isPending && <Spinner />}
           Enregistrer
         </Button>

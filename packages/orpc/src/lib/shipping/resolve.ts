@@ -10,6 +10,8 @@ import type { ShippingProvider } from "./types"
 
 export const LIVE_ONLY_PRODUCTION = "Le mode réel Aramex n'est autorisé qu'en production."
 export const LIVE_NEEDS_CONFIRMATION = "Confirmez les types de produit avec Aramex avant d'activer le mode réel."
+export const LIVE_UNVERIFIED =
+  "Le mode réel Aramex attend la vérification des réglages d'étiquette et de paiement : utilisez le mode test pour l'instant."
 const MISSING = "Renseignez et testez les identifiants Aramex avant de l'activer."
 
 export interface AramexInputs {
@@ -21,11 +23,27 @@ export function aramexComplete({ config, secrets }: AramexInputs): boolean {
   return !!(config.userName && config.accountNumber && config.accountEntity && secrets.password && secrets.accountPin)
 }
 
-/** Live only in production and only once the product types are confirmed; everywhere else the test host. */
+/** The unverified Aramex values (docs/aramex.md) must be set explicitly before live: no defaults. */
+export function liveReady(config: Record<string, unknown>): boolean {
+  return (
+    config.productTypesConfirmed === true &&
+    typeof config.labelReportId === "number" &&
+    typeof config.paymentType === "string" &&
+    Array.isArray(config.deliveredCodes) &&
+    config.deliveredCodes.length > 0
+  )
+}
+
+export function assertLiveAllowed(config: Record<string, unknown>): void {
+  if (config.productTypesConfirmed !== true) {
+    throw new ORPCError("PRECONDITION_FAILED", { message: LIVE_NEEDS_CONFIRMATION })
+  }
+  if (!liveReady(config)) throw new ORPCError("PRECONDITION_FAILED", { message: LIVE_UNVERIFIED })
+}
+
+/** Live only in production and only once everything is confirmed; everywhere else the test host. */
 export function effectiveMode(services: Services, config: Record<string, unknown>): "test" | "live" {
-  return config.mode === "live" && services.config.appEnv === "production" && config.productTypesConfirmed === true
-    ? "live"
-    : "test"
+  return config.mode === "live" && services.config.appEnv === "production" && liveReady(config) ? "live" : "test"
 }
 
 export function aramexDeps(services: Services, input: AramexInputs, timeoutMs?: number): ShippingDeps {
@@ -53,9 +71,9 @@ export function aramexDeps(services: Services, input: AramexInputs, timeoutMs?: 
         mode === "live"
           ? {
               productTypes,
-              labelReportId: DEFAULT_ARAMEX_CONFIG.labelReportId,
-              paymentType: DEFAULT_ARAMEX_CONFIG.paymentType,
-              deliveredCodes: DEFAULT_ARAMEX_CONFIG.deliveredCodes,
+              labelReportId: config.labelReportId as number,
+              paymentType: config.paymentType as string,
+              deliveredCodes: config.deliveredCodes as string[],
             }
           : { productTypes },
     },
@@ -94,15 +112,11 @@ const UNREACHABLE = "Aramex ne répond pas. Réessayez dans un instant."
 /** Fixed French messages only: nothing the provider said and no credential ever reaches the owner's screen. */
 export async function runConnectionTest(services: Services, input: AramexInputs): Promise<ConnectionTestResult> {
   if (!aramexComplete(input)) {
-    throw new ORPCError("PRECONDITION_FAILED", { message: "Renseignez tous les identifiants avant de tester la connexion à Aramex." })
+    throw new ORPCError("PRECONDITION_FAILED", {
+      message: "Renseignez tous les identifiants avant de tester la connexion à Aramex.",
+    })
   }
-  if (
-    input.config.mode === "live" &&
-    services.config.appEnv === "production" &&
-    input.config.productTypesConfirmed !== true
-  ) {
-    throw new ORPCError("PRECONDITION_FAILED", { message: LIVE_NEEDS_CONFIRMATION })
-  }
+  if (input.config.mode === "live" && services.config.appEnv === "production") assertLiveAllowed(input.config)
   const provider = createShippingProvider("aramex", aramexDeps(services, input, 8000))
   const step = (name: "login" | "rate", ok: boolean, message?: string) => ({
     name,
@@ -123,11 +137,8 @@ export async function runConnectionTest(services: Services, input: AramexInputs)
 
 export { MISSING as ARAMEX_MISSING }
 
-/** `<provider>:<environment>` for /health, no secrets. */
+/** Public: only the saved provider and the app environment, nothing read from the vault and nothing derived from secrets. */
 export async function shippingHealth(services: Services): Promise<string> {
-  const { provider, degraded } = await resolveShipping(services).catch(() => ({ provider: null, degraded: null }))
-  if (!provider) return "manual:none"
-  if (provider.id === "manual") return degraded ? "manual:degraded" : "manual:none"
-  const found = await getIntegration(services, "aramex")
-  return `aramex:${effectiveMode(services, found?.config ?? {})}`
+  const { provider } = await getShippingSettings(services.db)
+  return `${provider}:${services.config.appEnv}`
 }

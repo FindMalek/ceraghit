@@ -11,6 +11,7 @@ import { createMailer, mailTransport } from "./mailer"
 import { createServer } from "./server"
 
 const env = loadEnv()
+if (env.APP_ENV === "production" && env.ARAMEX_FAKE) throw new Error("ARAMEX_FAKE is not allowed in production")
 const db = createDb(env.DATABASE_URL, env.DB_POOL_MAX)
 
 if (env.BOOTSTRAP) {

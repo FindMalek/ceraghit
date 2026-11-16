@@ -45,9 +45,9 @@ unsaved values, never stores them, 10 tests per 10 minutes) and saves. The test 
 - Numéro de compte: digits only, on the Aramex invoices. Entité du compte: 3 letters, often `TUN`. Pays du compte: `TN`.
 - Types de produit national (`DOM`, default `ONP`) and international (`EXP`, default `PPX`): ask the rep which ProductType
   codes are allowed on the account.
-- Mode réel: only in production and only after the owner confirms the product types (switch in the form). Outside
+- Mode réel: only in production, after the owner confirms the product types (switch in the form) and `labelReportId`, `paymentType`, `deliveredCodes` are set explicitly in the config (no defaults until #198 verifies them, no form field yet). Outside
   production the test host is used even if a row says live. Aramex without complete credentials falls back to manual
   shipping and the page says so.
 - `/health` reports `shipping: "<provider>:<environment>"`.
-- Env fallback (production): `ARAMEX_USERNAME`, `ARAMEX_PASSWORD`, `ARAMEX_ACCOUNT_NUMBER`, `ARAMEX_ACCOUNT_PIN`,
+- Env fallback (credentials only, always the test host; live needs the dashboard settings): `ARAMEX_USERNAME`, `ARAMEX_PASSWORD`, `ARAMEX_ACCOUNT_NUMBER`, `ARAMEX_ACCOUNT_PIN`,
   `ARAMEX_ACCOUNT_ENTITY`, `ARAMEX_ACCOUNT_COUNTRY_CODE`.

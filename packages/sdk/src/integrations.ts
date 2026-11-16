@@ -52,6 +52,10 @@ export const aramexConfigSchema = z
       .optional(),
     /** The owner checked the product types with the Aramex rep: the only way to unlock live. */
     productTypesConfirmed: z.boolean().optional(),
+    /** Unverified until #198: live needs all three set explicitly, there is no default. */
+    labelReportId: z.number().int().positive().optional(),
+    paymentType: z.string().trim().min(1).max(5).optional(),
+    deliveredCodes: z.array(z.string().trim().min(1).max(10)).min(1).max(10).optional(),
     shipper: aramexShipperSchema.optional(),
   })
   .strict()

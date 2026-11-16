@@ -31,7 +31,7 @@ A production row is unreadable with any other key, and previews never receive pr
 ## Owner checklist (production, Vercel api project)
 
 1. `SECRETS_KEY`: generate with the command below, store a copy in the password manager (a lost key means re-entering secrets).
-2. Optional env fallback for Aramex, only if the owner does not enter credentials in the dashboard: `ARAMEX_USERNAME`,
+2. Optional env fallback for Aramex (it always talks to the Aramex test host: live is only enabled by saving the settings in the dashboard), only if the owner does not enter credentials in the dashboard: `ARAMEX_USERNAME`,
    `ARAMEX_PASSWORD`, `ARAMEX_ACCOUNT_NUMBER`, `ARAMEX_ACCOUNT_PIN`, `ARAMEX_ACCOUNT_ENTITY`, `ARAMEX_ACCOUNT_COUNTRY_CODE`.
 3. Redeploy the api, then open Livraison in the dashboard and use "Tester la connexion".
 

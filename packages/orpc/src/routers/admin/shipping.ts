@@ -12,7 +12,7 @@ import { enforceLimit } from "../../lib/rate-limit"
 import {
   ARAMEX_MISSING,
   aramexComplete,
-  LIVE_NEEDS_CONFIRMATION,
+  assertLiveAllowed,
   LIVE_ONLY_PRODUCTION,
   resolveShipping,
   runConnectionTest,
@@ -47,20 +47,25 @@ export const shippingRouter = {
       if (config?.mode === "live") {
         if (context.config.appEnv !== "production")
           throw new ORPCError("BAD_REQUEST", { message: LIVE_ONLY_PRODUCTION })
-        if (config.productTypesConfirmed !== true) {
-          throw new ORPCError("PRECONDITION_FAILED", { message: LIVE_NEEDS_CONFIRMATION })
+        assertLiveAllowed(config)
+      }
+      if (input.mode.provider === "aramex") {
+        // Checked on what would be stored, before anything is saved: a refusal leaves the credentials untouched.
+        await assertVaultReadable(context)
+        const saved = await getIntegration(context, "aramex")
+        const secrets: Record<string, string> = { ...saved?.secrets }
+        for (const [k, v] of Object.entries(input.aramex?.secrets ?? {})) {
+          if (v === null) delete secrets[k]
+          else if (v) secrets[k] = v
         }
+        const merged = { config: (config ?? saved?.config ?? {}) as Record<string, unknown>, secrets }
+        if (!aramexComplete(merged)) throw new ORPCError("PRECONDITION_FAILED", { message: ARAMEX_MISSING })
       }
       if (input.aramex) {
         await saveIntegration(context, context.admin.id, "aramex", {
           config: aramexConfigSchema.parse(input.aramex.config),
           secrets: input.aramex.secrets,
         })
-      }
-      if (input.mode.provider === "aramex") {
-        await assertVaultReadable(context)
-        const found = await getIntegration(context, "aramex")
-        if (!found || !aramexComplete(found)) throw new ORPCError("PRECONDITION_FAILED", { message: ARAMEX_MISSING })
       }
       await saveShippingSettings(context.db, input.mode)
       return view(context)
