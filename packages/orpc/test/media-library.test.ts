@@ -189,4 +189,49 @@ describe.skipIf(!url)("media library", () => {
     ])
     expect(detail.usageCount).toBe(2)
   })
+
+  test("an empty patch returns the image, a tag filter ignores case, % and _ are literal", async () => {
+    const tag = `Mix${run}`
+    const id = await addMedia(`plain-${run}`, { tags: [tag.toLowerCase()] })
+    expect((await owner.media.update({ id })).id).toBe(id)
+    const base = { limit: 10, offset: 0, sort: "newest" as const }
+    expect((await owner.media.list({ ...base, tag })).items.map((m) => m.id)).toEqual([id])
+    expect((await owner.media.list({ ...base, q: `%${run}` })).items).toHaveLength(0)
+    expect((await owner.media.list({ ...base, q: `pl_in-${run}` })).items).toHaveLength(0)
+  })
+
+  test("remove waits for a concurrent attach and then refuses", async () => {
+    const id = await addMedia(`race-${run}`)
+    const [category] = await db.select({ id: categories.id }).from(categories).limit(1)
+    let release!: () => void
+    let attached!: () => void
+    const gate = new Promise<void>((r) => (release = r))
+    const ready = new Promise<void>((r) => (attached = r))
+    const attach = db.transaction(async (tx) => {
+      const [p] = await tx
+        .insert(products)
+        .values({
+          ref: `T${run}r`,
+          slug: `t-${run}-r`,
+          categoryId: category!.id,
+          title: { fr: "Race" },
+          priceTnd: 1000,
+          priceEur: 300,
+        })
+        .returning({ id: products.id })
+      productIds.push(p!.id)
+      await tx.insert(productImages).values({ productId: p!.id, image: "s3:race", mediaId: id, position: 0 })
+      attached()
+      await gate
+    })
+    await ready
+    const removing = owner.media.remove({ id }).then(
+      () => "removed",
+      (e) => e.code as string,
+    )
+    release()
+    await attach
+    expect(await removing).toBe("CONFLICT")
+    expect(await db.select().from(media).where(eq(media.id, id))).toHaveLength(1)
+  })
 })

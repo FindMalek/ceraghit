@@ -106,7 +106,7 @@ export async function listMedia(db: Db, query: MediaListQuery) {
     conds.push(sql`(${sql.join(matches, sql` or `)})`)
   }
   if (query.unused) conds.push(sql`${usage} = 0`)
-  if (query.tag) conds.push(sql`${media.tags} @> array[${query.tag}]::text[]`)
+  if (query.tag) conds.push(sql`${media.tags} @> array[${query.tag.toLowerCase()}]::text[]`)
   const where = and(...conds)
 
   const order = {
@@ -165,6 +165,12 @@ export async function mediaUsage(db: Db, id: string): Promise<MediaUsage[]> {
   return out
 }
 
+async function getMediaOrThrow(db: Db, id: string): Promise<Media> {
+  const found = await getMedia(db, id)
+  if (!found) throw new ORPCError("NOT_FOUND", { message: "Media not found." })
+  return found
+}
+
 export async function getMediaDetail(db: Db, id: string) {
   const found = await getMedia(db, id)
   if (!found) throw new ORPCError("NOT_FOUND", { message: "Media not found." })
@@ -182,6 +188,7 @@ export async function updateMedia(db: Db, input: MediaUpdate): Promise<Media> {
   if (input.alt !== undefined) set.alt = input.alt
   if (input.tags !== undefined) set.tags = [...new Set(input.tags)].sort()
   if (input.keep !== undefined) set.keep = input.keep
+  if (Object.keys(set).length === 0) return getMediaOrThrow(db, input.id)
   const [row] = await db
     .update(media)
     .set(set)

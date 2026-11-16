@@ -1,10 +1,26 @@
 import type { Localized } from "../schema"
 
-/** Alt text and tags for the first catalogue pictures, so search and sort have something to show. */
-export const DEMO_MEDIA_TAGS: { alt: Localized; tags: string[] }[] = [
-  { alt: { fr: "Vase noir émaillé", en: "Glazed black vase", ar: "مزهرية سوداء مطلية" }, tags: ["vase", "noir"] },
-  { alt: { fr: "Vase noir brillant", en: "Glossy black vase", ar: "مزهرية سوداء لامعة" }, tags: ["vase", "noir"] },
-  { alt: { fr: "Lampe en céramique", en: "Ceramic lamp", ar: "مصباح من السيراميك" }, tags: ["lampe"] },
-  { alt: { fr: "Lampe de table noire", en: "Black table lamp", ar: "مصباح طاولة أسود" }, tags: ["lampe", "noir"] },
-  { alt: { fr: "Grand vase décoratif", en: "Large decorative vase", ar: "مزهرية كبيرة للزينة" }, tags: ["vase"] },
-]
+interface DemoMedia {
+  alt: Localized
+  tags: string[]
+}
+
+/** Demo alt text and tags, by the product ref whose first picture they describe. */
+export const DEMO_MEDIA_BY_REF: Record<string, DemoMedia> = {
+  "0010": { alt: { fr: "Curda Seca", en: "Curda Seca piece", ar: "قطعة كوردا سيكا" }, tags: ["curda-seca"] },
+  "0200": { alt: { fr: "Lampe votive", en: "Votive lamp", ar: "مصباح نذري" }, tags: ["lampe"] },
+  "0201": { alt: { fr: "Lampe votive", en: "Votive lamp", ar: "مصباح نذري" }, tags: ["lampe"] },
+  "0050": { alt: { fr: "Medusa en bas-relief", en: "Medusa bas-relief", ar: "ميدوزا نحت بارز" }, tags: ["bas-relief"] },
+  "0002": {
+    alt: { fr: "Fontaine andalouse", en: "Andalusian fountain", ar: "نافورة أندلسية" },
+    tags: ["haut-relief"],
+  },
+}
+
+/** A picture uploaded but not attached to anything, so the "unused" filter has something to show. */
+export const DEMO_UNUSED_MEDIA = {
+  key: "demo/media/atelier-inutilise.webp",
+  filename: "atelier-inutilise.webp",
+  alt: { fr: "Atelier", en: "Studio", ar: "الورشة" } as Localized,
+  tags: ["atelier"],
+}
