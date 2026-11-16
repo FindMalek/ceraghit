@@ -21,6 +21,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@workspace/sdk": "workspace:*",
     "drizzle-orm": "catalog:",
     "postgres": "catalog:"
   },
