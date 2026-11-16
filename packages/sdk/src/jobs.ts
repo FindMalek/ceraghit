@@ -24,6 +24,14 @@ export const JOBS: JobSpec[] = [
     staleAfterMinutes: 26 * 60,
   },
   {
+    name: "media-cleanup",
+    label: "Nettoyage de la médiathèque",
+    cron: "30 3 * * *",
+    timezone: "Africa/Tunis",
+    schedule: "Chaque jour à 03:30",
+    staleAfterMinutes: 26 * 60,
+  },
+  {
     name: "release-holds",
     label: "Libération du stock réservé",
     cron: "5 * * * *",
@@ -61,6 +69,9 @@ export const JOBS: JobSpec[] = [
 export const JOB_COUNT_LABELS: Record<string, [one: string, other: string]> = {
   released: ["commande libérée", "commandes libérées"],
   deleted: ["photo supprimée", "photos supprimées"],
+  abandonedDeleted: ["envoi abandonné supprimé", "envois abandonnés supprimés"],
+  unusedDeleted: ["photo inutilisée supprimée", "photos inutilisées supprimées"],
+  warned: ["photo bientôt supprimée", "photos bientôt supprimées"],
   marked: ["photo marquée inutilisée", "photos marquées inutilisées"],
   restored: ["photo restaurée", "photos restaurées"],
   rateLimits: ["limite purgée", "limites purgées"],

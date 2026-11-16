@@ -99,7 +99,8 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
       if (given.length !== wanted.length || !timingSafeEqual(given, wanted)) {
         return new Response("Unauthorized", { status: 401 })
       }
-      const outcome = await runJob(services, name, (now) => job.run(services, now))
+      const dryRun = url.searchParams.get("dryRun") === "1"
+      const outcome = await runJob(services, name, (now) => job.run(services, now, { dryRun }))
       return Response.json(outcome, { status: outcome.ok ? 200 : 500 })
     }
     if (pathname === "/webhooks/konnect") {

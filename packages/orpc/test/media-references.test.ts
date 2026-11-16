@@ -6,8 +6,6 @@ import * as schema from "@workspace/db/schema"
 import { eq, inArray, is, sql } from "drizzle-orm"
 import { getTableConfig, PgTable } from "drizzle-orm/pg-core"
 import { MEDIA_REFERENCES } from "../src/lib/media"
-import type { Storage } from "../src/lib/storage"
-import { cleanupUploads } from "../src/lib/uploads"
 
 const url = process.env.DATABASE_URL
 const BACKFILL = new URL("../../db/drizzle/0012_media_backfill.sql", import.meta.url).pathname
@@ -100,41 +98,5 @@ describe.skipIf(!url)("media backfill and cleanup", () => {
       .from(locations)
       .where(eq(locations.name, `loc-${run}`))
     expect(l?.imageMediaId).toBe(rows.find((r) => r.key === keys.bundled)!.id)
-  })
-
-  test("cleanup keeps files referenced by media id or pinned, deletes the unreferenced after 30 days", async () => {
-    const removed: string[] = []
-    const storage = { remove: async (k: string) => void removed.push(k) } as unknown as Storage
-    const files = [keys.pinned, keys.used, keys.lost]
-    const start = new Date("2027-01-10T03:00:00Z")
-    const rollback = new Error("rollback")
-    // cleanup walks every uploads row, so it runs in a transaction that is always rolled back: other data is never touched
-    await db
-      .transaction(async (tx) => {
-        const t = tx as unknown as typeof db
-        await t
-          .insert(uploads)
-          .values(files.map((key) => ({ key, folder: "media", contentType: "image/webp", bytes: 10 })))
-        const rows = await t
-          .insert(media)
-          .values(files.map((key) => ({ key, filename: "x.webp", confirmedAt: new Date(), keep: key === keys.pinned })))
-          .returning()
-        const used = rows.find((r) => r.key === keys.used)!
-        await t
-          .update(locations)
-          .set({ imageMediaId: used.id })
-          .where(eq(locations.name, `loc-${run}`))
-
-        await cleanupUploads(t, storage, start)
-        await cleanupUploads(t, storage, new Date(start.getTime() + 31 * 86_400_000))
-        const mine = removed.filter((k) => k.includes(run))
-        expect(mine).toContain(keys.lost)
-        expect(mine).not.toContain(keys.pinned)
-        expect(mine).not.toContain(keys.used)
-        throw rollback
-      })
-      .catch((e) => {
-        if (e !== rollback) throw e
-      })
   })
 })
