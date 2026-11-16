@@ -31,7 +31,7 @@ const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) 
       use: {
         ...(device === "desktop"
           ? { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }
-          : devices["iPhone 14"]),
+          : devices["Pixel 7"]),
         locale: "fr-FR",
         appLocale: "fr" as AppLocale,
       },
@@ -86,7 +86,7 @@ export default defineConfig<E2EOptions>({
       testIgnore: /dashboard\//,
       grepInvert: grepInvert(locale, "mobile"),
       dependencies: ["setup"],
-      use: { ...devices["iPhone 14"], locale: browserLocale, appLocale: locale },
+      use: { ...devices["Pixel 7"], locale: browserLocale, appLocale: locale },
     })),
     ...DASHBOARD_PROJECTS,
   ],
