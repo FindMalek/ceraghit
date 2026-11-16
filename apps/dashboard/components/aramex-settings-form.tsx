@@ -99,11 +99,15 @@ function Body({
   aramex,
   appEnv,
   degraded,
+  saved,
+  setSaved,
 }: {
   mode: ShippingSettings
   aramex: MaskedIntegration
   appEnv: "local" | "preview" | "production"
   degraded: "missing-credentials" | null
+  saved: boolean
+  setSaved: (saved: boolean) => void
 }) {
   const queryClient = useQueryClient()
   const stored = aramex.config as AramexConfig
@@ -120,7 +124,6 @@ function Body({
   const [shipper, setShipper] = useState<Shipper>(stored.shipper ?? EMPTY_SHIPPER)
   const [secrets, setSecrets] = useState<Secrets>({})
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
   const [result, setResult] = useState<ConnectionTestResult | null>(null)
 
   const config: AramexConfig = {
@@ -503,6 +506,7 @@ function Body({
 }
 
 export function AramexSettingsForm() {
+  const [saved, setSaved] = useState(false)
   const query = useQuery(orpc.admin.shipping.getSettings.queryOptions({ input: {} }))
   if (query.isPending) {
     return (
@@ -519,5 +523,15 @@ export function AramexSettingsForm() {
     )
   }
   const { mode, aramex, appEnv, degraded } = query.data
-  return <Body key={aramex.updatedAt ?? "new"} mode={mode} aramex={aramex} appEnv={appEnv} degraded={degraded} />
+  return (
+    <Body
+      key={aramex.updatedAt ?? "new"}
+      mode={mode}
+      aramex={aramex}
+      appEnv={appEnv}
+      degraded={degraded}
+      saved={saved}
+      setSaved={setSaved}
+    />
+  )
 }
