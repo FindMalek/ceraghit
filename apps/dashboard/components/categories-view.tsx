@@ -97,6 +97,7 @@ function CategoryDialog({
               value={draft.name}
               onChange={(name) => setDraft((d) => ({ ...d, name }))}
               error={error ?? undefined}
+              translateField="category.name"
             />
             <LocalizedField
               id="cat-desc"
@@ -104,6 +105,7 @@ function CategoryDialog({
               multiline
               value={draft.description}
               onChange={(description) => setDraft((d) => ({ ...d, description }))}
+              translateField="category.description"
             />
             <Field>
               <FieldLabel>Image</FieldLabel>

@@ -116,6 +116,7 @@ function SettingsFormBody({ settings }: { settings: StudioSettings }) {
             onChange={setNote}
             error={errors.note}
             hint="Affichée au moment de payer, par exemple les délais."
+            translateField="settings.shippingNote"
           />
         </FieldSet>
         {(Object.keys(errors).length > 0 || Object.keys(rateErrors).length > 0) && (

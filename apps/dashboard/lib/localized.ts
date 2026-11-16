@@ -10,6 +10,23 @@ export const toLocalizedDraft = (value: Partial<Localized> | null | undefined): 
   ar: value?.ar ?? "",
 })
 
+/** Fills only the languages still empty at response time, so a tab the owner typed into meanwhile wins. */
+export function mergeTranslation(
+  current: LocalizedDraft,
+  result: Partial<Record<"fr" | "en" | "ar", string>>,
+): { values: LocalizedDraft; filled: ("fr" | "en" | "ar")[] } {
+  const values = { ...current }
+  const filled: ("fr" | "en" | "ar")[] = []
+  for (const lang of ["fr", "en", "ar"] as const) {
+    const text = result[lang]
+    if (text && !values[lang].trim()) {
+      values[lang] = text
+      filled.push(lang)
+    }
+  }
+  return { values, filled }
+}
+
 /** Optional fields become null when nothing is typed, otherwise the schema decides whether French is missing. */
 export function fromLocalizedDraft(draft: LocalizedDraft, optional: true): Localized | null
 export function fromLocalizedDraft(draft: LocalizedDraft, optional?: false): Localized

@@ -187,13 +187,20 @@ function LocationSheet({
                 onChange={(e) => set("phone", e.target.value)}
               />
             </Field>
-            <LocalizedField id="loc-hours" label="Horaires" value={draft.hours} onChange={(v) => set("hours", v)} />
+            <LocalizedField
+              id="loc-hours"
+              label="Horaires"
+              value={draft.hours}
+              onChange={(v) => set("hours", v)}
+              translateField="location.hours"
+            />
             <LocalizedField
               id="loc-desc"
               label="Description"
               multiline
               value={draft.description}
               onChange={(v) => set("description", v)}
+              translateField="location.description"
             />
             <Field data-invalid={Boolean(errors.mapUrl)}>
               <FieldLabel htmlFor="loc-map">Lien de la carte</FieldLabel>

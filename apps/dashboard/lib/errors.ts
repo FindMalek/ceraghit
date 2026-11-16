@@ -61,6 +61,10 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   ],
   [/^Le coffre des clés n'est pas configuré/, (m) => m.input ?? ""],
   [/^Au moins un moyen de paiement doit rester actif/, (m) => m.input ?? ""],
+  [
+    /^(Ajoutez une clé Groq|Écrivez d'abord le texte|Toutes les langues sont déjà|Limite mensuelle de traduction|Le service de traduction)/,
+    (m) => m.input ?? "",
+  ],
   [/^Card payment needs the Konnect live keys/, () => "Ajoutez d'abord vos clés Konnect pour activer la carte."],
   [/^Cash on delivery is only available/, () => "Le paiement à la livraison n'est disponible qu'en Tunisie."],
 ]
