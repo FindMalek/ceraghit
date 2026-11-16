@@ -11,9 +11,9 @@ test.beforeAll(async () => {
 
 test("the product gallery is accessible and photos reorder with the menu", { tag: ["@fr"] }, async ({ page, step }) => {
   await loginAsOwnerAndWait(page)
-  await step("open a product", async () => {
+  await step("open a product with several photos", async () => {
     await page.goto(`${E2E.dashboardUrl}/products`)
-    await page.getByRole("link", { name: "Modifier" }).first().click()
+    await page.locator("tr", { hasText: "0010" }).getByRole("link", { name: "Modifier" }).click()
     await expect(page.getByRole("list", { name: "Photos du produit" })).toBeVisible()
   })
   await step("the gallery has no serious accessibility violation", async () => {
