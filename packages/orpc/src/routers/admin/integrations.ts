@@ -49,7 +49,7 @@ export const integrationsRouter = {
     .input(providerInput)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      await clearIntegration(context.db, input.provider)
+      await clearIntegration(context.db, input.provider, context.admin.id, context.now())
       return { ok: true as const }
     }),
 }

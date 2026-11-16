@@ -220,7 +220,6 @@ export const orders = pgTable(
   ],
 )
 
-/** Who moved an order to which status, and why. Written for every admin status change. */
 /** One row per provider. Secrets are AES-256-GCM encrypted (packages/orpc/src/lib/secrets.ts), never plaintext. */
 export const integrationCredentials = pgTable("integration_credentials", {
   /** "konnect" | "aramex" | "groq" | ...; one row per provider. */
@@ -235,6 +234,7 @@ export const integrationCredentials = pgTable("integration_credentials", {
   updatedBy: uuid("updated_by").references(() => admins.id, { onDelete: "set null" }),
 })
 
+/** Who moved an order to which status, and why. Written for every admin status change. */
 export const orderAudit = pgTable(
   "order_audit",
   {

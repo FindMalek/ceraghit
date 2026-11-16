@@ -16,7 +16,7 @@ settings (wallet id, mode) sit in the `config` column in clear. The row also kee
 
 `SECRETS_KEY` is generated per environment: production has its own, every preview/local run has a different one (or none).
 A production row is unreadable with any other key, and previews never receive production data. Set it only on the api
-Vercel project (never `NEXT_PUBLIC_*`, never web or dashboard). Production refuses to boot without it.
+Vercel project (never `NEXT_PUBLIC_*`, never web or dashboard). Optional at boot for now (nothing reads the vault yet): without it saving keys is refused and env values keep working. The first issue that reads the vault (#167, #187) makes it required in production.
 
 ## Generate a key
 
@@ -35,4 +35,4 @@ Format `<version>:<base64 of 32 bytes>`, version is a positive integer.
 
 ## Lost key
 
-Saved secrets cannot be recovered: the owner re-enters them. Env values keep Konnect working meanwhile.
+Saved secrets cannot be recovered: the owner re-enters them. Reads fall back to the env values while the key is wrong, and saving asks the owner to clear the unreadable row first (`clear` keeps the row with who and when, secrets emptied).

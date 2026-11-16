@@ -42,7 +42,7 @@ holds live keys.
 # Provider secrets
 
 - Gateway and carrier keys saved in the dashboard live AES-256-GCM encrypted in `integration_credentials`, master key
-  `SECRETS_KEY` (differs per environment, api only). They are never returned to a client or logged: read them server side
+  `SECRETS_KEY` (differs per environment, api only, optional until a provider reads the vault). They are never returned to a client or logged: read them server side
   with `getSecret(services, provider)`, show only `admin.integrations.*` masks. Details in `docs/secrets.md`.
 
 # Scheduled jobs

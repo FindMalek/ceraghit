@@ -17,7 +17,6 @@ const production = {
   S3_BUCKET: "b",
   S3_ACCESS_KEY_ID: "a",
   S3_SECRET_ACCESS_KEY: "s",
-  SECRETS_KEY: KEY1,
 }
 
 test("live payment keys are refused outside production", () => {
@@ -68,8 +67,9 @@ test("production refuses a missing or short PROXY_SECRET", () => {
 
 const KEY2 = `2:${Buffer.alloc(32, 2).toString("base64")}`
 
-test("the vault key is required in production and validated everywhere", () => {
-  expect(() => loadEnv({ ...production, SECRETS_KEY: "" })).toThrow(/SECRETS_KEY/)
+test("the vault key is optional but validated everywhere", () => {
+  expect(() => loadEnv({ ...production, SECRETS_KEY: "" })).not.toThrow()
+  expect(() => loadEnv({ ...production, SECRETS_KEY: "bad" })).toThrow(/SECRETS_KEY/)
   expect(() => loadEnv(production)).not.toThrow()
   expect(() => loadEnv(base)).not.toThrow()
   let message = ""

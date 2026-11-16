@@ -28,6 +28,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Only paid orders get an invoice/, () => "Seules les commandes payées reçoivent une facture."],
   [/^Some required steps are not complete/, () => "Terminez d'abord les étapes obligatoires."],
   [/^Champ inconnu\.?$/, (m) => m.input ?? ""],
+  [/^Les clés enregistrées sont illisibles/, (m) => m.input ?? ""],
   [/^Réglage invalide\.?$/, (m) => m.input ?? ""],
   [/^Le coffre des clés n'est pas configuré/, (m) => m.input ?? ""],
   [/^Au moins un moyen de paiement doit rester actif/, (m) => m.input ?? ""],

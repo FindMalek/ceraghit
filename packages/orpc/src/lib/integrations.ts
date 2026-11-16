@@ -19,6 +19,7 @@ export interface ResolvedIntegration {
 
 type Row = typeof integrationCredentials.$inferSelect
 
+export const UNREADABLE = "Les clés enregistrées sont illisibles. Effacez-les puis saisissez-les à nouveau."
 export const VAULT_UNAVAILABLE = "Le coffre des clés n'est pas configuré sur ce serveur."
 
 const secretFields = (provider: IntegrationProvider): readonly string[] => INTEGRATIONS[provider].secretFields
@@ -56,7 +57,11 @@ export async function getIntegration(
 ): Promise<ResolvedIntegration | null> {
   const row = await loadRow(services.db, provider)
   if (row?.secretsEnc) {
-    return { provider, config: row.config, secrets: decryptRow(services.secrets ?? null, row), source: "db" }
+    try {
+      return { provider, config: row.config, secrets: decryptRow(services.secrets ?? null, row), source: "db" }
+    } catch (error) {
+      if (!(error instanceof SecretsError)) throw error
+    }
   }
   return fromEnv(services, provider)
 }
@@ -91,32 +96,55 @@ export async function saveIntegration(
   const config = input.config ? INTEGRATION_CONFIG_SCHEMAS[provider].safeParse(input.config) : null
   if (config && !config.success) throw new ORPCError("BAD_REQUEST", { message: "Réglage invalide." })
 
-  const existing = await loadRow(services.db, provider)
-  const merged = existing ? decryptRow(keyring, existing) : {}
-  for (const [field, value] of Object.entries(input.secrets ?? {})) {
-    if (value === null) delete merged[field]
-    else if (value !== undefined) merged[field] = value.trim()
-  }
-  const sealed = Object.keys(merged).length
-    ? encryptJson(keyring, merged, integrationAad(provider))
-    : { secretsEnc: null, keyVersion: null }
-  const values = {
-    config: (config?.success ? config.data : (existing?.config ?? {})) as Record<string, unknown>,
-    ...sealed,
-    updatedAt: services.now(),
-    updatedBy: adminId,
-  }
-  await services.db
-    .insert(integrationCredentials)
-    .values({ provider, ...values })
-    .onConflictDoUpdate({ target: integrationCredentials.provider, set: values })
+  await services.db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(integrationCredentials)
+      .where(eq(integrationCredentials.provider, provider))
+      .for("update")
+    let merged: Record<string, string>
+    try {
+      merged = existing ? decryptRow(keyring, existing) : {}
+    } catch (error) {
+      if (!(error instanceof SecretsError)) throw error
+      throw new ORPCError("PRECONDITION_FAILED", { message: UNREADABLE })
+    }
+    for (const [field, value] of Object.entries(input.secrets ?? {})) {
+      if (value === null) delete merged[field]
+      else if (value !== undefined) merged[field] = value.trim()
+    }
+    const sealed = Object.keys(merged).length
+      ? encryptJson(keyring, merged, integrationAad(provider))
+      : { secretsEnc: null, keyVersion: null }
+    const values = {
+      config: (config?.success ? config.data : (existing?.config ?? {})) as Record<string, unknown>,
+      ...sealed,
+      updatedAt: services.now(),
+      updatedBy: adminId,
+    }
+    await tx
+      .insert(integrationCredentials)
+      .values({ provider, ...values })
+      .onConflictDoUpdate({ target: integrationCredentials.provider, set: values })
+  })
 }
 
-export async function clearIntegration(db: Db, provider: IntegrationProvider): Promise<void> {
-  await db.delete(integrationCredentials).where(eq(integrationCredentials.provider, provider))
+/** Keeps the row with secrets emptied so who cleared it and when survives; reads then use the env values. */
+export async function clearIntegration(
+  db: Db,
+  provider: IntegrationProvider,
+  adminId: string,
+  now: Date,
+): Promise<void> {
+  await db
+    .update(integrationCredentials)
+    .set({ config: {}, secretsEnc: null, keyVersion: null, updatedAt: now, updatedBy: adminId })
+    .where(eq(integrationCredentials.provider, provider))
 }
 
-const hintOf = (value: string) => (value.length >= 16 ? `••••${value.slice(-4)}` : null)
+/** Only API-key style fields get a hint; passwords and PINs never do. */
+const hintOf = (field: string, value: string) =>
+  /key$/i.test(field) && value.length >= 16 ? `••••${value.slice(-4)}` : null
 
 /** The only shape a client ever sees: which secrets are set, plus a last-4 hint for long API keys. */
 export async function describeIntegration(
@@ -137,7 +165,7 @@ export async function describeIntegration(
   const secrets: MaskedIntegration["secrets"] = {}
   for (const field of secretFields(provider)) {
     const value = resolved?.secrets[field]
-    secrets[field] = { configured: unreadable ? true : !!value, hint: value ? hintOf(value) : null }
+    secrets[field] = { configured: unreadable ? true : !!value, hint: value ? hintOf(field, value) : null }
   }
   return {
     provider,
@@ -153,7 +181,7 @@ export async function describeIntegration(
 export async function rotateSecrets(db: Db, keyring: Keyring): Promise<{ rotated: number }> {
   return db.transaction(async (tx) => {
     let rotated = 0
-    for (const row of await tx.select().from(integrationCredentials)) {
+    for (const row of await tx.select().from(integrationCredentials).for("update")) {
       if (!row.secretsEnc || row.keyVersion === keyring.current.version) continue
       const plain = decryptRow(keyring, row)
       const sealed = encryptJson(keyring, plain, integrationAad(row.provider))

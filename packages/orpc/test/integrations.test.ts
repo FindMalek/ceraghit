@@ -148,6 +148,8 @@ describe.skipIf(!url)("integrations vault", () => {
       secrets: { apiKey: "db-key-db-key-db-key" },
     })
     await client.integrations.clear({ provider: "konnect" })
+    expect((await rawRow("konnect"))?.secretsEnc).toBeNull()
+    expect((await rawRow("konnect"))?.updatedBy).not.toBeNull()
     expect(await getIntegration(withEnv, "konnect")).toMatchObject({
       source: "env",
       config: { walletId: "env-wallet" },
@@ -159,7 +161,12 @@ describe.skipIf(!url)("integrations vault", () => {
     await owner.integrations.save({ provider: "groq", secrets: { apiKey: SENTINEL } })
     const row = (await rawRow("groq"))!
     await db.insert(integrationCredentials).values({ ...row, provider: "konnect" })
-    await expect(getIntegration(base, "konnect")).rejects.toThrow("cannot decrypt")
+    expect(await getIntegration(base, "konnect")).toBeNull()
+    await expect(owner.integrations.save({ provider: "konnect", secrets: { apiKey: "x" } })).rejects.toThrow(
+      "illisibles",
+    )
+    const lost: Services = { ...base, secrets: parseKeyring(K2) }
+    expect(await getIntegration(lost, "groq")).toBeNull()
     // the masked view of an unreadable row still answers and leaks nothing
     expect(JSON.stringify(await owner.integrations.get({ provider: "konnect" }))).not.toContain(SENTINEL)
   })

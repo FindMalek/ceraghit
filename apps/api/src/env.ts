@@ -40,7 +40,7 @@ const schema = z
     MAIL_REDIRECT_TO: z.email().optional(),
     /** Mailpit catcher (pnpm db:up locally, one per preview). Mails go there instead of Resend. Refused in production. */
     MAILPIT_URL: z.url().optional(),
-    /** Master key of the credentials vault: `<version>:<base64 of 32 bytes>`. Differs per environment, never shared. */
+    /** Master key of the credentials vault: `<version>:<base64 of 32 bytes>`. Differs per environment, never shared. Optional until a provider reads the vault: without it saving keys is refused. */
     SECRETS_KEY: z.string().optional(),
     /** The key being rotated away from (lower version), set only while `secrets:rotate` runs. */
     SECRETS_KEY_PREVIOUS: z.string().optional(),
@@ -71,7 +71,6 @@ const schema = z
         fail("SECRETS_KEY_PREVIOUS must have a lower version than SECRETS_KEY")
     }
     if (env.APP_ENV === "production") {
-      if (!env.SECRETS_KEY) fail("production needs SECRETS_KEY")
       if (env.ONLINE_PAYMENTS) {
         if (env.KONNECT_MODE !== "live") fail("production needs KONNECT_MODE=live")
         if (!env.KONNECT_API_KEY || !env.KONNECT_WALLET_ID)

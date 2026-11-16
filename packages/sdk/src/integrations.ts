@@ -11,14 +11,12 @@ export type IntegrationProvider = keyof typeof INTEGRATIONS
 export const INTEGRATION_PROVIDERS = Object.keys(INTEGRATIONS) as IntegrationProvider[]
 export const integrationProviderSchema = z.enum(["konnect", "aramex", "groq"])
 
-const looseConfig = z.record(z.string(), z.unknown())
-/** Each owning issue replaces its placeholder; the DB column is free-form so no migration is needed. */
-export const konnectConfigSchema = z.object({
-  walletId: z.string().max(200).optional(),
-  mode: z.enum(["test", "live"]).optional(),
-})
-export const aramexConfigSchema = looseConfig
-export const groqConfigSchema = looseConfig
+/** Strict: only known non-secret keys, so nothing secret can be parked in `config` in clear. Owning issues extend them. */
+export const konnectConfigSchema = z
+  .object({ walletId: z.string().max(200).optional(), mode: z.enum(["test", "live"]).optional() })
+  .strict()
+export const aramexConfigSchema = z.object({}).strict()
+export const groqConfigSchema = z.object({}).strict()
 export const INTEGRATION_CONFIG_SCHEMAS = {
   konnect: konnectConfigSchema,
   aramex: aramexConfigSchema,
