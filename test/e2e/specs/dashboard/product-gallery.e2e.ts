@@ -13,7 +13,7 @@ test("the product gallery is accessible and photos reorder with the menu", { tag
   await loginAsOwnerAndWait(page)
   await step("open a product", async () => {
     await page.goto(`${E2E.dashboardUrl}/products`)
-    await page.locator('a[href^="/products/"]:not([href="/products/new"])').first().click()
+    await page.getByRole("button", { name: "Modifier" }).first().click()
     await expect(page.getByRole("list", { name: "Photos du produit" })).toBeVisible()
   })
   await step("the gallery has no serious accessibility violation", async () => {
