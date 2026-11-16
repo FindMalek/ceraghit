@@ -94,7 +94,7 @@ const UNREACHABLE = "Aramex ne répond pas. Réessayez dans un instant."
 /** Fixed French messages only: nothing the provider said and no credential ever reaches the owner's screen. */
 export async function runConnectionTest(services: Services, input: AramexInputs): Promise<ConnectionTestResult> {
   if (!aramexComplete(input)) {
-    throw new ORPCError("PRECONDITION_FAILED", { message: "Renseignez tous les identifiants avant de tester." })
+    throw new ORPCError("PRECONDITION_FAILED", { message: "Renseignez tous les identifiants avant de tester la connexion à Aramex." })
   }
   if (
     input.config.mode === "live" &&
