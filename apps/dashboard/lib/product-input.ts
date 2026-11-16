@@ -21,7 +21,9 @@ export function productToInput(product: Product, patch: Partial<ProductInput> = 
     quoteOnly: product.quoteOnly,
     featured: product.featured,
     status: product.status,
-    images: product.images.map(({ image, alt }) => ({ image, alt })),
+    images: product.images.flatMap((i) =>
+      i.mediaId ? [{ mediaId: i.mediaId, isMain: i.isMain, alt: i.altOverride }] : [],
+    ),
     variants: product.variants.map((v) => ({
       id: v.id,
       label: v.label,

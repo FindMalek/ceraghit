@@ -18,7 +18,7 @@ import {
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
-import { DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA, ensureSiteImages } from "./media"
+import { DEMO_HIDDEN_HERO, DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA, ensureSiteImages } from "./media"
 import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS } from "./scenario"
 import { localize } from "./translations"
 
@@ -150,6 +150,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
           image,
           position,
           mediaId: mediaByKey.get(image) ?? null,
+          isMain: position === (opts.demo && row.ref === DEMO_MAIN_SECOND_REF ? 1 : 0),
         })),
       ),
     )

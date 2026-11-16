@@ -32,6 +32,9 @@ export const DEMO_UNUSED_MEDIA = {
   tags: ["atelier"],
 }
 
+/** Demo piece whose main photo is its second one, to show that the main photo comes first on the storefront. */
+export const DEMO_MAIN_SECOND_REF = "0011"
+
 /**
  * Fills `site_images` with the pictures the storefront ships with, only while the table is empty: once the owner
  * edits a slot (even to remove everything) his rows win. Runs on every deploy.

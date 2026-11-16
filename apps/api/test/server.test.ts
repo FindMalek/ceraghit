@@ -59,3 +59,30 @@ for (const path of ["/nope", "/v1/nope", "/rpc/nope", "/cron/cleanup-uploads"]) 
     expect(await response.json()).toEqual({ message: "Not found." })
   })
 }
+
+test.skipIf(!process.env.DATABASE_URL)("/health shows only the saved provider and environment", async () => {
+  const { createDb, settings } = await import("@workspace/db")
+  const { runMigrations } = await import("@workspace/db/migrate")
+  const { eq } = await import("drizzle-orm")
+  const db = createDb(process.env.DATABASE_URL!)
+  await runMigrations(db)
+  await db.delete(settings).where(eq(settings.key, "shipping"))
+  await db.insert(settings).values({ key: "shipping", value: { provider: "aramex", quoteFromProvider: false } })
+  const services = {
+    db,
+    payments: { name: "demo", mode: "test" },
+    storage: null,
+    secrets: null,
+    config: {
+      webUrl: "http://localhost:3000",
+      apiPublicUrl: "http://localhost:3001",
+      appEnv: "preview",
+      deployEnv: "local",
+      secureCookies: true,
+      onlinePayments: false,
+    },
+  } as unknown as Services
+  const body = (await (await createServer(services)(get("/health"))).json()) as { shipping: string }
+  await db.delete(settings).where(eq(settings.key, "shipping"))
+  expect(body.shipping).toBe("aramex:preview")
+})

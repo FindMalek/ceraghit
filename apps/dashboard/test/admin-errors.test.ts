@@ -75,3 +75,17 @@ test("every english message the admin api throws reaches the owner in french", (
     .map(({ where, message }) => `${where} ${message}`)
   expect(unmapped).toEqual([])
 })
+
+test("shipping messages built from constants reach the owner in french", () => {
+  const messages = [
+    "Le mode réel Aramex n'est autorisé qu'en production.",
+    "Confirmez les types de produit avec Aramex avant d'activer le mode réel.",
+    "Le mode réel Aramex attend la vérification des réglages d'étiquette et de paiement : utilisez le mode test pour l'instant.",
+    "Renseignez et testez les identifiants Aramex avant de l'activer.",
+    "Les identifiants enregistrés ne peuvent pas être lus : la clé du coffre (SECRETS_KEY) est absente de ce serveur.",
+    "Trop d'essais, réessayez dans quelques minutes.",
+  ]
+  for (const message of messages) {
+    expect(errorMessage(new ORPCError("PRECONDITION_FAILED", { message }))).toBe(message)
+  }
+})

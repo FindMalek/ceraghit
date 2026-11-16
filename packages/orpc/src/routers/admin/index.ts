@@ -9,6 +9,7 @@ import { mediaRouter } from "./media"
 import { ordersRouter, requestsRouter } from "./orders"
 import { overview } from "./overview"
 import { profileRouter, setupRouter } from "./profile"
+import { shippingRouter } from "./shipping"
 import { siteRouter } from "./site"
 import { locationsRouter, settingsRouter, uploadsRouter } from "./studio"
 
@@ -26,6 +27,7 @@ export const adminRouter = {
   requests: requestsRouter,
   locations: locationsRouter,
   settings: settingsRouter,
+  shipping: shippingRouter,
   uploads: uploadsRouter,
   media: mediaRouter,
   site: siteRouter,

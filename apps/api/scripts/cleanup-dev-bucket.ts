@@ -1,6 +1,6 @@
 /**
  * Daily housekeeping of the homelab bucket (previews, staging, local): removes everything under `pr-<n>/` once that PR
- * is no longer open, and any other object older than MAX_AGE_DAYS. Never touches another bucket than `ceraghit-dev`.
+ * is no longer open, and any other object older than MAX_AGE_DAYS, except `staging/` (the staging api's media-cleanup job cleans it). Never touches another bucket than `ceraghit-dev`.
  *
  *   S3_ENDPOINT=… S3_BUCKET=ceraghit-dev S3_ACCESS_KEY_ID=… S3_SECRET_ACCESS_KEY=… OPEN_PRS=61,62 bun apps/api/scripts/cleanup-dev-bucket.ts
  * DRY_RUN=true only prints what would go.
@@ -31,7 +31,8 @@ const objects = await storage.list()
 for (const object of objects) {
   const pr = object.key.match(/^pr-(\d+)\//)?.[1]
   const closedPr = pr !== undefined && !openPrs.has(pr)
-  const stale = now - object.modifiedAt.getTime() > maxAge
+  // staging/ is referenced by the persistent staging database: the api's media-cleanup job owns it
+  const stale = !object.key.startsWith("staging/") && now - object.modifiedAt.getTime() > maxAge
   if (!closedPr && !stale) continue
   console.info(`${dryRun ? "would delete" : "delete"} ${object.key} (${object.size} bytes)`)
   if (!dryRun) await storage.remove(object.key)

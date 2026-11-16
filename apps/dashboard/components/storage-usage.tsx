@@ -8,10 +8,20 @@ const format = (bytes: number): string =>
   bytes >= 1e9 ? `${(bytes / 1e9).toFixed(2).replace(".", ",")} Go` : `${Math.round(bytes / 1e6)} Mo`
 
 /** How much of the 2,5 Go plan the photos use. Files nobody uses are removed 30 days after they stop being used. */
-export function StorageUsage() {
+export function StorageUsage({ compact = false }: { compact?: boolean }) {
   const { data } = useQuery(orpc.admin.uploads.usage.queryOptions())
   if (!data) return null
   const percent = Math.min(100, Math.round((data.usedBytes / data.quotaBytes) * 100))
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <Progress value={percent} className="h-2 w-24" aria-label="Stockage utilisé" />
+        <span className="tabular-nums">
+          {format(data.usedBytes)} / {format(data.quotaBytes)}
+        </span>
+      </div>
+    )
+  }
   return (
     <div className="frame flex flex-col gap-2 bg-card/60 p-4">
       <div className="flex items-baseline justify-between gap-3">

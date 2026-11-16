@@ -10,6 +10,11 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   ],
   [/^Media not found\.?$/, () => "Image introuvable."],
   [
+    /^A photo is no longer available\.?$/,
+    () => "Une photo n'existe plus dans la médiathèque. Retirez-la puis enregistrez.",
+  ],
+  [/^Each photo can only be added once\.?$/, () => "Chaque photo ne peut être ajoutée qu'une fois."],
+  [
     /^This image is still in use\.?$/,
     () => "Cette image est encore utilisée. Retirez-la d'abord des pages qui l'affichent.",
   ],
@@ -50,6 +55,10 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Champ inconnu\.?$/, (m) => m.input ?? ""],
   [/^Les clés enregistrées sont illisibles/, (m) => m.input ?? ""],
   [/^Réglage invalide\.?$/, (m) => m.input ?? ""],
+  [
+    /^(Renseignez |Le mode réel Aramex|Confirmez les types|Les identifiants enregistrés ne peuvent|Trop d'essais)/,
+    (m) => m.input ?? "",
+  ],
   [/^Le coffre des clés n'est pas configuré/, (m) => m.input ?? ""],
   [/^Au moins un moyen de paiement doit rester actif/, (m) => m.input ?? ""],
   [/^Card payment needs the Konnect live keys/, () => "Ajoutez d'abord vos clés Konnect pour activer la carte."],
