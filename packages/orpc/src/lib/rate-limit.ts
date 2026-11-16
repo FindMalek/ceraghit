@@ -21,6 +21,8 @@ export const LIMITS = {
   mailDomain: { max: 6, windowMs: 10 * MINUTE },
   mailTest: { max: 5, windowMs: 10 * MINUTE },
   uploadUrl: { max: 12, windowMs: 10 * MINUTE },
+  mediaSign: { max: 60, windowMs: 10 * MINUTE },
+  mediaConfirm: { max: 60, windowMs: 10 * MINUTE },
 } as const satisfies Record<string, Limit>
 
 /** Rows older than this are dead for every limit above. */

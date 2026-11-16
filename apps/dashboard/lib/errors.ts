@@ -3,6 +3,12 @@ import { ORPCError } from "@orpc/client"
 export { isUnauthorized } from "@workspace/orpc/errors"
 
 const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
+  [/^Only compressed WebP images are accepted\.?$/, () => "L'image n'a pas pu être vérifiée. Réessayez l'envoi."],
+  [
+    /^(The upload has not arrived yet|Could not check the upload|Upload already in progress)/,
+    () => "Envoi pas encore vérifiable. Réessayez dans un instant.",
+  ],
+  [/^Media not found\.?$/, () => "Image introuvable."],
   [/^Email introuvable\.?$/, () => "Email introuvable."],
   [/^Wrong email or password\.?$/, () => "Email ou mot de passe incorrect."],
   [/^Too many attempts\. Try again in 1 hour/, () => "Trop de tentatives. Réessayez dans 1 heure."],
