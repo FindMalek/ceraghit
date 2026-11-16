@@ -22,6 +22,7 @@ import { createOrder, settleOrder } from "../../lib/orders"
 import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings } from "../../lib/settings"
+import { toShipping } from "../../lib/shipping-events"
 import { getShopProfile, studioInbox } from "../../lib/shop-profile"
 import { reserveUpload } from "../../lib/uploads"
 import { publicProcedure } from "../../procedures"
@@ -73,6 +74,7 @@ export const ordersRouter = {
         items: order.items.map(({ ref, title, unitMinor, quantity }) => ({ ref, title, unitMinor, quantity })),
         createdAt: order.createdAt.toISOString(),
         paidAt: order.paidAt?.toISOString() ?? null,
+        shipping: status === "fulfilled" ? toShipping(order) : null,
       }
     }),
 

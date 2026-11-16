@@ -2,6 +2,8 @@ import { ORPCError } from "@orpc/server"
 import { admins, customRequests, orderAudit, orders } from "@workspace/db"
 import {
   adminOrderSchema,
+  type CarrierId,
+  carrierIdSchema,
   currencySchema,
   customRequestSchema,
   type HoldSettings,
@@ -20,6 +22,7 @@ import { z } from "zod"
 import { tryIssueInvoice } from "../../lib/invoices"
 import { cancelOrder, LAZY_SWEEP_LIMIT, markPaidManually, recordAudit, releaseExpiredHolds } from "../../lib/orders"
 import { getPaymentSettings } from "../../lib/settings"
+import { markOrderShipped, toShipping, updateOrderTracking } from "../../lib/shipping-events"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -55,8 +58,19 @@ function toAdminOrder(o: OrderRow, holds: HoldSettings, now: Date) {
     locale: o.locale,
     paymentProvider: o.paymentProvider,
     paymentRef: o.paymentRef,
+    shipping: toShipping(o),
   }
 }
+
+const shipFields = {
+  id: z.string(),
+  carrier: carrierIdSchema,
+  carrierName: z.string().trim().max(60).optional(),
+  trackingNumber: z.string().trim().max(60).optional(),
+  trackingUrl: z.url().max(500).optional(),
+}
+const needsCarrierName = (v: { carrier: string; carrierName?: string }) => v.carrier !== "other" || !!v.carrierName
+const carrierNameIssue = { message: "Indiquez le nom du transporteur.", path: ["carrierName"] }
 
 /** A studio day in Africa/Tunis (UTC+1, no daylight saving) as a UTC instant. */
 const tunisDayStart = (day: string, plus = 0) => new Date(new Date(`${day}T00:00:00+01:00`).getTime() + plus * 864e5)
@@ -178,6 +192,37 @@ export const ordersRouter = {
       }))
     }),
 
+  markShipped: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/orders/{id}/ship",
+      summary: "Mark shipped with carrier and tracking",
+      tags: TAG,
+    })
+    .input(z.object(shipFields).refine(needsCarrierName, carrierNameIssue))
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      const { id, ...ship } = input
+      await markOrderShipped(context, id, ship, { adminId: context.admin.id })
+      await tryIssueInvoice(context.db, id, context.now())
+      return { ok: true as const }
+    }),
+
+  updateTracking: adminProcedure
+    .route({
+      method: "PATCH",
+      path: "/admin/orders/{id}/tracking",
+      summary: "Change the tracking of a shipped order",
+      tags: TAG,
+    })
+    .input(z.object(shipFields).refine(needsCarrierName, carrierNameIssue))
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      const { id, ...ship } = input
+      await updateOrderTracking(context, id, ship)
+      return { ok: true as const }
+    }),
+
   setStatus: adminProcedure
     .route({
       method: "POST",
@@ -229,14 +274,8 @@ export const ordersRouter = {
           expectedTotalMinor: order.totalMinor,
           expectedCurrency: order.currency,
         })
-      } else if (input.status === "fulfilled" && order.status === "paid") {
-        await move({ status: "fulfilled" }, "paid")
-      } else if (input.status === "fulfilled" && order.status === "pending_payment" && order.paymentMethod === "cod") {
-        // cash on delivery: the sale counts once it ships, the cash is collected at the door
-        await move(
-          { status: "fulfilled", paidAt: context.now(), paymentProvider: order.paymentProvider ?? "cod" },
-          "pending_payment",
-        )
+      } else if (input.status === "fulfilled") {
+        await markOrderShipped(context, order.id, { carrier: "other" }, { adminId })
       } else {
         throw new ORPCError("BAD_REQUEST", {
           message: `An order that is ${order.status} cannot become ${input.status}.`,

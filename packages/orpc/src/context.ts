@@ -18,6 +18,8 @@ export interface Services {
   /** Master key of the credentials vault; null when SECRETS_KEY is not set (saving is refused). */
   secrets?: Keyring | null
   now: () => Date
+  /** Server hooks; tests pass spies. */
+  hooks?: { orderShipped?: (orderId: string) => Promise<void> }
   /** Tests pass a fake for the Resend domains api. */
   http?: typeof fetch
   /** Waits between mail retries; tests pass an instant one. */
