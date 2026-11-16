@@ -5,7 +5,6 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import type { Media } from "@workspace/sdk"
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group"
 import { Skeleton } from "@workspace/ui/components/skeleton"
@@ -20,10 +19,7 @@ import { EmptyState, ErrorState } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { StorageUsage } from "@/components/storage-usage"
 import {
-  applyFilter,
   DEFAULT_MEDIA_QUERY,
-  formatDay,
-  isExpiringSoon,
   type MediaFilter,
   type MediaQuery,
   type MediaSort,
@@ -42,7 +38,6 @@ const SORTS: { value: MediaSort; label: string }[] = [
 const FILTERS: { value: MediaFilter; label: string }[] = [
   { value: "all", label: "Toutes" },
   { value: "unused", label: "Non utilisées" },
-  { value: "expiring", label: "Bientôt supprimées" },
 ]
 
 /** Search, sort, filters, tag chips and the grid with "Charger plus": shared by the page and the picker. */
@@ -84,10 +79,7 @@ export function MediaBrowser({
     }),
   )
   const pages = list.data?.pages
-  const items = useMemo(
-    () => applyFilter(pages?.flatMap((page) => page.items) ?? [], query.filter),
-    [pages, query.filter],
-  )
+  const items = useMemo(() => pages?.flatMap((page) => page.items) ?? [], [pages])
   useEffect(() => onItems?.(items), [items, onItems])
 
   const noStorage = list.error instanceof ORPCError && list.error.code === "PRECONDITION_FAILED"
@@ -95,7 +87,7 @@ export function MediaBrowser({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <InputGroup className="h-11 sm:max-w-md">
+        <InputGroup className="h-11! sm:max-w-md">
           <InputGroupAddon>
             <MagnifyingGlassIcon />
           </InputGroupAddon>
@@ -111,7 +103,7 @@ export function MediaBrowser({
           label="Trier par"
           value={query.sort}
           options={SORTS}
-          className="h-11 sm:w-52"
+          className="h-11! sm:w-52"
           onChange={(sort) => onQueryChange({ ...query, sort })}
         />
       </div>
@@ -202,7 +194,7 @@ export function MediaBrowser({
   )
 }
 
-/** The `/media` page: expiring banner, storage meter, upload zone and the library. */
+/** The `/media` page: storage meter, upload zone and the library. */
 export function MediaLibrary() {
   const router = useRouter()
   const pathname = usePathname()
@@ -213,30 +205,11 @@ export function MediaLibrary() {
     const search = toSearchParams(next).toString()
     router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false })
   }
-  const unused = useQuery(orpc.admin.media.list.queryOptions({ input: { unused: true, limit: 60, sort: "oldest" } }))
-  const expiring = (unused.data?.items ?? []).filter((m) => isExpiringSoon(m))
-  const first = expiring
-    .map((m) => m.deletesAt)
-    .filter(Boolean)
-    .sort()[0]
   return (
     <>
       <PageHeader title="Médiathèque" description="Toutes vos photos au même endroit." actions={null} />
       <PageBody>
         <StorageUsage />
-        {expiring.length > 0 && first && (
-          <Alert>
-            <AlertTitle>
-              {expiring.length} photo{expiring.length > 1 ? "s" : ""} inutilisée{expiring.length > 1 ? "s" : ""} seront
-              supprimées d'ici le {formatDay(first)}.
-            </AlertTitle>
-            <AlertDescription>
-              <Button variant="outline" className="h-11" onClick={() => setQuery({ ...query, filter: "expiring" })}>
-                Voir
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
         <MediaBrowser
           query={query}
           onQueryChange={setQuery}

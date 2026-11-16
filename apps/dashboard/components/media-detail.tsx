@@ -47,23 +47,27 @@ function DetailBody({ id, onClose }: { id: string; onClose: () => void }) {
     setKeep(media.keep)
   }, [media])
 
-  const refresh = () =>
+  const refresh = (withDetail = true) =>
     Promise.all(
-      [orpc.admin.media.list, orpc.admin.media.tags, orpc.admin.media.get, orpc.admin.uploads.usage].map((p) =>
-        queryClient.invalidateQueries({ queryKey: p.key() }),
-      ),
+      [
+        orpc.admin.media.list,
+        orpc.admin.media.tags,
+        orpc.admin.uploads.usage,
+        ...(withDetail ? [orpc.admin.media.get] : []),
+      ].map((p) => queryClient.invalidateQueries({ queryKey: p.key() })),
     )
   const save = useMutation({
     mutationFn: () =>
       browserClient.admin.media.update({ id, filename, alt: fromLocalizedDraft(alt, true), tags, keep }),
-    onSuccess: refresh,
+    onSuccess: () => refresh(),
     onError: (error) => showError(errorMessage(error)),
   })
   const remove = useMutation({
     mutationFn: () => browserClient.admin.media.remove({ id }),
     onSuccess: async () => {
-      await refresh()
       onClose()
+      queryClient.removeQueries({ queryKey: orpc.admin.media.get.key({ input: { id } }) })
+      await refresh(false)
     },
     onError: (error) =>
       showError(error instanceof ORPCError && error.code === "CONFLICT" ? IN_USE : errorMessage(error)),

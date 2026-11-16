@@ -7,7 +7,7 @@ import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
 import { type KeyboardEvent, useRef, useState } from "react"
 import { useAppConfig } from "@/components/app-config"
-import { formatDay, isExpiringSoon } from "@/lib/media-query"
+import { formatDay } from "@/lib/media-query"
 
 export function MediaGrid({
   items,
@@ -44,6 +44,7 @@ export function MediaGrid({
     if (event.key === "Enter") {
       event.preventDefault()
       if (onChoose) onChoose(media)
+      else if (selectable) onToggle(media)
       else onActivate(media)
     }
   }
@@ -51,7 +52,9 @@ export function MediaGrid({
     <ul ref={list} className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {items.map((media, index) => {
         const selected = selectedIds.includes(media.id)
-        const expiring = isExpiringSoon(media)
+        const expiring = Boolean(
+          media.deletesAt && !media.keep && new Date(media.deletesAt).getTime() - Date.now() <= 7 * 86_400_000,
+        )
         return (
           <li key={media.id} className="min-w-0">
             <button

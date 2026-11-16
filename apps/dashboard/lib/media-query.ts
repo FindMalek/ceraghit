@@ -1,6 +1,6 @@
-import { type Media, mediaSortSchema } from "@workspace/sdk"
+import { mediaSortSchema } from "@workspace/sdk"
 
-export type MediaFilter = "all" | "unused" | "expiring"
+export type MediaFilter = "all" | "unused"
 export type MediaSort = (typeof mediaSortSchema.options)[number]
 
 export interface MediaQuery {
@@ -10,10 +10,9 @@ export interface MediaQuery {
   tag: string
 }
 
-export const EXPIRING_DAYS = 7
 export const DEFAULT_MEDIA_QUERY: MediaQuery = { q: "", sort: "newest", filter: "all", tag: "" }
 
-const FILTERS: MediaFilter[] = ["all", "unused", "expiring"]
+const FILTERS: MediaFilter[] = ["all", "unused"]
 
 /** Reads `?q=&sort=&filter=&tag=` (and the `?unused=1` link shape), dropping anything unknown. */
 export function parseMediaQuery(params: URLSearchParams): MediaQuery {
@@ -37,7 +36,6 @@ export function toSearchParams(query: MediaQuery): URLSearchParams {
   return params
 }
 
-/** The input of `admin.media.list`: "expiring" is "unused" narrowed on the client by `isExpiringSoon`. */
 export function toListInput(query: MediaQuery) {
   return {
     ...(query.q && { q: query.q }),
@@ -45,15 +43,6 @@ export function toListInput(query: MediaQuery) {
     ...(query.filter !== "all" && { unused: true }),
     ...(query.tag && { tag: query.tag }),
   }
-}
-
-export function isExpiringSoon(media: Pick<Media, "deletesAt" | "keep">, now = Date.now()): boolean {
-  if (media.keep || !media.deletesAt) return false
-  return new Date(media.deletesAt).getTime() - now <= EXPIRING_DAYS * 86_400_000
-}
-
-export function applyFilter(items: Media[], filter: MediaFilter, now = Date.now()): Media[] {
-  return filter === "expiring" ? items.filter((m) => isExpiringSoon(m, now)) : items
 }
 
 export const formatBytes = (bytes: number): string =>
