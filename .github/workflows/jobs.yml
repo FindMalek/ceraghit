@@ -45,6 +45,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - run: pnpm install --frozen-lockfile --filter jobs...
+      # `trigger deploy` reads the login profile from the config file before it looks at TRIGGER_ACCESS_TOKEN,
+      # so write the same profile a `trigger login` would have saved.
+      - name: Write the Trigger.dev login profile
+        env:
+          TRIGGER_API_URL: https://trigger.findmalek.engineer
+          TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+        run: |
+          node -e '
+          const fs = require("node:fs"), os = require("node:os"), path = require("node:path");
+          const dir = path.join(os.homedir(), ".config", "trigger");
+          fs.mkdirSync(dir, { recursive: true });
+          fs.writeFileSync(path.join(dir, "config.json"), JSON.stringify({
+            version: 2,
+            currentProfile: "default",
+            profiles: { default: { accessToken: process.env.TRIGGER_ACCESS_TOKEN, apiUrl: process.env.TRIGGER_API_URL } },
+            settings: { hasSeenMCPInstallPrompt: true, hasSeenRulesInstallPrompt: true },
+          }));
+          '
       - name: Deploy the schedules
         env:
           TRIGGER_API_URL: https://trigger.findmalek.engineer
