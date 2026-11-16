@@ -26,6 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { DownloadInvoiceButton } from "@/components/download-invoice-button"
 import { ExportOrdersDialog } from "@/components/export-orders-dialog"
 import { MANUAL_METHOD_LABEL, MarkPaidDialog } from "@/components/mark-paid-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
@@ -354,6 +355,9 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                 >
                   Facture
                 </a>
+                {(order.status === "paid" || order.status === "fulfilled") && (
+                  <DownloadInvoiceButton orderId={order.id} />
+                )}
                 {actionsFor(order.status, order.paymentMethod).map((action) => (
                   <Button
                     key={action.to}
