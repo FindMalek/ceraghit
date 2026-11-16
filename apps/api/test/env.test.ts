@@ -84,3 +84,9 @@ test("the vault key is optional but validated everywhere", () => {
   expect(() => loadEnv({ ...base, SECRETS_KEY_PREVIOUS: KEY1 })).toThrow(/needs SECRETS_KEY/)
   expect(() => loadEnv({ ...base, SECRETS_KEY: KEY2, SECRETS_KEY_PREVIOUS: KEY1 })).not.toThrow()
 })
+
+test("aramex fallback values are optional and read from ARAMEX_*", () => {
+  const env = loadEnv({ ...production, ARAMEX_USERNAME: "shop@example.test", ARAMEX_ACCOUNT_NUMBER: "20016" })
+  expect(env.ARAMEX_USERNAME).toBe("shop@example.test")
+  expect(env.ARAMEX_PASSWORD).toBeUndefined()
+})

@@ -40,10 +40,17 @@ const schema = z
     MAIL_REDIRECT_TO: z.email().optional(),
     /** Mailpit catcher (pnpm db:up locally, one per preview). Mails go there instead of Resend. Refused in production. */
     MAILPIT_URL: z.url().optional(),
-    /** Master key of the credentials vault: `<version>:<base64 of 32 bytes>`. Differs per environment, never shared. Optional until a provider reads the vault: without it saving keys is refused. */
+    /** Master key of the credentials vault: `<version>:<base64 of 32 bytes>`. Differs per environment, never shared. Optional at boot: without it saving or using saved credentials is refused, and boot fails only if the DB already holds saved secrets. */
     SECRETS_KEY: z.string().optional(),
     /** The key being rotated away from (lower version), set only while `secrets:rotate` runs. */
     SECRETS_KEY_PREVIOUS: z.string().optional(),
+    /** Aramex fallback for production while the owner saved none in the dashboard (docs/aramex.md). Always the test host outside production. */
+    ARAMEX_USERNAME: z.string().optional(),
+    ARAMEX_PASSWORD: z.string().optional(),
+    ARAMEX_ACCOUNT_NUMBER: z.string().optional(),
+    ARAMEX_ACCOUNT_PIN: z.string().optional(),
+    ARAMEX_ACCOUNT_ENTITY: z.string().optional(),
+    ARAMEX_ACCOUNT_COUNTRY_CODE: z.string().optional(),
     S3_ENDPOINT: z.string().optional(),
     S3_REGION: z.string().default("auto"),
     S3_BUCKET: z.string().optional(),

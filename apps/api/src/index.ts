@@ -2,6 +2,7 @@ import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
+import { assertVaultKeyForRows } from "@workspace/orpc/rotate"
 import { parseKeyring } from "@workspace/orpc/secrets"
 import { CRON_JOBS } from "./cron"
 import { loadEnv } from "./env"
@@ -15,6 +16,9 @@ if (env.BOOTSTRAP) {
   await runMigrations(db)
   await seed(db, { demo: env.SEED_DEMO, admin: { email: env.ADMIN_EMAIL ?? "", password: env.ADMIN_PASSWORD ?? "" } })
 }
+
+const secrets = parseKeyring(env.SECRETS_KEY, env.SECRETS_KEY_PREVIOUS)
+await assertVaultKeyForRows(db, secrets)
 
 const payments =
   env.KONNECT_API_KEY && env.KONNECT_WALLET_ID
@@ -37,7 +41,7 @@ const fetch = createServer({
     prefix: env.DEPLOY_ENV.startsWith("pr-") || env.DEPLOY_ENV === "staging" ? `${env.DEPLOY_ENV}/` : "",
   }),
   auth: new AdminAuth(db),
-  secrets: parseKeyring(env.SECRETS_KEY, env.SECRETS_KEY_PREVIOUS),
+  secrets,
   now: () => new Date(),
   config: {
     webUrl: env.WEB_URL,
@@ -52,6 +56,14 @@ const fetch = createServer({
     emailFrom: env.EMAIL_FROM,
     resendApiKey: env.RESEND_API_KEY,
     envCredentials: {
+      aramex: {
+        userName: env.ARAMEX_USERNAME,
+        password: env.ARAMEX_PASSWORD,
+        accountNumber: env.ARAMEX_ACCOUNT_NUMBER,
+        accountPin: env.ARAMEX_ACCOUNT_PIN,
+        accountEntity: env.ARAMEX_ACCOUNT_ENTITY,
+        accountCountryCode: env.ARAMEX_ACCOUNT_COUNTRY_CODE,
+      },
       konnect: { apiKey: env.KONNECT_API_KEY, walletId: env.KONNECT_WALLET_ID, mode: env.KONNECT_MODE },
     },
   },
