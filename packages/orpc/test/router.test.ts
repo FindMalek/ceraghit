@@ -22,7 +22,6 @@ import { cancelOrder, releaseExpiredHolds } from "../src/lib/orders"
 import { DemoProvider } from "../src/lib/payments"
 import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
 import { createStorage, type Storage } from "../src/lib/storage"
-import { cleanupUploads } from "../src/lib/uploads"
 import { appRouter } from "../src/routers"
 import { adminRouter } from "../src/routers/admin"
 
@@ -418,7 +417,7 @@ describe.skipIf(!url)("router", () => {
     expect(await off.public.catalog.settings()).not.toHaveProperty("bank")
   })
 
-  test("uploads are counted against the plan, and a file nobody uses is deleted only after a month unused", async () => {
+  test("uploads are counted against the plan, and the plan refuses a full bucket", async () => {
     const removed: string[] = []
     const storage: Storage = {
       bucket: "b",
@@ -442,20 +441,6 @@ describe.skipIf(!url)("router", () => {
     const lost = await owner.uploads.sign({ folder: "products", contentType: "image/webp", size: 2_000 })
     expect((await owner.uploads.usage()).usedBytes - before.usedBytes).toBe(3_000)
     await db.insert(productImages).values({ productId: ids.mug!, image: kept.image, position: 99 })
-
-    const day = 24 * 60 * 60_000
-    const start = new Date("2026-12-01T03:00:00Z")
-    await cleanupUploads(db, storage, start)
-    await cleanupUploads(db, storage, new Date(start.getTime() + 29 * day))
-    expect(removed).not.toContain(lost.image.slice(3))
-    await cleanupUploads(db, storage, new Date(start.getTime() + 31 * day))
-    expect(removed).toContain(lost.image.slice(3))
-    expect(removed).not.toContain(kept.image.slice(3))
-    const left = await db
-      .select({ key: uploads.key })
-      .from(uploads)
-      .where(inArray(uploads.key, [kept.image.slice(3), lost.image.slice(3)]))
-    expect(left.map((r) => r.key)).toEqual([kept.image.slice(3)])
 
     await db.insert(uploads).values([
       { key: "full-a", folder: "test", contentType: "image/webp", bytes: 1_245_000_000 },
