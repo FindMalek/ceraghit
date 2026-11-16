@@ -1,0 +1,12 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "ProcessedShipmentHolds": [
+    {
+      "ID": "44001234567",
+      "HasErrors": false,
+      "Notifications": []
+    }
+  ]
+}

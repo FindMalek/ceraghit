@@ -3,7 +3,10 @@ import { z } from "zod"
 /** Field lists only, never values: the dashboard renders a mask per secret field. */
 export const INTEGRATIONS = {
   konnect: { secretFields: ["apiKey"], configFields: ["walletId", "mode"] },
-  aramex: { secretFields: ["password", "accountPin"], configFields: [] },
+  aramex: {
+    secretFields: ["password", "accountPin"],
+    configFields: ["userName", "accountNumber", "accountEntity", "accountCountryCode", "mode"],
+  },
   groq: { secretFields: ["apiKey"], configFields: [] },
 } as const satisfies Record<string, { secretFields: readonly string[]; configFields: readonly string[] }>
 
@@ -15,7 +18,15 @@ export const integrationProviderSchema = z.enum(["konnect", "aramex", "groq"])
 export const konnectConfigSchema = z
   .object({ walletId: z.string().max(200).optional(), mode: z.enum(["test", "live"]).optional() })
   .strict()
-export const aramexConfigSchema = z.object({}).strict()
+export const aramexConfigSchema = z
+  .object({
+    userName: z.string().max(200).optional(),
+    accountNumber: z.string().max(50).optional(),
+    accountEntity: z.string().max(20).optional(),
+    accountCountryCode: z.string().length(2).optional(),
+    mode: z.enum(["test", "live"]).optional(),
+  })
+  .strict()
 export const groqConfigSchema = z.object({}).strict()
 export const INTEGRATION_CONFIG_SCHEMAS = {
   konnect: konnectConfigSchema,

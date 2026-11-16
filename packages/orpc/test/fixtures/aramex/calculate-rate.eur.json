@@ -1,0 +1,12 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "TotalAmount": {
+    "CurrencyCode": "EUR",
+    "Value": 27.35
+  },
+  "RateDetails": {
+    "Amount": 27.35
+  }
+}

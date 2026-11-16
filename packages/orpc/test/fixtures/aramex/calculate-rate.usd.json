@@ -1,0 +1,9 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "TotalAmount": {
+    "CurrencyCode": "USD",
+    "Value": 30.0
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "TrackingResults": [
+    {
+      "Key": "44001234567",
+      "Value": [
+        {
+          "WaybillNumber": "44001234567",
+          "UpdateCode": "SH005",
+          "UpdateDescription": "Delivered",
+          "UpdateDateTime": "/Date(1731715200000+0100)/",
+          "UpdateLocation": "Tunis, Tunisia",
+          "Comments": "",
+          "ProblemCode": "",
+          "GrossWeight": 1.5
+        },
+        {
+          "WaybillNumber": "44001234567",
+          "UpdateCode": "SH001",
+          "UpdateDescription": "Shipment received",
+          "UpdateDateTime": "/Date(1731628800000+0100)/",
+          "UpdateLocation": "Sousse, Tunisia",
+          "Comments": "",
+          "ProblemCode": ""
+        }
+      ]
+    }
+  ],
+  "NonExistingWaybills": ["99999999999"]
+}
