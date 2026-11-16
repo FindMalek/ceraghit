@@ -34,7 +34,7 @@ export function ProductCard({
         {cover && (
           <Image
             src={imageSrc(cover.image)}
-            alt={cover.alt ?? pick(product.title, locale)}
+            alt={pick(cover.alt, locale) || pick(product.title, locale)}
             fill
             sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
             priority={priority}

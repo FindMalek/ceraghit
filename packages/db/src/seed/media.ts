@@ -24,3 +24,6 @@ export const DEMO_UNUSED_MEDIA = {
   alt: { fr: "Atelier", en: "Studio", ar: "الورشة" } as Localized,
   tags: ["atelier"],
 }
+
+/** Demo piece whose main photo is its second one, to show that the main photo comes first on the storefront. */
+export const DEMO_MAIN_SECOND_REF = "0011"

@@ -18,7 +18,7 @@ function grepInvert(locale: AppLocale, device: "desktop" | "mobile"): RegExp | u
  * Dashboard specs reset the shop profile, the lockout counters and sessions, which every other spec relies on,
  * so each file runs alone, after the storefront projects, desktop before mobile.
  */
-const DASHBOARD_SPECS = ["auth", "onboarding"] as const
+const DASHBOARD_SPECS = ["auth", "onboarding", "product-gallery"] as const
 const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) =>
   DASHBOARD_SPECS.map((spec, s) => {
     const index = d * DASHBOARD_SPECS.length + s

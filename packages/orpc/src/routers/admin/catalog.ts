@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { categories, orderItems, productImages, products } from "@workspace/db"
+import { categories, orderItems, products } from "@workspace/db"
 import {
   categoryInputSchema,
   categorySchema,
@@ -11,6 +11,7 @@ import {
 import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
+import { saveProductImages } from "../../lib/product-images"
 import { syncVariants } from "../../lib/variants"
 import { adminProcedure } from "../../procedures"
 
@@ -86,11 +87,7 @@ export const productsRouter = {
             slug,
           })
           .returning({ id: products.id })
-        if (images.length) {
-          await tx
-            .insert(productImages)
-            .values(images.map((img, position) => ({ ...img, productId: row!.id, position })))
-        }
+        await saveProductImages(tx, row!.id, images)
         const aggregate = await syncVariants(tx, row!.id, variants)
         if (aggregate) await tx.update(products).set(aggregate).where(eq(products.id, row!.id))
         return row!.id
@@ -124,9 +121,7 @@ export const productsRouter = {
           .where(eq(products.id, id))
           .returning({ id: products.id })
         if (!updated.length) throw new ORPCError("NOT_FOUND", { message: "Product not found." })
-        await tx.delete(productImages).where(eq(productImages.productId, id))
-        if (images.length)
-          await tx.insert(productImages).values(images.map((img, position) => ({ ...img, productId: id, position })))
+        await saveProductImages(tx, id, images)
         const aggregate = await syncVariants(tx, id, variants)
         if (aggregate) await tx.update(products).set(aggregate).where(eq(products.id, id))
       })

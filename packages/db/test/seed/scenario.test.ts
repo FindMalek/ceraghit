@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
-import { DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
+import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
 import { buildScenario, DEMO_DESCRIPTIONS } from "../../src/seed/scenario"
 
 const products = [
@@ -131,4 +131,9 @@ test("demo media describe their own product and include a tagged and an unused p
   }
   expect(Object.values(DEMO_MEDIA_BY_REF).some((m) => m.tags.length > 0)).toBe(true)
   expect(CATALOGUE.flatMap((p) => p.images)).not.toContain(DEMO_UNUSED_MEDIA.key)
+})
+
+test("the demo has a piece whose main photo is not the first one", () => {
+  const product = CATALOGUE.find((p) => p.ref === DEMO_MAIN_SECOND_REF)
+  expect(product?.images.length).toBeGreaterThan(1)
 })

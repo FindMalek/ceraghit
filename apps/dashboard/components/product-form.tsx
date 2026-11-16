@@ -11,14 +11,15 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { useRouter } from "next/navigation"
 import { type FormEvent, useState } from "react"
-import { ImageListField } from "@/components/image-field"
 import { LocalizedField } from "@/components/localized-field"
 import { MoneyInput } from "@/components/money-input"
+import { ProductGalleryField } from "@/components/product-gallery-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { SimpleSelect } from "@/components/simple-select"
 import { emptyVariant, type VariantDraft, VariantsField } from "@/components/variants-field"
 import { PRODUCT_STATUS } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
+import { type GalleryItem, productImageToItem, toInputImages } from "@/lib/gallery"
 import { emptyLocalized, fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 import { inputToMinor, minorToInput } from "@/lib/money"
 
@@ -41,7 +42,7 @@ interface Draft {
   quoteOnly: boolean
   featured: boolean
   status: ProductInput["status"]
-  images: { image: string; alt?: string | null }[]
+  images: GalleryItem[]
   variants: VariantDraft[]
 }
 
@@ -87,7 +88,7 @@ const toDraft = (product: Product): Draft => ({
   quoteOnly: product.quoteOnly,
   featured: product.featured,
   status: product.status,
-  images: product.images.map(({ image, alt }) => ({ image, alt })),
+  images: product.images.flatMap(productImageToItem),
   variants: product.variants.map((v) => ({
     id: v.id,
     label: toLocalizedDraft(v.label),
@@ -196,7 +197,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
       quoteOnly: draft.quoteOnly,
       featured: draft.featured,
       status: draft.status,
-      images: draft.images,
+      images: toInputImages(draft.images),
       variants,
     })
     if (!parsed.success) {
@@ -387,7 +388,7 @@ function ProductFormBody({ product }: { product: Product | null }) {
 
         <FieldSet>
           <FieldLabel>Photos</FieldLabel>
-          <ImageListField value={draft.images} onChange={(v) => set("images", v)} />
+          <ProductGalleryField value={draft.images} onChange={(v) => set("images", v)} />
           {errors.images && <FieldError>{errors.images}</FieldError>}
         </FieldSet>
 

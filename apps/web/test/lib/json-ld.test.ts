@@ -23,7 +23,18 @@ const product: Product = {
   quoteOnly: false,
   featured: false,
   status: "published",
-  images: [{ id: "i1", image: "/catalogue/0200-1.webp", alt: null }],
+  images: [
+    {
+      id: "i1",
+      mediaId: null,
+      image: "/catalogue/0200-1.webp",
+      alt: null,
+      altOverride: null,
+      isMain: true,
+      width: null,
+      height: null,
+    },
+  ],
   variants: [],
 }
 
