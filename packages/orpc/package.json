@@ -9,6 +9,7 @@
     "./errors": "./src/errors.ts",
     "./react": "./src/react.tsx",
     "./secrets": "./src/lib/secrets.ts",
+    "./fake-aramex": "./src/lib/shipping/aramex/fake.ts",
     "./rotate": "./src/lib/integrations.ts",
     "./server": "./src/server-client.ts"
   },

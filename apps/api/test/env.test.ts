@@ -90,3 +90,8 @@ test("aramex fallback values are optional and read from ARAMEX_*", () => {
   expect(env.ARAMEX_USERNAME).toBe("shop@example.test")
   expect(env.ARAMEX_PASSWORD).toBeUndefined()
 })
+
+test("ARAMEX_FAKE is refused in production and allowed elsewhere", () => {
+  expect(() => loadEnv({ ...production, ARAMEX_FAKE: "true" })).toThrow(/ARAMEX_FAKE/)
+  expect(loadEnv({ ...base, ARAMEX_FAKE: "true" }).ARAMEX_FAKE).toBe(true)
+})

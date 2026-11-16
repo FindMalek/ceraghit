@@ -2,6 +2,7 @@ import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
+import { createFakeAramexFetch } from "@workspace/orpc/fake-aramex"
 import { assertVaultKeyForRows } from "@workspace/orpc/rotate"
 import { parseKeyring } from "@workspace/orpc/secrets"
 import { CRON_JOBS } from "./cron"
@@ -42,6 +43,7 @@ const fetch = createServer({
   }),
   auth: new AdminAuth(db),
   secrets,
+  ...(env.ARAMEX_FAKE ? { http: createFakeAramexFetch() } : {}),
   now: () => new Date(),
   config: {
     webUrl: env.WEB_URL,

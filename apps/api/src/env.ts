@@ -51,6 +51,8 @@ const schema = z
     ARAMEX_ACCOUNT_PIN: z.string().optional(),
     ARAMEX_ACCOUNT_ENTITY: z.string().optional(),
     ARAMEX_ACCOUNT_COUNTRY_CODE: z.string().optional(),
+    /** Answers Aramex calls with canned replies (screenshots, demos). Refused in production. */
+    ARAMEX_FAKE: flag.default(false),
     S3_ENDPOINT: z.string().optional(),
     S3_REGION: z.string().default("auto"),
     S3_BUCKET: z.string().optional(),
@@ -78,6 +80,7 @@ const schema = z
         fail("SECRETS_KEY_PREVIOUS must have a lower version than SECRETS_KEY")
     }
     if (env.APP_ENV === "production") {
+      if (env.ARAMEX_FAKE) fail("ARAMEX_FAKE is only allowed outside production")
       if (env.ONLINE_PAYMENTS) {
         if (env.KONNECT_MODE !== "live") fail("production needs KONNECT_MODE=live")
         if (!env.KONNECT_API_KEY || !env.KONNECT_WALLET_ID)
