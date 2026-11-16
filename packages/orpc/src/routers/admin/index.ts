@@ -1,3 +1,4 @@
+import { aiRouter } from "./ai"
 import { authRouter } from "./auth"
 import { categoriesRouter, productsRouter } from "./catalog"
 import { helpRouter } from "./help"
@@ -16,6 +17,7 @@ import { locationsRouter, settingsRouter, uploadsRouter } from "./studio"
 /** Every procedure here is built on `adminProcedure` (the `auth` login/logout excepted), see router.test.ts. */
 export const adminRouter = {
   auth: authRouter,
+  ai: aiRouter,
   overview,
   products: productsRouter,
   categories: categoriesRouter,

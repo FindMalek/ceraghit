@@ -471,6 +471,17 @@ export const invoices = pgTable(
   (t) => [uniqueIndex("invoices_year_seq_idx").on(t.year, t.seq)],
 )
 
+/** Monthly AI usage, keyed by the studio month ("2026-11", Africa/Tunis). One row per month. */
+export const aiUsage = pgTable("ai_usage", {
+  month: text("month").primaryKey(),
+  requests: integer("requests").notNull().default(0),
+  tokensIn: integer("tokens_in").notNull().default(0),
+  tokensOut: integer("tokens_out").notNull().default(0),
+  /** Micro USD, so cents survive as integers. */
+  costMicroUsd: integer("cost_micro_usd").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+})
+
 export const mediaRelations = relations(media, ({ many }) => ({ productImages: many(productImages) }))
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
   products: many(products),

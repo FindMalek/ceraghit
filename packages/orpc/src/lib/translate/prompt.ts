@@ -32,9 +32,11 @@ export interface TranslateRequest {
   maxLength: number
   source: { lang: Lang; text: string }
   targets: Lang[]
+  /** Appended to the user prompt on the one retry after a length miss. */
+  feedback?: string
 }
 
-export function buildTranslatePrompt({ field, maxLength, source, targets }: TranslateRequest): {
+export function buildTranslatePrompt({ field, maxLength, source, targets, feedback }: TranslateRequest): {
   system: string
   prompt: string
 } {
@@ -52,7 +54,7 @@ export function buildTranslatePrompt({ field, maxLength, source, targets }: Tran
     "An empty source gives an empty output. Never invent content.",
     `Answer only with the fields ${targets.join(", ")}.`,
   ].join("\n\n")
-  const prompt = `Field: ${field}\nSource (${source.lang}):\n${source.text}`
+  const prompt = `Field: ${field}\nSource (${source.lang}):\n${source.text}${feedback ? `\n\nCorrection: ${feedback}` : ""}`
   return { system, prompt }
 }
 

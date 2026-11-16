@@ -755,3 +755,58 @@ export const mediaSignResultSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("existing"), media: mediaSchema }),
   z.object({ status: z.literal("upload"), mediaId: z.string(), uploadUrl: z.string() }),
 ])
+
+/** Max characters per localized field, shared by the forms and the translate procedure. */
+export const AI_FIELD_LIMITS = {
+  "product.title": 120,
+  "product.description": 3000,
+  "product.material": 200,
+  "product.technique": 200,
+  "variant.label": 80,
+  "category.name": 80,
+  "category.description": 500,
+  "location.description": 1000,
+  "location.hours": 300,
+  "settings.shippingNote": 500,
+} as const
+export const aiTranslateFieldSchema = z.enum(Object.keys(AI_FIELD_LIMITS) as [keyof typeof AI_FIELD_LIMITS])
+export type AiTranslateField = z.infer<typeof aiTranslateFieldSchema>
+
+export const aiSettingsSchema = z.object({
+  model: z.string().default("openai/gpt-oss-120b"),
+  reasoningEffort: z.enum(["low", "medium"]).default("low"),
+  monthlyCapUsd: z.number().min(0).nullable().default(5),
+})
+export type AiSettings = z.infer<typeof aiSettingsSchema>
+
+export const aiUsageSchema = z.object({
+  month: z.string(),
+  requests: z.number().int(),
+  tokensIn: z.number().int(),
+  tokensOut: z.number().int(),
+  costUsd: z.number(),
+})
+export type AiUsage = z.infer<typeof aiUsageSchema>
+
+export const aiStatusSchema = z.object({
+  configured: z.boolean(),
+  model: z.string(),
+  month: z.string(),
+  usage: aiUsageSchema,
+  capUsd: z.number().nullable(),
+  capReached: z.boolean(),
+})
+export type AiStatus = z.infer<typeof aiStatusSchema>
+
+export const aiTranslateInputSchema = z.object({
+  field: aiTranslateFieldSchema,
+  values: z.object({ fr: z.string(), en: z.string(), ar: z.string() }),
+})
+export type AiTranslateInput = z.infer<typeof aiTranslateInputSchema>
+
+export const aiTranslateOutputSchema = z.object({
+  values: z.object({ fr: z.string().optional(), en: z.string().optional(), ar: z.string().optional() }),
+  warnings: z.array(z.enum(["length", "arabic_script"])).default([]),
+  usage: z.object({ tokensIn: z.number().int(), tokensOut: z.number().int() }),
+})
+export type AiTranslateOutput = z.infer<typeof aiTranslateOutputSchema>
