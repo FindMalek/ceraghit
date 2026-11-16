@@ -1,0 +1,12 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "SuggestedAddresses": [
+    {
+      "Line1": "Rue de Marseille",
+      "City": "Tunis",
+      "CountryCode": "TN"
+    }
+  ]
+}

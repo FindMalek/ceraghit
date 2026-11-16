@@ -1,0 +1,11 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "ProcessedPickup": {
+    "ID": "123456",
+    "GUID": "7e9d1c9a-0000-4000-8000-000000000001",
+    "Reference1": "CG-PU-1",
+    "ProcessedShipments": []
+  }
+}

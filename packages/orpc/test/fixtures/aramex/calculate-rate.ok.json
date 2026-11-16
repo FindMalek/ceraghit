@@ -1,0 +1,15 @@
+{
+  "Transaction": null,
+  "Notifications": [],
+  "HasErrors": false,
+  "TotalAmount": {
+    "CurrencyCode": "TND",
+    "Value": 8.5
+  },
+  "RateDetails": {
+    "Amount": 7.14,
+    "OtherAmount1": 0,
+    "TotalAmountBeforeTax": 7.14,
+    "TaxAmount": 1.36
+  }
+}
