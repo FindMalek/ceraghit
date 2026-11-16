@@ -8,6 +8,7 @@
     "start": "bun src/index.ts",
     "check-types": "tsc --noEmit",
     "test": "bun test",
+    "secrets:rotate": "bun --env-file=../../.env src/rotate-secrets.ts",
     "build:vercel": "esbuild src/vercel.ts --bundle --platform=node --target=node22 --format=esm --outfile=api/index.js --banner:js=\"import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);\""
   },
   "dependencies": {

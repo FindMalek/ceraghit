@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { loadEnv } from "../src/env"
 
+const KEY1 = `1:${Buffer.alloc(32, 1).toString("base64")}`
 const base = { DATABASE_URL: "postgres://x" }
 const production = {
   ...base,
@@ -62,4 +63,24 @@ test("production refuses a missing or short PROXY_SECRET", () => {
   expect(() => loadEnv(without)).toThrow(/PROXY_SECRET/)
   expect(() => loadEnv({ ...production, PROXY_SECRET: "short" })).toThrow(/PROXY_SECRET/)
   expect(loadEnv({ ...base, APP_ENV: "preview" }).PROXY_SECRET).toBeUndefined()
+})
+
+const KEY2 = `2:${Buffer.alloc(32, 2).toString("base64")}`
+
+test("the vault key is optional but validated everywhere", () => {
+  expect(() => loadEnv({ ...production, SECRETS_KEY: "" })).not.toThrow()
+  expect(() => loadEnv({ ...production, SECRETS_KEY: "bad" })).toThrow(/SECRETS_KEY/)
+  expect(() => loadEnv(production)).not.toThrow()
+  expect(() => loadEnv(base)).not.toThrow()
+  let message = ""
+  try {
+    loadEnv({ ...base, SECRETS_KEY: "1:BADVALUE-SENTINEL" })
+  } catch (error) {
+    message = String(error)
+  }
+  expect(message).toContain("SECRETS_KEY")
+  expect(message).not.toContain("SENTINEL")
+  expect(() => loadEnv({ ...base, SECRETS_KEY: KEY1, SECRETS_KEY_PREVIOUS: KEY1 })).toThrow(/lower version/)
+  expect(() => loadEnv({ ...base, SECRETS_KEY_PREVIOUS: KEY1 })).toThrow(/needs SECRETS_KEY/)
+  expect(() => loadEnv({ ...base, SECRETS_KEY: KEY2, SECRETS_KEY_PREVIOUS: KEY1 })).not.toThrow()
 })

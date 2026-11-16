@@ -2,6 +2,7 @@ import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
+import { parseKeyring } from "@workspace/orpc/secrets"
 import { CRON_JOBS } from "./cron"
 import { loadEnv } from "./env"
 import { createMailer, mailTransport } from "./mailer"
@@ -36,6 +37,7 @@ const fetch = createServer({
     prefix: env.DEPLOY_ENV.startsWith("pr-") || env.DEPLOY_ENV === "staging" ? `${env.DEPLOY_ENV}/` : "",
   }),
   auth: new AdminAuth(db),
+  secrets: parseKeyring(env.SECRETS_KEY, env.SECRETS_KEY_PREVIOUS),
   now: () => new Date(),
   config: {
     webUrl: env.WEB_URL,
@@ -49,6 +51,9 @@ const fetch = createServer({
     proxySecret: env.PROXY_SECRET,
     emailFrom: env.EMAIL_FROM,
     resendApiKey: env.RESEND_API_KEY,
+    envCredentials: {
+      konnect: { apiKey: env.KONNECT_API_KEY, walletId: env.KONNECT_WALLET_ID, mode: env.KONNECT_MODE },
+    },
   },
 })
 

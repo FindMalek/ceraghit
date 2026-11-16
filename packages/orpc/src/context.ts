@@ -1,7 +1,9 @@
 import type { Db } from "@workspace/db"
+import type { IntegrationProvider } from "@workspace/sdk"
 import type { AdminAuth } from "./lib/auth"
 import type { Mailer } from "./lib/mailer"
 import type { PaymentProvider } from "./lib/payments"
+import type { Keyring } from "./lib/secrets"
 import type { Storage } from "./lib/storage"
 
 export type AppEnv = "local" | "preview" | "production"
@@ -13,6 +15,8 @@ export interface Services {
   mailer: Mailer
   storage: Storage | null
   auth: AdminAuth
+  /** Master key of the credentials vault; null when SECRETS_KEY is not set (saving is refused). */
+  secrets?: Keyring | null
   now: () => Date
   /** Tests pass a fake for the Resend domains api. */
   http?: typeof fetch
@@ -37,6 +41,8 @@ export interface Services {
     emailFrom?: string
     /** Server only, never sent to a client: reads the sending domain's DNS state. */
     resendApiKey?: string
+    /** Production values of provider credentials, used while the owner saved none in the dashboard. */
+    envCredentials?: Partial<Record<IntegrationProvider, Record<string, string | undefined>>>
   }
 }
 
