@@ -186,6 +186,18 @@ async function waitWithRetry(deployed, onChange) {
   return deployed.every((d) => d.status === "ready")
 }
 
+/** OpenObserve: the preview service account from repo secrets, so previews never write with the production account. */
+function telemetryEnv() {
+  return {
+    OPENOBSERVE_URL: process.env.OPENOBSERVE_URL,
+    OPENOBSERVE_ORG: process.env.OPENOBSERVE_ORG,
+    OPENOBSERVE_USER: process.env.OPENOBSERVE_USER,
+    OPENOBSERVE_PASSWORD: process.env.OPENOBSERVE_PASSWORD,
+    OPENOBSERVE_STREAM: process.env.OPENOBSERVE_STREAM,
+    LOG_LEVEL: process.env.LOG_LEVEL || "info",
+  }
+}
+
 /** The api goes first: web and dashboard reach it by its swarm service name on dokploy-network. */
 async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
   const suffix = tag.startsWith("pr-") ? `-${tag}` : ""
@@ -217,6 +229,7 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
       API_PUBLIC_URL: urls.api,
       PROXY_SECRET: proxySecret,
       MAILPIT_URL: mail ? `http://${mail.appName}:8025` : undefined,
+      ...telemetryEnv(),
       ...apiEnv,
     },
   })
@@ -224,8 +237,10 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
     API_URL: `http://${api.appName}:3001`,
     WEB_URL: urls.web,
     APP_ENV: "preview",
+    DEPLOY_ENV: apiEnv.DEPLOY_ENV || tag,
     PROXY_SECRET: proxySecret,
     S3_ENDPOINT: process.env.S3_ENDPOINT,
+    ...telemetryEnv(),
   }
   const web = await deployApp(environment, {
     name: `ceraghit-web${suffix}`,

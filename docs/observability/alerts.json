@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "org_id": "default",
+  "alerts": [
+    {
+      "name": "ceraghit-api-error-logs",
+      "description": "Any error log from the production api, web or dashboard in a 5 minute window.",
+      "stream_type": "logs",
+      "stream_name": "ceraghit",
+      "is_real_time": false,
+      "query_condition": {
+        "type": "sql",
+        "sql": "SELECT count(*) AS errors FROM \"ceraghit\" WHERE level = 'error' AND deployment_environment = 'production'",
+        "promql": null,
+        "aggregation": null
+      },
+      "trigger_condition": {
+        "period": 5,
+        "operator": ">=",
+        "threshold": 1,
+        "frequency": 1,
+        "frequency_type": "minutes",
+        "silence": 30,
+        "timezone": "Africa/Tunis"
+      },
+      "destinations": ["owner-mail"],
+      "enabled": true,
+      "context_attributes": {
+        "service": "ceraghit-api",
+        "runbook": "docs/observability/README.md"
+      }
+    },
+    {
+      "name": "ceraghit-mail-failures",
+      "description": "A mail the transport refused. The owner resends failed mails from the dashboard, so this should stay at zero.",
+      "stream_type": "metrics",
+      "stream_name": "ceraghit_emails_failed",
+      "is_real_time": false,
+      "query_condition": {
+        "type": "promql",
+        "sql": null,
+        "promql": "sum(ceraghit_emails_failed) > 0",
+        "aggregation": null
+      },
+      "trigger_condition": {
+        "period": 15,
+        "operator": ">=",
+        "threshold": 1,
+        "frequency": 5,
+        "frequency_type": "minutes",
+        "silence": 60,
+        "timezone": "Africa/Tunis"
+      },
+      "destinations": ["owner-mail"],
+      "enabled": true
+    },
+    {
+      "name": "ceraghit-payment-mismatch",
+      "description": "The gateway answered paid but the amount, currency or order number did not match: never mark such an order paid by hand without checking Konnect.",
+      "stream_type": "metrics",
+      "stream_name": "ceraghit_payments_settle",
+      "is_real_time": false,
+      "query_condition": {
+        "type": "promql",
+        "sql": null,
+        "promql": "sum(ceraghit_payments_settle{result=\"mismatch\"}) > 0",
+        "aggregation": null
+      },
+      "trigger_condition": {
+        "period": 5,
+        "operator": ">=",
+        "threshold": 1,
+        "frequency": 1,
+        "frequency_type": "minutes",
+        "silence": 30,
+        "timezone": "Africa/Tunis"
+      },
+      "destinations": ["owner-mail"],
+      "enabled": true
+    },
+    {
+      "name": "ceraghit-cron-missed",
+      "description": "A scheduled job has not run for 26 hours: its GitHub job or its Dokploy/Vercel caller is broken.",
+      "stream_type": "metrics",
+      "stream_name": "ceraghit_cron_runs",
+      "is_real_time": false,
+      "query_condition": {
+        "type": "promql",
+        "sql": null,
+        "promql": "absent(sum by (job) (ceraghit_cron_runs))",
+        "aggregation": null
+      },
+      "trigger_condition": {
+        "period": 1560,
+        "operator": ">=",
+        "threshold": 1,
+        "frequency": 60,
+        "frequency_type": "minutes",
+        "silence": 720,
+        "timezone": "Africa/Tunis"
+      },
+      "destinations": ["owner-mail"],
+      "enabled": true
+    }
+  ]
+}

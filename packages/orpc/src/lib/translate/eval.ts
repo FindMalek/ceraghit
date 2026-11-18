@@ -1,5 +1,6 @@
 import { createGroq } from "@ai-sdk/groq"
 import { generateText, type LanguageModel, Output } from "ai"
+import { withSpan } from "../telemetry"
 import { costUsd, type EvalModelId, modelInfo, type ReasoningEffort } from "./models"
 import { buildTranslatePrompt, type Lang, type TranslateRequest, translationSchema } from "./prompt"
 import { lengthRatio, percentile, roundTripSimilarity, scoreArabicScript, scoreGlossary, scoreKeep } from "./score"
@@ -65,7 +66,10 @@ export async function translateWith(
 
 export function groqTranslate(apiKey: string): TranslateFn {
   const groq = createGroq({ apiKey })
-  return (column, request) => translateWith(groq(column.model), column.effort, request)
+  return (column, request) =>
+    withSpan("ai.translate", { model: column.model, "ai.effort": column.effort }, () =>
+      translateWith(groq(column.model), column.effort, request),
+    )
 }
 
 export interface SampleRecord {

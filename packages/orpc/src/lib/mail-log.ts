@@ -2,6 +2,7 @@ import { mailLog } from "@workspace/db"
 import { and, eq, lt, ne } from "drizzle-orm"
 import type { Services } from "../context"
 import { type Mail, MailError } from "./mailer"
+import { recordEmail } from "./metrics"
 
 export type MailKind =
   | "order_confirmation"
@@ -36,7 +37,7 @@ export async function deliverMail(
   services: Services,
   kind: MailKind,
   mail: Mail,
-  opts: { orderId?: string; inline?: boolean; existingId?: string } = {},
+  opts: { orderId?: string; inline?: boolean; existingId?: string; locale?: string } = {},
 ): Promise<boolean> {
   const { db, mailer, now } = services
   const sleep = services.sleep ?? sleepFor
@@ -90,6 +91,7 @@ export async function deliverMail(
   } catch (e) {
     console.error("[mail log]", describe(e))
   }
+  recordEmail(kind, ok, opts.locale)
   if (!ok) console.error(`[mail ${kind}] ${mail.to}:`, error)
   return ok
 }

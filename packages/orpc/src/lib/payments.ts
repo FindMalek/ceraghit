@@ -4,6 +4,7 @@ import type { Currency } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
 import type { AppEnv } from "../context"
 import { publicError } from "../errors"
+import { withSpan } from "./telemetry"
 
 export interface InitPayment {
   orderNumber: string
@@ -62,44 +63,48 @@ export class KonnectProvider implements PaymentProvider {
   }
 
   async init(input: InitPayment) {
-    const [firstName, ...rest] = input.customer.name.split(" ")
-    const res = await this.call<{ payUrl: string; paymentRef: string }>("/payments/init-payment", {
-      method: "POST",
-      body: JSON.stringify({
-        receiverWalletId: this.walletId,
-        amount: input.amountMinor,
-        token: input.currency,
-        type: "immediate",
-        lifespan: 30,
-        orderId: input.orderNumber,
-        description: input.description,
-        firstName,
-        lastName: rest.join(" ") || firstName,
-        email: input.customer.email,
-        phoneNumber: input.customer.phone,
-        webhook: input.webhookUrl,
-        successUrl: input.successUrl,
-        failUrl: input.failUrl,
-        silentWebhook: true,
-        checkoutForm: false,
-        acceptedPaymentMethods: ["bank_card", "wallet", "e-DINAR"],
-      }),
+    return withSpan("payments.init", { provider: this.name, "payment.mode": this.mode }, async () => {
+      const [firstName, ...rest] = input.customer.name.split(" ")
+      const res = await this.call<{ payUrl: string; paymentRef: string }>("/payments/init-payment", {
+        method: "POST",
+        body: JSON.stringify({
+          receiverWalletId: this.walletId,
+          amount: input.amountMinor,
+          token: input.currency,
+          type: "immediate",
+          lifespan: 30,
+          orderId: input.orderNumber,
+          description: input.description,
+          firstName,
+          lastName: rest.join(" ") || firstName,
+          email: input.customer.email,
+          phoneNumber: input.customer.phone,
+          webhook: input.webhookUrl,
+          successUrl: input.successUrl,
+          failUrl: input.failUrl,
+          silentWebhook: true,
+          checkoutForm: false,
+          acceptedPaymentMethods: ["bank_card", "wallet", "e-DINAR"],
+        }),
+      })
+      return { payUrl: res.payUrl, ref: res.paymentRef }
     })
-    return { payUrl: res.payUrl, ref: res.paymentRef }
   }
 
   async check(ref: string): Promise<PaymentCheck> {
-    const { payment } = await this.call<{
-      payment: { status: string; amount: number; token?: string; orderId?: string }
-    }>(`/payments/${encodeURIComponent(ref)}`)
-    const status = payment.status === "completed" ? "paid" : payment.status === "failed" ? "failed" : "pending"
-    const token = payment.token?.toUpperCase()
-    return {
-      status,
-      amountMinor: payment.amount,
-      currency: token === "TND" || token === "EUR" ? token : null,
-      orderNumber: payment.orderId ?? null,
-    }
+    return withSpan("payments.get", { provider: this.name, "payment.mode": this.mode }, async () => {
+      const { payment } = await this.call<{
+        payment: { status: string; amount: number; token?: string; orderId?: string }
+      }>(`/payments/${encodeURIComponent(ref)}`)
+      const status = payment.status === "completed" ? "paid" : payment.status === "failed" ? "failed" : "pending"
+      const token = payment.token?.toUpperCase()
+      return {
+        status,
+        amountMinor: payment.amount,
+        currency: token === "TND" || token === "EUR" ? token : null,
+        orderNumber: payment.orderId ?? null,
+      }
+    })
   }
 }
 

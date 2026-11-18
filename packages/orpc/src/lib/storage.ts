@@ -1,4 +1,5 @@
 import { AwsClient } from "aws4fetch"
+import { withSpan } from "./telemetry"
 
 export const TOO_LARGE = "object is larger than the limit"
 
@@ -43,6 +44,8 @@ export function createStorage(config: StorageConfig): Storage | null {
   if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) return null
   const aws = new AwsClient({ accessKeyId, secretAccessKey, region, service: "s3" })
   const urlFor = (key: string) => `${endpoint.replace(/\/$/, "")}/${bucket}/${key}`
+  const traced = <T>(name: string, key: string | undefined, run: () => Promise<T>): Promise<T> =>
+    withSpan(name, { "s3.bucket": bucket, ...(key ? { "s3.key": key } : {}) }, run)
   const publicBase = config.publicUrl?.replace(/\/$/, "")
 
   /** `bind` also signs content-type and content-length, which aws4fetch leaves out unless `allHeaders` is set. */
@@ -68,53 +71,51 @@ export function createStorage(config: StorageConfig): Storage | null {
       size === undefined
         ? presign("PUT", key, 600, { "content-type": contentType })
         : presign("PUT", key, 600, { "content-type": contentType, "content-length": String(size) }, true),
-    async head(key) {
-      const res = await aws.fetch(urlFor(key), { method: "HEAD" })
-      return res.ok
-    },
-    async read(key, maxBytes) {
-      const res = await aws.fetch(urlFor(key))
-      if (res.status === 404) return null
-      if (!res.ok || !res.body) throw new Error(`bucket read failed (${res.status})`)
-      const chunks: Uint8Array[] = []
-      let total = 0
-      for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
-        total += chunk.length
-        if (total > maxBytes) {
-          await res.body.cancel()
-          throw new Error(TOO_LARGE)
+    head: (key) => traced("s3.head", key, async () => (await aws.fetch(urlFor(key), { method: "HEAD" })).ok),
+    read: (key, maxBytes) =>
+      traced("s3.read", key, async () => {
+        const res = await aws.fetch(urlFor(key))
+        if (res.status === 404) return null
+        if (!res.ok || !res.body) throw new Error(`bucket read failed (${res.status})`)
+        const chunks: Uint8Array[] = []
+        let total = 0
+        for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
+          total += chunk.length
+          if (total > maxBytes) {
+            await res.body.cancel()
+            throw new Error(TOO_LARGE)
+          }
+          chunks.push(chunk)
         }
-        chunks.push(chunk)
-      }
-      return Buffer.concat(chunks)
-    },
+        return Buffer.concat(chunks)
+      }),
+
     readUrl: (key) => (publicBase ? Promise.resolve(`${publicBase}/${key}`) : presign("GET", key, 3600)),
     publicUrl: (key) => (publicBase ? `${publicBase}/${key}` : null),
-    async remove(key) {
-      await aws.fetch(urlFor(key), { method: "DELETE" })
-    },
-    async list(listPrefix = "") {
-      const found: { key: string; size: number; modifiedAt: Date }[] = []
-      let token: string | null = null
-      do {
-        const url = new URL(`${endpoint.replace(/\/$/, "")}/${bucket}`)
-        url.searchParams.set("list-type", "2")
-        if (listPrefix) url.searchParams.set("prefix", listPrefix)
-        if (token) url.searchParams.set("continuation-token", token)
-        const res = await aws.fetch(url)
-        if (!res.ok) throw new Error(`bucket listing failed (${res.status})`)
-        const xml = await res.text()
-        for (const [, block] of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
-          const key = block?.match(/<Key>([\s\S]*?)<\/Key>/)?.[1]
-          const size = block?.match(/<Size>(\d+)<\/Size>/)?.[1]
-          const modified = block?.match(/<LastModified>([\s\S]*?)<\/LastModified>/)?.[1]
-          if (key && size && modified) found.push({ key, size: Number(size), modifiedAt: new Date(modified) })
-        }
-        token = xml.includes("<IsTruncated>true</IsTruncated>")
-          ? (xml.match(/<NextContinuationToken>([\s\S]*?)<\/NextContinuationToken>/)?.[1] ?? null)
-          : null
-      } while (token)
-      return found
-    },
+    remove: (key) => traced("s3.remove", key, async () => void (await aws.fetch(urlFor(key), { method: "DELETE" }))),
+    list: (listPrefix = "") =>
+      traced("s3.list", listPrefix || undefined, async () => {
+        const found: { key: string; size: number; modifiedAt: Date }[] = []
+        let token: string | null = null
+        do {
+          const url = new URL(`${endpoint.replace(/\/$/, "")}/${bucket}`)
+          url.searchParams.set("list-type", "2")
+          if (listPrefix) url.searchParams.set("prefix", listPrefix)
+          if (token) url.searchParams.set("continuation-token", token)
+          const res = await aws.fetch(url)
+          if (!res.ok) throw new Error(`bucket listing failed (${res.status})`)
+          const xml = await res.text()
+          for (const [, block] of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+            const key = block?.match(/<Key>([\s\S]*?)<\/Key>/)?.[1]
+            const size = block?.match(/<Size>(\d+)<\/Size>/)?.[1]
+            const modified = block?.match(/<LastModified>([\s\S]*?)<\/LastModified>/)?.[1]
+            if (key && size && modified) found.push({ key, size: Number(size), modifiedAt: new Date(modified) })
+          }
+          token = xml.includes("<IsTruncated>true</IsTruncated>")
+            ? (xml.match(/<NextContinuationToken>([\s\S]*?)<\/NextContinuationToken>/)?.[1] ?? null)
+            : null
+        } while (token)
+        return found
+      }),
   }
 }

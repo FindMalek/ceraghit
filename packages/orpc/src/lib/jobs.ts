@@ -2,6 +2,7 @@ import { jobRuns } from "@workspace/db"
 import { JOBS, type JobStatus } from "@workspace/sdk"
 import { and, desc, eq, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
+import { recordCronRun } from "./metrics"
 
 export const JOB_RETENTION_DAYS = 90
 
@@ -28,17 +29,23 @@ export async function runJob(
     const [lock] = await tx.execute<{ locked: boolean }>(
       sql`select pg_try_advisory_xact_lock(hashtext(${`cron:${name}`})) as locked`,
     )
-    if (!lock?.locked) return { ok: true, skipped: "already running" }
+    if (!lock?.locked) {
+      recordCronRun(name, "skipped", 0)
+      return { ok: true, skipped: "already running" }
+    }
 
     const startedAt = now()
+    const started = performance.now()
     const [row] = await db.insert(jobRuns).values({ name, startedAt }).returning({ id: jobRuns.id })
     let outcome: JobOutcome
     try {
       const counts = await run(startedAt)
       await db.update(jobRuns).set({ finishedAt: now(), ok: true, counts }).where(eq(jobRuns.id, row!.id))
+      recordCronRun(name, "ok", performance.now() - started)
       outcome = { ok: true, ...counts }
     } catch (error) {
       console.error(`[cron] ${name}`, describe(error))
+      recordCronRun(name, "failed", performance.now() - started)
       await db
         .update(jobRuns)
         .set({ finishedAt: now(), ok: false, error: describe(error) })

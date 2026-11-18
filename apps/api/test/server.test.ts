@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import type { Services } from "@workspace/orpc"
+import { withRequestLogging } from "../src/logger"
 import { createServer } from "../src/server"
 
 function serverFor(appEnv: "local" | "preview" | "production") {
@@ -59,6 +60,16 @@ for (const path of ["/nope", "/v1/nope", "/rpc/nope", "/cron/cleanup-uploads"]) 
     expect(await response.json()).toEqual({ message: "Not found." })
   })
 }
+
+const traced = withRequestLogging(fetch)
+
+test("every response carries an x-request-id, and a plain inbound one is echoed", async () => {
+  const fresh = await traced(get("/nope"))
+  expect(fresh.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/)
+
+  const echoed = await traced(new Request("https://api.test/nope", { headers: { "x-request-id": "req-1234567890" } }))
+  expect(echoed.headers.get("x-request-id")).toBe("req-1234567890")
+})
 
 test.skipIf(!process.env.DATABASE_URL)("/health shows only the saved provider and environment", async () => {
   const { createDb, settings } = await import("@workspace/db")
