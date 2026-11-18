@@ -1,4 +1,5 @@
 import { mailColors } from "../emails/brand"
+import { withSpan } from "./telemetry"
 
 export interface Mail {
   to: string
@@ -63,20 +64,22 @@ export class MailpitMailer implements Mailer {
   ) {}
 
   async send({ to, subject, text, html, replyTo }: Mail) {
-    const res = await this.http(`${this.baseUrl.replace(/\/$/, "")}/api/v1/send`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        From: parseAddress(this.from),
-        To: [{ Email: to }],
-        ReplyTo: replyTo ? [{ Email: replyTo }] : undefined,
-        Subject: subject,
-        Text: text,
-        HTML: html,
-      }),
+    return withSpan("email.send", { provider: "mailpit" }, async () => {
+      const res = await this.http(`${this.baseUrl.replace(/\/$/, "")}/api/v1/send`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          From: parseAddress(this.from),
+          To: [{ Email: to }],
+          ReplyTo: replyTo ? [{ Email: replyTo }] : undefined,
+          Subject: subject,
+          Text: text,
+          HTML: html,
+        }),
+      })
+      if (!res.ok) throw new MailError(`mailpit ${res.status}: ${await bodyOf(res)}`, res.status >= 500, res.status)
+      return { id: null }
     })
-    if (!res.ok) throw new MailError(`mailpit ${res.status}: ${await bodyOf(res)}`, res.status >= 500, res.status)
-    return { id: null }
   }
 }
 
@@ -90,32 +93,34 @@ export class ResendMailer implements Mailer {
   ) {}
 
   async send({ to, subject, text, html, replyTo, idempotencyKey }: Mail) {
-    let res: Response
-    try {
-      res = await this.http("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${this.apiKey}`,
-          "content-type": "application/json",
-          ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
-        },
-        body: JSON.stringify({ from: this.from, to, subject, text, html, reply_to: replyTo }),
-        signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
-      })
-    } catch {
-      throw new MailError("resend: network error", true, 0)
-    }
-    if (!res.ok) {
-      const seconds = Number(res.headers.get("retry-after"))
-      throw new MailError(
-        `resend ${res.status}: ${await bodyOf(res)}`,
-        res.status === 429 || res.status >= 500,
-        res.status,
-        Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined,
-      )
-    }
-    const body = (await res.json().catch(() => null)) as { id?: unknown } | null
-    return { id: typeof body?.id === "string" ? body.id : null }
+    return withSpan("email.send", { provider: "resend" }, async () => {
+      let res: Response
+      try {
+        res = await this.http("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${this.apiKey}`,
+            "content-type": "application/json",
+            ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
+          },
+          body: JSON.stringify({ from: this.from, to, subject, text, html, reply_to: replyTo }),
+          signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
+        })
+      } catch {
+        throw new MailError("resend: network error", true, 0)
+      }
+      if (!res.ok) {
+        const seconds = Number(res.headers.get("retry-after"))
+        throw new MailError(
+          `resend ${res.status}: ${await bodyOf(res)}`,
+          res.status === 429 || res.status >= 500,
+          res.status,
+          Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : undefined,
+        )
+      }
+      const body = (await res.json().catch(() => null)) as { id?: unknown } | null
+      return { id: typeof body?.id === "string" ? body.id : null }
+    })
   }
 }
 

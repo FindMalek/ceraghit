@@ -59,6 +59,17 @@ const schema = z
     S3_ACCESS_KEY_ID: z.string().optional(),
     S3_SECRET_ACCESS_KEY: z.string().optional(),
     S3_PUBLIC_URL: z.string().optional(),
+    /** "debug" | "info" | "warn" | "error": what reaches stdout and OpenObserve. */
+    LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+    /**
+     * OpenObserve (OTLP over HTTP, basic auth). All optional: without the url, the user or the password nothing is
+     * exported and boot is unaffected. Names match the owner's other projects.
+     */
+    OPENOBSERVE_URL: z.url().optional(),
+    OPENOBSERVE_ORG: z.string().default("default"),
+    OPENOBSERVE_USER: z.string().optional(),
+    OPENOBSERVE_PASSWORD: z.string().optional(),
+    OPENOBSERVE_STREAM: z.string().default("ceraghit"),
   })
   .superRefine((env, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message })

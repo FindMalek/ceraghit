@@ -11,6 +11,15 @@ overrides:
   "body-parser@<2.4.0": ">=2.4.0"
   # GHSA-96hv-2xvq-fx4p, reached through @trigger.dev/sdk > socket.io-client > ws.
   "ws@<8.21.0": ">=8.21.0"
+  # One opentelemetry line for the whole workspace: @vercel/otel's peers would otherwise pull the 3.x SDKs beside the
+  # 0.2xx one the api starts, and two logger providers would fight over the global.
+  "@opentelemetry/api": 1.9.0
+  "@opentelemetry/api-logs": 0.208.0
+  "@opentelemetry/instrumentation": 0.208.0
+  "@opentelemetry/resources": 2.2.0
+  "@opentelemetry/sdk-logs": 0.208.0
+  "@opentelemetry/sdk-metrics": 2.2.0
+  "@opentelemetry/sdk-trace-base": 2.2.0
 
 catalog:
   "@orpc/client": 1.15.7
@@ -19,8 +28,22 @@ catalog:
   "@orpc/openapi": 1.15.7
   "@orpc/server": 1.15.7
   "@orpc/tanstack-query": 1.15.7
+  "@opentelemetry/api": 1.9.0
+  "@opentelemetry/api-logs": 0.208.0
+  "@opentelemetry/exporter-logs-otlp-http": 0.208.0
+  "@opentelemetry/exporter-metrics-otlp-http": 0.208.0
+  "@opentelemetry/exporter-trace-otlp-http": 0.208.0
+  "@opentelemetry/resources": 2.2.0
+  "@opentelemetry/sdk-logs": 0.208.0
+  "@opentelemetry/sdk-metrics": 2.2.0
+  "@opentelemetry/instrumentation": 0.208.0
+  "@opentelemetry/sdk-node": 0.208.0
+  "@opentelemetry/sdk-trace-base": 2.2.0
+  "@opentelemetry/semantic-conventions": 1.29.0
   "@orpc/zod": 1.15.7
   "@tanstack/react-query": 5.104.3
+  "@vercel/functions": 3.11.3
+  "@vercel/otel": 2.3.0
   "@biomejs/biome": 2.5.15
   "@types/bun": ^1.3.3
   "@types/node": ^26.6.6

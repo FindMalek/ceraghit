@@ -1,6 +1,7 @@
 import { categories, customRequests, type Db, locations, media, productImages, settings, uploads } from "@workspace/db"
 import { and, eq, inArray, isNotNull, lte, sql } from "drizzle-orm"
 import { MEDIA_REFERENCES, usageCountSql } from "./media"
+import { recordUploadsDeleted } from "./metrics"
 import type { Storage } from "./storage"
 
 /** The only upload folders the job may delete from. Anything else (labels, invoices, exports) is never touched. */
@@ -263,5 +264,6 @@ export async function cleanupUploads(db: Db, storage: Storage, opts: CleanupOpti
       )
     }
   }
+  if (!dryRun) recordUploadsDeleted(report.abandonedDeleted + report.unusedDeleted)
   return report
 }

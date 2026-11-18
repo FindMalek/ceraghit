@@ -180,9 +180,25 @@ write by hand. Resend needs its SPF/DKIM records on the same zone, and `commande
 
 | project | env (Production only) |
 | :-- | :-- |
-| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it, `PROXY_SECRET` (required, 24+ random characters), `SECRETS_KEY` (optional until a provider reads the vault, then required; vault master key, api only, see `docs/secrets.md`) |
-| web | `APP_ENV=production`, `API_URL` (api origin), `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL` (same values as the api: they only feed the CSP, no keys), `PROXY_SECRET` (same value as the api) |
-| dashboard | `APP_ENV=production`, `API_URL`, `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL`, `PROXY_SECRET` (same value as the api) |
+| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it, `PROXY_SECRET` (required, 24+ random characters), `SECRETS_KEY` (optional until a provider reads the vault, then required; vault master key, api only, see `docs/secrets.md`), `OPENOBSERVE_URL`, `OPENOBSERVE_ORG=default`, `OPENOBSERVE_USER`, `OPENOBSERVE_PASSWORD`, `OPENOBSERVE_STREAM=ceraghit`, `LOG_LEVEL=info` (telemetry, see below) |
+| web | `APP_ENV=production`, `DEPLOY_ENV=production`, `API_URL` (api origin), `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL` (same values as the api: they only feed the CSP, no keys), `PROXY_SECRET` (same value as the api), `OPENOBSERVE_*` and `LOG_LEVEL` (same values as the api) |
+| dashboard | `APP_ENV=production`, `DEPLOY_ENV=production`, `API_URL`, `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL`, `PROXY_SECRET` (same value as the api), `OPENOBSERVE_*` and `LOG_LEVEL` (same values as the api) |
+
+## observability
+
+All three apps send traces, structured logs and business metrics to OpenObserve (`https://o2.findmalek.engineer`) over
+OTLP/HTTP with basic auth, service names `ceraghit-api`, `ceraghit-web`, `ceraghit-dashboard`, tagged
+`deployment.environment` (`local`, `pr-<n>`, `staging`, `production`). Nothing leaves while `OPENOBSERVE_URL`,
+`OPENOBSERVE_USER` and `OPENOBSERVE_PASSWORD` are unset, and a missing value never blocks a boot (one warning line in
+production).
+
+- production: the five values come from `docs/production.env.example`, pushed by `scripts/vercel-setup.sh`; use the
+  ingest-only service account `ceraghit-production`.
+- previews and staging: repo variables `OPENOBSERVE_URL`, `OPENOBSERVE_ORG`, `OPENOBSERVE_STREAM` and secrets
+  `OPENOBSERVE_USER`, `OPENOBSERVE_PASSWORD` (the `ceraghit-preview` account), read by `preview.yml` / `staging.yml`
+  and passed to the Dokploy apps.
+- dashboards, alerts and metric names: `docs/observability/README.md`, `dashboard.json` and `alerts.json`. Error alerting
+  is there, not in Sentry (issue #142's step is covered by the "error logs" alert).
 
 **Neon**: one project, production branch; keep the pooled connection string as `DATABASE_URL`.
 

@@ -39,11 +39,13 @@ export async function sendOrderEmails(services: Services, orderId: string): Prom
     await deliverMail(services, "order_confirmation", await renderOrderConfirmation(order, ctx), {
       orderId,
       inline: true,
+      locale: order.locale,
     })
     if (studio) {
       await deliverMail(services, "order_studio", await renderStudioNewOrder(order, ctx, studio), {
         orderId,
         inline: true,
+        locale: order.locale,
       })
     }
   } catch (error) {
@@ -59,6 +61,7 @@ export async function sendPaymentReceivedEmail(services: Services, orderId: stri
     await deliverMail(services, "payment_received", await renderPaymentReceived(loaded.order, loaded.ctx), {
       orderId,
       inline: true,
+      locale: loaded.order.locale,
     })
   } catch (error) {
     console.error("[payment received email]", error)
@@ -73,6 +76,7 @@ export async function sendOrderExpiredEmail(services: Services, orderId: string,
     await deliverMail(services, "order_expired", await renderOrderExpired(loaded.order, loaded.ctx, days), {
       orderId,
       inline: true,
+      locale: loaded.order.locale,
     })
   } catch (error) {
     console.error("[order expired email]", error)
@@ -99,6 +103,7 @@ export async function sendShippedEmail(services: Services, orderId: string): Pro
     await deliverMail(services, "shipped", await renderShipped(loaded.order, shipment, loaded.ctx), {
       orderId,
       inline: true,
+      locale: loaded.order.locale,
     })
   } catch (error) {
     console.error("[shipped email]", error)

@@ -76,4 +76,9 @@ jobs:
           PREVIEW_S3_BUCKET: ${{ vars.PREVIEW_S3_BUCKET }}
           PREVIEW_S3_ACCESS_KEY_ID: ${{ secrets.PREVIEW_S3_ACCESS_KEY_ID }}
           PREVIEW_S3_SECRET_ACCESS_KEY: ${{ secrets.PREVIEW_S3_SECRET_ACCESS_KEY }}
+          OPENOBSERVE_URL: ${{ vars.OPENOBSERVE_URL }}
+          OPENOBSERVE_ORG: ${{ vars.OPENOBSERVE_ORG }}
+          OPENOBSERVE_STREAM: ${{ vars.OPENOBSERVE_STREAM }}
+          OPENOBSERVE_USER: ${{ secrets.OPENOBSERVE_USER }}
+          OPENOBSERVE_PASSWORD: ${{ secrets.OPENOBSERVE_PASSWORD }}
         run: node scripts/deploy/dokploy.mjs staging

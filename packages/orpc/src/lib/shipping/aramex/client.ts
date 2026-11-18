@@ -1,4 +1,5 @@
 import type { z } from "zod"
+import { withSpan } from "../../telemetry"
 import { type AramexService, serviceUrl } from "./endpoints"
 import { AramexError } from "./errors"
 import * as s from "./schemas"
@@ -163,7 +164,9 @@ export class AramexClient {
     for (let i = 0; i < attempts; i++) {
       if (i > 0) await this.sleep(BACKOFF_MS[Math.min(i - 1, BACKOFF_MS.length - 1)] ?? 900)
       try {
-        return (await this.once(operation, payload)) as AramexResponse<K>
+        return (await withSpan(`aramex.${operation.name.toLowerCase()}`, { "aramex.service": operation.service }, () =>
+          this.once(operation, payload),
+        )) as AramexResponse<K>
       } catch (error) {
         if (!(error instanceof AramexError) || !error.retriable) throw error
         last = error

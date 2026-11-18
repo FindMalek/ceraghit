@@ -1,0 +1,208 @@
+{
+  "version": 5,
+  "dashboardId": "ceraghit",
+  "title": "Ceraghit",
+  "description": "Storefront, orders, mail and jobs of the Ceraghit api. Streams come from OTLP: metrics as ceraghit_* and http_server_duration, traces as default, logs as ceraghit.",
+  "role": "",
+  "owner": "",
+  "created": "2026-11-18T00:00:00Z",
+  "variables": {
+    "list": [
+      {
+        "name": "env",
+        "label": "environment",
+        "type": "query_values",
+        "value": "production",
+        "options": [
+          { "label": "production", "value": "production" },
+          { "label": "staging", "value": "staging" },
+          { "label": "local", "value": "local" }
+        ]
+      }
+    ]
+  },
+  "defaultDatetimeDuration": { "type": "relative", "value": "24h" },
+  "tabs": [
+    {
+      "tabId": "default",
+      "name": "Overview",
+      "panels": [
+        {
+          "id": "requests",
+          "type": "line",
+          "title": "Requests by status class",
+          "description": "http.server.duration, counted per status_class",
+          "config": { "show_legends": true, "unit": "requests" },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp, '5 minute') AS ts, status_class, count(*) AS requests FROM \"http_server_duration\" WHERE deployment_environment = '$env' GROUP BY ts, status_class ORDER BY ts",
+              "customQuery": true,
+              "fields": {
+                "stream": "http_server_duration",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "breakdown": []
+              }
+            }
+          ],
+          "layout": { "x": 0, "y": 0, "w": 8, "h": 4, "i": 1 }
+        },
+        {
+          "id": "latency",
+          "type": "line",
+          "title": "p95 latency per route",
+          "description": "http.server.duration, milliseconds",
+          "config": { "show_legends": true, "unit": "ms" },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp, '5 minute') AS ts, route, approx_percentile_cont(value, 0.95) AS p95 FROM \"http_server_duration\" WHERE deployment_environment = '$env' GROUP BY ts, route ORDER BY ts",
+              "customQuery": true,
+              "fields": {
+                "stream": "http_server_duration",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "breakdown": []
+              }
+            }
+          ],
+          "layout": { "x": 8, "y": 0, "w": 8, "h": 4, "i": 2 }
+        },
+        {
+          "id": "orders",
+          "type": "bar",
+          "title": "Orders created and paid, per currency",
+          "description": "Never sum TND and EUR: split by currency first",
+          "config": { "show_legends": true, "unit": "orders" },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp, '1 hour') AS ts, currency, sum(value) AS created FROM \"ceraghit_orders_created\" WHERE deployment_environment = '$env' GROUP BY ts, currency ORDER BY ts",
+              "customQuery": true,
+              "fields": {
+                "stream": "ceraghit_orders_created",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "breakdown": []
+              }
+            },
+            {
+              "query": "SELECT histogram(_timestamp, '1 hour') AS ts, currency, sum(value) AS paid FROM \"ceraghit_orders_paid\" WHERE deployment_environment = '$env' GROUP BY ts, currency ORDER BY ts",
+              "customQuery": true,
+              "fields": {
+                "stream": "ceraghit_orders_paid",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "breakdown": []
+              }
+            }
+          ],
+          "layout": { "x": 0, "y": 4, "w": 8, "h": 4, "i": 3 }
+        },
+        {
+          "id": "amount",
+          "type": "bar",
+          "title": "Amount received per currency (minor units)",
+          "description": "ceraghit.orders.amount_paid, millimes for TND and cents for EUR",
+          "config": { "show_legends": true, "unit": "minor units" },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp, '1 day') AS ts, currency, sum(value) AS amount FROM \"ceraghit_orders_amount_paid\" WHERE deployment_environment = '$env' GROUP BY ts, currency ORDER BY ts",
+              "customQuery": true,
+              "fields": {
+                "stream": "ceraghit_orders_amount_paid",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "breakdown": []
+              }
+            }
+          ],
+          "layout": { "x": 8, "y": 4, "w": 8, "h": 4, "i": 4 }
+        },
+        {
+          "id": "mails",
+          "type": "table",
+          "title": "Emails sent and failed",
+          "description": "A failed order mail is retried from the dashboard, but a burst means the sending domain is in trouble",
+          "config": {},
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT kind, sum(value) AS failed FROM \"ceraghit_emails_failed\" WHERE deployment_environment = '$env' GROUP BY kind ORDER BY failed DESC",
+              "customQuery": true,
+              "fields": {
+                "stream": "ceraghit_emails_failed",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "breakdown": []
+              }
+            }
+          ],
+          "layout": { "x": 0, "y": 8, "w": 4, "h": 4, "i": 5 }
+        },
+        {
+          "id": "crons",
+          "type": "table",
+          "title": "Scheduled jobs",
+          "description": "ceraghit.cron.runs and its duration, newest first",
+          "config": {},
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT job, result, sum(value) AS runs, max(value) AS longest_ms FROM \"ceraghit_cron_duration_ms\" WHERE deployment_environment = '$env' GROUP BY job, result ORDER BY job",
+              "customQuery": true,
+              "fields": {
+                "stream": "ceraghit_cron_duration_ms",
+                "stream_type": "metrics",
+                "x": [],
+                "y": [],
+                "breakdown": []
+              }
+            }
+          ],
+          "layout": { "x": 4, "y": 8, "w": 4, "h": 4, "i": 6 }
+        },
+        {
+          "id": "ai",
+          "type": "bar",
+          "title": "AI tokens per month",
+          "description": "ceraghit.ai.tokens, per model",
+          "config": { "show_legends": true, "unit": "tokens" },
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT histogram(_timestamp, '30 day') AS ts, model, sum(value) AS tokens FROM \"ceraghit_ai_tokens\" WHERE deployment_environment = '$env' GROUP BY ts, model ORDER BY ts",
+              "customQuery": true,
+              "fields": { "stream": "ceraghit_ai_tokens", "stream_type": "metrics", "x": [], "y": [], "breakdown": [] }
+            }
+          ],
+          "layout": { "x": 8, "y": 8, "w": 8, "h": 4, "i": 7 }
+        },
+        {
+          "id": "errors",
+          "type": "table",
+          "title": "Recent error logs",
+          "description": "Stream ceraghit: what the error alert mails about",
+          "config": {},
+          "queryType": "sql",
+          "queries": [
+            {
+              "query": "SELECT _timestamp, service, msg, request_id, trace_id FROM \"ceraghit\" WHERE level = 'error' AND deployment_environment = '$env' ORDER BY _timestamp DESC LIMIT 50",
+              "customQuery": true,
+              "fields": { "stream": "ceraghit", "stream_type": "logs", "x": [], "y": [], "breakdown": [] }
+            }
+          ],
+          "layout": { "x": 0, "y": 12, "w": 16, "h": 5, "i": 8 }
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import type { PublicErrorReason } from "@workspace/sdk"
 import { CLIENT_IP_HEADER, PROXY_SECRET_HEADER } from "@workspace/sdk/proxy"
 import { eq, lt, sql } from "drizzle-orm"
 import { publicError } from "../errors"
+import { recordRateLimitBlocked } from "./metrics"
 
 export interface Limit {
   max: number
@@ -84,6 +85,13 @@ export async function sweepRateLimits(db: Db, now: Date): Promise<number> {
   return gone.length
 }
 
+/** Three buckets only: a metric attribute never names the endpoint. */
+function limitBucket(name: keyof typeof LIMITS): "login" | "orders" | "requests" {
+  if (name === "loginIp" || name === "loginEmail") return "login"
+  if (name === "orderCreate" || name === "orderGet") return "orders"
+  return "requests"
+}
+
 interface LimitContext {
   db: Db
   headers: Headers
@@ -100,6 +108,7 @@ export async function enforceLimit(
 ): Promise<void> {
   const address = clientAddress(context.headers, context.config.proxySecret)
   if (!(await takeLimit(context.db, `${name}:${address}`, LIMITS[name], context.now()))) {
+    recordRateLimitBlocked(limitBucket(name))
     throw publicError("TOO_MANY_REQUESTS", reason, message)
   }
 }

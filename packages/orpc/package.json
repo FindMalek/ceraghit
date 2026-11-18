@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./errors": "./src/errors.ts",
+    "./metrics": "./src/lib/metrics.ts",
     "./react": "./src/react.tsx",
     "./secrets": "./src/lib/secrets.ts",
     "./fake-aramex": "./src/lib/shipping/aramex/fake.ts",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@ai-sdk/groq": "4.0.84",
+    "@opentelemetry/api": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",
     "ai": "7.0.173",
@@ -36,7 +38,8 @@
     "@types/bun": "catalog:",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "catalog:",
-    "@types/react": "catalog:"
+    "@types/react": "catalog:",
+    "@opentelemetry/sdk-metrics": "catalog:"
   },
   "peerDependencies": {
     "react": "catalog:"

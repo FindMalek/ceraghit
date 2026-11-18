@@ -11,6 +11,7 @@ import {
 import { eq, sql } from "drizzle-orm"
 import type { Services } from "../../context"
 import { getSecret } from "../integrations"
+import { recordAiRequest, recordAiTokens } from "../metrics"
 import { getAiSettings } from "../settings"
 import { groqTranslate, type TranslateFn } from "./eval"
 import { AI_MODELS, type AiModelId, costUsd, DEFAULT_AI_MODEL, FALLBACK_AI_MODEL } from "./models"
@@ -146,6 +147,7 @@ export async function translateField(
     model = FALLBACK_AI_MODEL
     result = await translate({ model, effort: settings.reasoningEffort }, request)
     if (result.output === null) {
+      recordAiRequest({ model, result: "error" })
       throw new ORPCError("BAD_GATEWAY", { message: "Le service de traduction ne répond pas. Réessayez." })
     }
   }
@@ -178,6 +180,8 @@ export async function translateField(
     tokensOut,
     Math.round(costUsd(model, tokensIn, tokensOut) * 1_000_000),
   )
+  recordAiRequest({ model, result: warnings.length ? "length" : "ok" })
+  recordAiTokens({ model }, tokensIn + tokensOut)
 
   return {
     values: Object.fromEntries(targets.map((lang) => [lang, values[lang] ?? ""])),

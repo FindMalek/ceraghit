@@ -2,7 +2,11 @@
  * Next route handler that forwards /api/* to the api service at runtime, so browsers only ever talk to their own
  * origin (first-party cookies, no CORS) and images stay env-agnostic: API_URL is read per request, not baked at build.
  */
+import { context, propagation } from "@opentelemetry/api"
+
 const HOP_BY_HOP = ["connection", "keep-alive", "transfer-encoding", "upgrade", "host", "content-length"]
+/** Trace headers are minted here, never taken from the browser. */
+const TRACE_HEADERS = ["traceparent", "tracestate", "baggage"]
 
 /** Paths each app may reach, so the storefront origin can never call an admin procedure (and vice versa). */
 export const WEB_ALLOWED = [/^\/rpc\/public\//, /^\/files\//]
@@ -25,6 +29,11 @@ export function createProxy(allowed: RegExp[]) {
   return (request: Request) => proxyToApi(request, allowed)
 }
 
+/** Same rule as the api: keep a plain inbound id, mint one otherwise. */
+export function requestIdOf(inbound: string | null | undefined): string {
+  return inbound && /^[A-Za-z0-9-]{8,64}$/.test(inbound) ? inbound : crypto.randomUUID()
+}
+
 export async function proxyToApi(request: Request, allowed: RegExp[]): Promise<Response> {
   const base = process.env.API_URL ?? "http://localhost:3001"
   const url = new URL(request.url)
@@ -33,7 +42,14 @@ export async function proxyToApi(request: Request, allowed: RegExp[]): Promise<R
   const target = new URL(path + url.search, base)
   const headers = new Headers(request.headers)
   for (const h of HOP_BY_HOP) headers.delete(h)
+  for (const h of TRACE_HEADERS) headers.delete(h)
   for (const name of [...headers.keys()]) if (name.startsWith(TRUSTED_PREFIX)) headers.delete(name)
+  const requestId = requestIdOf(request.headers.get("x-request-id"))
+  headers.set("x-request-id", requestId)
+  // The active span of the Next route handler becomes the parent of the api span: one trace per checkout.
+  const carrier: Record<string, string> = {}
+  propagation.inject(context.active(), carrier)
+  if (carrier.traceparent) headers.set("traceparent", carrier.traceparent)
   const secret = process.env.PROXY_SECRET
   const address = visitorAddress(request.headers)
   if (secret && address) {
@@ -52,5 +68,6 @@ export async function proxyToApi(request: Request, allowed: RegExp[]): Promise<R
   const out = new Headers(res.headers)
   out.delete("content-encoding")
   out.delete("content-length")
+  out.set("x-request-id", requestId)
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers: out })
 }

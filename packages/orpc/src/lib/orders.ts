@@ -15,6 +15,7 @@ import { orderUrl } from "../emails/order-url"
 import { publicError } from "../errors"
 import { findProducts } from "./catalog"
 import { tryIssueInvoice } from "./invoices"
+import { recordAmountPaid, recordOrderCreated, recordOrderPaid, recordPaymentSettle } from "./metrics"
 import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentReceivedEmail } from "./order-emails"
 import type { PaymentCheck } from "./payments"
 import { unitMinor } from "./pricing"
@@ -308,6 +309,7 @@ export async function createOrder(services: Services, input: OrderInput) {
   })
 
   const payPageUrl = orderUrl(config.webUrl, { ...created, locale: input.locale })
+  recordOrderCreated({ method: created.paymentMethod, currency: created.currency, country: created.country })
   if (created.paymentMethod === "cod" || created.paymentMethod === "transfer") {
     await db.update(orders).set({ paymentProvider: created.paymentMethod }).where(eq(orders.id, created.id))
     await sendOrderEmails(services, created.id)
@@ -427,6 +429,8 @@ export async function markPaidManually(
   }
   await tryIssueInvoice(db, order.id, now())
   await sendPaymentReceivedEmail(services, order.id)
+  recordOrderPaid({ method: order.paymentMethod, currency: order.currency, source: "manual" })
+  recordAmountPaid({ currency: order.currency }, order.totalMinor)
   return { status: "paid", alreadyPaid: false }
 }
 
@@ -461,9 +465,16 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
   }
   if (order.status !== "pending_payment") return { number: order.number, status: order.status }
 
-  const check = await payments.check(ref)
+  let check: PaymentCheck
+  try {
+    check = await payments.check(ref)
+  } catch (error) {
+    recordPaymentSettle("error")
+    throw error
+  }
   if (check.status === "paid") {
     if (!paymentMatches(order, check)) {
+      recordPaymentSettle("mismatch")
       console.error(`[settle ${order.number}] payment does not match the order`)
       await recordAuditOnce(db, {
         orderId: order.id,
@@ -481,14 +492,19 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
       .where(and(eq(orders.id, order.id), eq(orders.status, "pending_payment")))
       .returning({ status: orders.status })
     if (paid) {
+      recordPaymentSettle("paid")
+      recordOrderPaid({ method: order.paymentMethod, currency: order.currency, source: "gateway" })
+      recordAmountPaid({ currency: order.currency }, order.totalMinor)
       await tryIssueInvoice(db, order.id, now())
       await sendOrderEmails(services, order.id)
     }
     return { number: order.number, status: paid?.status ?? "paid" }
   }
   if (check.status === "failed") {
+    recordPaymentSettle("failed")
     await cancelOrder(db, order.id)
     return { number: order.number, status: "cancelled" }
   }
+  recordPaymentSettle("pending")
   return { number: order.number, status: order.status }
 }
