@@ -96,11 +96,17 @@ export function ProductsView() {
   const [status, setStatus] = useState<StatusFilter>("all")
   const [categoryId, setCategoryId] = useState("all")
   const [toDelete, setToDelete] = useState<Product | null>(null)
+  const [visible, setVisible] = useState(40)
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(q), 300)
     return () => clearTimeout(timer)
   }, [q])
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset the page whenever the filters change
+  useEffect(() => {
+    setVisible(40)
+  }, [search, status, categoryId])
 
   const categories = useQuery(orpc.admin.categories.list.queryOptions())
   const products = useQuery(
@@ -144,7 +150,8 @@ export function ProductsView() {
     { value: "all", label: "Toutes les catégories" },
     ...(categories.data ?? []).map((c) => ({ value: c.id, label: pick(c.name, "fr") })),
   ]
-  const rows = products.data ?? []
+  const all = products.data ?? []
+  const rows = all.slice(0, visible)
 
   return (
     <>
@@ -332,6 +339,13 @@ export function ProductsView() {
               </Table>
             </div>
           </>
+        )}
+        {all.length > visible && (
+          <div className="flex justify-center pt-3">
+            <Button variant="outline" className="h-11" onClick={() => setVisible((n) => n + 40)}>
+              Voir plus de produits
+            </Button>
+          </div>
         )}
       </PageBody>
 
