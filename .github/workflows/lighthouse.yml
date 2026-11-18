@@ -1,0 +1,43 @@
+# Core Web Vitals and SEO budgets, warn-only. Runs on demand against a preview or production, and weekly against
+# production. The preview runner (the-keep) is slower than Vercel, so treat preview scores as indicative.
+
+name: Lighthouse
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Base URL to audit
+        required: false
+        default: https://ceraghit.com
+
+concurrency:
+  group: lighthouse
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Run Lighthouse CI
+        continue-on-error: true
+        env:
+          BASE_URL: ${{ inputs.base_url || 'https://ceraghit.com' }}
+        run: |
+          npx --yes @lhci/cli@0.15.x collect \
+            --url="$BASE_URL/" \
+            --url="$BASE_URL/shop" \
+            --url="$BASE_URL/ar" \
+            --url="$BASE_URL/en/atelier" \
+            --numberOfRuns=1
+          npx --yes @lhci/cli@0.15.x assert
