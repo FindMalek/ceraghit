@@ -14,12 +14,17 @@ overrides:
   # One opentelemetry line for the whole workspace: @vercel/otel's peers would otherwise pull the 3.x SDKs beside the
   # 0.2xx one the api starts, and two logger providers would fight over the global.
   "@opentelemetry/api": 1.9.0
-  "@opentelemetry/api-logs": 0.208.0
-  "@opentelemetry/instrumentation": 0.208.0
-  "@opentelemetry/resources": 2.2.0
-  "@opentelemetry/sdk-logs": 0.208.0
-  "@opentelemetry/sdk-metrics": 2.2.0
-  "@opentelemetry/sdk-trace-base": 2.2.0
+  "@opentelemetry/api-logs": 0.217.0
+  "@opentelemetry/instrumentation": 0.217.0
+  "@opentelemetry/resources": 2.6.0
+  "@opentelemetry/sdk-logs": 0.217.0
+  "@opentelemetry/sdk-metrics": 2.6.0
+  "@opentelemetry/sdk-trace-base": 2.6.0
+  "@opentelemetry/sdk-node": 0.217.0
+  # JaegerPropagator DoS on a malformed header, patched in 2.9.0.
+  "@opentelemetry/propagator-jaeger@<2.9.0": ">=2.9.0"
+  # Reached through @opentelemetry/otlp-transformer; the 8.x advisories are patched in 8.4.1.
+  "protobufjs@<8.4.1": ">=8.4.1"
 
 catalog:
   "@orpc/client": 1.15.7
@@ -29,16 +34,16 @@ catalog:
   "@orpc/server": 1.15.7
   "@orpc/tanstack-query": 1.15.7
   "@opentelemetry/api": 1.9.0
-  "@opentelemetry/api-logs": 0.208.0
-  "@opentelemetry/exporter-logs-otlp-http": 0.208.0
-  "@opentelemetry/exporter-metrics-otlp-http": 0.208.0
-  "@opentelemetry/exporter-trace-otlp-http": 0.208.0
-  "@opentelemetry/resources": 2.2.0
-  "@opentelemetry/sdk-logs": 0.208.0
-  "@opentelemetry/sdk-metrics": 2.2.0
-  "@opentelemetry/instrumentation": 0.208.0
-  "@opentelemetry/sdk-node": 0.208.0
-  "@opentelemetry/sdk-trace-base": 2.2.0
+  "@opentelemetry/api-logs": 0.217.0
+  "@opentelemetry/exporter-logs-otlp-http": 0.217.0
+  "@opentelemetry/exporter-metrics-otlp-http": 0.217.0
+  "@opentelemetry/exporter-trace-otlp-http": 0.217.0
+  "@opentelemetry/resources": 2.6.0
+  "@opentelemetry/sdk-logs": 0.217.0
+  "@opentelemetry/sdk-metrics": 2.6.0
+  "@opentelemetry/instrumentation": 0.217.0
+  "@opentelemetry/sdk-node": 0.217.0
+  "@opentelemetry/sdk-trace-base": 2.6.0
   "@opentelemetry/semantic-conventions": 1.29.0
   "@orpc/zod": 1.15.7
   "@tanstack/react-query": 5.104.3
