@@ -257,3 +257,21 @@ Every mail goes through `deliverMail` and leaves a row in `mail_log` (sent or fa
 body). Transient errors (network, 429, 5xx) are retried twice; a failure shows up under "Emails en échec" in the dashboard
 with a banner until the owner resends or dismisses it. The same daily `cleanup-uploads` call deletes rows older than 90
 days (bodies hold customer details).
+
+## uptime and backups
+
+- **uptime** (`.github/workflows/uptime.yml`, every 10 min, GitHub-hosted so it never depends on the-keep): api `/health`
+  must answer `"env":"production"` and `"db":true`, the storefront `/` and `/shop` and the dashboard `/login` must be 200,
+  and every certificate must have more than 14 days left. A failure opens or comments on one issue titled `production down`
+  with the `incident` label; the next green run closes it. Skipped unless `vars.DEPLOY_ENABLED` is `true`.
+- **database backup** (`.github/workflows/backup.yml`, Sundays 02:30 UTC): `pg_dump --format=custom` encrypted with `age`
+  to `BACKUP_AGE_RECIPIENT`, uploaded to the `ceraghit-backup` R2 bucket as `db/YYYY-MM-DD.dump.age`. Keep the age private
+  key offline with the owner.
+- **media backup**: the same run syncs `ceraghit-prod` to `ceraghit-backup/media/` and moves deletions to
+  `media-deleted/<date>/` so an accidental delete is recoverable for 90 days.
+- **restore drill**: restore the last dump into a Neon branch (`pg_restore`), point a local api at it read-only, count
+  orders, products and media, then delete the branch. Do it once and note the date in the handover docs.
+- GitHub secrets in the `production` environment: `BACKUP_S3_ENDPOINT`, `BACKUP_S3_ACCESS_KEY_ID`,
+  `BACKUP_S3_SECRET_ACCESS_KEY`, and the source `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`.
+  Variables: `BACKUP_AGE_RECIPIENT`, optional `BACKUP_S3_BUCKET` (default `ceraghit-backup`), `PRODUCTION_API_HOST`,
+  `PRODUCTION_WEB_HOST`, `PRODUCTION_DASHBOARD_HOST`.
