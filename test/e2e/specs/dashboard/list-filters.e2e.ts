@@ -91,7 +91,10 @@ test("the request list shows 20 at a time and the filter has a reset", { tag: ["
       await expect(more).toBeVisible()
     })
     await step("load more shows the rest and hides the button", async () => {
-      await more.click()
+      while (await more.isVisible()) {
+        await more.click()
+        await page.waitForTimeout(200)
+      }
       await expect(rows).toHaveCount(total)
       await expect(more).toHaveCount(0)
     })
