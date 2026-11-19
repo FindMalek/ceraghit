@@ -186,6 +186,20 @@ export function ProductsView() {
             options={categoryOptions}
             className="h-11 w-full md:w-64"
           />
+          {(q !== "" || status !== "all" || categoryId !== "all") && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-11"
+              onClick={() => {
+                setQ("")
+                setStatus("all")
+                setCategoryId("all")
+              }}
+            >
+              Réinitialiser les filtres
+            </Button>
+          )}
         </div>
 
         {products.isPending && <LoadingRows />}
