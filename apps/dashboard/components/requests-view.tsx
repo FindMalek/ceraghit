@@ -184,9 +184,16 @@ function RequestSheet({ request, onClose }: { request: Request | null; onClose: 
 export function RequestsView() {
   const [status, setStatus] = useState<Filter>("all")
   const [selected, setSelected] = useState<string | null>(null)
+  const [visible, setVisible] = useState(20)
   const requests = useRequests(status)
-  const rows = requests.data ?? []
-  const current = rows.find((request) => request.id === selected) ?? null
+  const all = requests.data ?? []
+  const rows = all.slice(0, visible)
+  const current = all.find((request) => request.id === selected) ?? null
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset the page when the filter changes
+  useEffect(() => {
+    setVisible(20)
+  }, [status])
 
   return (
     <>
@@ -230,6 +237,13 @@ export function RequestsView() {
             </li>
           ))}
         </ul>
+        {all.length > visible && (
+          <div className="flex justify-center pt-3">
+            <Button variant="outline" className="h-11" onClick={() => setVisible((n) => n + 20)}>
+              Voir plus de demandes
+            </Button>
+          </div>
+        )}
       </PageBody>
       <RequestSheet request={current} onClose={() => setSelected(null)} />
     </>
