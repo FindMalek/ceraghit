@@ -202,13 +202,20 @@ export function RequestsView() {
         description="Les demandes de pièces uniques. Vous répondez depuis votre boîte mail."
       />
       <PageBody>
-        <SimpleSelect
-          label="Filtrer par statut"
-          value={status}
-          onChange={setStatus}
-          options={FILTERS}
-          className="h-11 w-full md:w-64"
-        />
+        <div className="flex flex-col gap-3 md:flex-row">
+          <SimpleSelect
+            label="Filtrer par statut"
+            value={status}
+            onChange={setStatus}
+            options={FILTERS}
+            className="h-11 w-full md:w-64"
+          />
+          {status !== "all" && (
+            <Button type="button" variant="ghost" className="h-11" onClick={() => setStatus("all")}>
+              Réinitialiser le filtre
+            </Button>
+          )}
+        </div>
         {requests.isPending && <LoadingRows rows={4} />}
         {requests.isError && <ErrorState error={requests.error} onRetry={() => requests.refetch()} />}
         {requests.data && rows.length === 0 && (
