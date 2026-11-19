@@ -67,3 +67,45 @@ test("the product list shows 40 rows and loads the rest on demand", { tag: ["@fr
     await db.close()
   }
 })
+
+test("the request list shows 20 at a time and the filter has a reset", { tag: ["@fr"] }, async ({ page, step }) => {
+  const db = openDb()
+  await db.execute(sql`delete from custom_requests where email like 'zx-%'`)
+  const [{ n } = { n: 0 }] = (await db.execute(sql`select count(*)::int as n from custom_requests`)) as unknown as {
+    n: number
+  }[]
+  const extra = Math.max(25 - n, 4)
+  await db.execute(sql`
+    insert into custom_requests (name, email, description, status)
+    select 'Demande ' || g, 'zx-' || g || '@example.test', 'Un vase sur mesure', case when g <= 3 then 'contacted'::request_status else 'new'::request_status end
+    from generate_series(1, ${extra}) g`)
+  try {
+    const rows = page.locator("li:has(> button.frame)")
+    const more = page.getByRole("button", { name: "Voir plus de demandes" })
+    const total = n + extra
+    await loginAsOwnerAndWait(page)
+    await page.goto(`${E2E.dashboardUrl}/requests`)
+
+    await step("the first page holds 20 requests and offers more", async () => {
+      await expect(rows).toHaveCount(20)
+      await expect(more).toBeVisible()
+    })
+    await step("load more shows the rest and hides the button", async () => {
+      await more.click()
+      await expect(rows).toHaveCount(total)
+      await expect(more).toHaveCount(0)
+    })
+    await step("a status filter narrows the list and the reset brings it back", async () => {
+      await page.getByRole("combobox", { name: "Filtrer par statut" }).click()
+      await page.getByRole("option", { name: "Contactée" }).click()
+      await expect(rows).toHaveCount(3)
+      await expect(more).toHaveCount(0)
+      await page.getByRole("button", { name: "Réinitialiser le filtre" }).click()
+      await expect(rows).toHaveCount(20)
+      await expect(page.getByRole("button", { name: "Réinitialiser le filtre" })).toHaveCount(0)
+    })
+  } finally {
+    await db.execute(sql`delete from custom_requests where email like 'zx-%'`)
+    await db.close()
+  }
+})
