@@ -137,7 +137,7 @@ export const productsRouter = {
       summary: "Publish or unpublish several products",
       tags: TAG,
     })
-    .input(z.object({ ids: z.array(z.string()).min(1).max(100), status: z.enum(["draft", "published"]) }))
+    .input(z.object({ ids: z.array(z.uuid()).min(1).max(500), status: z.enum(["draft", "published"]) }))
     .output(z.object({ updated: z.number() }))
     .handler(async ({ context, input }) => {
       const rows = await context.db

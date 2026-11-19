@@ -75,6 +75,9 @@ test("the selection publishes and unpublishes several products at once", { tag: 
     insert into products (ref, slug, category_id, title, price_tnd, price_eur, stock, status)
     select 'zy-' || g, 'zy-bulk-' || g, (select id from categories limit 1), '{"fr":"Pièce groupée"}'::jsonb, 1000, 300, 1, 'draft'
     from generate_series(1, 3) g`)
+  await db.execute(sql`
+    insert into products (ref, slug, category_id, title, price_tnd, price_eur, stock, status)
+    select 'zy-4', 'zy-bulk-4', (select id from categories limit 1), '{"fr":"Pièce archivée"}'::jsonb, 1000, 300, 1, 'archived'`)
   try {
     const unpublish = page.getByRole("button", { name: "Dépublier", exact: true })
     await loginAsOwnerAndWait(page)
@@ -95,6 +98,7 @@ test("the selection publishes and unpublishes several products at once", { tag: 
       await expect(page.getByText("2 sélectionnés")).toHaveCount(0)
     })
     await step("select all then unpublish puts every product back to draft", async () => {
+      await expect(page.getByRole("checkbox", { name: "Sélectionner zy-4" })).toBeDisabled()
       await page.getByRole("checkbox", { name: "Tout sélectionner" }).click()
       await expect(page.getByText("3 sélectionnés")).toBeVisible()
       await page.getByRole("button", { name: "Dépublier la sélection", exact: true }).click()

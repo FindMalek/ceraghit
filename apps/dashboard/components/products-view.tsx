@@ -164,7 +164,8 @@ export function ProductsView() {
   ]
   const all = products.data ?? []
   const rows = all.slice(0, visible)
-  const allSelected = rows.length > 0 && rows.every((p) => selected.has(p.id))
+  const selectable = rows.filter((p) => p.status !== "archived")
+  const allSelected = selectable.length > 0 && selectable.every((p) => selected.has(p.id))
   const toggleOne = (id: string, on: boolean) =>
     setSelected((prev) => {
       const next = new Set(prev)
@@ -243,7 +244,8 @@ export function ProductsView() {
                 <Checkbox
                   id="select-all-products"
                   checked={allSelected}
-                  onCheckedChange={(on) => setSelected(on ? new Set(rows.map((p) => p.id)) : new Set())}
+                  disabled={bulk.isPending || selectable.length === 0}
+                  onCheckedChange={(on) => setSelected(on ? new Set(selectable.map((p) => p.id)) : new Set())}
                 />
                 <label htmlFor="select-all-products">Tout sélectionner</label>
               </div>
@@ -278,6 +280,7 @@ export function ProductsView() {
                 <li key={product.id} className="frame flex flex-col gap-3 bg-card/70 p-3">
                   <Checkbox
                     checked={selected.has(product.id)}
+                    disabled={bulk.isPending || product.status === "archived"}
                     onCheckedChange={(on) => toggleOne(product.id, on)}
                     aria-label={`Sélectionner ${product.ref}`}
                   />
@@ -353,6 +356,7 @@ export function ProductsView() {
                       <TableCell>
                         <Checkbox
                           checked={selected.has(product.id)}
+                          disabled={bulk.isPending || product.status === "archived"}
                           onCheckedChange={(on) => toggleOne(product.id, on)}
                           aria-label={`Sélectionner ${product.ref}`}
                         />
