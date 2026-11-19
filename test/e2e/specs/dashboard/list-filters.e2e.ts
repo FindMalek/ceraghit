@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm"
 import { E2E } from "../../env"
 import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { completeSetup, openDb } from "../../helpers/db"
@@ -30,4 +31,39 @@ test("the reset button clears the product filters", { tag: ["@fr"] }, async ({ p
     await expect(page.getByRole("link", { name: "Modifier" }).first()).toBeVisible()
     await expect(reset).toHaveCount(0)
   })
+})
+
+test("the product list shows 40 rows and loads the rest on demand", { tag: ["@fr"] }, async ({ page, step }) => {
+  const db = openDb()
+  await db.execute(sql`delete from products where ref like 'zz-%'`)
+  await db.execute(sql`
+    insert into products (ref, slug, category_id, title, price_tnd, price_eur, stock, status)
+    select 'zz-' || g, 'zz-load-more-' || g, (select id from categories limit 1), '{"fr":"Pièce de test"}'::jsonb, 1000, 300, 1, 'draft'
+    from generate_series(1, 15) g`)
+  try {
+    const rows = page.getByRole("link", { name: "Modifier" })
+    const more = page.getByRole("button", { name: "Voir plus de produits" })
+    await loginAsOwnerAndWait(page)
+    await page.goto(`${E2E.dashboardUrl}/products`)
+
+    await step("the first page holds 40 products and offers more", async () => {
+      await expect(rows).toHaveCount(40)
+      await expect(more).toBeVisible()
+    })
+    await step("a filter goes back to the first page of the new result", async () => {
+      await page.getByPlaceholder("Référence ou nom").fill("Pièce de test")
+      await expect(rows).toHaveCount(15)
+      await expect(more).toHaveCount(0)
+    })
+    await step("clearing the filter and loading more shows every product", async () => {
+      await page.getByRole("button", { name: "Réinitialiser les filtres" }).click()
+      await expect(rows).toHaveCount(40)
+      await more.click()
+      await expect(rows).toHaveCount(45)
+      await expect(more).toHaveCount(0)
+    })
+  } finally {
+    await db.execute(sql`delete from products where ref like 'zz-%'`)
+    await db.close()
+  }
 })
