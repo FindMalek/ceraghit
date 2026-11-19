@@ -21,6 +21,7 @@ test("the reset button clears the product filters", { tag: ["@fr"] }, async ({ p
   await step("a search with no match shows the reset button and no rows", async () => {
     await search.fill("zzz-no-such-product")
     await expect(reset).toBeVisible()
+    await expect(page.getByText("Aucun produit ne correspond à ces filtres.")).toBeVisible()
     await expect(page.getByRole("link", { name: "Modifier" })).toHaveCount(0)
   })
   await step("reset brings the rows back and hides itself", async () => {
