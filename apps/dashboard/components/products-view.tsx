@@ -165,7 +165,7 @@ export function ProductsView() {
   const all = products.data ?? []
   const rows = all.slice(0, visible)
   const selectable = rows.filter((p) => p.status !== "archived")
-  const allSelected = selectable.length > 0 && selectable.every((p) => selected.has(p.id))
+  const allSelected = selectable.length > 0 && selectable.slice(0, 500).every((p) => selected.has(p.id))
   const toggleOne = (id: string, on: boolean) =>
     setSelected((prev) => {
       const next = new Set(prev)
@@ -245,7 +245,9 @@ export function ProductsView() {
                   id="select-all-products"
                   checked={allSelected}
                   disabled={bulk.isPending || selectable.length === 0}
-                  onCheckedChange={(on) => setSelected(on ? new Set(selectable.map((p) => p.id)) : new Set())}
+                  onCheckedChange={(on) =>
+                    setSelected(on ? new Set(selectable.slice(0, 500).map((p) => p.id)) : new Set())
+                  }
                 />
                 <label htmlFor="select-all-products">Tout sélectionner</label>
               </div>
@@ -256,7 +258,7 @@ export function ProductsView() {
                   </span>
                   <Button
                     size="sm"
-                    disabled={bulk.isPending}
+                    disabled={bulk.isPending || update.isPending}
                     onClick={() => bulk.mutate({ ids: [...selected], status: "published" })}
                   >
                     Publier la sélection
@@ -264,7 +266,7 @@ export function ProductsView() {
                   <Button
                     size="sm"
                     variant="outline"
-                    disabled={bulk.isPending}
+                    disabled={bulk.isPending || update.isPending}
                     onClick={() => bulk.mutate({ ids: [...selected], status: "draft" })}
                   >
                     Dépublier la sélection
@@ -302,7 +304,7 @@ export function ProductsView() {
                     <ProductStatusBadge status={product.status} />
                     <StockControl
                       product={product}
-                      busy={update.isPending}
+                      busy={update.isPending || bulk.isPending}
                       onChange={(stock) => patch(product, { stock })}
                     />
                   </div>
@@ -316,7 +318,7 @@ export function ProductsView() {
                     <Button
                       variant="outline"
                       className="h-11 flex-1"
-                      disabled={update.isPending}
+                      disabled={update.isPending || bulk.isPending}
                       onClick={() => togglePublish(product)}
                     >
                       {product.status === "published" ? "Dépublier" : "Publier"}
@@ -386,7 +388,7 @@ export function ProductsView() {
                       <TableCell>
                         <StockControl
                           product={product}
-                          busy={update.isPending}
+                          busy={update.isPending || bulk.isPending}
                           onChange={(stock) => patch(product, { stock })}
                         />
                       </TableCell>
@@ -404,7 +406,7 @@ export function ProductsView() {
                           <Button
                             variant="outline"
                             size="sm"
-                            disabled={update.isPending}
+                            disabled={update.isPending || bulk.isPending}
                             onClick={() => togglePublish(product)}
                           >
                             {product.status === "published" ? "Dépublier" : "Publier"}
