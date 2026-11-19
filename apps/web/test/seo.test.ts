@@ -31,6 +31,14 @@ describe("localizedPath", () => {
   })
 })
 
+describe("apexHost", () => {
+  test("strips www and leaves the apex alone", () => {
+    expect(seo.apexHost("www.ceraghit.com")).toBe("ceraghit.com")
+    expect(seo.apexHost("ceraghit.com")).toBeNull()
+    expect(seo.apexHost("pr-1.ceraghit.findmalek.engineer")).toBeNull()
+  })
+})
+
 describe("pageMetadata", () => {
   test("sets a canonical and an alternate for every enabled locale", () => {
     const meta = seo.pageMetadata({ locale: "en", path: "/shop", title: "Boutique" })

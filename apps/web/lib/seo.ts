@@ -13,6 +13,11 @@ export function absoluteUrl(pathOrUrl: string): string {
   return /^https?:\/\//.test(pathOrUrl) ? pathOrUrl : `${SITE.url}${pathOrUrl}`
 }
 
+/** The apex host when the request came through `www.`, so the app can 308 it to the canonical domain. */
+export function apexHost(host: string): string | null {
+  return host.startsWith("www.") ? host.slice(4) : null
+}
+
 export function absoluteImage(image: string): string {
   return absoluteUrl(imageSrc(image))
 }
