@@ -24,6 +24,8 @@ describe.skipIf(!url)("product gallery", () => {
     bucket: "b",
     prefix,
     presignPut: async (key) => key,
+    put: async () => {},
+    signedGet: async (key) => key,
     head: async () => true,
     read: async () => null,
     readUrl: async (key) => key,
