@@ -17,7 +17,7 @@ const LOCALES = ["fr", "en", "ar"] as const
 
 test(
   "the customer gets one payment mail and one shipped mail, in the language of the order",
-  { tag: ["@fr", "@desktop"] },
+  { tag: ["@fr"] },
   async ({ page, step }, testInfo) => {
     const piece = await pieceFor(page.request, testInfo)
     await loginAsOwnerAndWait(page)
@@ -51,6 +51,7 @@ test(
         })
         expect(paid.ok()).toBe(true)
         const mail = await mailWithSubject(copy.paymentReceived.subject(number))
+        expect(mail.subject).toBe(copy.paymentReceived.subject(number))
         expect(mail.text).toContain(number)
 
         const shipped = await post(`${id}/ship`, {
@@ -61,6 +62,7 @@ test(
         })
         expect(shipped.ok()).toBe(true)
         const shippedMail = await mailWithSubject(copy.shipped.subject(number))
+        expect(shippedMail.subject).toBe(copy.shipped.subject(number))
         expect(shippedMail.text).toContain(copy.shipped.intro)
         expect(shippedMail.text).toContain(`RR${number.replace(/\D/g, "").slice(-8)}TN`)
         expect(shippedMail.text).toContain("https://suivi.example.test/track")
