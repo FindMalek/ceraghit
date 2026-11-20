@@ -120,14 +120,14 @@ test("the hero slideshow can be paused and resumed with the keyboard", async ({ 
   const pause = page.getByRole("button", { name: t(appLocale, "home.carouselPause") })
   await step("the slideshow offers a pause button", async () => {
     await expect(pause).toBeVisible()
-    await expect(pause).toHaveAttribute("aria-pressed", "false")
   })
   await step("pausing turns it into a resume button", async () => {
     await pause.focus()
     await page.keyboard.press("Enter")
     const resume = page.getByRole("button", { name: t(appLocale, "home.carouselPlay") })
-    await expect(resume).toHaveAttribute("aria-pressed", "true")
+    await expect(resume).toBeVisible()
+    await expect(pause).toHaveCount(0)
     await page.keyboard.press("Enter")
-    await expect(pause).toHaveAttribute("aria-pressed", "false")
+    await expect(pause).toBeVisible()
   })
 })

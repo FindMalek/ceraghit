@@ -41,7 +41,6 @@ export function HeroCarousel({ images }: { images: string[] }) {
       {images.length > 1 && (
         <button
           type="button"
-          aria-pressed={paused}
           aria-label={paused ? t("carouselPlay") : t("carouselPause")}
           onClick={() => setPaused((p) => !p)}
           className="absolute end-2 bottom-2 grid size-11 place-items-center bg-background/80 text-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
