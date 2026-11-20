@@ -10,44 +10,50 @@ const OPEN_ON_PURPOSE = new Set(["/admin/login", "/admin/logout"])
 
 type Spec = { paths: Record<string, Record<string, unknown>> }
 
-test(
-  "every admin route answers 401 to visitors, forged cookies and the proxies of the other app",
-  ONCE,
-  async ({ request }) => {
-    const spec = (await (await request.get(`${E2E.apiUrl}/v1/openapi.json`)).json()) as Spec
-    const routes = Object.entries(spec.paths)
-      .filter(([path]) => path.startsWith("/admin/") && !OPEN_ON_PURPOSE.has(path))
-      .flatMap(([path, methods]) =>
-        Object.keys(methods)
-          .filter((m) => ["get", "post", "put", "patch", "delete"].includes(m))
-          .map((method) => ({ method: method.toUpperCase(), url: path.replace(/\{[^}]+\}/g, FAKE_ID) })),
-      )
-    expect(routes.length).toBeGreaterThan(30)
+test("every admin route answers 401 to visitors and to forged cookies", ONCE, async ({ request }) => {
+  const spec = (await (await request.get(`${E2E.apiUrl}/v1/openapi.json`)).json()) as Spec
+  const routes = Object.entries(spec.paths)
+    .filter(([path]) => path.startsWith("/admin/") && !OPEN_ON_PURPOSE.has(path))
+    .flatMap(([path, methods]) =>
+      Object.keys(methods)
+        .filter((m) => ["get", "post", "put", "patch", "delete"].includes(m))
+        .map((method) => ({ method: method.toUpperCase(), url: path.replace(/\{[^}]+\}/g, FAKE_ID) })),
+    )
+  expect(routes.length).toBeGreaterThan(30)
 
-    const open: string[] = []
-    for (const { method, url } of routes) {
-      for (const cookie of [undefined, "ceraghit_admin=forged"]) {
-        const res = await request.fetch(`${E2E.apiUrl}/v1${url}`, {
-          method,
-          headers: { "x-csrf-token": "orpc", ...(cookie ? { cookie } : {}) },
-          data: method === "GET" || method === "DELETE" ? undefined : {},
-        })
-        if (res.status() !== 401) open.push(`${method} ${url} ${cookie ? "forged" : "anonymous"} -> ${res.status()}`)
-      }
+  const open: string[] = []
+  for (const { method, url } of routes) {
+    for (const cookie of [undefined, "ceraghit_admin=forged"]) {
+      const res = await request.fetch(`${E2E.apiUrl}/v1${url}`, {
+        method,
+        headers: { "x-csrf-token": "orpc", ...(cookie ? { cookie } : {}) },
+        data: method === "GET" || method === "DELETE" ? undefined : {},
+      })
+      if (res.status() !== 401) open.push(`${method} ${url} ${cookie ? "forged" : "anonymous"} -> ${res.status()}`)
     }
-    expect(open).toEqual([])
-  },
-)
+  }
+  expect(open).toEqual([])
+})
 
 /** The request target goes out exactly as written, the way a client that does not normalise it would send it. */
-function rawGet(port: number, path: string): Promise<{ status: number; setCookie: unknown; body: string }> {
+function rawGet(
+  port: number,
+  path: string,
+): Promise<{ status: number; setCookie: unknown; location: unknown; body: string }> {
   return new Promise((resolve, reject) => {
     const req = request({ host: "localhost", port, path, method: "GET" }, (res) => {
       let body = ""
       res.on("data", (chunk) => {
         body += chunk
       })
-      res.on("end", () => resolve({ status: res.statusCode ?? 0, setCookie: res.headers["set-cookie"], body }))
+      res.on("end", () =>
+        resolve({
+          status: res.statusCode ?? 0,
+          setCookie: res.headers["set-cookie"],
+          location: res.headers.location,
+          body,
+        }),
+      )
     })
     req.on("error", reject)
     req.end()
@@ -79,6 +85,12 @@ test("each app's /api proxy only forwards its own namespace", ONCE, async ({ req
     expect(login.status()).toBe(404)
     expect(await login.json()).toEqual(BLOCKED)
     expect(login.headers()["set-cookie"]).toBeUndefined()
+    const control = await api.post(`${E2E.dashboardUrl}/api/rpc/admin/auth/login`, {
+      headers: { "x-csrf-token": "orpc" },
+      data: { json: { email: E2E.adminEmail, password: "not-the-password" } },
+    })
+    expect(await control.json(), "the same path reaches the api behind the dashboard proxy").not.toEqual(BLOCKED)
+    expect(control.headers()["set-cookie"]).toBeUndefined()
   })
 
   await test.step("traversal variants sent as raw request targets are never served", async () => {
@@ -90,7 +102,13 @@ test("each app's /api proxy only forwards its own namespace", ONCE, async ({ req
       "/api/rpc/public%2f..%2fadmin/products/list",
     ]) {
       const res = await rawGet(E2E.ports.web, path)
-      expect(res.status, path).not.toBe(200)
+      if (res.status === 308) {
+        // Next folds the double slash into the plain path, which the step above proves is refused.
+        expect(res.location, path).toMatch(/\/api\/rpc\/admin\/products\/list$/)
+      } else {
+        expect(res.status, path).toBeGreaterThanOrEqual(400)
+        expect(res.status, path).toBeLessThan(500)
+      }
       expect(res.setCookie, path).toBeUndefined()
       expect(res.body, path).not.toContain('"code":"UNAUTHORIZED"')
     }
@@ -105,25 +123,32 @@ test("each app's /api proxy only forwards its own namespace", ONCE, async ({ req
   })
 })
 
-test("an order is only readable with its own token", ONCE, async ({ request, page }, testInfo) => {
+test("an order is only readable with its own token", ONCE, async ({ request: api, page }, testInfo) => {
   const piece = await pieceFor(page.request, testInfo)
-  const made = await request.post(`${E2E.apiUrl}/v1/orders`, {
-    data: {
-      items: [{ productId: piece.id, quantity: 1 }],
-      currency: "TND",
-      locale: "fr",
-      paymentMethod: "cod",
-      country: "TN",
-      ...BUYER,
-    },
-  })
-  expect(made.ok()).toBe(true)
-  const { number } = (await made.json()) as { number: string }
-  for (const token of ["", "wrong-token", "0".repeat(32)]) {
-    const res = await request.get(`${E2E.apiUrl}/v1/orders/${number}?token=${token}`)
+  const place = async () => {
+    const made = await api.post(`${E2E.apiUrl}/v1/orders`, {
+      data: {
+        items: [{ productId: piece.id, quantity: 1 }],
+        currency: "TND",
+        locale: "fr",
+        paymentMethod: "cod",
+        country: "TN",
+        ...BUYER,
+      },
+    })
+    expect(made.ok()).toBe(true)
+    return (await made.json()) as { number: string; token: string }
+  }
+  const mine = await place()
+  const other = await place()
+
+  const own = await api.get(`${E2E.apiUrl}/v1/orders/${mine.number}?token=${mine.token}`)
+  expect(own.status(), "the right token opens the order").toBe(200)
+
+  for (const token of ["", "wrong-token", "0".repeat(32), other.token]) {
+    const res = await api.get(`${E2E.apiUrl}/v1/orders/${mine.number}?token=${token}`)
     expect(res.status(), `token "${token}"`).toBe(404)
-    const text = await res.text()
-    expect(text).not.toContain(BUYER.email)
+    expect(await res.text()).not.toContain(BUYER.email)
   }
 })
 
