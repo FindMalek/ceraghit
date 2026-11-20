@@ -193,4 +193,14 @@ describe.skipIf(!url)("manual payment confirmation", () => {
     const [cancelled] = await db.select().from(orders).where(eq(orders.id, o.id))
     expect(cancelled!.status).toBe("cancelled")
   })
+
+  test("a paid order can still be refunded", async () => {
+    const o = await order({ status: "paid", paidAt: services.now() })
+    await owner.orders.setStatus({ id: o.id, status: "refunded" })
+    const [row] = await db.select().from(orders).where(eq(orders.id, o.id))
+    expect(row!.status).toBe("refunded")
+    const audit = await owner.orders.audit({ id: o.id })
+    expect(audit).toHaveLength(1)
+    expect(audit[0]).toMatchObject({ fromStatus: "paid", toStatus: "refunded" })
+  })
 })
