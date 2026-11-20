@@ -1,3 +1,4 @@
+import { request } from "node:http"
 import { E2E } from "../../env"
 import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { BUYER } from "../../helpers/checkout"
@@ -38,30 +39,70 @@ test(
   },
 )
 
-test("each app's /api proxy only forwards its own namespace", ONCE, async ({ request }) => {
-  const sneaky = [
-    "/api/rpc/admin/me",
-    "/api/rpc/public/../admin/me",
-    "/api/rpc/public/%2e%2e/admin/me",
-    "/api/rpc//admin/me",
-    "/api/RPC/admin/me",
-  ]
-  for (const path of sneaky) {
-    const res = await request.get(`${E2E.webUrl}${path}`)
-    expect(res.status(), `web ${path}`).toBeGreaterThanOrEqual(400)
-    expect(res.headers()["set-cookie"], `web ${path}`).toBeUndefined()
-  }
-  const login = await request.post(`${E2E.webUrl}/api/rpc/admin/login`, {
-    headers: { "x-csrf-token": "orpc" },
-    data: { json: { email: E2E.adminEmail, password: E2E.adminPassword } },
+/** The request target goes out exactly as written, the way a client that does not normalise it would send it. */
+function rawGet(port: number, path: string): Promise<{ status: number; setCookie: unknown; body: string }> {
+  return new Promise((resolve, reject) => {
+    const req = request({ host: "localhost", port, path, method: "GET" }, (res) => {
+      let body = ""
+      res.on("data", (chunk) => {
+        body += chunk
+      })
+      res.on("end", () => resolve({ status: res.statusCode ?? 0, setCookie: res.headers["set-cookie"], body }))
+    })
+    req.on("error", reject)
+    req.end()
   })
-  expect(login.status()).toBeGreaterThanOrEqual(400)
-  expect(login.headers()["set-cookie"]).toBeUndefined()
+}
 
-  for (const path of ["/api/rpc/public/products/list", "/api/rpc/public/../public/products/list"]) {
-    const res = await request.get(`${E2E.dashboardUrl}${path}`)
-    expect(res.status(), `dashboard ${path}`).toBeGreaterThanOrEqual(400)
-  }
+const BLOCKED = { message: "Not found." }
+
+test("each app's /api proxy only forwards its own namespace", ONCE, async ({ request: api }) => {
+  await test.step("the storefront proxy answers its own 404 for a real admin procedure", async () => {
+    for (const method of ["GET", "POST"]) {
+      const res = await api.fetch(`${E2E.webUrl}/api/rpc/admin/products/list`, {
+        method,
+        headers: { "x-csrf-token": "orpc" },
+        data: method === "POST" ? {} : undefined,
+      })
+      expect(res.status(), method).toBe(404)
+      expect(await res.json(), method).toEqual(BLOCKED)
+      expect(res.headers()["set-cookie"]).toBeUndefined()
+    }
+    const reachable = await api.get(`${E2E.dashboardUrl}/api/rpc/admin/products/list`, {
+      headers: { "x-csrf-token": "orpc" },
+    })
+    expect(reachable.status(), "the same path is a real procedure behind the dashboard proxy").toBe(401)
+    const login = await api.post(`${E2E.webUrl}/api/rpc/admin/auth/login`, {
+      headers: { "x-csrf-token": "orpc" },
+      data: { json: { email: E2E.adminEmail, password: E2E.adminPassword } },
+    })
+    expect(login.status()).toBe(404)
+    expect(await login.json()).toEqual(BLOCKED)
+    expect(login.headers()["set-cookie"]).toBeUndefined()
+  })
+
+  await test.step("traversal variants sent as raw request targets are never served", async () => {
+    for (const path of [
+      "/api/rpc/public/../admin/products/list",
+      "/api/rpc/public/%2e%2e/admin/products/list",
+      "/api/rpc//admin/products/list",
+      "/api/RPC/admin/products/list",
+      "/api/rpc/public%2f..%2fadmin/products/list",
+    ]) {
+      const res = await rawGet(E2E.ports.web, path)
+      expect(res.status, path).not.toBe(200)
+      expect(res.setCookie, path).toBeUndefined()
+      expect(res.body, path).not.toContain('"code":"UNAUTHORIZED"')
+    }
+  })
+
+  await test.step("the dashboard proxy answers its own 404 for a public procedure", async () => {
+    const res = await api.get(`${E2E.dashboardUrl}/api/rpc/public/products/list`, {
+      headers: { "x-csrf-token": "orpc" },
+    })
+    expect(res.status()).toBe(404)
+    expect(await res.json()).toEqual(BLOCKED)
+  })
 })
 
 test("an order is only readable with its own token", ONCE, async ({ request, page }, testInfo) => {
