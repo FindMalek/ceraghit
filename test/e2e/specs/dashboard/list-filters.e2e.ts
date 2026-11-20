@@ -68,6 +68,53 @@ test("the product list shows 40 rows and loads the rest on demand", { tag: ["@fr
   }
 })
 
+test("the selection publishes and unpublishes several products at once", { tag: ["@fr"] }, async ({ page, step }) => {
+  const db = openDb()
+  await db.execute(sql`delete from products where ref like 'zy-%'`)
+  await db.execute(sql`
+    insert into products (ref, slug, category_id, title, price_tnd, price_eur, stock, status)
+    select 'zy-' || g, 'zy-bulk-' || g, (select id from categories limit 1), '{"fr":"Pièce groupée"}'::jsonb, 1000, 300, 1, 'draft'
+    from generate_series(1, 3) g`)
+  await db.execute(sql`
+    insert into products (ref, slug, category_id, title, price_tnd, price_eur, stock, status)
+    select 'zy-4', 'zy-bulk-4', (select id from categories limit 1), '{"fr":"Pièce archivée"}'::jsonb, 1000, 300, 1, 'archived'`)
+  try {
+    const unpublish = page.getByRole("button", { name: "Dépublier", exact: true })
+    await loginAsOwnerAndWait(page)
+    await page.goto(`${E2E.dashboardUrl}/products`)
+    await page.getByPlaceholder("Référence ou nom").fill("zy-")
+    await expect(page.getByRole("checkbox", { name: "Sélectionner zy-1" })).toBeVisible()
+
+    await step("nothing is selected: no bulk buttons", async () => {
+      await expect(page.getByRole("button", { name: "Publier la sélection", exact: true })).toHaveCount(0)
+      await expect(unpublish).toHaveCount(0)
+    })
+    await step("two products are selected and published together, the third stays a draft", async () => {
+      await page.getByRole("checkbox", { name: "Sélectionner zy-1" }).click()
+      await page.getByRole("checkbox", { name: "Sélectionner zy-2" }).click()
+      await expect(page.getByText("2 sélectionnés")).toBeVisible()
+      await page.getByRole("button", { name: "Publier la sélection", exact: true }).click()
+      await expect(unpublish).toHaveCount(2)
+      await expect(page.getByText("2 sélectionnés")).toHaveCount(0)
+    })
+    await step("select all then unpublish puts every product back to draft", async () => {
+      await expect(page.getByRole("checkbox", { name: "Sélectionner zy-4" })).toBeDisabled()
+      await page.getByRole("checkbox", { name: "Tout sélectionner" }).click()
+      await expect(page.getByText("3 sélectionnés")).toBeVisible()
+      await page.getByRole("button", { name: "Dépublier la sélection", exact: true }).click()
+      await expect(unpublish).toHaveCount(0)
+    })
+    await step("changing the filter drops the selection", async () => {
+      await page.getByRole("checkbox", { name: "Sélectionner zy-1" }).click()
+      await page.getByPlaceholder("Référence ou nom").fill("zy-2")
+      await expect(page.getByText("sélectionné")).toHaveCount(0)
+    })
+  } finally {
+    await db.execute(sql`delete from products where ref like 'zy-%'`)
+    await db.close()
+  }
+})
+
 test("the request list shows 20 at a time and the filter has a reset", { tag: ["@fr"] }, async ({ page, step }) => {
   const db = openDb()
   await db.execute(sql`delete from custom_requests where email like 'zx-%'`)

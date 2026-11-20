@@ -8,7 +8,7 @@ import {
   productStatusSchema,
   slugify,
 } from "@workspace/sdk"
-import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { saveProductImages } from "../../lib/product-images"
@@ -127,6 +127,25 @@ export const productsRouter = {
       })
       const [row] = await findProducts(context.db, { where: eq(products.id, id), limit: 1 })
       return toProduct(row!)
+    }),
+
+  /** Archived products stay archived: only the owner's draft and published states are switched in bulk. */
+  setStatus: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/products/status",
+      summary: "Publish or unpublish several products",
+      tags: TAG,
+    })
+    .input(z.object({ ids: z.array(z.uuid()).min(1).max(500), status: z.enum(["draft", "published"]) }))
+    .output(z.object({ updated: z.number() }))
+    .handler(async ({ context, input }) => {
+      const rows = await context.db
+        .update(products)
+        .set({ status: input.status, updatedAt: context.now() })
+        .where(and(inArray(products.id, input.ids), ne(products.status, "archived")))
+        .returning({ id: products.id })
+      return { updated: rows.length }
     }),
 
   /** A product that was ordered is archived instead, so order history keeps pointing at it. */

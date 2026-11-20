@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { formatMoney, imageSrc, type Product, pick } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
+import { Checkbox } from "@workspace/ui/components/checkbox"
 import { showError } from "@workspace/ui/components/error-banner"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
@@ -97,6 +98,7 @@ export function ProductsView() {
   const [categoryId, setCategoryId] = useState("all")
   const [toDelete, setToDelete] = useState<Product | null>(null)
   const [visible, setVisible] = useState(40)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(q), 300)
@@ -106,6 +108,7 @@ export function ProductsView() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset the page whenever the filters change
   useEffect(() => {
     setVisible(40)
+    setSelected(new Set())
   }, [search, status, categoryId])
 
   const categories = useQuery(orpc.admin.categories.list.queryOptions())
@@ -126,6 +129,15 @@ export function ProductsView() {
   const update = useMutation(
     orpc.admin.products.update.mutationOptions({
       onSuccess: refresh,
+      onError: (error) => showError(errorMessage(error)),
+    }),
+  )
+  const bulk = useMutation(
+    orpc.admin.products.setStatus.mutationOptions({
+      onSuccess: () => {
+        setSelected(new Set())
+        refresh()
+      },
       onError: (error) => showError(errorMessage(error)),
     }),
   )
@@ -152,6 +164,15 @@ export function ProductsView() {
   ]
   const all = products.data ?? []
   const rows = all.slice(0, visible)
+  const selectable = rows.filter((p) => p.status !== "archived")
+  const allSelected = selectable.length > 0 && selectable.slice(0, 500).every((p) => selected.has(p.id))
+  const toggleOne = (id: string, on: boolean) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (on) next.add(id)
+      else next.delete(id)
+      return next
+    })
 
   return (
     <>
@@ -218,9 +239,53 @@ export function ProductsView() {
 
         {rows.length > 0 && (
           <>
+            <div className="flex min-h-11 flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  id="select-all-products"
+                  checked={allSelected}
+                  disabled={bulk.isPending || selectable.length === 0}
+                  onCheckedChange={(on) =>
+                    setSelected(on ? new Set(selectable.slice(0, 500).map((p) => p.id)) : new Set())
+                  }
+                />
+                <label htmlFor="select-all-products">Tout sélectionner</label>
+              </div>
+              {selected.size > 0 && (
+                <>
+                  <span className="text-sm tabular-nums">
+                    {selected.size} sélectionné{selected.size > 1 ? "s" : ""}
+                  </span>
+                  <Button
+                    size="sm"
+                    disabled={bulk.isPending || update.isPending}
+                    onClick={() => bulk.mutate({ ids: [...selected], status: "published" })}
+                  >
+                    Publier la sélection
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={bulk.isPending || update.isPending}
+                    onClick={() => bulk.mutate({ ids: [...selected], status: "draft" })}
+                  >
+                    Dépublier la sélection
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+                    Désélectionner
+                  </Button>
+                </>
+              )}
+            </div>
             <ul className="flex flex-col gap-3 md:hidden">
               {rows.map((product) => (
                 <li key={product.id} className="frame flex flex-col gap-3 bg-card/70 p-3">
+                  <Checkbox
+                    checked={selected.has(product.id)}
+                    disabled={bulk.isPending || product.status === "archived"}
+                    onCheckedChange={(on) => toggleOne(product.id, on)}
+                    aria-label={`Sélectionner ${product.ref}`}
+                  />
                   <Link href={`/products/${product.id}`} className="flex gap-3">
                     <Cover product={product} />
                     <div className="min-w-0 flex-1">
@@ -239,7 +304,7 @@ export function ProductsView() {
                     <ProductStatusBadge status={product.status} />
                     <StockControl
                       product={product}
-                      busy={update.isPending}
+                      busy={update.isPending || bulk.isPending}
                       onChange={(stock) => patch(product, { stock })}
                     />
                   </div>
@@ -253,7 +318,7 @@ export function ProductsView() {
                     <Button
                       variant="outline"
                       className="h-11 flex-1"
-                      disabled={update.isPending}
+                      disabled={update.isPending || bulk.isPending}
                       onClick={() => togglePublish(product)}
                     >
                       {product.status === "published" ? "Dépublier" : "Publier"}
@@ -275,6 +340,7 @@ export function ProductsView() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10" />
                     <TableHead className="w-20" />
                     <TableHead>Réf.</TableHead>
                     <TableHead>Produit</TableHead>
@@ -289,6 +355,14 @@ export function ProductsView() {
                 <TableBody>
                   {rows.map((product) => (
                     <TableRow key={product.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selected.has(product.id)}
+                          disabled={bulk.isPending || product.status === "archived"}
+                          onCheckedChange={(on) => toggleOne(product.id, on)}
+                          aria-label={`Sélectionner ${product.ref}`}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Cover product={product} />
                       </TableCell>
@@ -314,7 +388,7 @@ export function ProductsView() {
                       <TableCell>
                         <StockControl
                           product={product}
-                          busy={update.isPending}
+                          busy={update.isPending || bulk.isPending}
                           onChange={(stock) => patch(product, { stock })}
                         />
                       </TableCell>
@@ -332,7 +406,7 @@ export function ProductsView() {
                           <Button
                             variant="outline"
                             size="sm"
-                            disabled={update.isPending}
+                            disabled={update.isPending || bulk.isPending}
                             onClick={() => togglePublish(product)}
                           >
                             {product.status === "published" ? "Dépublier" : "Publier"}
