@@ -41,14 +41,20 @@ const normalise = (text: string | undefined) =>
   (text ?? "").trim().toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "")
 const ceilTo = (value: number, step: number) => Math.ceil(value / step - 1e-9) * step
 
-/** One parcel: the summed weight with the same packaging as the flat rates, the largest box. */
+/**
+ * One parcel: the summed weight with the same packaging as the flat rates. The box is the widest footprint with every
+ * piece stacked on top of the others, so volume priced rates never see a box smaller than the cart.
+ */
 export function parcelFor(rates: ShippingRates, lines: ShippingItem[]): Parcel {
   const grams = lines.reduce((sum, l) => sum + l.weightGrams * l.quantity, 0)
   return {
     weightGrams: Math.ceil(grams * (1 + rates.packagingPct / 100) + rates.packagingGrams),
     lengthCm: Math.max(1, ...lines.map((l) => l.lengthCm)),
     widthCm: Math.max(1, ...lines.map((l) => l.widthCm)),
-    heightCm: Math.max(1, ...lines.map((l) => l.heightCm)),
+    heightCm: Math.max(
+      1,
+      lines.reduce((sum, l) => sum + l.heightCm * l.quantity, 0),
+    ),
     pieces: 1,
   }
 }
@@ -110,7 +116,8 @@ export async function quoteShipping(services: Services, input: ShippingQuoteInpu
   })
   if (!flat.available || flat.freeApplied) return flatResult()
 
-  const mode = await getShippingSettings(services.db)
+  const mode = await getShippingSettings(services.db).catch(() => null)
+  if (!mode) return flatResult("error")
   if (mode.provider !== "aramex" || !mode.quoteFromProvider) return flatResult("disabled")
   if (!input.city?.trim()) return flatResult("no-city")
 
@@ -145,6 +152,7 @@ export async function quoteShipping(services: Services, input: ShippingQuoteInpu
       parcel,
       from.country,
       from.city,
+      normalise(from.postalCode),
     ])
     answer = await providerAmount(
       provider,

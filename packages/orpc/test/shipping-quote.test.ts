@@ -78,7 +78,7 @@ describe("provider price", () => {
   })
 })
 
-test("the parcel carries the flat rates' packaging and the largest box", () => {
+test("the parcel carries the flat rates' packaging and a box tall enough for every piece", () => {
   const rates = { ...DEFAULT_SHIPPING_RATES, packagingPct: 20, packagingGrams: 300 }
   const lines = [
     { weightGrams: 500, lengthCm: 30, widthCm: 10, heightCm: 10, quantity: 2 },
@@ -88,7 +88,7 @@ test("the parcel carries the flat rates' packaging and the largest box", () => {
     weightGrams: Math.ceil(2000 * 1.2 + 300),
     lengthCm: 30,
     widthCm: 25,
-    heightCm: 12,
+    heightCm: 10 * 2 + 12,
     pieces: 1,
   })
 })
@@ -100,12 +100,22 @@ describe.skipIf(!url)("quote service", () => {
   const lines = [{ weightGrams: 1000, lengthCm: 20, widthCm: 20, heightCm: 10, quantity: 1 }]
   const input = { lines, country: "TN", currency: "TND" as const, subtotalMinor: 50_000 }
 
+  let studioBefore: typeof settings.$inferSelect | undefined
+
   beforeAll(async () => {
     await runMigrations(db)
+    ;[studioBefore] = await db.select().from(settings).where(eq(settings.key, "studio"))
+    // the flat rates come from the studio row: start from the defaults whatever the db holds
+    await db.delete(settings).where(eq(settings.key, "studio"))
     await db.delete(settings).where(eq(settings.key, "shipping"))
   })
   afterAll(async () => {
     await db.delete(settings).where(eq(settings.key, "shipping"))
+    if (studioBefore)
+      await db
+        .insert(settings)
+        .values(studioBefore)
+        .onConflictDoUpdate({ target: settings.key, set: { value: studioBefore.value } })
     await db.close()
   })
 
