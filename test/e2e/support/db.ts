@@ -46,3 +46,35 @@ export async function setStock(productId: string, stock: number): Promise<void> 
 export async function ageOrder(number: string, minutes: number): Promise<void> {
   await sql`update orders set created_at = created_at - make_interval(mins => ${minutes}) where number = ${number}`
 }
+
+export interface AuditRow {
+  action: string
+  fromStatus: string
+  toStatus: string
+  method: string | null
+  reference: string | null
+  note: string | null
+  adminId: string | null
+}
+
+/** The order's audit trail, oldest first. */
+export async function auditRows(number: string): Promise<AuditRow[]> {
+  return sql<AuditRow[]>`
+    select a.action, a.from_status as "fromStatus", a.to_status as "toStatus", a.method, a.reference, a.note,
+      a.admin_id as "adminId"
+    from order_audit a join orders o on o.id = a.order_id
+    where o.number = ${number} order by a.created_at`
+}
+
+export interface ShippingRow {
+  carrier: string | null
+  trackingNumber: string | null
+  trackingUrl: string | null
+}
+
+export async function shippingRow(number: string): Promise<ShippingRow> {
+  const [row] = await sql<ShippingRow[]>`
+    select carrier, tracking_number as "trackingNumber", tracking_url as "trackingUrl" from orders where number = ${number}`
+  if (!row) throw new Error(`no order ${number}`)
+  return row
+}
