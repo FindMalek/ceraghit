@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import type { Currency, SHIPPING_COUNTRIES } from "@workspace/sdk"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type Country = (typeof SHIPPING_COUNTRIES)[number]
 
@@ -25,11 +25,21 @@ export function useShippingQuote(
 ) {
   const city = useSettled(place.city?.trim() ?? "", 600)
   const postalCode = useSettled(place.postalCode?.trim() ?? "", 600)
-  return useQuery(
+  // What the answer on screen is an answer to, apart from the address: cart, country and currency.
+  const question = JSON.stringify({ items, country, currency })
+  const answered = useRef(question)
+  const query = useQuery(
     orpc.public.catalog.shippingQuote.queryOptions({
       input: { items, country, currency, ...(city ? { city } : {}), ...(postalCode ? { postalCode } : {}) },
       enabled: items.length > 0,
       staleTime: 60_000,
+      // A new city is a new question, but the last answer stays on screen until the new one arrives. Never across a
+      // change of cart, country or currency: that amount would be shown in the wrong currency.
+      placeholderData: (previous) => (answered.current === question ? previous : undefined),
     }),
   )
+  useEffect(() => {
+    if (query.data && !query.isPlaceholderData) answered.current = question
+  }, [query.data, query.isPlaceholderData, question])
+  return query
 }
