@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { createDb, orderItems, orders, products } from "@workspace/db"
+import { createDb, orderItems, orders, products, settings } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { and, eq, like } from "drizzle-orm"
@@ -7,6 +7,7 @@ import type { Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { createOrder } from "../src/lib/orders"
 import { DemoProvider } from "../src/lib/payments"
+import { saveShippingSettings } from "../src/lib/shipping/settings"
 
 const url = process.env.DATABASE_URL
 
@@ -89,6 +90,18 @@ describe.skipIf(!url)("the delivery price the customer saw", () => {
     })
     expect(await stockNow()).toBe(before)
     expect((await db.select({ id: orders.id }).from(orders).where(eq(orders.email, email))).length).toBe(count)
+  })
+
+  test("with Aramex pricing on, a client that sends no price is still charged the flat rate it was shown", async () => {
+    const flat = (await db.query.orders.findFirst({ where: eq(orders.number, (await place()).number) }))!.shippingMinor
+    await saveShippingSettings(db, { provider: "aramex", quoteFromProvider: true })
+    try {
+      const order = await place()
+      const row = (await db.query.orders.findFirst({ where: eq(orders.number, order.number) }))!
+      expect(row.shippingMinor).toBe(flat)
+    } finally {
+      await db.delete(settings).where(eq(settings.key, "shipping"))
+    }
   })
 
   test("an order from a client that does not send the price still goes through", async () => {

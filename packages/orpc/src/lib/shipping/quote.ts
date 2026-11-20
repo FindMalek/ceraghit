@@ -23,6 +23,8 @@ export interface ShippingQuoteInput {
   postalCode?: string
   currency: Currency
   subtotalMinor: number
+  /** False prices with the flat rates only, even when the owner turned provider pricing on. Defaults to true. */
+  allowProvider?: boolean
 }
 
 const QUOTE_TIMEOUT_MS = 4000
@@ -127,7 +129,8 @@ export async function quoteShipping(services: Services, input: ShippingQuoteInpu
 
   const mode = await getShippingSettings(services.db).catch(() => null)
   if (!mode) return flatResult("error")
-  if (mode.provider !== "aramex" || !mode.quoteFromProvider) return flatResult("disabled")
+  if (input.allowProvider === false || mode.provider !== "aramex" || !mode.quoteFromProvider)
+    return flatResult("disabled")
   if (!input.city?.trim()) return flatResult("no-city")
 
   let answer: Awaited<ReturnType<typeof providerAmount>>

@@ -237,6 +237,8 @@ export async function createOrder(services: Services, input: OrderInput) {
     ...(input.postalCode ? { postalCode: input.postalCode } : {}),
     currency: input.currency,
     subtotalMinor: subtotal,
+    // The carrier's rate only applies when the customer sent the price they saw, so nobody is charged more than shown.
+    allowProvider: input.expectedShippingMinor !== undefined,
   })
   if (!quote.available) {
     throw publicError(

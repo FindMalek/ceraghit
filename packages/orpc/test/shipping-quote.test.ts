@@ -187,6 +187,12 @@ describe.skipIf(!url)("quote service", () => {
     expect(result).toMatchObject({ available: false, reason: "too-heavy", source: "flat" })
   })
 
+  test("allowProvider false prices with the flat rates even with Aramex pricing on", async () => {
+    await saveShippingSettings(db, { provider: "aramex", quoteFromProvider: true })
+    const result = await quoteShipping(services, { ...input, city: "Sfax", allowProvider: false })
+    expect(result).toMatchObject({ source: "flat", fallbackReason: "disabled" })
+  })
+
   test("a cart over the free-delivery threshold ships free even with Aramex pricing on", async () => {
     await saveShippingSettings(db, { provider: "aramex", quoteFromProvider: true })
     const result = await quoteShipping(services, { ...input, city: "Sfax", subtotalMinor: 300_000 })
