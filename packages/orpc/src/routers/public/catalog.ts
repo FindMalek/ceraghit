@@ -146,17 +146,26 @@ export const catalogRouter = {
       if (lines.length !== input.items.length)
         throw publicError("NOT_FOUND", "piece_unavailable", "A piece in your cart is no longer available.")
       const subtotalMinor = lines.reduce((sum, l) => sum + unitMinor(l, l.variant, input.currency) * l.quantity, 0)
-      const { available, reason, zoneName, chargeableKg, amountMinor, freeApplied, freeOverMinor, source } =
-        await quoteShipping(context, {
-          lines,
-          country: input.country,
-          currency: input.currency,
-          subtotalMinor,
-          // Each carrier call costs time and quota: a visitor past the limit still gets the flat price.
-          beforeProviderCall: () => withinLimit(context, "shippingQuote"),
-          ...(input.city ? { city: input.city } : {}),
-          ...(input.postalCode ? { postalCode: input.postalCode } : {}),
-        })
+      const {
+        available,
+        reason,
+        zoneName,
+        chargeableKg,
+        amountMinor,
+        freeApplied,
+        freeOverMinor,
+        source,
+        fallbackReason,
+      } = await quoteShipping(context, {
+        lines,
+        country: input.country,
+        currency: input.currency,
+        subtotalMinor,
+        // Each carrier call costs time and quota: a visitor past the limit still gets the flat price.
+        beforeProviderCall: () => withinLimit(context, "shippingQuote"),
+        ...(input.city ? { city: input.city } : {}),
+        ...(input.postalCode ? { postalCode: input.postalCode } : {}),
+      })
       return {
         available,
         reason,
@@ -167,7 +176,8 @@ export const catalogRouter = {
         freeOverMinor,
         subtotalMinor,
         source,
-        estimate: !input.city?.trim(),
+        // Only while the carrier would set the price once the city is known; with flat rates the price is final.
+        estimate: fallbackReason === "no-city",
       }
     }),
 }
