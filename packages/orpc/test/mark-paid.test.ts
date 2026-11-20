@@ -182,4 +182,25 @@ describe.skipIf(!url)("manual payment confirmation", () => {
       expect(audit.filter((a) => a.action === "mark_paid_manually")).toHaveLength(row!.paidAt ? 1 : 0)
     }
   })
+
+  test("an unpaid order can be cancelled but never refunded", async () => {
+    const o = await order()
+    await expect(owner.orders.setStatus({ id: o.id, status: "refunded" })).rejects.toThrow(/cannot be refunded/)
+    const [row] = await db.select().from(orders).where(eq(orders.id, o.id))
+    expect(row!.status).toBe("pending_payment")
+    expect(await owner.orders.audit({ id: o.id })).toHaveLength(0)
+    await owner.orders.setStatus({ id: o.id, status: "cancelled" })
+    const [cancelled] = await db.select().from(orders).where(eq(orders.id, o.id))
+    expect(cancelled!.status).toBe("cancelled")
+  })
+
+  test("a paid order can still be refunded", async () => {
+    const o = await order({ status: "paid", paidAt: services.now() })
+    await owner.orders.setStatus({ id: o.id, status: "refunded" })
+    const [row] = await db.select().from(orders).where(eq(orders.id, o.id))
+    expect(row!.status).toBe("refunded")
+    const audit = await owner.orders.audit({ id: o.id })
+    expect(audit).toHaveLength(1)
+    expect(audit[0]).toMatchObject({ fromStatus: "paid", toStatus: "refunded" })
+  })
 })

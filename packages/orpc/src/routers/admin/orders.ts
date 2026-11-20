@@ -236,6 +236,8 @@ export const ordersRouter = {
       const order = await context.db.query.orders.findFirst({ where: eq(orders.id, input.id) })
       if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
       const adminId = context.admin.id
+      if (input.status === "refunded" && order.status === "pending_payment")
+        throw new ORPCError("BAD_REQUEST", { message: "An unpaid order cannot be refunded, cancel it instead." })
       const move = (patch: Partial<typeof orders.$inferInsert>, from: (typeof order)["status"]) =>
         context.db.transaction(async (tx) => {
           const [row] = await tx
