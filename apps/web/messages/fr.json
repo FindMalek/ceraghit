@@ -550,6 +550,7 @@
       "option_required": "Choisissez une option pour chaque pièce du panier.",
       "out_of_stock": "Une pièce de votre panier n'est plus en stock.",
       "order_too_big": "Cette commande est trop volumineuse pour être expédiée en ligne, envoyez-nous une demande.",
+      "shipping_changed": "Le prix de livraison a changé, vérifiez le total puis validez à nouveau.",
       "order_failed": "La commande n'a pas pu être créée, réessayez.",
       "order_not_found": "Commande introuvable.",
       "payment_not_found": "Paiement introuvable.",

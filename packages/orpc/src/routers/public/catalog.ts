@@ -1,7 +1,6 @@
 import { categories, locations, products } from "@workspace/db"
 import {
   categorySchema,
-  estimateShipping,
   locationSchema,
   productQuerySchema,
   productSchema,
@@ -16,6 +15,7 @@ import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
 import { effectivePaymentMethods, getSettings } from "../../lib/settings"
+import { quoteShipping } from "../../lib/shipping/quote"
 import { getShopProfile, publicShopProfile } from "../../lib/shop-profile"
 import { publicProcedure } from "../../procedures"
 
@@ -145,14 +145,26 @@ export const catalogRouter = {
       if (lines.length !== input.items.length)
         throw publicError("NOT_FOUND", "piece_unavailable", "A piece in your cart is no longer available.")
       const subtotalMinor = lines.reduce((sum, l) => sum + unitMinor(l, l.variant, input.currency) * l.quantity, 0)
-      const settings = await getSettings(context.db)
-      const { available, reason, zoneName, chargeableKg, amountMinor, freeApplied, freeOverMinor } = estimateShipping(
-        settings.shippingRates,
-        lines,
-        input.country,
-        input.currency,
+      const { available, reason, zoneName, chargeableKg, amountMinor, freeApplied, freeOverMinor, source } =
+        await quoteShipping(context, {
+          lines,
+          country: input.country,
+          currency: input.currency,
+          subtotalMinor,
+          ...(input.city ? { city: input.city } : {}),
+          ...(input.postalCode ? { postalCode: input.postalCode } : {}),
+        })
+      return {
+        available,
+        reason,
+        zoneName,
+        chargeableKg,
+        amountMinor,
+        freeApplied,
+        freeOverMinor,
         subtotalMinor,
-      )
-      return { available, reason, zoneName, chargeableKg, amountMinor, freeApplied, freeOverMinor, subtotalMinor }
+        source,
+        estimate: !input.city?.trim(),
+      }
     }),
 }
