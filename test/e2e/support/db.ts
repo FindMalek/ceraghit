@@ -95,3 +95,11 @@ export async function orderId(number: string): Promise<string> {
   if (!row) throw new Error(`no order ${number}`)
   return row.id
 }
+
+/** How many mails of each kind the api logged for an order. */
+export async function mailKinds(number: string): Promise<Record<string, number>> {
+  const rows = await sql<{ kind: string; n: number }[]>`
+    select m.kind, count(*)::int as n from mail_log m join orders o on o.id = m.order_id
+    where o.number = ${number} group by m.kind`
+  return Object.fromEntries(rows.map((r) => [r.kind, r.n]))
+}
