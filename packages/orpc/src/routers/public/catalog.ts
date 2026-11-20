@@ -14,6 +14,7 @@ import { publicError } from "../../errors"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
+import { withinLimit } from "../../lib/rate-limit"
 import { effectivePaymentMethods, getSettings } from "../../lib/settings"
 import { quoteShipping } from "../../lib/shipping/quote"
 import { getShopProfile, publicShopProfile } from "../../lib/shop-profile"
@@ -151,6 +152,8 @@ export const catalogRouter = {
           country: input.country,
           currency: input.currency,
           subtotalMinor,
+          // Each carrier call costs time and quota: a visitor past the limit still gets the flat price.
+          allowProvider: input.city?.trim() ? await withinLimit(context, "shippingQuote") : true,
           ...(input.city ? { city: input.city } : {}),
           ...(input.postalCode ? { postalCode: input.postalCode } : {}),
         })

@@ -4,7 +4,7 @@ import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { like } from "drizzle-orm"
 import { AdminAuth } from "../src/lib/auth"
-import { LIMITS, sweepRateLimits, takeLimit } from "../src/lib/rate-limit"
+import { LIMITS, sweepRateLimits, takeLimit, withinLimit } from "../src/lib/rate-limit"
 
 const url = process.env.DATABASE_URL
 
@@ -62,5 +62,22 @@ describe.skipIf(!url)("rate limits", () => {
     expect(await takeLimit(db, key, limit, now)).toBe(false)
     expect(await sweepRateLimits(db, new Date(now.getTime() + 2 * 864e5))).toBeGreaterThan(0)
     expect(await takeLimit(db, key, limit, now)).toBe(true)
+  })
+
+  test("delivery quotes past the limit are told so without an error, per address, and a new window allows again", async () => {
+    const ctx = (address: string) => ({
+      db,
+      headers: new Headers({ "x-forwarded-for": address }),
+      now: () => clock,
+      config: {},
+    })
+    clock = new Date()
+    const here = `4.4.4.${tag}`
+    for (let i = 0; i < LIMITS.shippingQuote.max; i++) expect(await withinLimit(ctx(here), "shippingQuote")).toBe(true)
+    expect(await withinLimit(ctx(here), "shippingQuote")).toBe(false)
+    expect(await withinLimit(ctx(`5.5.5.${tag}`), "shippingQuote")).toBe(true)
+
+    clock = new Date(clock.getTime() + LIMITS.shippingQuote.windowMs + 1)
+    expect(await withinLimit(ctx(here), "shippingQuote")).toBe(true)
   })
 })
