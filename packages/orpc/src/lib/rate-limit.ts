@@ -18,6 +18,7 @@ export const LIMITS = {
   loginEmail: { max: 10, windowMs: 60 * MINUTE },
   orderCreate: { max: 10, windowMs: 10 * MINUTE },
   orderGet: { max: 60, windowMs: 10 * MINUTE },
+  shippingQuote: { max: 30, windowMs: MINUTE },
   requestCreate: { max: 5, windowMs: 60 * MINUTE },
   mailDomain: { max: 6, windowMs: 10 * MINUTE },
   mailTest: { max: 5, windowMs: 10 * MINUTE },
@@ -97,6 +98,12 @@ interface LimitContext {
   headers: Headers
   now: () => Date
   config: { proxySecret?: string }
+}
+
+/** Counts a hit for this visitor on `name` and says whether it is still within the limit, without throwing. */
+export async function withinLimit(context: LimitContext, name: keyof typeof LIMITS): Promise<boolean> {
+  const address = clientAddress(context.headers, context.config.proxySecret)
+  return takeLimit(context.db, `${name}:${address}`, LIMITS[name], context.now())
 }
 
 /** Counts a hit for this visitor on `name` and throws a guest-safe 429 once the limit is used up. */

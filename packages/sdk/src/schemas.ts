@@ -405,6 +405,8 @@ export const orderInputSchema = z.object({
   address: z.string().trim().min(3).max(300),
   postalCode: z.string().trim().max(20).optional(),
   note: z.string().trim().max(500).optional(),
+  /** The delivery price the customer saw. A different price is refused so nobody pays more than they were shown. */
+  expectedShippingMinor: z.number().int().min(0).optional(),
 })
 export type OrderInput = z.infer<typeof orderInputSchema>
 
@@ -671,6 +673,9 @@ export const shippingQuoteInputSchema = z.object({
   items: z.array(cartItemSchema).min(1).max(30),
   country: z.enum(SHIPPING_COUNTRIES),
   currency: currencySchema,
+  /** Known once the customer fills the address; without it the price is an estimate. */
+  city: z.string().trim().max(80).optional(),
+  postalCode: z.string().trim().max(20).optional(),
 })
 
 export const shippingQuoteSchema = z.object({
@@ -683,6 +688,10 @@ export const shippingQuoteSchema = z.object({
   /** The zone's free-delivery threshold in the quote currency, null when the zone has none. */
   freeOverMinor: z.number().int().nullable(),
   subtotalMinor: z.number().int(),
+  /** Who set the price: the carrier's own rate or the studio's flat zone rates. */
+  source: z.enum(["aramex", "flat"]),
+  /** No city yet, the price may change once the address is known. */
+  estimate: z.boolean(),
 })
 
 export const mediaSourceSchema = z.enum(["bucket", "bundled", "external"])

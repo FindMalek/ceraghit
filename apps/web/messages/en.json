@@ -550,6 +550,7 @@
       "option_required": "Choose an option for every piece in your cart.",
       "out_of_stock": "A piece in your cart is no longer in stock.",
       "order_too_big": "This order is too big to ship online, please send us a request.",
+      "shipping_changed": "The delivery price changed, check the total and place the order again.",
       "order_failed": "The order could not be created, please try again.",
       "order_not_found": "Order not found.",
       "payment_not_found": "Payment not found.",

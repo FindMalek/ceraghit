@@ -76,6 +76,21 @@ describe("provider price", () => {
     expect(Date.now() - started).toBeLessThan(1000)
   })
 
+  test("the limit gate is asked only when the carrier is really called, and a refusal answers flat", async () => {
+    const p = provider(async () => quote(9_500))
+    let asked = 0
+    const gate = (allowed: boolean) => async () => {
+      asked += 1
+      return allowed
+    }
+    expect(await providerAmount(p, req, NOW, "k", 30, gate(false))).toEqual({ fallback: "limited" })
+    expect(p.calls).toBe(0)
+    expect(await providerAmount(p, req, NOW, "k", 30, gate(true))).toEqual({ amountMinor: 9_500 })
+    expect(await providerAmount(p, req, NOW + 1_000, "k", 30, gate(false))).toEqual({ amountMinor: 9_500 })
+    expect(asked).toBe(2)
+    expect(p.calls).toBe(1)
+  })
+
   test("a provider error falls back and never throws", async () => {
     const p = provider(async () => {
       throw new Error("HasErrors")
@@ -185,6 +200,12 @@ describe.skipIf(!url)("quote service", () => {
     const heavy = [{ ...lines[0]!, weightGrams: 40_000 }]
     const result = await quoteShipping(services, { ...input, lines: heavy, city: "Sfax" })
     expect(result).toMatchObject({ available: false, reason: "too-heavy", source: "flat" })
+  })
+
+  test("allowProvider false prices with the flat rates even with Aramex pricing on", async () => {
+    await saveShippingSettings(db, { provider: "aramex", quoteFromProvider: true })
+    const result = await quoteShipping(services, { ...input, city: "Sfax", allowProvider: false })
+    expect(result).toMatchObject({ source: "flat", fallbackReason: "disabled" })
   })
 
   test("a cart over the free-delivery threshold ships free even with Aramex pricing on", async () => {

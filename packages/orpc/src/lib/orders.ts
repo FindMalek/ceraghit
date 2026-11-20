@@ -2,7 +2,6 @@ import { ORPCError } from "@orpc/server"
 import { type Db, orderAudit, orderItems, orders, products, productVariants } from "@workspace/db"
 import {
   type Currency,
-  estimateShipping,
   holdDays,
   type ManualPaymentMethod,
   type OrderInput,
@@ -19,7 +18,8 @@ import { recordAmountPaid, recordOrderCreated, recordOrderPaid, recordPaymentSet
 import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentReceivedEmail } from "./order-emails"
 import type { PaymentCheck } from "./payments"
 import { unitMinor } from "./pricing"
-import { effectivePaymentMethods, getPaymentSettings, getSettings } from "./settings"
+import { effectivePaymentMethods, getPaymentSettings } from "./settings"
+import { quoteShipping } from "./shipping/quote"
 
 /** A pending order holds its stock this long, then the pieces go back on sale. */
 export const HOLD_MINUTES = 45
@@ -228,16 +228,18 @@ export async function createOrder(services: Services, input: OrderInput) {
     return { row, variant, quantity: item.quantity }
   })
 
-  const settings = await getSettings(db)
   const unit = ({ row, variant }: (typeof lines)[number]) => unitMinor(row, variant, input.currency)
   const subtotal = lines.reduce((sum, l) => sum + unit(l) * l.quantity, 0)
-  const quote = estimateShipping(
-    settings.shippingRates,
-    lines.map(({ row, quantity }) => ({ ...row, quantity })),
-    input.country,
-    input.currency,
-    subtotal,
-  )
+  const quote = await quoteShipping(services, {
+    lines: lines.map(({ row, quantity }) => ({ ...row, quantity })),
+    country: input.country,
+    city: input.city,
+    ...(input.postalCode ? { postalCode: input.postalCode } : {}),
+    currency: input.currency,
+    subtotalMinor: subtotal,
+    // The carrier's rate only applies when the customer sent the price they saw, so nobody is charged more than shown.
+    allowProvider: input.expectedShippingMinor !== undefined,
+  })
   if (!quote.available) {
     throw publicError(
       "BAD_REQUEST",
@@ -246,6 +248,13 @@ export async function createOrder(services: Services, input: OrderInput) {
     )
   }
   const shipping = quote.amountMinor
+  if (input.expectedShippingMinor !== undefined && input.expectedShippingMinor !== shipping) {
+    throw publicError(
+      "CONFLICT",
+      "shipping_changed",
+      "The delivery price changed, check the total and place the order again.",
+    )
+  }
   const total = subtotal + shipping
 
   const created = await db.transaction(async (tx) => {
