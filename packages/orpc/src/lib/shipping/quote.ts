@@ -12,7 +12,7 @@ import { resolveShipping } from "./resolve"
 import { getShippingSettings } from "./settings"
 import type { Parcel, ShipAddress, ShippingProvider } from "./types"
 
-export type FallbackReason = "disabled" | "no-city" | "timeout" | "error" | "currency"
+export type FallbackReason = "disabled" | "no-city" | "timeout" | "error" | "currency" | "limited"
 
 export type ShippingQuoteResult = ShippingEstimate & { source: "aramex" | "flat"; fallbackReason?: FallbackReason }
 
@@ -25,6 +25,8 @@ export interface ShippingQuoteInput {
   subtotalMinor: number
   /** False prices with the flat rates only, even when the owner turned provider pricing on. Defaults to true. */
   allowProvider?: boolean
+  /** Asked once, only when the carrier really is about to be called (never for a cache hit). False answers flat. */
+  beforeProviderCall?: () => Promise<boolean>
 }
 
 const QUOTE_TIMEOUT_MS = 4000
@@ -78,9 +80,11 @@ export async function providerAmount(
   now: number,
   cacheKey: string,
   timeoutMs = QUOTE_TIMEOUT_MS,
+  beforeCall?: () => Promise<boolean>,
 ): Promise<{ amountMinor: number } | { fallback: FallbackReason }> {
   const hit = cache.get(cacheKey)
   if (hit && hit.expires > now) return hit.value
+  if (beforeCall && !(await beforeCall())) return { fallback: "limited" }
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
     const quote = await Promise.race([
@@ -171,6 +175,8 @@ export async function quoteShipping(services: Services, input: ShippingQuoteInpu
       { from, to, parcel, currency: input.currency },
       services.now().getTime(),
       key,
+      QUOTE_TIMEOUT_MS,
+      input.beforeProviderCall,
     )
   } catch {
     return flatResult("error")

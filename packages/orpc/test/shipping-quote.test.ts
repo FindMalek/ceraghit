@@ -76,6 +76,21 @@ describe("provider price", () => {
     expect(Date.now() - started).toBeLessThan(1000)
   })
 
+  test("the limit gate is asked only when the carrier is really called, and a refusal answers flat", async () => {
+    const p = provider(async () => quote(9_500))
+    let asked = 0
+    const gate = (allowed: boolean) => async () => {
+      asked += 1
+      return allowed
+    }
+    expect(await providerAmount(p, req, NOW, "k", 30, gate(false))).toEqual({ fallback: "limited" })
+    expect(p.calls).toBe(0)
+    expect(await providerAmount(p, req, NOW, "k", 30, gate(true))).toEqual({ amountMinor: 9_500 })
+    expect(await providerAmount(p, req, NOW + 1_000, "k", 30, gate(false))).toEqual({ amountMinor: 9_500 })
+    expect(asked).toBe(2)
+    expect(p.calls).toBe(1)
+  })
+
   test("a provider error falls back and never throws", async () => {
     const p = provider(async () => {
       throw new Error("HasErrors")

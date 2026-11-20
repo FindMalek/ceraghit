@@ -153,7 +153,7 @@ export const catalogRouter = {
           currency: input.currency,
           subtotalMinor,
           // Each carrier call costs time and quota: a visitor past the limit still gets the flat price.
-          allowProvider: input.city?.trim() ? await withinLimit(context, "shippingQuote") : true,
+          beforeProviderCall: () => withinLimit(context, "shippingQuote"),
           ...(input.city ? { city: input.city } : {}),
           ...(input.postalCode ? { postalCode: input.postalCode } : {}),
         })

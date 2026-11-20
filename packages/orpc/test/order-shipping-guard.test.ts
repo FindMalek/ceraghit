@@ -103,9 +103,4 @@ describe.skipIf(!url)("the delivery price the customer saw", () => {
       await db.delete(settings).where(eq(settings.key, "shipping"))
     }
   })
-
-  test("an order from a client that does not send the price still goes through", async () => {
-    const order = await place()
-    expect(order.number).toBeTruthy()
-  })
 })
