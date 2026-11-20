@@ -114,3 +114,20 @@ test("hero rotates to the next photo after five seconds", async ({ page, home })
   await expect(slides.nth(1)).toHaveClass(/opacity-100/)
   await expect(slides.first()).toHaveClass(/opacity-0/)
 })
+
+test("the hero slideshow can be paused and resumed with the keyboard", async ({ page, home, step, appLocale }) => {
+  await page.goto(home())
+  const pause = page.getByRole("button", { name: t(appLocale, "home.carouselPause") })
+  await step("the slideshow offers a pause button", async () => {
+    await expect(pause).toBeVisible()
+  })
+  await step("pausing turns it into a resume button", async () => {
+    await pause.focus()
+    await page.keyboard.press("Enter")
+    const resume = page.getByRole("button", { name: t(appLocale, "home.carouselPlay") })
+    await expect(resume).toBeVisible()
+    await expect(pause).toHaveCount(0)
+    await page.keyboard.press("Enter")
+    await expect(pause).toBeVisible()
+  })
+})
