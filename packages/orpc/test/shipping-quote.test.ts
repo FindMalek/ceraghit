@@ -4,7 +4,13 @@ import { runMigrations } from "@workspace/db/migrate"
 import { DEFAULT_SHIPPING_RATES, estimateShipping } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../src/context"
-import { clearShippingQuoteCache, parcelFor, providerAmount, quoteShipping } from "../src/lib/shipping/quote"
+import {
+  clearShippingQuoteCache,
+  parcelFor,
+  providerAmount,
+  quotedAmount,
+  quoteShipping,
+} from "../src/lib/shipping/quote"
 import { saveShippingSettings } from "../src/lib/shipping/settings"
 import type { Quote, ShippingProvider } from "../src/lib/shipping/types"
 
@@ -78,6 +84,43 @@ describe("provider price", () => {
   })
 })
 
+describe("what the customer pays", () => {
+  test("TND: the provider amount plus handling, rounded up to 500 millimes", () => {
+    expect(quotedAmount(8_200, 3_000, "TND")).toBe(11_500)
+    expect(quotedAmount(9_500, 3_000, "TND")).toBe(12_500)
+    expect(quotedAmount(9_501, 3_000, "TND")).toBe(13_000)
+  })
+
+  test("EUR: the provider amount plus handling, rounded up to 50 cents", () => {
+    expect(quotedAmount(1_210, 100, "EUR")).toBe(1_350)
+    expect(quotedAmount(1_250, 100, "EUR")).toBe(1_350)
+    expect(quotedAmount(1_251, 100, "EUR")).toBe(1_400)
+  })
+
+  test("handling is added before rounding, not after", () => {
+    // 4_300 + 3_200 rounds up to 7_500; rounding the provider amount first (4_500) and adding 3_200 would charge 7_700
+    expect(quotedAmount(4_300, 3_200, "TND")).toBe(7_500)
+  })
+})
+
+describe("provider answers that make no sense", () => {
+  beforeEach(clearShippingQuoteCache)
+
+  test("a zero, negative or fractional amount is never a price", async () => {
+    for (const amount of [0, -500, 12.5]) {
+      clearShippingQuoteCache()
+      expect(
+        await providerAmount(
+          provider(async () => quote(amount)),
+          req,
+          NOW,
+          "k",
+        ),
+      ).toEqual({ fallback: "error" })
+    }
+  })
+})
+
 test("the parcel carries the flat rates' packaging and a box tall enough for every piece", () => {
   const rates = { ...DEFAULT_SHIPPING_RATES, packagingPct: 20, packagingGrams: 300 }
   const lines = [
@@ -101,16 +144,23 @@ describe.skipIf(!url)("quote service", () => {
   const input = { lines, country: "TN", currency: "TND" as const, subtotalMinor: 50_000 }
 
   let studioBefore: typeof settings.$inferSelect | undefined
+  let shippingBefore: typeof settings.$inferSelect | undefined
 
   beforeAll(async () => {
     await runMigrations(db)
     ;[studioBefore] = await db.select().from(settings).where(eq(settings.key, "studio"))
+    ;[shippingBefore] = await db.select().from(settings).where(eq(settings.key, "shipping"))
     // the flat rates come from the studio row: start from the defaults whatever the db holds
     await db.delete(settings).where(eq(settings.key, "studio"))
     await db.delete(settings).where(eq(settings.key, "shipping"))
   })
   afterAll(async () => {
     await db.delete(settings).where(eq(settings.key, "shipping"))
+    if (shippingBefore)
+      await db
+        .insert(settings)
+        .values(shippingBefore)
+        .onConflictDoUpdate({ target: settings.key, set: { value: shippingBefore.value } })
     if (studioBefore)
       await db
         .insert(settings)
@@ -135,6 +185,13 @@ describe.skipIf(!url)("quote service", () => {
     const heavy = [{ ...lines[0]!, weightGrams: 40_000 }]
     const result = await quoteShipping(services, { ...input, lines: heavy, city: "Sfax" })
     expect(result).toMatchObject({ available: false, reason: "too-heavy", source: "flat" })
+  })
+
+  test("a cart over the free-delivery threshold ships free even with Aramex pricing on", async () => {
+    await saveShippingSettings(db, { provider: "aramex", quoteFromProvider: true })
+    const result = await quoteShipping(services, { ...input, city: "Sfax", subtotalMinor: 300_000 })
+    expect(result).toMatchObject({ source: "flat", freeApplied: true, amountMinor: 0 })
+    expect(result.fallbackReason).toBeUndefined()
   })
 
   test("Aramex pricing on without saved credentials falls back to the flat rate", async () => {

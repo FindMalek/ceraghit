@@ -41,6 +41,11 @@ const normalise = (text: string | undefined) =>
   (text ?? "").trim().toLowerCase().normalize("NFKD").replace(/\p{M}/gu, "")
 const ceilTo = (value: number, step: number) => Math.ceil(value / step - 1e-9) * step
 
+/** What the customer pays: the provider's amount plus the zone handling of the same currency, rounded up to a step. */
+export function quotedAmount(providerMinor: number, handlingMinor: number, currency: Currency): number {
+  return ceilTo(providerMinor + handlingMinor, currency === "TND" ? 500 : 50)
+}
+
 /**
  * One parcel: the summed weight with the same packaging as the flat rates. The box is the widest footprint with every
  * piece stacked on top of the others, so volume priced rates never see a box smaller than the cart.
@@ -87,6 +92,10 @@ export async function providerAmount(
       return { fallback: "timeout" }
     }
     // Aramex prices in its own currency, we never convert one into the other.
+    if (quote && (!Number.isInteger(quote.amountMinor) || quote.amountMinor <= 0)) {
+      remember(cacheKey, { fallback: "error" }, ERROR_TTL_MS, now)
+      return { fallback: "error" }
+    }
     if (!quote || quote.currency !== req.currency) {
       remember(cacheKey, { fallback: "currency" }, ERROR_TTL_MS, now)
       return { fallback: "currency" }
@@ -167,8 +176,7 @@ export async function quoteShipping(services: Services, input: ShippingQuoteInpu
 
   const zone = rates.zones.find((z) => z.id === flat.zoneId)
   const handling = zone?.handling[input.currency] ?? 0
-  const step = input.currency === "TND" ? 500 : 50
-  return { ...flat, amountMinor: ceilTo(answer.amountMinor + handling, step), source: "aramex" }
+  return { ...flat, amountMinor: quotedAmount(answer.amountMinor, handling, input.currency), source: "aramex" }
 }
 
 /** For tests: forget everything cached. */
