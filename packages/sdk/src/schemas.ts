@@ -690,7 +690,7 @@ export const shippingQuoteSchema = z.object({
   subtotalMinor: z.number().int(),
   /** Who set the price: the carrier's own rate or the studio's flat zone rates. */
   source: z.enum(["aramex", "flat"]),
-  /** No city yet, the price may change once the address is known. */
+  /** The carrier would price this once the city is known, so the amount shown may still change. */
   estimate: z.boolean(),
 })
 

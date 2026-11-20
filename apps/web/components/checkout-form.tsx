@@ -28,7 +28,14 @@ import { useCartTotals } from "./cart-summary"
 import { CountrySelect } from "./country-select"
 import { useCurrency } from "./currency-provider"
 import { FormField } from "./form-field"
-import { ShippingAmount, ShippingDetail, ShippingNote, ShippingNudge, ShippingUnavailable } from "./shipping-quote-note"
+import {
+  ShippingAmount,
+  ShippingDetail,
+  ShippingLabel,
+  ShippingNote,
+  ShippingNudge,
+  ShippingUnavailable,
+} from "./shipping-quote-note"
 import { TermsCheckbox } from "./terms-checkbox"
 
 const FIELDS = ["customerName", "email", "phone", "city", "address", "postalCode", "note"] as const
@@ -56,10 +63,13 @@ export function CheckoutForm({
   const totals = useCartTotals(lines)
   const [chosen, setChosen] = useState<PaymentMethod | null>(null)
   const [country, setCountry] = useState<(typeof SHIPPING_COUNTRIES)[number]>("TN")
+  const [city, setCity] = useState("")
+  const [postalCode, setPostalCode] = useState("")
   const quote = useShippingQuote(
     lines.map((l) => ({ productId: l.productId, variantId: l.variantId ?? undefined, quantity: l.quantity })),
     country,
     currency,
+    { city, postalCode },
   )
   const shipping = quote.data?.available ? quote.data.amountMinor : 0
   const canPay = quote.data?.available === true
@@ -78,6 +88,8 @@ export function CheckoutForm({
       },
       onError: (error) => {
         showError(apiError(error, t("failed")))
+        // A changed delivery price: show the new one so the customer can place the order again knowing it.
+        quote.refetch()
         router.refresh()
       },
     }),
@@ -112,6 +124,8 @@ export function CheckoutForm({
       address: value("address"),
       postalCode: value("postalCode") || undefined,
       note: value("note") || undefined,
+      // The price on screen, so a different one is refused and never charged without the customer seeing it.
+      expectedShippingMinor: quote.data?.available ? quote.data.amountMinor : undefined,
     })
     if (!parsed.success || !accepted) {
       const next: typeof errors = {}
@@ -166,10 +180,22 @@ export function CheckoutForm({
               onChange={setCountry}
               autoComplete="country"
             />
-            <FormField id="city" label={t("city")} autoComplete="address-level2" error={errors.city} />
+            <FormField
+              id="city"
+              label={t("city")}
+              autoComplete="address-level2"
+              error={errors.city}
+              onChange={(event) => setCity(event.target.value)}
+            />
           </div>
           <FormField id="address" label={t("address")} autoComplete="street-address" error={errors.address} />
-          <FormField id="postalCode" label={t("postalCode")} autoComplete="postal-code" className="sm:max-w-48" />
+          <FormField
+            id="postalCode"
+            label={t("postalCode")}
+            autoComplete="postal-code"
+            className="sm:max-w-48"
+            onChange={(event) => setPostalCode(event.target.value)}
+          />
           <FormField id="note" label={t("note")} multiline placeholder={t("notePlaceholder")} />
         </fieldset>
         <fieldset className="space-y-3">
@@ -230,7 +256,9 @@ export function CheckoutForm({
             <dd className="tabular-nums">{formatMoney(totals.subtotal, currency, locale)}</dd>
           </div>
           <div className="flex items-center justify-between">
-            <dt className="text-muted-foreground">{tc("shipping")}</dt>
+            <dt className="text-muted-foreground">
+              <ShippingLabel quote={quote} />
+            </dt>
             <dd>
               <ShippingAmount quote={quote} />
             </dd>

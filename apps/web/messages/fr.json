@@ -278,7 +278,9 @@
     "tooBig": "Cette commande est trop volumineuse pour une livraison en ligne. Écrivez-nous pour un devis de transport.",
     "contact": "Demander un devis",
     "free": "Livraison offerte",
-    "nudge": "Plus que {amount} pour la livraison offerte"
+    "nudge": "Plus que {amount} pour la livraison offerte",
+    "estimated": "Livraison estimée",
+    "carrier": "Livraison Aramex"
   },
   "legal": {
     "draft": "Projet à faire valider par l'atelier",

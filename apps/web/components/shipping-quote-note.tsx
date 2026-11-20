@@ -21,6 +21,15 @@ export function ShippingAmount({ quote }: { quote: Quote }) {
   return <span className="tabular-nums">{formatMoney(quote.data.amountMinor, currency, locale)}</span>
 }
 
+/** "Livraison" by default, "estimée" while the carrier's price may still change, "Aramex" once it set the price. */
+export function ShippingLabel({ quote }: { quote: Quote }) {
+  const t = useTranslations("shipping")
+  const tc = useTranslations("cart")
+  if (quote.data?.source === "aramex") return t("carrier")
+  if (quote.data?.estimate) return t("estimated")
+  return tc("shipping")
+}
+
 export function ShippingDetail({ quote }: { quote: Quote }) {
   const t = useTranslations("shipping")
   if (!quote.data?.available) return null

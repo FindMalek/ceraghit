@@ -278,7 +278,9 @@
     "tooBig": "This order is too large for online delivery. Write to us for a transport quote.",
     "contact": "Ask for a quote",
     "free": "Free delivery",
-    "nudge": "Only {amount} more for free delivery"
+    "nudge": "Only {amount} more for free delivery",
+    "estimated": "Estimated delivery",
+    "carrier": "Aramex delivery"
   },
   "legal": {
     "draft": "Draft to be validated by the studio",
