@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises"
 import type { Page } from "@playwright/test"
 import { E2E } from "../../env"
 import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
@@ -5,7 +6,7 @@ import { BUYER } from "../../helpers/checkout"
 import { completeSetup, openDb } from "../../helpers/db"
 import { t } from "../../helpers/messages"
 import { pieceFor } from "../../support/catalogue"
-import { auditRows, orderRow, shippingRow, stockOf } from "../../support/db"
+import { auditRows, orderRow, salesWindow, shippingRow, stockOf } from "../../support/db"
 
 test.beforeAll(async () => {
   const db = openDb()
@@ -187,5 +188,79 @@ test(
       await page.getByRole("option", { name: "Annulée", exact: true }).click()
       await expect(row).toHaveCount(0)
     })
+  },
+)
+
+const decimal = (minor: number, currency: "TND" | "EUR") =>
+  currency === "TND" ? (minor / 1000).toFixed(3) : (minor / 100).toFixed(2)
+
+test(
+  "the csv export is one currency per file and adds up to the paid orders",
+  { tag: ["@fr"] },
+  async ({ page, step }, testInfo) => {
+    const piece = await pieceFor(page.request, testInfo)
+    const tnd = await placeOrder(page, piece.id, "cod")
+    const eur = await placeOrder(page, piece.id, "transfer")
+    await loginAsOwnerAndWait(page)
+
+    await step(
+      "a cash on delivery order is shipped (paid, TND) and a transfer order is marked paid (EUR)",
+      async () => {
+        await openOrder(page, tnd.number)
+        await page.getByRole("button", { name: "Marquer expédiée", exact: true }).click()
+        await page.getByRole("button", { name: "Confirmer l'expédition" }).click()
+        await expect.poll(async () => (await orderRow(tnd.number)).status).toBe("fulfilled")
+        await openOrder(page, eur.number)
+        await page.getByRole("button", { name: "Marquer payée", exact: true }).click()
+        await page.getByRole("button", { name: "Confirmer le paiement" }).click()
+        await expect.poll(async () => (await orderRow(eur.number)).status).toBe("paid")
+      },
+    )
+
+    const download = async (currency: "TND" | "EUR"): Promise<string[][]> => {
+      await page.goto(`${E2E.dashboardUrl}/orders`)
+      await page.getByRole("button", { name: "Exporter en CSV" }).click()
+      await page.getByLabel("Devise").click()
+      await page
+        .getByRole("option", { name: new RegExp(currency === "TND" ? "dinar|TND|DT" : "euro|EUR|€", "i") })
+        .click()
+      const [file] = await Promise.all([
+        page.waitForEvent("download"),
+        page.getByRole("button", { name: "Télécharger le CSV" }).click(),
+      ])
+      expect(file.suggestedFilename()).toContain(`commandes-${currency}-`)
+      const text = await readFile((await file.path()) as string, "utf8")
+      return text
+        .replace(/^﻿/, "")
+        .trim()
+        .split("\r\n")
+        .map((line) => line.split(";"))
+    }
+
+    for (const [currency, order] of [
+      ["TND", tnd],
+      ["EUR", eur],
+    ] as const) {
+      await step(`the ${currency} file holds ${currency} orders only and its total is the db sum`, async () => {
+        const [header, ...lines] = await download(currency)
+        const total = lines.at(-1)
+        const rows = lines.slice(0, -1)
+        const currencyColumn = header?.indexOf("devise") ?? -1
+        const totalColumn = header?.indexOf("total") ?? -1
+        expect(currencyColumn).toBeGreaterThan(-1)
+        expect(rows.length).toBeGreaterThan(0)
+        for (const row of rows) expect(row[currencyColumn], `row ${row[0]}`).toBe(currency)
+        const numbers = rows.map((row) => row[0])
+        expect(numbers).toContain(order.number)
+        const other = currency === "TND" ? eur : tnd
+        expect(numbers, "the other currency never leaks in").not.toContain(other.number)
+
+        const expected = await salesWindow(currency)
+        expect(rows.length).toBe(expected.orders)
+        expect(total?.[0]).toBe("TOTAL")
+        expect(total?.[totalColumn]).toBe(decimal(expected.total, currency))
+        expect(total?.[currencyColumn]).toBe(currency)
+      })
+    }
   },
 )

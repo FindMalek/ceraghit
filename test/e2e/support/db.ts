@@ -78,3 +78,14 @@ export async function shippingRow(number: string): Promise<ShippingRow> {
   if (!row) throw new Error(`no order ${number}`)
   return row
 }
+
+/** What the CSV export of the last 30 studio days (Africa/Tunis) must add up to, straight from the db. */
+export async function salesWindow(currency: "TND" | "EUR"): Promise<{ total: number; orders: number }> {
+  const [row] = await sql<{ total: number; orders: number }[]>`
+    select coalesce(sum(total_minor), 0)::int as total, count(*)::int as orders
+    from orders
+    where currency = ${currency} and status in ('paid', 'fulfilled')
+      and paid_at >= (date_trunc('day', now() at time zone 'Africa/Tunis') - interval '29 days') at time zone 'Africa/Tunis'
+      and paid_at < (date_trunc('day', now() at time zone 'Africa/Tunis') + interval '1 day') at time zone 'Africa/Tunis'`
+  return row ?? { total: 0, orders: 0 }
+}
