@@ -1,6 +1,7 @@
 import { E2E } from "../../env"
 import { expect, test } from "../../fixtures"
 import { BUYER } from "../../helpers/checkout"
+import { t } from "../../helpers/messages"
 import { pieceFor } from "../../support/catalogue"
 import { ageOrder, orderRow, stockOf } from "../../support/db"
 
@@ -29,8 +30,10 @@ test(
       expect(made.ok()).toBe(true)
       return (await made.json()) as { number: string; token: string }
     }
-    const show = (order: { number: string; token: string }) =>
-      page.goto(`${E2E.webUrl}/order/${order.number}?t=${order.token}`)
+    const show = async (order: { number: string; token: string }, headline: string) => {
+      await page.goto(`${E2E.webUrl}/order/${order.number}?t=${order.token}`)
+      await expect(page.getByRole("status").first()).toContainText(headline)
+    }
     const release = async () => {
       const res = await api.post(`${E2E.apiUrl}/cron/release-holds`, {
         headers: { authorization: `Bearer ${E2E.cronSecret}` },
@@ -46,19 +49,21 @@ test(
       await ageOrder(transfer.number, 6 * DAY)
       await release()
       expect((await orderRow(transfer.number)).status).toBe("pending_payment")
-      await show(transfer)
+      await show(transfer, t("fr", "order.transferTitle"))
     })
     await step("past the 7 day transfer hold the order is cancelled and its stock comes back", async () => {
       await ageOrder(transfer.number, 2 * DAY)
       await release()
       expect((await orderRow(transfer.number)).status).toBe("cancelled")
       expect(await stockOf(piece.id)).toBe(stock - 1)
+      await show(transfer, t("fr", "order.status.cancelled"))
     })
     await step("a cash on delivery order has no hold: it stays pending however old it is", async () => {
       await ageOrder(cod.number, 60 * DAY)
       await release()
       expect((await orderRow(cod.number)).status).toBe("pending_payment")
       expect(await stockOf(piece.id)).toBe(stock - 1)
+      await show(cod, t("fr", "order.codTitle"))
     })
   },
 )
