@@ -89,3 +89,9 @@ export async function salesWindow(currency: "TND" | "EUR"): Promise<{ total: num
       and paid_at < (date_trunc('day', now() at time zone 'Africa/Tunis') + interval '1 day') at time zone 'Africa/Tunis'`
   return row ?? { total: 0, orders: 0 }
 }
+
+export async function orderId(number: string): Promise<string> {
+  const [row] = await sql<{ id: string }[]>`select id from orders where number = ${number}`
+  if (!row) throw new Error(`no order ${number}`)
+  return row.id
+}

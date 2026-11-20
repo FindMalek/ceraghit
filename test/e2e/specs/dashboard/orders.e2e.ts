@@ -6,7 +6,7 @@ import { BUYER } from "../../helpers/checkout"
 import { completeSetup, openDb } from "../../helpers/db"
 import { t } from "../../helpers/messages"
 import { pieceFor } from "../../support/catalogue"
-import { auditRows, orderRow, salesWindow, shippingRow, stockOf } from "../../support/db"
+import { auditRows, orderId, orderRow, salesWindow, shippingRow, stockOf } from "../../support/db"
 
 test.beforeAll(async () => {
   const db = openDb()
@@ -262,5 +262,65 @@ test(
         expect(total?.[currencyColumn]).toBe(currency)
       })
     }
+  },
+)
+
+test(
+  "the api refuses illegal order moves and a payment is recorded once",
+  { tag: ["@fr", "@desktop"] },
+  async ({ page, playwright, step }, testInfo) => {
+    const piece = await pieceFor(page.request, testInfo)
+    const pending = await placeOrder(page, piece.id, "transfer")
+    const other = await placeOrder(page, piece.id, "transfer")
+    await loginAsOwnerAndWait(page)
+    const api = (id: string, path: string) => `${E2E.apiUrl}/v1/admin/orders/${id}/${path}`
+    const post = async (id: string, path: string, data: object) =>
+      page.request.post(api(id, path), { headers: { "x-csrf-token": "orpc" }, data })
+    const pendingId = await orderId(pending.number)
+    const otherId = await orderId(other.number)
+
+    await step("moves the schema or the state machine do not allow are refused and change nothing", async () => {
+      for (const status of ["pending_payment", "refunded", "fulfilled"]) {
+        const res = await post(pendingId, "status", { status })
+        // a transfer order that is still pending can be paid or cancelled, not refunded, and not shipped without a payment
+        expect(res.status(), `pending -> ${status}`).toBeGreaterThanOrEqual(400)
+        expect(res.status(), `pending -> ${status}`).toBeLessThan(500)
+      }
+      expect((await orderRow(pending.number)).status).toBe("pending_payment")
+      const cancel = await post(pendingId, "status", { status: "cancelled" })
+      expect(cancel.ok()).toBe(true)
+      const revive = await post(pendingId, "status", { status: "paid" })
+      expect(revive.status(), "cancelled -> paid").toBeGreaterThanOrEqual(400)
+      expect((await orderRow(pending.number)).status).toBe("cancelled")
+    })
+
+    await step("a visitor can neither move an order nor record a payment", async () => {
+      const visitor = await playwright.request.newContext()
+      for (const [path, data] of [
+        ["status", { status: "paid" }],
+        ["mark-paid", { method: "transfer", reference: null, note: null, totalMinor: 1, currency: "EUR" }],
+      ] as const) {
+        const res = await visitor.post(api(otherId, path), { headers: { "x-csrf-token": "orpc" }, data })
+        expect(res.status(), path).toBe(401)
+      }
+      await visitor.dispose()
+      expect((await orderRow(other.number)).status).toBe("pending_payment")
+    })
+
+    await step("a payment for the wrong amount or currency is refused, the right one is recorded once", async () => {
+      const order = await orderRow(other.number)
+      const body = { method: "transfer", reference: "VIR-1", note: null, totalMinor: order.totalMinor, currency: "EUR" }
+      const wrongAmount = await post(otherId, "mark-paid", { ...body, totalMinor: order.totalMinor - 1 })
+      expect(wrongAmount.status()).toBeGreaterThanOrEqual(400)
+      const wrongCurrency = await post(otherId, "mark-paid", { ...body, currency: "TND" })
+      expect(wrongCurrency.status()).toBeGreaterThanOrEqual(400)
+      expect((await orderRow(other.number)).status).toBe("pending_payment")
+
+      const first = await post(otherId, "mark-paid", body)
+      expect(await first.json()).toEqual({ status: "paid", alreadyPaid: false })
+      const second = await post(otherId, "mark-paid", body)
+      expect(await second.json()).toEqual({ status: "paid", alreadyPaid: true })
+      expect(await auditRows(other.number), "one payment, one audit row").toHaveLength(1)
+    })
   },
 )
