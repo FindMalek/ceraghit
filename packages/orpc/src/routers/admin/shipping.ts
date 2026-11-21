@@ -37,6 +37,7 @@ async function view(context: Parameters<typeof describeIntegration>[0]) {
     mode: await getShippingSettings(context.db),
     aramex: await describeIntegration(context, "aramex"),
     appEnv: context.config.appEnv,
+    simulated: context.config.aramexFake === true,
     degraded: (await resolveShipping(context).catch(() => null))?.degraded ?? null,
   }
 }
