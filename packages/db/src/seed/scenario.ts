@@ -28,6 +28,36 @@ const PEOPLE = [
   "Julien Martin",
 ]
 const TN_CITIES = ["Tunis", "La Marsa", "Sousse", "Sfax", "Hammamet", "Nabeul"]
+/** Stands in for the Aramex list on a demo, so the checkout city picker shows without Aramex. Every demo city is in it. */
+export const DEMO_TN_CITIES = [
+  "Ariana",
+  "Béja",
+  "Ben Arous",
+  "Bizerte",
+  "Djerba Houmt Souk",
+  "Gabès",
+  "Gafsa",
+  "Hammamet",
+  "Jendouba",
+  "Kairouan",
+  "Kasserine",
+  "Kébili",
+  "La Marsa",
+  "Le Kef",
+  "Mahdia",
+  "Manouba",
+  "Médenine",
+  "Monastir",
+  "Nabeul",
+  "Sfax",
+  "Sidi Bouzid",
+  "Siliana",
+  "Sousse",
+  "Tataouine",
+  "Tozeur",
+  "Tunis",
+  "Zaghouan",
+]
 const STREETS: Record<string, string[]> = {
   Tunis: ["rue de Marseille", "avenue Habib Bourguiba", "rue Charles de Gaulle"],
   "La Marsa": ["avenue Taieb Mhiri", "rue Hédi Chaker"],

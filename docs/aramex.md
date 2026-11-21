@@ -65,3 +65,14 @@ unsaved values, never stores them, 10 tests per 10 minutes) and saves. The test 
 - `/health` reports `shipping: "<provider>:<environment>"`.
 - Env fallback (credentials only, always the test host; live needs the dashboard settings): `ARAMEX_USERNAME`, `ARAMEX_PASSWORD`, `ARAMEX_ACCOUNT_NUMBER`, `ARAMEX_ACCOUNT_PIN`,
   `ARAMEX_ACCOUNT_ENTITY`, `ARAMEX_ACCOUNT_COUNTRY_CODE`.
+
+## Villes et adresses
+
+- Tunisian cities come from Aramex `FetchCities`, cached 7 days in `settings` (`aramex:cities:TN`), refreshed lazily with
+  a 4 s limit. When Aramex is down the stale list is served; with no list the checkout stays free text and never blocks.
+  Manual mode never calls Aramex and only serves the demo list (`fixture: true`, seeded from `DEMO_TN_CITIES`).
+- `public.catalog.shippingCities` (rate limited, cache only, 50 results, accent and case insensitive) feeds the checkout
+  picker. `createOrder` stores the list's spelling and refuses an unknown Tunisian city (`invalid_city`) only when a list exists.
+- Dashboard: `Mettre à jour la liste des villes` (Livraison) and `Vérifier l'adresse avec Aramex` (order sheet,
+  `ValidateAddress`; an Aramex failure answers `ok: false`, never a 500).
+- Not done: country postcode rules (`postCodeRequired`) and `IsAddressServiced`.
