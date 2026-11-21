@@ -31,6 +31,7 @@ const DASHBOARD_SPECS = [
   "products-crud",
   "payoneer",
   "tutorials",
+  "storage-meter",
 ] as const
 const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) =>
   DASHBOARD_SPECS.map((spec, s) => {

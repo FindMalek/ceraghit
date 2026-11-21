@@ -41,7 +41,7 @@ import { useAppConfig } from "@/components/app-config"
 import { LocalizedField } from "@/components/localized-field"
 import { MediaPicker } from "@/components/media-picker"
 import { MediaUploadZone } from "@/components/media-upload-zone"
-import { StorageUsage } from "@/components/storage-usage"
+import { StorageUsage, useStorageUsage } from "@/components/storage-usage"
 import { addImages, GALLERY_MAX, type GalleryItem, moveImage, removeImage, replaceImage, setMain } from "@/lib/gallery"
 import { fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 
@@ -196,6 +196,7 @@ export function ProductGalleryField({
 }) {
   const [picker, setPicker] = useState<"add" | number | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
+  const storage = useStorageUsage()
   const [altIndex, setAltIndex] = useState<number | null>(null)
   const [status, setStatus] = useState("")
   const sensors = useSensors(
@@ -269,7 +270,13 @@ export function ProductGalleryField({
           <ImagesIcon />
           Choisir dans la médiathèque
         </Button>
-        <Button type="button" variant="outline" className="h-11" disabled={full} onClick={() => setUploadOpen(true)}>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11"
+          disabled={full || storage.data?.level === "full"}
+          onClick={() => setUploadOpen(true)}
+        >
           <UploadSimpleIcon />
           Envoyer des photos
         </Button>
@@ -277,7 +284,7 @@ export function ProductGalleryField({
           {value.length} / {GALLERY_MAX} photos
         </p>
       </div>
-      <StorageUsage compact />
+      <StorageUsage variant="compact" />
       {picker !== null && (
         <MediaPicker
           open

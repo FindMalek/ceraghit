@@ -2,9 +2,11 @@ import {
   cleanupUploads,
   type JobCounts,
   purgeMailLog,
+  reconcileStorage,
   releaseExpiredHolds,
   type Services,
   sendExpiryMails,
+  storageUsage,
   sweepRateLimits,
 } from "@workspace/orpc"
 
@@ -22,7 +24,23 @@ async function mediaCleanup(services: Services, now: Date, dryRun: boolean): Pro
     `[cleanup] env=${services.config.deployEnv} dryRun=${dryRun} abandoned=${report.abandonedDeleted} unused=${report.unusedDeleted} freedBytes=${report.freedBytes} warned=${report.warned} errors=${report.errors}`,
   )
   if (dryRun) for (const item of items) console.info(`[cleanup] would remove ${item.reason} ${item.key} ${item.bytes}`)
-  return { ...counts, dryRun: dryRun ? 1 : 0 }
+  const {
+    dryRun: __,
+    errors: reconcileErrors,
+    ...reconcile
+  } = await reconcileStorage(services.db, services.storage, { now, dryRun })
+  console.info(
+    `[reconcile] env=${services.config.deployEnv} dryRun=${dryRun} listed=${reconcile.listed} missingRows=${reconcile.missingRows} orphansDeleted=${reconcile.orphansDeleted} rowsDropped=${reconcile.rowsDropped} sizesFixed=${reconcile.sizesFixed} drift=${reconcile.driftBytesBefore}->${reconcile.driftBytesAfter} errors=${reconcileErrors}`,
+  )
+  const usage = await storageUsage(services.db)
+  return {
+    ...counts,
+    ...reconcile,
+    reconcileErrors,
+    usedBytes: usage.usedBytes,
+    percent: usage.percent,
+    dryRun: dryRun ? 1 : 0,
+  }
 }
 
 /**
