@@ -205,14 +205,16 @@ production).
 **Cloudflare R2**: bucket `ceraghit-prod`, a public custom domain (`cdn.<domain>`) for `S3_PUBLIC_URL`, an API token scoped
 to that bucket, and a CORS rule allowing `PUT` from the dashboard **and the web** origins (product photos are uploaded by
 the dashboard, customer photos on `/custom` by the storefront, both straight to the bucket; the web ones are limited to
-5 MB and signed with their exact size and type). Exact rule, nothing else (no `*`, no `GET`, the api never sends CORS headers either):
+5 MB and signed with their exact size and type). Exact rules, nothing else (no `*`, `GET` only from the dashboard, for the tutorial video captions, the api never sends CORS headers either):
 
 ```json
-[{ "AllowedOrigins": ["https://ceraghit.com", "https://dashboard.ceraghit.com"], "AllowedMethods": ["PUT"], "AllowedHeaders": ["content-type"], "MaxAgeSeconds": 3600 }]
+[{ "AllowedOrigins": ["https://ceraghit.com", "https://dashboard.ceraghit.com"], "AllowedMethods": ["PUT"], "AllowedHeaders": ["content-type"], "MaxAgeSeconds": 3600 },
+ { "AllowedOrigins": ["https://dashboard.ceraghit.com"], "AllowedMethods": ["GET", "HEAD"], "MaxAgeSeconds": 3600 }]
 ```
 
 **Garage** (the-keep): bucket `ceraghit-dev` with key `ceraghit-dev-key` (previews and local), CORS allowing `PUT` from
-`*.ceraghit.findmalek.engineer`.
+`*.ceraghit.findmalek.engineer`, and `GET` from the dashboard preview origins (one rule per origin: Garage sends the whole list
+in `Access-Control-Allow-Origin` when a rule has several, which browsers refuse).
 
 **DNS** (Vercel DNS, `findmalek.engineer`): `ceraghit` and `*.ceraghit` CNAME → `home.findmalek.engineer`.
 

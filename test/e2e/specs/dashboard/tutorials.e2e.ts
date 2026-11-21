@@ -70,6 +70,11 @@ test("a video link opens the player with its hosted file and captions, Esc close
   await loginAsOwnerAndWait(page)
   const mobile = (page.viewportSize()?.width ?? 1440) < 768
   const device = mobile ? "mobile" : "desktop"
+  await page.addInitScript(() => {
+    const seen: string[] = []
+    ;(window as unknown as { csp: string[] }).csp = seen
+    document.addEventListener("securitypolicyviolation", (e) => seen.push(`${e.violatedDirective} ${e.blockedURI}`))
+  })
   await page.goto(`${help}?video=${PUBLISHED}`)
   const player = page.getByRole("dialog", { name: "Rechercher une pièce" })
 
@@ -81,6 +86,20 @@ test("a video link opens the player with its hosted file and captions, Esc close
     await expect(video.locator("track")).toHaveAttribute("srclang", "fr")
     await expect(video.locator("track")).toHaveAttribute("src", `/api/files/tutorials/${PUBLISHED}-${device}.vtt`)
     await expect(player.getByRole("heading", { name: "Vidéos liées" })).toBeVisible()
+  })
+  await step("the video really loads and plays, its captions load, and the policy blocks nothing", async () => {
+    const video = player.locator("video")
+    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.readyState)).toBeGreaterThanOrEqual(1)
+    await video.evaluate(async (v: HTMLVideoElement) => {
+      v.muted = true
+      await v.play()
+    })
+    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(0)
+    expect(await video.evaluate((v: HTMLVideoElement) => v.error)).toBeNull()
+    await expect
+      .poll(() => video.evaluate((v: HTMLVideoElement) => v.textTracks[0]?.cues?.length ?? 0))
+      .toBeGreaterThan(0)
+    expect(await page.evaluate(() => (window as unknown as { csp: string[] }).csp)).toEqual([])
   })
   await step("the file is served through the dashboard proxy", async () => {
     const res = await request.get(`${E2E.dashboardUrl}/api/files/tutorials/${PUBLISHED}-${device}.mp4`)

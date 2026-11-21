@@ -19,6 +19,13 @@ Upload under the key prefix `tutorials/` (the api adds the environment prefix on
 `<id>` is the catalogue id, for example `07-rechercher-produit`. The dashboard loads them through
 `/api/files/<prefix>tutorials/...` (the api redirects to the CDN or a signed url).
 
+Production files are H.264 `mp4` served as `video/mp4` with Range requests (R2 and Garage both support them), captions
+are `text/vtt`, the poster a `jpg`. The video element is `crossorigin="anonymous"`, so the bucket or CDN must send
+`Access-Control-Allow-Origin` for the dashboard origin on GET (captions are fetched in CORS mode). Garage returns an
+invalid header when one CORS rule lists several origins: use one rule per origin. The dashboard CSP must allow the CDN
+or bucket origin in `media-src` (`buildCsp` takes it from `S3_ENDPOINT` and `S3_PUBLIC_URL`, so the dashboard needs
+those variables).
+
 ## Manifest
 
 ```json

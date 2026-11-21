@@ -86,6 +86,7 @@ function Player({
           key={`${tutorial.id}-${device}`}
           controls
           playsInline
+          crossOrigin="anonymous"
           preload="metadata"
           poster={files?.poster ? fileUrl(prefix, keys.poster) : undefined}
           src={fileUrl(prefix, keys.video)}

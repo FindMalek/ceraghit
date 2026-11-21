@@ -16,9 +16,10 @@ const FILES = { desktop: true, mobile: true, captions: true, poster: true }
 export const PUBLISHED = "07-rechercher-produit"
 
 /**
- * Playwright's Chromium has no H.264, so the sample is a VP8 webm stored under the usual `.mp4` key: the player
+ * The one video the e2e bucket holds: a 2 second clip under the keys the recorder upload uses, plus the manifest.
+ * Playwright's Chromium has no H.264, so the clip is a VP8 webm stored under the usual `.mp4` key: the player
  * does not care about the extension and Chromium sniffs the container.
- * The one video the e2e bucket holds: a 1 second sample under the keys the recorder upload uses, plus the manifest. */
+ */
 const OBJECTS: [string, Buffer | string, string][] = [
   ["tutorials/manifest.json", JSON.stringify({ videos: { [PUBLISHED]: FILES } }), "application/json"],
   [`tutorials/${PUBLISHED}.jpg`, fixture("poster.jpg"), "image/jpeg"],

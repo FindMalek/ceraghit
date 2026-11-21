@@ -42,7 +42,12 @@ export const tutorialSchema = z.object({
 })
 export type Tutorial = z.infer<typeof tutorialSchema>
 
-/** The catalogue of tutorial videos, from the feature inventory. Files live in the bucket, never in git. */
+/**
+ * The catalogue of tutorial videos, from the feature inventory. Files live in the bucket, never in git.
+ * Videos marked `status: "soon"` wait for their feature, remove the status when it ships:
+ * 27, 48, 77, 91 Payoneer (#330, link per order #169), 76 Konnect keys (#322), 49 and 92 Aramex shipping and
+ * tracking (#192, #195), 68 site photos page (#200, #201).
+ */
 export const TUTORIALS: readonly Tutorial[] = [
   {
     id: "01-decouvrir-accueil",
@@ -825,7 +830,7 @@ export const TUTORIALS: readonly Tutorial[] = [
     devices: ["desktop", "mobile"],
     lengthSeconds: 60,
     tags: ["répondre", "email", "copier", "appeler", "whatsapp"],
-    description: "Répondre à un client par email, par téléphone ou sur WhatsApp.",
+    description: "Répondre à une demande : ouvrir l'email, copier l'adresse ou appeler, puis noter la suite.",
   },
   {
     id: "71-mode-livraison-grille",
@@ -882,7 +887,7 @@ export const TUTORIALS: readonly Tutorial[] = [
     devices: ["desktop", "mobile"],
     lengthSeconds: 75,
     tags: ["délai", "annulation automatique", "stock réservé", "virement", "jours"],
-    description: "Choisir combien de temps une commande non payée garde son stock avant d'être annulée.",
+    description: "Régler après combien de jours une commande en virement ou à la livraison non payée est annulée.",
   },
   {
     id: "76-cles-konnect",
@@ -1054,7 +1059,7 @@ export const TUTORIALS: readonly Tutorial[] = [
     devices: ["desktop", "mobile"],
     lengthSeconds: 75,
     tags: ["tâches planifiées", "cron", "nettoyage", "stock réservé", "photos"],
-    description: "Les tâches qui tournent seules : nettoyage, stock réservé, photos inutilisées.",
+    description: "Ce qui tourne tout seul : stock réservé, photos et emails.",
   },
   {
     id: "91-lien-payoneer-par-email",
