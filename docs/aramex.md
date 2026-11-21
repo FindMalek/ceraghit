@@ -92,3 +92,65 @@ The customer order page shows one line in our own words (never Aramex's text, wh
 notes). The tracking codes in `aramex/status.ts` (`SH005`, `SH006`, `SH003`, `SH069`, `SH012`) are guesses until the
 sandbox (#198); the English keywords are the fallback. The simulated Aramex tells its story from the waybill: `DELIVERED`
 ends delivered, `PROBLEM` ends on an incident, anything else is in transit.
+
+## Guessed values (confirm in the sandbox, then fix the one place that holds them)
+
+Nothing below was verified against a real Aramex account. Tick a line when the rep or a sandbox call confirms it and
+update the code named on the right. The Aramex docs PDFs return 403 to fetchers and no credentials exist yet.
+
+| Guess | Value in code | Where |
+| --- | --- | --- |
+| Test host | `https://ws.dev.aramex.net` (timed out from outside, probably IP allow-listed) | `ARAMEX_HOSTS` in `aramex/endpoints.ts` |
+| Live host | `https://ws.aramex.net` | same |
+| `Source` and `Version` in `ClientInfo` | see `aramex/client.ts` (`v1.0`) | `aramex/client.ts` |
+| WCF date format | `/Date(ms+hhmm)/` in both directions | `aramex/dates.ts` |
+| `LabelFileContents` | base64 string or number array, both parsed | `aramex/provider.ts` `decodeLabel` |
+| Product types | DOM `ONP`, EXP `PPX` (others seen: `OND`, `CDS`, `PDX`, `DPX`, `GPX`) | `DEFAULT_ARAMEX_CONFIG.productTypes`, dashboard form |
+| Payment type | `P` (prepaid; `C` collect, `3` third party) | `DEFAULT_ARAMEX_CONFIG.paymentType` |
+| Service codes | `CODS` cash on delivery, `INSR` insurance | `aramex/provider.ts` `createShipment`, `insuranceServiceCode` |
+| Label report | `ReportID` 9201, `ReportType` `URL` | `labelReportId`, `labelReportType` |
+| Commercial invoice report | `ReportID` 9202, sent on EXP only | `commercialInvoiceReportId` |
+| Delivered status | tracking `UpdateCode` `SH005` is the only code mapped (to `delivered`); every other code is stored as an event only | `deliveredCodes`, `tracking.ts` |
+| Pickup | location `Atelier`, vehicle `Car`, package type `Box`, window Monday to Saturday in `Africa/Tunis` (UTC+1), at least 2 hours, last pickup 1 hour before closing | `pickupLocation`, `aramex/provider.ts` `createPickup`, `pickups.ts` `windowOf` |
+| Contact `Type`, units | `KG`, `CM` | `aramex/provider.ts` |
+| Cancel | no cancel operation: `HoldShipments` is used | `aramex/provider.ts` `cancel` |
+| Customs | EXP goods declared in the order currency; `CustomsValueAmount` is the sum of the pieces, `ProviderHSCode` and `CommodityCode` both set | `aramex/provider.ts` `createShipment` |
+
+`createShippingProvider` refuses `mode: "live"` until `productTypes`, `labelReportId`, `paymentType` and `deliveredCodes`
+are passed explicitly, so a guess can never reach production by default.
+
+## Sandbox checklist (the day credentials arrive)
+
+Each step: do it on a preview with `ARAMEX_FAKE` unset, never on production.
+
+1. [ ] Confirm the test host with the rep. If it is not `https://ws.dev.aramex.net`, change `ARAMEX_HOSTS.test` (one line).
+2. [ ] Ask Aramex to allow-list the server address if they filter by IP (Vercel has no fixed egress address).
+3. [ ] Dashboard, Livraison: choose Aramex, enter the credentials in test mode, `Tester la connexion`. Both steps (`login`, `rate`) must be green.
+4. [ ] Checkout on the preview with Aramex quotes on: a Tunisian cash on delivery order, a Tunisian card or demo order, a French EUR order. Check an EUR order is quoted in EUR (otherwise it stays on flat rates, nothing to change).
+5. [ ] Create a domestic shipment (prepaid). The label PDF must print on the paper size the owner uses (`labelReportId`, `labelReportType`).
+6. [ ] Create a domestic cash on delivery shipment. `CODS` and the amount in TND must appear on the label.
+7. [ ] Create an international shipment to France with the customs declaration. Check the commercial invoice PDF (`Facture commerciale (PDF)`): goods, HS codes, values in the order currency, origin Tunisia.
+8. [ ] Run `Actualiser` or `POST /cron/track-shipments`. Write down the real `UpdateCode` values and the delivered one, then set `deliveredCodes`.
+9. [ ] Book a pickup, then cancel it.
+10. [ ] Cancel (hold) a fresh shipment and ask the agency whether the hold is enough.
+11. [ ] Compare the WCF dates and `LabelFileContents` with the fixtures in `packages/orpc/test` and replace them with anonymised real bodies.
+12. [ ] Go live in production only after the owner signs off: set `labelReportId`, `paymentType`, `deliveredCodes` and the product types explicitly, enable live mode, check the first parcel end to end.
+
+Test and live follow the same separation as Konnect: previews only ever use the test host, live exists only in production.
+
+## Questions for the Aramex rep (French, to send as is)
+
+1. API access : « Pouvez-vous activer l'accès API Shipping Services (ShippingAPI.V2, services Shipping, Rate Calculator, Tracking, Location) pour notre compte, et nous envoyer les identifiants de test puis de production : nom d'utilisateur API, mot de passe, numéro de compte, PIN du compte, code d'entité (AccountEntity), code pays du compte ? »
+2. Environnement de test : « Quelle est l'adresse de l'environnement de test, et faut-il vous communiquer une adresse IP à autoriser ? Nos serveurs n'ont pas d'IP fixe en production (Vercel). »
+3. `Source` et `Version` : « Quelle valeur de Source et de Version devons-nous envoyer dans ClientInfo ? »
+4. Types de produit : « Quels ProductType sont ouverts sur notre compte pour le national (DOM) et l'international (EXP) ? Lequel recommandez-vous pour des céramiques fragiles ? »
+5. Paiement à la livraison : « Le paiement à la livraison (service CODS) est-il activé ? Quels frais, quel plafond, sous quel délai et sur quel compte reversez-vous les montants encaissés ? »
+6. Euro et international : « Pouvez-vous nous donner des tarifs en euros (PreferredCurrencyCode=EUR) pour l'international, ou uniquement en dinars ? Qui paie les droits et taxes à l'arrivée (DAP ou DDP) ? La valeur en douane peut-elle être déclarée en EUR ? »
+7. Objets fragiles : « Y a-t-il un service ou une assurance spécifique pour les objets fragiles (code de service INSR ?), et quelles règles d'emballage ? »
+8. Étiquettes : « Quel ReportID et ReportType utiliser pour l'étiquette (format A4 ou A6) et pour la facture commerciale ? »
+9. Enlèvements : « Comment se passent les enlèvements à l'atelier : heures limites, type de véhicule à indiquer, enlèvement régulier possible ? »
+10. Annulation : « Comment annuler un envoi déjà créé par l'API (l'API n'a pas d'opération d'annulation) : la mise en attente (HoldShipments) suffit-elle ? »
+11. Suivi : « Avez-vous la liste des codes de suivi (UpdateCode) et un système de notification (webhook) ? Sinon, à quelle fréquence pouvons-nous interroger TrackShipments ? »
+12. Limites : « Y a-t-il des limites d'appels API par minute ou par jour ? »
+13. Villes : « Pour la Tunisie, faut-il utiliser exactement les noms renvoyés par FetchCities ? Le code postal est-il obligatoire ? »
+14. Douane : « Quel code SH (6 chiffres ou plus) pour des céramiques artisanales décoratives (6913) et de table (6912) ? La facture commerciale est-elle obligatoire pour la France et l'Europe, et dans quelle devise ? »
