@@ -93,3 +93,26 @@ test("the slideshow cannot be saved without a visible photo", async ({ page, ste
     await expect(hero.getByRole("button", { name: "Enregistrer" })).toBeDisabled()
   })
 })
+
+test("tile controls are locked while a save is pending so a late answer cannot drop an edit", async ({
+  page,
+  step,
+}) => {
+  await loginAsOwnerAndWait(page)
+  await page.route("**/api/rpc/admin/site/saveSlot*", async (route) => {
+    await new Promise((r) => setTimeout(r, 1500))
+    await route.continue()
+  })
+  await page.goto(`${E2E.dashboardUrl}/site-images`)
+  const hero = page.locator("#hero")
+  await expect(hero.getByTestId("hero-tile").first()).toBeVisible()
+  await step("start a save and the tile menus are disabled until it answers", async () => {
+    await hero.getByRole("button", { name: "Actions pour Photos d'accueil (diaporama) 2" }).click()
+    await page.getByRole("menuitem", { name: "Masquer" }).click()
+    await hero.getByRole("button", { name: "Enregistrer" }).click()
+    await expect(hero.getByRole("button", { name: "Actions pour Photos d'accueil (diaporama) 1" })).toBeDisabled()
+    await expect(hero.getByRole("button", { name: "Enregistrer" })).toBeDisabled()
+    await expect(hero.getByText("Images enregistrées.")).toBeVisible()
+    await expect(hero.getByRole("button", { name: "Actions pour Photos d'accueil (diaporama) 1" })).toBeEnabled()
+  })
+})

@@ -89,7 +89,7 @@ export default async function HomePage() {
                   {category.image && (
                     <Image
                       src={imageSrc(category.image)}
-                      alt=""
+                      alt={pick(category.imageAlt, locale)}
                       fill
                       sizes="(min-width: 1024px) 25vw, 50vw"
                       className="object-cover opacity-60 transition duration-500 group-hover:scale-105 group-hover:opacity-80"

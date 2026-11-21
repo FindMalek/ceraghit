@@ -88,7 +88,13 @@ export default async function AtelierPage() {
               <li key={place.id} className="frame flex flex-col gap-4 bg-card/70 p-6 sm:flex-row">
                 {place.image && (
                   <div className="relative aspect-square w-full shrink-0 overflow-hidden sm:w-32">
-                    <Image src={imageSrc(place.image)} alt="" fill sizes="128px" className="object-cover" />
+                    <Image
+                      src={imageSrc(place.image)}
+                      alt={pick(place.imageAlt, locale)}
+                      fill
+                      sizes="128px"
+                      className="object-cover"
+                    />
                   </div>
                 )}
                 <div className="space-y-2">

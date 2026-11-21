@@ -1,5 +1,5 @@
-import type { Db } from "@workspace/db"
-import { type Category, mediaSrc, type Product } from "@workspace/sdk"
+import { type Db, type locations, media } from "@workspace/db"
+import { type Category, type Location, mediaSrc, type Product } from "@workspace/sdk"
 
 export type ProductRow = Awaited<ReturnType<typeof findProducts>>[number]
 
@@ -61,15 +61,39 @@ export function toProduct(row: ProductRow): Product {
   }
 }
 
-export function toCategory(row: {
-  id: string
-  slug: string
-  name: Category["name"]
-  description: Category["description"]
+/** Columns of the linked library photo, for a `leftJoin(media, eq(media.id, <owner>.imageMediaId))`. */
+export const imageMediaColumns = { mediaKey: media.key, mediaSource: media.source, mediaAlt: media.alt }
+
+interface LinkedImage {
   image: string | null
-  visible: boolean
-  position: number
-  productCount: number
-}): Category {
-  return { ...row }
+  imageMediaId: string | null
+  mediaKey: string | null
+  mediaSource: "bucket" | "bundled" | "external" | null
+  mediaAlt: Category["description"]
+}
+
+/** The linked library photo wins, a row from before the library keeps its legacy string. */
+function resolveImage(row: LinkedImage): Pick<Category, "image" | "imageMediaId" | "imageAlt"> {
+  const linked = row.mediaKey && row.mediaSource ? mediaSrc({ key: row.mediaKey, source: row.mediaSource }) : null
+  return { image: linked ?? row.image, imageMediaId: row.imageMediaId, imageAlt: row.mediaAlt }
+}
+
+export function toCategory(
+  row: LinkedImage & {
+    id: string
+    slug: string
+    name: Category["name"]
+    description: Category["description"]
+    visible: boolean
+    position: number
+    productCount: number
+  },
+): Category {
+  const { mediaKey: _k, mediaSource: _s, mediaAlt: _a, ...rest } = row
+  return { ...rest, ...resolveImage(row) }
+}
+
+export function toLocation(row: typeof locations.$inferSelect & Omit<LinkedImage, "image" | "imageMediaId">): Location {
+  const { mediaKey: _k, mediaSource: _s, mediaAlt: _a, ...rest } = row
+  return { ...rest, ...resolveImage(row) }
 }

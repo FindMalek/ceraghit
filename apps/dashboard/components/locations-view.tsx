@@ -14,8 +14,8 @@ import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useEffect, useState } from "react"
 import { useAppConfig } from "@/components/app-config"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { ImageField } from "@/components/image-field"
 import { LocalizedField } from "@/components/localized-field"
+import { MediaImageField } from "@/components/media-image-field"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { errorMessage } from "@/lib/errors"
@@ -32,6 +32,7 @@ type LocationRow = {
   hours: { fr: string; en?: string; ar?: string } | null
   mapUrl: string | null
   image: string | null
+  imageMediaId?: string | null
   visible: boolean
 }
 
@@ -45,6 +46,7 @@ interface Draft {
   hours: LocalizedDraft
   mapUrl: string
   image: string | null
+  imageMediaId: string | null | undefined
   visible: boolean
 }
 
@@ -58,6 +60,7 @@ const EMPTY: Draft = {
   hours: emptyLocalized(),
   mapUrl: "",
   image: null,
+  imageMediaId: null,
   visible: true,
 }
 
@@ -90,6 +93,7 @@ function LocationSheet({
             hours: toLocalizedDraft(location.hours),
             mapUrl: location.mapUrl ?? "",
             image: location.image,
+            imageMediaId: location.imageMediaId ?? undefined,
             visible: location.visible,
           }
         : EMPTY,
@@ -116,7 +120,7 @@ function LocationSheet({
       phone: draft.phone.trim() || null,
       hours: fromLocalizedDraft(draft.hours, true),
       mapUrl: draft.mapUrl.trim() || null,
-      image: draft.image,
+      imageMediaId: draft.imageMediaId,
       visible: draft.visible,
     })
     if (!parsed.success) {
@@ -217,7 +221,11 @@ function LocationSheet({
             </Field>
             <Field>
               <FieldLabel>Photo</FieldLabel>
-              <ImageField folder="locations" value={draft.image} onChange={(v) => set("image", v)} />
+              <MediaImageField
+                aspect="4/3"
+                value={draft}
+                onChange={(picked) => setDraft((d) => ({ ...d, ...picked }))}
+              />
             </Field>
             <Field orientation="horizontal">
               <Switch id="loc-visible" checked={draft.visible} onCheckedChange={(v) => set("visible", v)} />
