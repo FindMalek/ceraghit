@@ -199,18 +199,27 @@ function Section({ slot, server }: { slot: SiteSlot; server: ServerItem[] }) {
       {draft.length === 0 ? (
         <p className="text-muted-foreground text-sm">Image par défaut du site.</p>
       ) : (
-        <ul
-          className={rule.multiple ? "grid grid-cols-2 gap-3 md:grid-cols-4" : "grid max-w-xs grid-cols-1 gap-3"}
-          aria-label={rule.label}
-        >
-          {draft.map((item, index) => (
-            <Tile key={item.mediaId} slot={slot} item={item} index={index} total={draft.length} onChange={change} />
-          ))}
-        </ul>
+        // A save replaces the draft with the saved snapshot, so edits stay locked until it answers.
+        <fieldset disabled={save.isPending} className="contents">
+          <ul
+            className={rule.multiple ? "grid grid-cols-2 gap-3 md:grid-cols-4" : "grid max-w-xs grid-cols-1 gap-3"}
+            aria-label={rule.label}
+          >
+            {draft.map((item, index) => (
+              <Tile key={item.mediaId} slot={slot} item={item} index={index} total={draft.length} onChange={change} />
+            ))}
+          </ul>
+        </fieldset>
       )}
       <div className="sticky bottom-0 flex flex-wrap items-center gap-3 bg-background/90 py-2 backdrop-blur">
         {(rule.multiple || draft.length === 0) && (
-          <Button type="button" variant="outline" className="h-11" disabled={full} onClick={() => setPicker(true)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11"
+            disabled={full || save.isPending}
+            onClick={() => setPicker(true)}
+          >
             <ImagesIcon />
             {rule.multiple ? "Choisir dans la médiathèque" : "Choisir une photo"}
           </Button>
