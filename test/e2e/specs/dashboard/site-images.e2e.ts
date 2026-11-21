@@ -79,6 +79,7 @@ test("the slideshow cannot be saved without a visible photo", async ({ page, ste
   const hero = page.locator("#hero")
   await step("hide every photo", async () => {
     const tiles = hero.getByTestId("hero-tile")
+    await expect(tiles.first()).toBeVisible()
     const count = await tiles.count()
     for (let i = 1; i <= count; i++) {
       if ((await tiles.nth(i - 1).getAttribute("data-visible")) === "false") continue
