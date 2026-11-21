@@ -2,14 +2,15 @@
 
 import { ORPCError } from "@orpc/client"
 import { UploadSimpleIcon } from "@phosphor-icons/react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import type { Media } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { Progress } from "@workspace/ui/components/progress"
 import { useRef, useState } from "react"
+import { useStorageUsage } from "@/components/storage-usage"
 import { errorMessage } from "@/lib/errors"
-import { type UploadPhase, uploadMedia } from "@/lib/upload-media"
+import { STORAGE_FULL_TEXT, type UploadPhase, uploadMedia } from "@/lib/upload-media"
 
 const PHASE_TEXT: Record<UploadPhase, string> = {
   compress: "Compression…",
@@ -28,7 +29,6 @@ const PROGRESS: Record<UploadPhase, number> = {
   error: 100,
 }
 const PARALLEL = 3
-const FULL_MESSAGE = "L'espace de stockage (2,5 Go) est plein. Supprimez des photos inutilisées."
 
 interface Row {
   id: number
@@ -39,8 +39,8 @@ interface Row {
 
 export function MediaUploadZone({ onUploaded }: { onUploaded?: (media: Media[]) => void }) {
   const queryClient = useQueryClient()
-  const usage = useQuery(orpc.admin.uploads.usage.queryOptions())
-  const full = usage.data ? usage.data.usedBytes >= usage.data.quotaBytes : false
+  const usage = useStorageUsage()
+  const full = usage.data?.level === "full"
   const [rows, setRows] = useState<Row[]>([])
   const [dragging, setDragging] = useState(false)
   const input = useRef<HTMLInputElement>(null)
@@ -59,7 +59,7 @@ export function MediaUploadZone({ onUploaded }: { onUploaded?: (media: Media[]) 
     const worker = async () => {
       for (let job = queue.shift(); job; job = queue.shift()) {
         try {
-          done.push(await uploadMedia(job.file, (phase) => patch(job.id, { phase })))
+          done.push(await uploadMedia(job.file, (phase) => patch(job.id, { phase }), usage.data))
         } catch (error) {
           const message =
             error instanceof ORPCError
@@ -103,7 +103,7 @@ export function MediaUploadZone({ onUploaded }: { onUploaded?: (media: Media[]) 
         className={`frame flex flex-col items-center gap-3 border-dashed p-6 text-center ${dragging ? "bg-accent" : "bg-card/60"}`}
       >
         <p className="text-muted-foreground text-sm">
-          {full ? FULL_MESSAGE : "Glissez vos photos ici, ou choisissez-les sur cet appareil."}
+          {full ? STORAGE_FULL_TEXT : "Glissez vos photos ici, ou choisissez-les sur cet appareil."}
         </p>
         <Button type="button" className="h-11" disabled={full} onClick={() => input.current?.click()}>
           <UploadSimpleIcon />

@@ -695,6 +695,10 @@ export type EmailDomain = z.infer<typeof emailDomainSchema>
 
 /** What the studio's plan stores: dashboard images and customer photos together. */
 export const STORAGE_QUOTA_BYTES = 2_500_000_000
+/** The meter turns to a warning from this share of the quota. */
+export const STORAGE_WARN_RATIO = 0.8
+export const STORAGE_LEVELS = ["ok", "warn", "full"] as const
+export type StorageLevel = (typeof STORAGE_LEVELS)[number]
 
 /** Long side of a stored picture; the dashboard shrinks to it and the api refuses anything larger. */
 export const MEDIA_MAX_SIDE = 2400
@@ -715,6 +719,9 @@ export const storageUsageSchema = z.object({
   usedBytes: z.number().int(),
   quotaBytes: z.number().int(),
   files: z.number().int(),
+  /** Whole percent of the quota in use, 100 and more once full. */
+  percent: z.number().int(),
+  level: z.enum(STORAGE_LEVELS),
 })
 export const uploadTargetSchema = z.object({ uploadUrl: z.string(), image: z.string(), publicUrl: z.string() })
 

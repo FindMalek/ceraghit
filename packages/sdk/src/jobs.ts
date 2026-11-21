@@ -78,6 +78,9 @@ export const JOB_COUNT_LABELS: Record<string, [one: string, other: string]> = {
   mailsPurged: ["email purgé", "emails purgés"],
   updated: ["colis mis à jour", "colis mis à jour"],
   mailed: ["client prévenu", "clients prévenus"],
+  orphansDeleted: ["fichier orphelin supprimé", "fichiers orphelins supprimés"],
+  rowsDropped: ["envoi fantôme retiré", "envois fantômes retirés"],
+  sizesFixed: ["taille corrigée", "tailles corrigées"],
   sent: ["email renvoyé", "emails renvoyés"],
 }
 

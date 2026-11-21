@@ -1,5 +1,5 @@
 import { type Db, uploads } from "@workspace/db"
-import { STORAGE_QUOTA_BYTES } from "@workspace/sdk"
+import { STORAGE_QUOTA_BYTES, STORAGE_WARN_RATIO, type StorageLevel } from "@workspace/sdk"
 import { sql } from "drizzle-orm"
 import { publicError } from "../errors"
 import { recordStorageBytes } from "./metrics"
@@ -10,7 +10,15 @@ export async function storageUsage(db: Db) {
     .from(uploads)
   const usedBytes = Number(row?.usedBytes ?? 0)
   recordStorageBytes(usedBytes)
-  return { usedBytes, quotaBytes: STORAGE_QUOTA_BYTES, files: row?.files ?? 0 }
+  const ratio = usedBytes / STORAGE_QUOTA_BYTES
+  const level: StorageLevel = ratio >= 1 ? "full" : ratio >= STORAGE_WARN_RATIO ? "warn" : "ok"
+  return {
+    usedBytes,
+    quotaBytes: STORAGE_QUOTA_BYTES,
+    files: row?.files ?? 0,
+    percent: Math.floor(ratio * 100),
+    level,
+  }
 }
 
 /** Refuses an upload that would go past the plan, then remembers it so the counter includes it. */
