@@ -67,6 +67,7 @@ test("the owner creates an Aramex shipment on a cash on delivery order and downl
     await page.getByRole("button", { name: "Utiliser cette suggestion" }).click()
     await expect(page.getByLabel("Adresse", { exact: true })).toHaveValue("Avenue Habib Bourguiba")
     await expect(page.getByLabel("Code postal")).toHaveValue("1000")
+    await expect(page.getByTestId("address-check")).toHaveCount(0)
   })
 
   await step("confirming creates the shipment, ships the order and counts the cash sale", async () => {

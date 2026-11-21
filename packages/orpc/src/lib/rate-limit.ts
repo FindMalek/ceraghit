@@ -27,6 +27,7 @@ export const LIMITS = {
   shipmentRefresh: { max: 20, windowMs: 10 * MINUTE },
   shipmentAction: { max: 30, windowMs: 10 * MINUTE },
   shippingTest: { max: 10, windowMs: 10 * MINUTE },
+  addressCheck: { max: 60, windowMs: 10 * MINUTE },
   uploadUrl: { max: 12, windowMs: 10 * MINUTE },
   mediaSign: { max: 60, windowMs: 10 * MINUTE },
   mediaConfirm: { max: 60, windowMs: 10 * MINUTE },

@@ -51,7 +51,14 @@ export function AddressCheck({
                 {s.line1}, {s.postalCode} {s.city}
               </span>
               {onUse && (
-                <Button variant="outline" className="h-11" onClick={() => onUse(s)}>
+                <Button
+                  variant="outline"
+                  className="h-11"
+                  onClick={() => {
+                    onUse(s)
+                    check.reset()
+                  }}
+                >
                   Utiliser cette suggestion
                 </Button>
               )}

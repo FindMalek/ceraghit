@@ -105,8 +105,8 @@ export const shippingRouter = {
         /** The address as edited in the shipment dialog, when it differs from the order's. */
         address: z
           .object({
-            line1: z.string().trim().max(100),
-            city: z.string().trim().max(60),
+            line1: z.string().trim().min(3).max(100),
+            city: z.string().trim().min(2).max(60),
             postalCode: z.string().trim().max(10).optional(),
           })
           .optional(),
@@ -114,6 +114,12 @@ export const shippingRouter = {
     )
     .output(addressCheckSchema)
     .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "addressCheck",
+        "too_many_requests",
+        "Trop d'essais, réessayez dans quelques minutes.",
+      )
       const [order] = await context.db.select().from(orders).where(eq(orders.id, input.orderId)).limit(1)
       if (!order) throw new ORPCError("NOT_FOUND", { message: "Commande introuvable." })
       const result = await checkAddress(context, {
