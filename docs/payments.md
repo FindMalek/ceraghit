@@ -62,11 +62,14 @@ verify the wallet id. A saved key only counts when its mode matches the
 environment (live in production, test elsewhere); otherwise the env default is used. There is no per-process cache: the
 vault row is read per call.
 
-Warning, fail closed: changing or clearing the keys (or losing `SECRETS_KEY`) while online orders are `pending_payment`
-can leave a real payment unrecorded. `settleOrder` never asks the demo gateway about an order created with Konnect: it
-logs and leaves the order pending, so the order is not cancelled and the stock is not released, but it is not marked
-paid either until Konnect can be asked again (same keys back) or the owner uses `markPaidManually`. The dashboard shows
-how many online orders are waiting and asks for confirmation before deleting the keys.
+Keys and pending card payments. Saving different keys or clearing them is refused (`assertKonnectUnlocked`) while an
+online order created through Konnect has been `pending_payment` for less than the 45 minute hold; re-saving identical
+values is allowed. If the keys become unusable anyway (`SECRETS_KEY` lost or rotated, row removed by hand), the code
+fails closed: `settleOrder` never asks another gateway about a Konnect order, and `releaseExpiredHolds` keeps Konnect
+orders past the hold pending (and logs them) instead of cancelling them while no Konnect gateway can be asked. A demo
+order is always checked by the demo gateway, never by Konnect. Nothing marks such an order paid: `markPaidManually`
+refuses online orders. A payment taken while the keys were unusable must be reconciled by hand in the Konnect dashboard
+once the keys are back (the next webhook or order page visit then settles it), otherwise the order stays pending.
 
 ## payoneer
 

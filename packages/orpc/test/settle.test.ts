@@ -3,9 +3,11 @@ import {
   admins,
   categories,
   createDb,
+  demoRef,
   invoiceCounters,
   invoices,
   mailLog,
+  newDemoNonce,
   orderAudit,
   orderItems,
   orders,
@@ -17,7 +19,7 @@ import { eq, inArray, like } from "drizzle-orm"
 import type { Services } from "../src/context"
 import { clearIntegration, saveIntegration } from "../src/lib/integrations"
 import type { Mail } from "../src/lib/mailer"
-import { settleOrder } from "../src/lib/orders"
+import { releaseExpiredHolds, settleOrder } from "../src/lib/orders"
 import type { PaymentCheck, PaymentProvider } from "../src/lib/payments"
 import { DemoProvider } from "../src/lib/payments"
 import { parseKeyring } from "../src/lib/secrets"
@@ -129,6 +131,31 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     await db.delete(invoiceCounters).where(eq(invoiceCounters.year, 2096))
     await db.delete(products).where(eq(products.id, productId))
     await db.delete(categories).where(eq(categories.slug, "tst-st"))
+  })
+
+  test("a demo order is never checked by the konnect gateway", async () => {
+    const ref = demoRef({
+      outcome: "pending",
+      orderNumber: "TST-ST-demo",
+      amountMinor: 3_400,
+      currency: "EUR",
+      nonce: newDemoNonce(),
+    })
+    const o = await order({ paymentProvider: "demo", paymentRef: ref })
+    const before = checks
+    await settleOrder(services, ref)
+    expect(checks).toBe(before)
+    expect(await statusOf(o.id)).toBe("pending_payment")
+  })
+
+  test("past the hold, a konnect order stays pending while no konnect keys can be used", async () => {
+    const old = new Date(Date.now() - 2 * 3_600_000)
+    const o = await order({ createdAt: old })
+    const demoOnly = { ...services, payments: new DemoProvider("https://web.test") } as Services
+    await releaseExpiredHolds(demoOnly, new Date(), { only: [o.id] })
+    expect(await statusOf(o.id)).toBe("pending_payment")
+    await releaseExpiredHolds(services, new Date(), { only: [o.id] })
+    expect(await statusOf(o.id)).toBe("cancelled")
   })
 
   test("a konnect order is never judged by the demo gateway when the keys are gone", async () => {

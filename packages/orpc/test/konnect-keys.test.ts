@@ -120,6 +120,46 @@ describe.skipIf(!url)("konnect keys", () => {
     ).rejects.toThrow("qu'en production")
   })
 
+  test("keys cannot change while a card payment may be in flight, but identical values and an empty queue are fine", async () => {
+    await reset()
+    const preview = withEnv("preview")
+    await save(preview, "test")
+    const n = `TST-KK-${Date.now()}`
+    await db.insert(orders).values({
+      number: n,
+      publicToken: "t",
+      status: "pending_payment",
+      paymentMethod: "online",
+      paymentProvider: "konnect",
+      paymentRef: `ref-${n}`,
+      currency: "EUR",
+      subtotalMinor: 100,
+      totalMinor: 100,
+      customerName: "Lock Buyer",
+      email: "konnect-keys-lock@example.test",
+      phone: "+32470000000",
+      country: "BE",
+      city: "Bruxelles",
+      address: "1 rue du test",
+      locale: "fr",
+    })
+    try {
+      const other = { apiKey: `${SENTINEL}-B`, walletId: WALLET, mode: "test" as const }
+      await expect(as(preview).settings.konnect.save(other)).rejects.toThrow("commandes en ligne")
+      await expect(as(preview).settings.konnect.clear()).rejects.toThrow("commandes en ligne")
+      await expect(
+        as(preview).integrations.save({ provider: "konnect", secrets: { apiKey: `${SENTINEL}-B` } }),
+      ).rejects.toThrow("commandes en ligne")
+      await expect(as(preview).integrations.clear({ provider: "konnect" })).rejects.toThrow("commandes en ligne")
+      await save(preview, "test")
+      expect(await resolvePayments(preview)).toMatchObject({ name: "konnect" })
+    } finally {
+      await db.delete(orders).where(eq(orders.number, n))
+    }
+    await as(preview).settings.konnect.save({ apiKey: `${SENTINEL}-B`, walletId: WALLET, mode: "test" })
+    await as(preview).settings.konnect.clear()
+  })
+
   test("a live row is never used outside production", async () => {
     await reset()
     await save(withEnv("production"), "live")

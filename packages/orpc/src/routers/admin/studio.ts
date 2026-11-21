@@ -21,6 +21,7 @@ import {
   getIntegration,
   saveIntegration,
 } from "../../lib/integrations"
+import { assertKonnectUnlocked } from "../../lib/orders"
 import { assertKonnectMode, gatewayReady, resolvePayments, testKonnectKey } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings, getSettings, savePaymentSettings, saveSettings } from "../../lib/settings"
@@ -123,6 +124,7 @@ const konnectRouter = {
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       assertKonnectMode(context.config.appEnv, input.mode)
+      await assertKonnectUnlocked(context, input)
       await saveIntegration(context, context.admin.id, "konnect", {
         config: { walletId: input.walletId, mode: input.mode },
         secrets: { apiKey: input.apiKey },
@@ -150,6 +152,7 @@ const konnectRouter = {
     .route({ method: "DELETE", path: "/admin/settings/konnect", summary: "Remove the saved Konnect keys", tags: TAG })
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context }) => {
+      await assertKonnectUnlocked(context, "clear")
       await clearIntegration(context.db, "konnect", context.admin.id, context.now())
       return { ok: true as const }
     }),
