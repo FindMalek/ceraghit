@@ -22,3 +22,8 @@ export async function categoryWithProducts(): Promise<string> {
   if (!row) throw new Error("no category with products in the demo seed")
   return row.id
 }
+
+/** Leftovers of a failed run, so a rerun starts clean and no other spec sees them. */
+export async function deleteCategories(frPrefix: string): Promise<void> {
+  await sql`delete from categories where name->>'fr' like ${`${frPrefix}%`} and not exists (select 1 from products p where p.category_id = categories.id)`
+}

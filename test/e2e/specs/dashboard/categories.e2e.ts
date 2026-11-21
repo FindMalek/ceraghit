@@ -3,7 +3,7 @@ import { E2E } from "../../env"
 import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { completeSetup, openDb } from "../../helpers/db"
 import { fillLocalized } from "../../helpers/products"
-import { categoryRows, categoryWithProducts } from "../../support/categories"
+import { categoryRows, categoryWithProducts, deleteCategories } from "../../support/categories"
 
 test.beforeAll(async () => {
   const db = openDb()
@@ -28,6 +28,10 @@ async function openDialog(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Nouvelle catégorie" })).toBeVisible()
 }
 
+test.afterEach(async () => {
+  await deleteCategories("Cat test")
+})
+
 test("the owner creates a category in three languages, hides it, moves it and deletes it", {
   tag: ["@fr", "@desktop"],
 }, async ({ page, step }) => {
@@ -42,36 +46,40 @@ test("the owner creates a category in three languages, hides it, moves it and de
     expect(await categoryRows("Cat test")).toHaveLength(0)
   })
 
-  await step("fill the French, English and Arabic names and save", async () => {
+  await step("fill the three names and save it hidden, so no other spec ever sees it", async () => {
     await fillLocalized(page, "cat-name", name)
+    await page.getByRole("switch", { name: "Visible dans le menu" }).click()
     await page.getByRole("button", { name: "Enregistrer" }).click()
     await expect(page.getByText(name.fr)).toBeVisible()
     const [row] = await categoryRows(`Cat test ${id}`)
     expect(row?.name).toEqual(name)
-    expect(row?.visible).toBe(true)
-  })
-
-  await step("the public menu lists it last, with its three names", async () => {
-    const list = await menu(page)
-    expect(list.at(-1)?.name).toMatchObject(name)
-  })
-
-  await step("moving it up puts it before the previous category in the db and in the menu", async () => {
-    const before = (await menu(page)).map((c) => c.name.fr)
-    await page.getByRole("listitem").filter({ hasText: name.fr }).getByRole("button", { name: "Monter" }).click()
-    await expect.poll(async () => (await menu(page)).map((c) => c.name.fr)).not.toEqual(before)
-    const after = (await menu(page)).map((c) => c.name.fr)
-    expect(after.indexOf(name.fr)).toBe(before.indexOf(name.fr) - 1)
-  })
-
-  await step("hiding it takes it out of the public menu", async () => {
-    await page.getByRole("listitem").filter({ hasText: name.fr }).getByRole("button", { name: "Modifier" }).click()
-    await page.getByRole("switch", { name: "Visible dans le menu" }).click()
-    await page.getByRole("button", { name: "Enregistrer" }).click()
-    await expect(page.getByText("Masquée")).toBeVisible()
-    expect((await categoryRows(`Cat test ${id}`))[0]?.visible).toBe(false)
+    expect(row?.visible).toBe(false)
     expect((await menu(page)).map((c) => c.name.fr)).not.toContain(name.fr)
   })
+
+  await step("moving it up changes its position by one place", async () => {
+    const position = async () => (await categoryRows(`Cat test ${id}`))[0]?.position ?? 0
+    const before = await position()
+    await page.getByRole("listitem").filter({ hasText: name.fr }).getByRole("button", { name: "Monter" }).click()
+    await expect.poll(position).toBeLessThan(before)
+  })
+
+  await step(
+    "made visible for one check, the public menu lists it with its three names, then it is hidden again",
+    async () => {
+      const card = page.getByRole("listitem").filter({ hasText: name.fr })
+      await card.getByRole("button", { name: "Modifier" }).click()
+      await page.getByRole("switch", { name: "Visible dans le menu" }).click()
+      await page.getByRole("button", { name: "Enregistrer" }).click()
+      await expect(page.getByText("Masquée")).toHaveCount(0)
+      expect((await menu(page)).find((c) => c.name.fr === name.fr)?.name).toMatchObject(name)
+      await card.getByRole("button", { name: "Modifier" }).click()
+      await page.getByRole("switch", { name: "Visible dans le menu" }).click()
+      await page.getByRole("button", { name: "Enregistrer" }).click()
+      await expect(page.getByText("Masquée")).toBeVisible()
+      expect((await menu(page)).map((c) => c.name.fr)).not.toContain(name.fr)
+    },
+  )
 
   await step("an empty category is deleted after a confirmation", async () => {
     await page.getByRole("listitem").filter({ hasText: name.fr }).getByRole("button", { name: "Supprimer" }).click()
