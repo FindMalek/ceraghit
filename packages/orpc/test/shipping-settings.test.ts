@@ -11,6 +11,7 @@ import { assertVaultKeyForRows } from "../src/lib/integrations"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
 import { parseKeyring } from "../src/lib/secrets"
+import { ARAMEX_HOSTS } from "../src/lib/shipping/aramex/endpoints"
 import { createFakeAramexFetch } from "../src/lib/shipping/aramex/fake"
 import { resolveShipping, resolveShippingProvider, shippingHealth } from "../src/lib/shipping/resolve"
 import { adminRouter } from "../src/routers/admin"
@@ -270,7 +271,10 @@ describe.skipIf(!url)("shipping settings", () => {
     const fake = createFakeAramexFetch()
     const call = async (op: string, info: object) =>
       (await (
-        await fake(`https://x.test/${op}`, { method: "POST", body: JSON.stringify({ ClientInfo: info }) })
+        await fake(`${ARAMEX_HOSTS.test}/ShippingAPI.V2/Location/Service_1_0.svc/json/${op}`, {
+          method: "POST",
+          body: JSON.stringify({ ClientInfo: info }),
+        })
       ).json()) as {
         HasErrors: boolean
       }
@@ -278,5 +282,17 @@ describe.skipIf(!url)("shipping settings", () => {
     expect((await call("FetchCountries", { Password: "fake-bad-login" })).HasErrors).toBe(true)
     expect((await call("CalculateRate", { AccountPin: "fake-bad-rate" })).HasErrors).toBe(true)
     expect((await call("CalculateRate", { AccountPin: "x" })).HasErrors).toBe(false)
+  })
+
+  test("the fake answers only Aramex urls: anything else goes to the real fetch", async () => {
+    const seen: string[] = []
+    const real = (async (input: RequestInfo | URL) => {
+      seen.push(String(input))
+      return new Response("real", { status: 202 })
+    }) as typeof fetch
+    const fake = createFakeAramexFetch(real)
+    const res = await fake("https://api.konnect.network/api/v2/payments/init-payment", { method: "POST", body: "{}" })
+    expect([res.status, await res.text()]).toEqual([202, "real"])
+    expect(seen).toEqual(["https://api.konnect.network/api/v2/payments/init-payment"])
   })
 })
