@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto"
 import { type Db, rateLimits } from "@workspace/db"
 import type { PublicErrorReason } from "@workspace/sdk"
-import { CLIENT_IP_HEADER, PROXY_SECRET_HEADER } from "@workspace/sdk/proxy"
+import { CLIENT_IP_HEADER, forwardedAddress, PROXY_SECRET_HEADER } from "@workspace/sdk/proxy"
 import { eq, lt, sql } from "drizzle-orm"
 import { publicError } from "../errors"
 import { recordRateLimitBlocked } from "./metrics"
@@ -43,14 +43,24 @@ function sameSecret(given: string | null, wanted: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
+export interface AddressTrust {
+  proxySecret?: string
+  /** Proxies in front of the api that append to x-forwarded-for; 0 trusts the header not at all. */
+  trustedProxyHops?: number
+  /** Local only: the header is honoured so tests and recordings can pick their own address. */
+  trustForwardedFor?: boolean
+}
+
 /**
- * The visitor's address. Behind the /api proxy the api only sees the web function, so the proxy forwards the real one
- * in a header signed with PROXY_SECRET; the header is ignored without the matching secret.
+ * The visitor's address, never taken from a client supplied header. In order: the address the web or dashboard proxy
+ * signed with PROXY_SECRET; the x-forwarded-for entry our own trusted proxies appended (counted from the right); the
+ * socket peer. Locally the rightmost x-forwarded-for entry is honoured as well.
  */
-export function clientAddress(headers: Headers, proxySecret?: string): string {
-  const forwarded = headers.get(CLIENT_IP_HEADER)?.trim()
-  if (forwarded && proxySecret && sameSecret(headers.get(PROXY_SECRET_HEADER), proxySecret)) return forwarded
-  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip") || "local"
+export function clientAddress(headers: Headers, trust: AddressTrust = {}, peer?: string): string {
+  const signed = headers.get(CLIENT_IP_HEADER)?.trim()
+  if (signed && trust.proxySecret && sameSecret(headers.get(PROXY_SECRET_HEADER), trust.proxySecret)) return signed
+  const hops = trust.trustedProxyHops ?? (trust.trustForwardedFor ? 1 : 0)
+  return forwardedAddress(headers, hops) ?? peer ?? "unknown"
 }
 
 /** Counts one hit in a fixed window with a single statement, and says whether it is within the limit. */
@@ -101,12 +111,22 @@ interface LimitContext {
   db: Db
   headers: Headers
   now: () => Date
-  config: { proxySecret?: string }
+  config: { proxySecret?: string; trustedProxyHops?: number; appEnv?: string }
+  peer?: string
+}
+
+export function addressOf(context: Pick<LimitContext, "headers" | "config" | "peer">): string {
+  const { proxySecret, trustedProxyHops, appEnv } = context.config
+  return clientAddress(
+    context.headers,
+    { proxySecret, trustedProxyHops: trustedProxyHops || undefined, trustForwardedFor: appEnv === "local" },
+    context.peer,
+  )
 }
 
 /** Counts a hit for this visitor on `name` and says whether it is still within the limit, without throwing. */
 export async function withinLimit(context: LimitContext, name: keyof typeof LIMITS): Promise<boolean> {
-  const address = clientAddress(context.headers, context.config.proxySecret)
+  const address = addressOf(context)
   return takeLimit(context.db, `${name}:${address}`, LIMITS[name], context.now())
 }
 
@@ -117,7 +137,7 @@ export async function enforceLimit(
   reason: PublicErrorReason,
   message: string,
 ): Promise<void> {
-  const address = clientAddress(context.headers, context.config.proxySecret)
+  const address = addressOf(context)
   if (!(await takeLimit(context.db, `${name}:${address}`, LIMITS[name], context.now()))) {
     recordRateLimitBlocked(limitBucket(name))
     throw publicError("TOO_MANY_REQUESTS", reason, message)

@@ -228,6 +228,7 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
       WEB_URL: urls.web,
       API_PUBLIC_URL: urls.api,
       PROXY_SECRET: proxySecret,
+      TRUSTED_PROXY_HOPS: "1",
       MAILPIT_URL: mail ? `http://${mail.appName}:8025` : undefined,
       ...telemetryEnv(),
       ...apiEnv,

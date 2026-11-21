@@ -33,6 +33,12 @@ const schema = z
     CRON_SECRET: z.string().min(24).optional(),
     /** Shared with the web and dashboard proxies so the api trusts the client address they forward. Required in production. */
     PROXY_SECRET: z.string().min(24).optional(),
+    /**
+     * Proxies in front of the api that append the peer they saw to x-forwarded-for (Traefik: 1, behind Cloudflare: 2;
+     * Vercel overwrites the header: 1). The api takes that entry counted from the right and never the client's own.
+     * 0 trusts no header: the socket address is used. Locally x-forwarded-for is always honoured (tests, recordings).
+     */
+    TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
     /** Order emails go through Resend. Without a key they are only logged (local and previews). */
     RESEND_API_KEY: z.string().optional(),
     EMAIL_FROM: z.string().default("Ceraghit <onboarding@resend.dev>"),
