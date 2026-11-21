@@ -1,9 +1,11 @@
+import { ORPCError } from "@orpc/server"
 import type { Db } from "@workspace/db"
 import { demoRef, newDemoNonce, orders, parseDemoRef } from "@workspace/db"
 import type { Currency } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
-import type { AppEnv } from "../context"
+import type { AppEnv, Services } from "../context"
 import { publicError } from "../errors"
+import { getIntegration } from "./integrations"
 import { withSpan } from "./telemetry"
 
 export interface InitPayment {
@@ -33,12 +35,65 @@ export interface PaymentProvider {
 }
 
 /** Whether card payment may be offered: production only through live Konnect, never the demo gateway. */
-export function gatewayReady(services: { payments: PaymentProvider; config: { appEnv: AppEnv } }): boolean {
+export async function gatewayReady(services: Services): Promise<boolean> {
   if (services.config.appEnv !== "production") return true
-  return services.payments.name === "konnect" && services.payments.mode === "live"
+  const payments = await resolvePayments(services)
+  return payments.name === "konnect" && payments.mode === "live"
 }
 
 const KONNECT_HOSTS = { test: "https://api.preprod.konnect.network/api/v2", live: "https://api.konnect.network/api/v2" }
+
+export const KONNECT_LIVE_ONLY_PRODUCTION = "Les clés Konnect réelles ne sont acceptées qu'en production."
+export const KONNECT_NEEDS_LIVE = "La production exige les clés Konnect réelles."
+
+export function assertKonnectMode(appEnv: AppEnv, mode: "test" | "live"): void {
+  if (mode === "live" && appEnv !== "production") {
+    throw new ORPCError("BAD_REQUEST", { message: KONNECT_LIVE_ONLY_PRODUCTION })
+  }
+  if (mode === "test" && appEnv === "production") throw new ORPCError("BAD_REQUEST", { message: KONNECT_NEEDS_LIVE })
+}
+
+/**
+ * The gateway to use right now: keys the owner saved in the dashboard win, then the env-built default
+ * (`services.payments`). A saved key whose mode does not match the environment (test in production, live elsewhere) is ignored, never used.
+ */
+export async function resolvePayments(services: Services): Promise<PaymentProvider> {
+  const found = await getIntegration(services, "konnect")
+  if (found?.source !== "db") return services.payments
+  const apiKey = found.secrets.apiKey
+  const walletId = found.config.walletId
+  if (!apiKey || typeof walletId !== "string" || !walletId) return services.payments
+  const mode = found.config.mode === "live" ? "live" : "test"
+  if ((services.config.appEnv === "production") !== (mode === "live")) return services.payments
+  return new KonnectProvider(apiKey, walletId, mode, services.http)
+}
+
+export interface KonnectCheck {
+  ok: boolean
+  message: string
+}
+
+/**
+ * Asks Konnect for a payment that cannot exist: a refused key answers 401/403, an accepted one 404. Creates nothing
+ * and never calls init-payment. Fixed messages only, nothing Konnect said reaches the owner.
+ */
+export async function testKonnectKey(
+  apiKey: string,
+  mode: "test" | "live",
+  http: typeof fetch = fetch,
+): Promise<KonnectCheck> {
+  try {
+    const res = await http(`${KONNECT_HOSTS[mode]}/payments/${crypto.randomUUID()}`, {
+      headers: { "x-api-key": apiKey },
+      signal: AbortSignal.timeout(8000),
+    })
+    if (res.status === 401 || res.status === 403) return { ok: false, message: "Clé API refusée par Konnect." }
+    if (res.ok || res.status === 404) {
+      return { ok: true, message: "Clé API acceptée par Konnect. L'identifiant du portefeuille n'est pas vérifié." }
+    }
+  } catch {}
+  return { ok: false, message: "Konnect ne répond pas. Réessayez dans un instant." }
+}
 
 export class KonnectProvider implements PaymentProvider {
   readonly name = "konnect" as const

@@ -69,6 +69,7 @@ export function apiEnv(): Record<string, string> {
     ADMIN_EMAIL: E2E.adminEmail,
     ADMIN_PASSWORD: E2E.adminPassword,
     CRON_SECRET: E2E.cronSecret,
+    SECRETS_KEY: `1:${Buffer.alloc(32, 7).toString("base64")}`,
     KONNECT_API_KEY: "",
     KONNECT_WALLET_ID: "",
     RESEND_API_KEY: "",
