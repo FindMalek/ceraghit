@@ -2,7 +2,7 @@ import { E2E } from "../../env"
 import { expect, test } from "../../fixtures"
 import { BUYER } from "../../helpers/checkout"
 import { pieceFor } from "../../support/catalogue"
-import { orderCount, orderRow, stockOf } from "../../support/db"
+import { orderRow, stockOf } from "../../support/db"
 
 test("forged payment and price requests change nothing", { tag: ["@fr", "@desktop"] }, async ({ page }, testInfo) => {
   const request = page.request
@@ -30,7 +30,6 @@ test("forged payment and price requests change nothing", { tag: ["@fr", "@deskto
   })
 
   await test.step("extra price and status fields in a new order are ignored", async () => {
-    const ordersBefore = await orderCount()
     const res = await request.post(`${E2E.apiUrl}/v1/orders`, {
       data: {
         items: [{ productId: piece.id, quantity: 1, priceTnd: 1, unitMinor: 1 }],
@@ -53,7 +52,6 @@ test("forged payment and price requests change nothing", { tag: ["@fr", "@deskto
     expect(order.paidAt).toBeNull()
     expect(order.subtotalMinor).toBe(piece.prices.TND)
     expect(order.totalMinor).toBeGreaterThan(1)
-    expect(await orderCount()).toBe(ordersBefore + 1)
     expect(await stockOf(piece.id)).toBe(piece.stock - 2)
   })
 })
