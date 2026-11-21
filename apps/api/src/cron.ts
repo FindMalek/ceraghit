@@ -7,6 +7,7 @@ import {
   type Services,
   sendExpiryMails,
   sweepRateLimits,
+  trackShipments,
 } from "@workspace/orpc"
 
 export interface CronJob {
@@ -54,6 +55,13 @@ export const CRON_JOBS: Record<string, CronJob> = {
   "retry-mail": {
     async run(services) {
       return await retryFailedMails(services)
+    },
+  },
+  /** A no-op while shipping is manual or the Aramex credentials are missing. */
+  "track-shipments": {
+    async run(services) {
+      const report = await trackShipments(services)
+      return { ...report }
     },
   },
 }

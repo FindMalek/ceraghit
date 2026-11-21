@@ -3,7 +3,7 @@ import { createDb, jobRuns, orderAudit, orders } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { AdminAuth, ConsoleMailer, DemoProvider, type Services } from "@workspace/orpc"
 import { and, count, eq, lt, sql } from "drizzle-orm"
-import { CRON_JOBS } from "../src/cron"
+import { CRON_JOBS, type CronJob } from "../src/cron"
 import { createServer } from "../src/server"
 
 const url = process.env.DATABASE_URL
@@ -14,7 +14,10 @@ describe.skipIf(!url)("cron endpoints", () => {
   const db = createDb(url!)
 
   beforeAll(() => runMigrations(db))
-  const make = (cronSecret: string | undefined) =>
+  const make = (
+    cronSecret: string | undefined,
+    jobs: Record<string, CronJob> = { [JOB]: CRON_JOBS["release-holds"]! },
+  ) =>
     createServer(
       {
         db,
@@ -33,7 +36,7 @@ describe.skipIf(!url)("cron endpoints", () => {
           cronSecret,
         },
       } as Services,
-      { [JOB]: CRON_JOBS["release-holds"]! },
+      jobs,
     )
   const server = make(SECRET)
   const call = (path: string, init: { method?: string; bearer?: string } = {}) =>
@@ -120,6 +123,22 @@ describe.skipIf(!url)("cron endpoints", () => {
       [true, { released: expired, mailed }],
       [true, { released: 0, mailed: 0 }],
     ])
+  })
+
+  test("track-shipments is a safe no-op while shipping is manual, and the run is recorded", async () => {
+    const res = await make(
+      SECRET,
+      CRON_JOBS,
+    )(
+      new Request("https://api.test/cron/track-shipments", {
+        method: "POST",
+        headers: { authorization: `Bearer ${SECRET}` },
+      }),
+    )
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true, skipped: "manual shipping" })
+    expect((await runs("track-shipments")).at(-1)?.ok).toBe(true)
+    await db.delete(jobRuns).where(eq(jobRuns.name, "track-shipments"))
   })
 
   test("two calls at once run the job once", async () => {
