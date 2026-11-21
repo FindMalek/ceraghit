@@ -19,7 +19,11 @@ export interface Services {
   secrets?: Keyring | null
   now: () => Date
   /** Server hooks; tests pass spies. */
-  hooks?: { orderShipped?: (orderId: string) => Promise<void> }
+  hooks?: {
+    orderShipped?: (orderId: string) => Promise<void>
+    shipmentDelivered?: (shipmentId: string) => Promise<void>
+    shipmentException?: (shipmentId: string) => Promise<void>
+  }
   /** Tests pass a fake for the Resend domains api. */
   http?: typeof fetch
   /** Waits between mail retries; tests pass an instant one. */

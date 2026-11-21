@@ -13,6 +13,17 @@ import { Link } from "@/i18n/navigation"
 const POLL_MS = 4000
 const POLL_FOR_MS = 120_000
 
+/** Our own words for the parcel's status, never the carrier's text. Unknown or held statuses show nothing. */
+const PARCEL_KEYS: Record<string, string> = {
+  created: "parcelCreated",
+  picked_up: "parcelPickedUp",
+  in_transit: "parcelInTransit",
+  out_for_delivery: "parcelOutForDelivery",
+  delivered: "parcelDelivered",
+  exception: "parcelException",
+  returned: "parcelReturned",
+}
+
 export function OrderStatus({ number, token }: { number: string; token: string }) {
   const t = useTranslations("order")
   const locale = useLocale()
@@ -46,6 +57,11 @@ export function OrderStatus({ number, token }: { number: string; token: string }
     )
   }
 
+  const day = (iso: string) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "Africa/Tunis" }).format(new Date(iso))
+  const parcelKey = order.shipping?.parcelStatus ? PARCEL_KEYS[order.shipping.parcelStatus] : undefined
+  const parcelAt = order.shipping?.parcelStatusAt
+  const parcel = parcelKey ? t(parcelKey, { date: parcelAt ? day(parcelAt) : "" }) : null
   const money = (minor: number) => formatMoney(minor, order.currency, locale)
   const codPending = order.status === "pending_payment" && order.paymentMethod === "cod"
   const transferPending = order.status === "pending_payment" && order.paymentMethod === "transfer"
@@ -94,6 +110,11 @@ export function OrderStatus({ number, token }: { number: string; token: string }
               <bdi dir="ltr">{carrierDisplayName(order.shipping)}</bdi>
             )}
           </p>
+          {parcel && (
+            <p className="font-medium" data-testid="parcel-status">
+              {parcel}
+            </p>
+          )}
           {order.shipping.trackingNumber && (
             <p className="text-sm">
               <span className="text-muted-foreground">{t("trackingNo")} </span>

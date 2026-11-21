@@ -24,6 +24,7 @@ export const LIMITS = {
   mailDomain: { max: 6, windowMs: 10 * MINUTE },
   mailTest: { max: 5, windowMs: 10 * MINUTE },
   konnectTest: { max: 10, windowMs: 10 * MINUTE },
+  shipmentRefresh: { max: 20, windowMs: 10 * MINUTE },
   shipmentAction: { max: 30, windowMs: 10 * MINUTE },
   shippingTest: { max: 10, windowMs: 10 * MINUTE },
   uploadUrl: { max: 12, windowMs: 10 * MINUTE },

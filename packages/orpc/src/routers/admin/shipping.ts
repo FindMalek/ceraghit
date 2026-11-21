@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { orders } from "@workspace/db"
+import { orders, shipments } from "@workspace/db"
 import {
   addressCheckSchema,
   adminShipmentSchema,
@@ -37,6 +37,7 @@ import {
   prepareShipment,
   retryLabel,
 } from "../../lib/shipping/shipments"
+import { trackShipments } from "../../lib/shipping/tracking"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -203,6 +204,40 @@ export const shippingRouter = {
     .input(z.object({ id: z.string(), inline: z.boolean().optional() }))
     .output(z.object({ url: z.string() }))
     .handler(async ({ context, input }) => ({ url: await labelDownloadUrl(context, input.id, input.inline) })),
+
+  refresh: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/refresh",
+      summary: "Ask Aramex for the latest tracking of one shipment now",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(adminShipmentSchema)
+    .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "shipmentRefresh",
+        "too_many_requests",
+        "Trop d'actualisations, réessayez dans quelques minutes.",
+      )
+      const [row] = await context.db
+        .select({ orderId: shipments.orderId })
+        .from(shipments)
+        .where(eq(shipments.id, input.id))
+        .limit(1)
+      if (!row) throw new ORPCError("NOT_FOUND", { message: "Expédition introuvable." })
+      try {
+        const report = await trackShipments(context, undefined, { shipmentId: input.id })
+        if ("skipped" in report) throw new ORPCError("PRECONDITION_FAILED", { message: ARAMEX_MISSING })
+      } catch (error) {
+        if (error instanceof ORPCError) throw error
+        throw new ORPCError("BAD_GATEWAY", { message: "Aramex ne répond pas, réessayez dans un instant." })
+      }
+      const shipment = await getOrderShipment(context.db, row.orderId)
+      if (!shipment) throw new ORPCError("NOT_FOUND", { message: "Expédition introuvable." })
+      return shipment
+    }),
 
   openShipments: adminProcedure
     .route({

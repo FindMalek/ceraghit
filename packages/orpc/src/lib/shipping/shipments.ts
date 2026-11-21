@@ -399,6 +399,11 @@ export async function getOrderShipment(db: Db, orderId: string): Promise<AdminSh
     hasLabel: row.labelKey !== null,
     pickupId: row.pickupId,
     errors: row.errors,
+    events: [...row.events]
+      .reverse()
+      .map(({ code, description, at, location }) => ({ code, description, at, location })),
+    lastPolledAt: row.lastPolledAt?.toISOString() ?? null,
+    deliveredAt: row.deliveredAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
   }
 }

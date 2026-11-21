@@ -79,3 +79,16 @@ unsaved values, never stores them, 10 tests per 10 minutes) and saves. The test 
 - Dashboard: `Mettre à jour la liste des villes` (Livraison) and `Vérifier l'adresse avec Aramex` (order sheet,
   `ValidateAddress`; an Aramex failure answers `ok: false`, never a 500).
 - Not done: country postcode rules (`postCodeRequired`) and `IsAddressServiced`.
+
+## Suivi des colis
+
+`track-shipments` (every 3 h, `POST /cron/track-shipments`) and the `Actualiser` button on the shipment card
+(`admin.shipping.refresh`, 20 per 10 minutes) both run `trackShipments`: events are merged (one per code and time, the
+newest 100 kept), the status comes from `aramex/status.ts` and never moves backwards, except into or out of `exception`.
+`delivered` stores `deliveredAt` and closes the shipment (it is no longer polled); the order stays `fulfilled`. Hooks
+`shipmentDelivered` / `shipmentException` (context `hooks`) fire once per transition, where the e-mail lane can plug in.
+
+The customer order page shows one line in our own words (never Aramex's text, which is English and may hold internal
+notes). The tracking codes in `aramex/status.ts` (`SH005`, `SH006`, `SH003`, `SH069`, `SH012`) are guesses until the
+sandbox (#198); the English keywords are the fallback. The simulated Aramex tells its story from the waybill: `DELIVERED`
+ends delivered, `PROBLEM` ends on an incident, anything else is in transit.
