@@ -126,6 +126,10 @@ export const adminShipmentSchema = z.object({
   /** The Aramex pickup this parcel is booked in, null when none. */
   pickupId: z.string().nullable(),
   errors: z.array(z.object({ at: z.string(), code: z.string(), message: z.string() })),
+  /** Newest first. */
+  events: z.array(z.object({ code: z.string(), description: z.string(), at: z.string(), location: z.string() })),
+  lastPolledAt: z.string().nullable(),
+  deliveredAt: z.string().nullable(),
   createdAt: z.string(),
 })
 export type AdminShipment = z.infer<typeof adminShipmentSchema>

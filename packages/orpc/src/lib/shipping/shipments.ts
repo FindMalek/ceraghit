@@ -175,6 +175,7 @@ function checkedCustoms(input: ShipmentDraftInput, currency: "TND" | "EUR") {
   return {
     currency,
     valueMinor: items.reduce((sum, i) => sum + i.valueMinor, 0),
+    // Aramex takes one GoodsOriginCountry per shipment (`Details`), so it is the first piece's; each item keeps its own CountryOfOrigin.
     originCountry: items[0]!.originCountry,
     items: items.map((i) => ({ ...i, hsCode: i.hsCode! })),
   }
@@ -426,18 +427,28 @@ async function attachInvoice(
     console.error(`[shipment] invoice ${waybill} ${error instanceof AramexError ? error.code : "failed"}`)
     await services.db
       .update(shipments)
-      .set({ errors: sql`${shipments.errors} || ${JSON.stringify([invoiceError(INVOICE_FAILED)])}::jsonb` })
+      .set({
+        errors: sql`(select coalesce(jsonb_agg(e), '[]'::jsonb) from jsonb_array_elements(${shipments.errors}) e where e->>'code' <> 'INVOICE') || ${JSON.stringify([invoiceError(INVOICE_FAILED)])}::jsonb`,
+      })
       .where(eq(shipments.id, shipmentId))
     return false
   }
 }
 
+/** One retry at a time per order (same claim as the creation), so two parallel retries cannot store two invoices. */
 export async function retryCommercialInvoice(services: Services, shipmentId: string): Promise<void> {
-  const row = await loadShipment(services.db, shipmentId)
-  if (row.productGroup !== "EXP" || row.commercialInvoiceKey) return
+  const first = await loadShipment(services.db, shipmentId)
+  if (first.productGroup !== "EXP" || first.commercialInvoiceKey) return
   const { provider } = await aramexFor(services, CREATE_TIMEOUT_MS)
-  if (!(await attachInvoice(services, row.id, row.waybill, provider, null))) {
-    throw new ORPCError("BAD_REQUEST", { message: INVOICE_FAILED })
+  const release = await claimOrder(services, first.orderId)
+  try {
+    const row = await loadShipment(services.db, shipmentId)
+    if (row.commercialInvoiceKey) return
+    if (!(await attachInvoice(services, row.id, row.waybill, provider, null))) {
+      throw new ORPCError("BAD_REQUEST", { message: INVOICE_FAILED })
+    }
+  } finally {
+    await release()
   }
 }
 
@@ -499,6 +510,11 @@ export async function getOrderShipment(db: Db, orderId: string): Promise<AdminSh
     hasCommercialInvoice: row.commercialInvoiceKey !== null,
     pickupId: row.pickupId,
     errors: row.errors,
+    events: [...row.events]
+      .reverse()
+      .map(({ code, description, at, location }) => ({ code, description, at, location })),
+    lastPolledAt: row.lastPolledAt?.toISOString() ?? null,
+    deliveredAt: row.deliveredAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
   }
 }
