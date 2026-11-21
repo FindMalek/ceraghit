@@ -102,7 +102,7 @@ update the code named on the right. The Aramex docs PDFs return 403 to fetchers 
 | --- | --- | --- |
 | Test host | `https://ws.dev.aramex.net` (timed out from outside, probably IP allow-listed) | `ARAMEX_HOSTS` in `aramex/endpoints.ts` |
 | Live host | `https://ws.aramex.net` | same |
-| `Source` and `Version` in `ClientInfo` | see `aramex/client.ts` (`v1.0`) | `aramex/client.ts` |
+| `Source` and `Version` in `ClientInfo` | `Version` `v1.0`; `Source` is `null`, so it is omitted from the request | `lib/shipping/resolve.ts` |
 | WCF date format | `/Date(ms+hhmm)/` in both directions | `aramex/dates.ts` |
 | `LabelFileContents` | base64 string or number array, both parsed | `aramex/provider.ts` `decodeLabel` |
 | Product types | DOM `ONP`, EXP `PPX` (others seen: `OND`, `CDS`, `PDX`, `DPX`, `GPX`) | `DEFAULT_ARAMEX_CONFIG.productTypes`, dashboard form |
@@ -110,7 +110,8 @@ update the code named on the right. The Aramex docs PDFs return 403 to fetchers 
 | Service codes | `CODS` cash on delivery, `INSR` insurance | `aramex/provider.ts` `createShipment`, `insuranceServiceCode` |
 | Label report | `ReportID` 9201, `ReportType` `URL` | `labelReportId`, `labelReportType` |
 | Commercial invoice report | `ReportID` 9202, sent on EXP only | `commercialInvoiceReportId` |
-| Delivered status | tracking `UpdateCode` `SH005` is the only code mapped (to `delivered`); every other code is stored as an event only | `deliveredCodes`, `tracking.ts` |
+| Tracking status codes | `BY_CODE`: `SH005` and `SH006` delivered, `SH003` out for delivery, `SH069` returned, `SH012` picked up; other codes fall back to English description keywords, else in transit | `lib/shipping/aramex/status.ts` |
+| Delivered code (provider side) | `deliveredCodes: ["SH005"]` tells the provider's `track` a parcel is delivered, separate from the table above | `aramex/provider.ts` `DEFAULT_ARAMEX_CONFIG`, passed by `lib/shipping/resolve.ts` |
 | Pickup | location `Atelier`, vehicle `Car`, package type `Box`, window Monday to Saturday in `Africa/Tunis` (UTC+1), at least 2 hours, last pickup 1 hour before closing | `pickupLocation`, `aramex/provider.ts` `createPickup`, `pickups.ts` `windowOf` |
 | Contact `Type`, units | `KG`, `CM` | `aramex/provider.ts` |
 | Cancel | no cancel operation: `HoldShipments` is used | `aramex/provider.ts` `cancel` |
@@ -124,12 +125,12 @@ are passed explicitly, so a guess can never reach production by default.
 Each step: do it on a preview with `ARAMEX_FAKE` unset, never on production.
 
 1. [ ] Confirm the test host with the rep. If it is not `https://ws.dev.aramex.net`, change `ARAMEX_HOSTS.test` (one line).
-2. [ ] Ask Aramex to allow-list the server address if they filter by IP (Vercel has no fixed egress address).
+2. [ ] Ask Aramex to allow-list the preview's egress IP if they filter by IP (previews run on the homelab, the-keep via Dokploy, not on Vercel).
 3. [ ] Dashboard, Livraison: choose Aramex, enter the credentials in test mode, `Tester la connexion`. Both steps (`login`, `rate`) must be green.
 4. [ ] Checkout on the preview with Aramex quotes on: a Tunisian cash on delivery order, a Tunisian card or demo order, a French EUR order. Check an EUR order is quoted in EUR (otherwise it stays on flat rates, nothing to change).
 5. [ ] Create a domestic shipment (prepaid). The label PDF must print on the paper size the owner uses (`labelReportId`, `labelReportType`).
 6. [ ] Create a domestic cash on delivery shipment. `CODS` and the amount in TND must appear on the label.
-7. [ ] Create an international shipment to France with the customs declaration. Check the commercial invoice PDF (`Facture commerciale (PDF)`): goods, HS codes, values in the order currency, origin Tunisia.
+7. [ ] Create an international shipment to France with the customs declaration. Check the commercial invoice PDF (international shipments and the invoice are #194): goods, HS codes, values in the order currency, origin Tunisia.
 8. [ ] Run `Actualiser` or `POST /cron/track-shipments`. Write down the real `UpdateCode` values and the delivered one, then set `deliveredCodes`.
 9. [ ] Book a pickup, then cancel it.
 10. [ ] Cancel (hold) a fresh shipment and ask the agency whether the hold is enough.
@@ -141,7 +142,7 @@ Test and live follow the same separation as Konnect: previews only ever use the 
 ## Questions for the Aramex rep (French, to send as is)
 
 1. API access : « Pouvez-vous activer l'accès API Shipping Services (ShippingAPI.V2, services Shipping, Rate Calculator, Tracking, Location) pour notre compte, et nous envoyer les identifiants de test puis de production : nom d'utilisateur API, mot de passe, numéro de compte, PIN du compte, code d'entité (AccountEntity), code pays du compte ? »
-2. Environnement de test : « Quelle est l'adresse de l'environnement de test, et faut-il vous communiquer une adresse IP à autoriser ? Nos serveurs n'ont pas d'IP fixe en production (Vercel). »
+2. Environnement de test : « Quelle est l'adresse de l'environnement de test, et faut-il vous communiquer une adresse IP à autoriser ? C'est l'IP de sortie du serveur de prévisualisation (hébergé chez nous) qu'il faudrait autoriser. »
 3. `Source` et `Version` : « Quelle valeur de Source et de Version devons-nous envoyer dans ClientInfo ? »
 4. Types de produit : « Quels ProductType sont ouverts sur notre compte pour le national (DOM) et l'international (EXP) ? Lequel recommandez-vous pour des céramiques fragiles ? »
 5. Paiement à la livraison : « Le paiement à la livraison (service CODS) est-il activé ? Quels frais, quel plafond, sous quel délai et sur quel compte reversez-vous les montants encaissés ? »
