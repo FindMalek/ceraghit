@@ -17,6 +17,7 @@
     "db:down": "docker compose -f docker/docker-compose.yml down",
     "demo:reset": "scripts/demo-reset.sh",
     "demo:reset:onboarding": "scripts/demo-reset.sh --onboarding",
+    "demo:videos": "bun test/demo/run.ts",
     "db:generate": "turbo db:generate -F @workspace/db",
     "db:migrate": "turbo db:migrate -F @workspace/db",
     "db:seed": "turbo db:seed -F @workspace/db",
