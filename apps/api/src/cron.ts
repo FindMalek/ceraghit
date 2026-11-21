@@ -3,6 +3,7 @@ import {
   type JobCounts,
   purgeMailLog,
   releaseExpiredHolds,
+  retryFailedMails,
   type Services,
   sendExpiryMails,
   sweepRateLimits,
@@ -48,6 +49,11 @@ export const CRON_JOBS: Record<string, CronJob> = {
     async run(services, now) {
       const released = await releaseExpiredHolds(services, now)
       return { released, mailed: await sendExpiryMails(services) }
+    },
+  },
+  "retry-mail": {
+    async run(services) {
+      return await retryFailedMails(services)
     },
   },
 }

@@ -31,3 +31,11 @@ export const releaseHoldsTask = schedules.task({
   cron: { pattern: releaseHolds.cron, timezone: releaseHolds.timezone },
   run: () => callCron(releaseHolds.name),
 })
+
+const retryMail = spec("retry-mail")
+
+export const retryMailTask = schedules.task({
+  id: retryMail.name,
+  cron: { pattern: retryMail.cron, timezone: retryMail.timezone },
+  run: () => callCron(retryMail.name),
+})
