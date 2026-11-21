@@ -21,6 +21,8 @@ export interface Narration {
 export interface Tts {
   provider: TtsProvider
   narrate(text: string): Promise<Narration>
+  /** True when `text` already has a usable clip in the cache (it would cost nothing). */
+  isCached(text: string): boolean
   /** Characters sent to a paid provider in this run: cached lines cost nothing. */
   billedChars(): number
 }
@@ -37,8 +39,29 @@ export interface TtsOptions {
   sleep?: (ms: number) => Promise<void>
 }
 
-const DEFAULT_MODEL = "eleven_multilingual_v2"
+export const DEFAULT_MODEL = "eleven_flash_v2_5"
 const VOICE_SETTINGS = { stability: 0.5, similarity_boost: 0.75 }
+
+/** Cache file name for a line, shared by the real generator and the dry-run plan. */
+export function cacheName(provider: TtsProvider, env: TtsEnv, text: string): string {
+  const model = env.ELEVENLABS_MODEL_ID || DEFAULT_MODEL
+  const voice = env.ELEVENLABS_VOICE_ID ?? ""
+  const hash = createHash("sha256")
+    .update(
+      [
+        provider,
+        provider === "elevenlabs" ? `${voice}|${model}|${JSON.stringify(VOICE_SETTINGS)}` : "thomas",
+        text,
+      ].join("\n"),
+    )
+    .digest("hex")
+    .slice(0, 24)
+  return `${hash}.${provider === "say" ? "m4a" : "mp3"}`
+}
+
+export function isCachedFile(file: string): boolean {
+  return existsSync(file) && readFileSync(file).length > 0
+}
 
 export function pickProvider(env: TtsEnv): { provider: TtsProvider; fellBack: boolean } {
   const explicit = env.TTS_PROVIDER
@@ -89,7 +112,6 @@ export function createTts(options: TtsOptions): Tts {
   mkdirSync(cacheDir, { recursive: true })
   const model = env.ELEVENLABS_MODEL_ID || DEFAULT_MODEL
   const voice = env.ELEVENLABS_VOICE_ID ?? ""
-  const ext = provider === "say" ? "m4a" : "mp3"
 
   async function render(text: string, file: string): Promise<void> {
     if (provider === "say") {
@@ -123,19 +145,10 @@ export function createTts(options: TtsOptions): Tts {
   return {
     provider,
     billedChars: () => billed,
+    isCached: (text) => isCachedFile(join(cacheDir, cacheName(provider, env, text))),
     async narrate(text) {
-      const hash = createHash("sha256")
-        .update(
-          [
-            provider,
-            provider === "elevenlabs" ? `${voice}|${model}|${JSON.stringify(VOICE_SETTINGS)}` : "thomas",
-            text,
-          ].join("\n"),
-        )
-        .digest("hex")
-        .slice(0, 24)
-      const file = join(cacheDir, `${hash}.${ext}`)
-      const cached = existsSync(file) && readFileSync(file).length > 0
+      const file = join(cacheDir, cacheName(provider, env, text))
+      const cached = isCachedFile(file)
       if (!cached) await render(text, file)
       const durationMs = duration(file)
       if (!Number.isFinite(durationMs) || durationMs <= 0) throw new Error(`narration ${file} has no usable duration`)

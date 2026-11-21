@@ -35,7 +35,7 @@ test("a line is generated once, then served from the cache and billed once", asy
   expect(sent.url).toBe("https://api.elevenlabs.io/v1/text-to-speech/voice-1?output_format=mp3_44100_128")
   expect(JSON.parse(String(sent.init.body))).toMatchObject({
     text: "Bonjour à tous",
-    model_id: "eleven_multilingual_v2",
+    model_id: "eleven_flash_v2_5",
   })
 })
 
