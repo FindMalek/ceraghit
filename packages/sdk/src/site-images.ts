@@ -98,3 +98,4 @@ export const siteSlotInputSchema = z.object({
     .max(8),
 })
 export type SiteSlotInput = z.output<typeof siteSlotInputSchema>
+export type PublicSiteImages = z.output<typeof publicSiteImagesSchema>
