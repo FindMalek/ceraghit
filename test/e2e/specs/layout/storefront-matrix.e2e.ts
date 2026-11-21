@@ -1,8 +1,8 @@
 import { E2E } from "../../env"
 import { expect, test } from "../../fixtures"
-import { createOrderViaApi } from "../../helpers/order"
 import { type AppLocale, localePath } from "../../helpers/locale"
 import { t } from "../../helpers/messages"
+import { createOrderViaApi } from "../../helpers/order"
 import { layoutProblems } from "../../support/layout"
 
 /** Runs in all six storefront projects: fr, en, ar on desktop and on a phone. */
@@ -21,7 +21,9 @@ async function products(request: import("@playwright/test").APIRequestContext): 
 }
 
 const longest = (list: ApiProduct[], locale: AppLocale): ApiProduct =>
-  [...list].sort((a, b) => (b.title[locale] ?? b.title.fr ?? "").length - (a.title[locale] ?? a.title.fr ?? "").length)[0]!
+  [...list].sort(
+    (a, b) => (b.title[locale] ?? b.title.fr ?? "").length - (a.title[locale] ?? a.title.fr ?? "").length,
+  )[0]!
 
 test("storefront pages fit the screen in this language and on this device", async ({
   page,
@@ -65,7 +67,9 @@ test("storefront pages fit the screen in this language and on this device", asyn
 
   await step("the cart with three lines", async () => {
     const plain = list.filter((p) => !p.unique && !p.quoteOnly && p.variants.length === 0)
-    const three = [...plain].sort((a, b) => (b.title[appLocale] ?? "").length - (a.title[appLocale] ?? "").length).slice(0, 3)
+    const three = [...plain]
+      .sort((a, b) => (b.title[appLocale] ?? "").length - (a.title[appLocale] ?? "").length)
+      .slice(0, 3)
     for (const piece of three) {
       await open(`/product/${piece.slug}`)
       await page.getByRole("button", { name: t(appLocale, "product.add") }).click()

@@ -18,7 +18,8 @@ export async function layoutProblems(page: Page): Promise<LayoutProblem[]> {
     const root = document.documentElement
     const label = (el: Element): string => {
       const id = el.id ? `#${el.id}` : ""
-      const cls = typeof el.className === "string" && el.className ? `.${el.className.split(/\s+/).slice(0, 3).join(".")}` : ""
+      const cls =
+        typeof el.className === "string" && el.className ? `.${el.className.split(/\s+/).slice(0, 3).join(".")}` : ""
       return `${el.tagName.toLowerCase()}${id}${cls}`
     }
     if (root.scrollWidth > window.innerWidth + 1)
@@ -45,8 +46,16 @@ export async function layoutProblems(page: Page): Promise<LayoutProblem[]> {
         .join(" ")
         .trim()
 
-      if (!clippedByAncestor(el) && (rect.right > window.innerWidth + 1 || rect.left < -1) && style.position !== "fixed")
-        found.push({ kind: "outside", where: label(el), text: ownText.slice(0, 60) || `${Math.round(rect.left)}..${Math.round(rect.right)}` })
+      if (
+        !clippedByAncestor(el) &&
+        (rect.right > window.innerWidth + 1 || rect.left < -1) &&
+        style.position !== "fixed"
+      )
+        found.push({
+          kind: "outside",
+          where: label(el),
+          text: ownText.slice(0, 60) || `${Math.round(rect.left)}..${Math.round(rect.right)}`,
+        })
 
       const clips = ["hidden", "clip"].includes(style.overflowX) || ["hidden", "clip"].includes(style.overflowY)
       if (ownText && clips && style.textOverflow !== "ellipsis") {
