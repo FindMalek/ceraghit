@@ -51,7 +51,7 @@ The tutorial budget is limited (`ELEVENLABS_CREDIT_BUDGET`, default 29000 credit
 
 1. `pnpm demo:videos -- --plan` (dry run, no network): per video the unique spoken lines, characters, how many are
    already cached or shared with an earlier video (both cost 0), credits at the model's rate, and the budget left. It warns on a spoken line over 140
-   characters (`NARRATION_MAX_LINE`) or a video over 700 spoken characters (`NARRATION_MAX_VIDEO`). Captions are free:
+   characters (`NARRATION_MAX_LINE`) or a video over 450 spoken characters (`NARRATION_MAX_VIDEO`). Captions are free:
    the voice gives the point, the caption carries the details.
 2. Draft pass: `pnpm demo:videos -- 34 --voice=draft`, fix wording and timing until it is right. Free.
 3. Final pass: `pnpm demo:videos -- 34 --voice=final`. It refuses to start when the new (uncached) credits exceed what is

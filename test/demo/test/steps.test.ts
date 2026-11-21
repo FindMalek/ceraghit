@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { readdirSync, readFileSync } from "node:fs"
 import { TUTORIALS } from "../../../packages/sdk/src/tutorials"
-import { DEFAULT_MAX_LINE, uniqueLines } from "../lib/narration"
+import { DEFAULT_MAX_LINE, DEFAULT_MAX_VIDEO, uniqueLines } from "../lib/narration"
 import { parseVideo } from "../lib/steps"
 
 const base = { id: "01", slug: "x", title_fr: "X", start: { app: "web", path: "/", loggedIn: false } }
@@ -20,7 +20,7 @@ test("every video file is named after a catalogue id and keeps its narration ins
     expect(catalogue.has(`${video.id}-${video.slug}`)).toBe(true)
     const lines = uniqueLines(video)
     for (const line of lines) expect(line.length).toBeLessThanOrEqual(DEFAULT_MAX_LINE)
-    expect(lines.join("").length).toBeLessThanOrEqual(450)
+    expect(lines.join("").length).toBeLessThanOrEqual(DEFAULT_MAX_VIDEO)
   }
 })
 
