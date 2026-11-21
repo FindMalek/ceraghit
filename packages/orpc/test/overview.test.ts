@@ -11,6 +11,12 @@ import { adminRouter } from "../src/routers/admin"
 
 const url = process.env.DATABASE_URL
 
+/** A fixed clock, studio time (UTC+1): every sale below is dated from it, so the test reads the same at any hour. */
+const TODAY = "2026-03-10"
+let clock = new Date(`${TODAY}T10:00:00+01:00`)
+const dayOffset = (daysAgo: number): string => new Date(Date.UTC(2026, 2, 10 - daysAgo)).toISOString().slice(0, 10)
+const studio = (daysAgo: number, time: string): string => `${dayOffset(daysAgo)}T${time}:00+01:00`
+
 describe.skipIf(!url)("overview stats", () => {
   const db = createDb(url!)
   const services: Services = {
@@ -19,7 +25,7 @@ describe.skipIf(!url)("overview stats", () => {
     mailer: { send: async () => ({ id: null }) },
     storage: null,
     auth: new AdminAuth(db),
-    now: () => new Date(),
+    now: () => clock,
     config: {
       webUrl: "https://web.test",
       apiPublicUrl: "https://api.test",
@@ -64,15 +70,14 @@ describe.skipIf(!url)("overview stats", () => {
   })
 
   test("a range starts at the studio midnight, not 24 hours times days before now", async () => {
-    const day = (ago: number) =>
-      new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Tunis" }).format(Date.now() - ago * 864e5)
+    clock = new Date(`${TODAY}T10:00:00+01:00`)
     const before = await owner.overview({ days: 7 })
     const monthBefore = await owner.overview({ days: 30 })
 
-    await sale(`${day(7)}T23:30:00+01:00`, "TND", 40_000)
-    await sale(`${day(6)}T00:10:00+01:00`, "TND", 85_500)
-    await sale(`${day(3)}T12:00:00+01:00`, "EUR", 5_900)
-    await sale(`${day(3)}T12:00:00+01:00`, "TND", 99_000, "cancelled")
+    await sale(studio(7, "23:30"), "TND", 40_000)
+    await sale(studio(6, "00:10"), "TND", 85_500)
+    await sale(studio(3, "12:00"), "EUR", 5_900)
+    await sale(studio(3, "12:00"), "TND", 99_000, "cancelled")
 
     const week = await owner.overview({ days: 7 })
     expect(week.revenue.TND - before.revenue.TND).toBe(85_500)
@@ -82,5 +87,17 @@ describe.skipIf(!url)("overview stats", () => {
     const month = await owner.overview({ days: 30 })
     expect(month.revenue.TND - monthBefore.revenue.TND).toBe(125_500)
     expect(month.revenue.EUR - monthBefore.revenue.EUR).toBe(5_900)
+  })
+
+  test("a range ends at the studio midnight: a sale just before it counts, one just after does not", async () => {
+    clock = new Date(`${TODAY}T23:50:00+01:00`)
+    const before = await owner.overview({ days: 7 })
+
+    await sale(studio(0, "23:45"), "TND", 30_000)
+    await sale(studio(-1, "00:10"), "TND", 9_000)
+
+    const week = await owner.overview({ days: 7 })
+    expect(week.revenue.TND - before.revenue.TND).toBe(30_000)
+    expect(week.paidOrders - before.paidOrders).toBe(1)
   })
 })

@@ -11,11 +11,14 @@ const PREFIX = "E2E-ST-"
 /** The browser runs in UTC while the studio is in Tunis (UTC+1, no daylight saving): the day boundary must come from the server. */
 test.use({ timezoneId: "UTC" })
 
+/** The one instant every date of this spec is derived from, set in `beforeAll` so the seed and the checks agree. */
+let NOW = Date.now()
+
 const tunisDay = (daysAgo: number): string =>
-  new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Tunis" }).format(Date.now() - daysAgo * 864e5)
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Tunis" }).format(NOW - daysAgo * 864e5)
 const tunisAt = (daysAgo: number, time: string): Date => new Date(`${tunisDay(daysAgo)}T${time}:00+01:00`)
 
-const SALES: SaleSeed[] = [
+const buildSales = (): SaleSeed[] => [
   { number: `${PREFIX}01`, status: "paid", currency: "TND", totalMinor: 120_000, paidAt: tunisAt(2, "10:00") },
   { number: `${PREFIX}02`, status: "paid", currency: "TND", totalMinor: 85_500, paidAt: tunisAt(3, "15:00") },
   { number: `${PREFIX}03`, status: "paid", currency: "TND", totalMinor: 40_000, paidAt: tunisAt(1, "09:30") },
@@ -30,6 +33,21 @@ const SALES: SaleSeed[] = [
   { number: `${PREFIX}11`, status: "paid", currency: "TND", totalMinor: 11_000, paidAt: tunisAt(6, "00:10") },
 ]
 
+let SALES: SaleSeed[] = []
+
+/** The api cuts its ranges at Tunis midnight per request: a run that crosses it would move the window under the seed. */
+const nearTunisMidnight = (now: number): boolean => {
+  const [hour, minute] = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Tunis",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+    .format(now)
+    .split(":")
+    .map(Number)
+  return (hour ?? 0) === 23 && (minute ?? 0) >= 55
+}
+
 /** What the seeded orders add to each range, by the issue's rules: paid or shipped, by paidAt, in their own currency. */
 const ADDED: Record<7 | 30, Record<Currency, { total: number; orders: number }>> = {
   7: { TND: { total: 286_500, orders: 5 }, EUR: { total: 17_900, orders: 2 } },
@@ -42,6 +60,12 @@ const baseline: Record<7 | 30, Record<Currency, { total: number; orders: number 
 }
 
 test.beforeAll(async () => {
+  NOW = Date.now()
+  test.skip(
+    nearTunisMidnight(NOW),
+    "within five minutes before Tunis midnight the studio day can change during the run, rerun after midnight",
+  )
+  SALES = buildSales()
   const db = openDb()
   await completeSetup(db)
   await db.close()
@@ -50,11 +74,28 @@ test.beforeAll(async () => {
     for (const currency of ["TND", "EUR"] as const) baseline[days][currency] = await salesWindow(currency, days)
   }
   for (const sale of SALES) await insertSale(sale)
+  for (const days of [7, 30] as const) {
+    for (const currency of ["TND", "EUR"] as const) {
+      const after = await salesWindow(currency, days)
+      expect(after.total - baseline[days][currency].total, `${currency} ${days}d seed total`).toBe(
+        ADDED[days][currency].total,
+      )
+      expect(after.orders - baseline[days][currency].orders, `${currency} ${days}d seed orders`).toBe(
+        ADDED[days][currency].orders,
+      )
+    }
+  }
 })
 
 test.afterAll(async () => {
   await deleteOrdersLike(PREFIX)
 })
+
+/** "1 nov. 2026" must not match inside "21 nov. 2026": the label has to start at a digit boundary. */
+const hasDay = (text: string, label: string): boolean => {
+  const at = text.indexOf(label)
+  return at !== -1 && !/\d/.test(text[at - 1] ?? "")
+}
 
 const minorOf = (text: string, currency: Currency): number =>
   Math.round(Number(text.replace(/[^\d,]/g, "").replace(",", ".")) * (currency === "TND" ? 1000 : 100))
@@ -189,9 +230,7 @@ test("the tiles equal the paid orders of the orders list, per currency", async (
     await page.getByPlaceholder("Numéro, nom ou email").fill(PREFIX)
     await expect(page.getByText(`${PREFIX}11`, { exact: true }).locator("visible=true")).toBeVisible()
     const dayLabel = (daysAgo: number): string =>
-      new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeZone: "Africa/Tunis" }).format(
-        Date.now() - daysAgo * 864e5,
-      )
+      new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeZone: "Africa/Tunis" }).format(NOW - daysAgo * 864e5)
     const sums: Record<Currency, number> = { TND: 0, EUR: 0 }
     for (const sale of SALES) {
       const row = page.locator("tr:visible, li:visible").filter({ hasText: sale.number }).last()
@@ -201,7 +240,7 @@ test("the tiles equal the paid orders of the orders list, per currency", async (
       expect(money, `${sale.number} shows its total`).not.toBeNull()
       expect(minorOf(money?.[1] ?? "", sale.currency), `${sale.number} total`).toBe(sale.totalMinor)
       expect(money?.[2]).toBe(sale.currency === "TND" ? "DT" : "€")
-      const age = Array.from({ length: 31 }, (_, i) => i).find((i) => text.includes(dayLabel(i)))
+      const age = Array.from({ length: 31 }, (_, i) => i).find((i) => hasDay(text, dayLabel(i)))
       const counts = /Payée|Expédiée/.test(text)
       if (counts && age !== undefined && age <= 6) sums[sale.currency] += sale.totalMinor
     }
