@@ -1,0 +1,43 @@
+{
+  "id": "46",
+  "slug": "emettre-facture",
+  "title_fr": "Émettre et imprimer une facture",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10042",
+      "caption_fr": "Ouvrez une commande payée.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10043",
+      "caption_fr": "Ouvrez une commande payée.",
+      "only": "mobile",
+      "voice": true
+    },
+    { "action": "click", "target": { "text": "CER-100" }, "caption_fr": "Voici la commande." },
+    { "action": "click", "target": { "role": "link", "name": "Facture" }, "caption_fr": "Cliquez sur Facture." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "English" },
+      "caption_fr": "Choisissez la langue : français, anglais ou arabe."
+    },
+    { "action": "click", "target": { "role": "button", "name": "Français" }, "caption_fr": "Revenons au français." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Émettre la facture" },
+      "caption_fr": "Émettez la facture : elle reçoit son numéro."
+    },
+    { "action": "scroll", "value": "500", "caption_fr": "Les mentions légales viennent de votre profil." },
+    {
+      "action": "hover",
+      "target": { "role": "button", "name": "Imprimer ou enregistrer en PDF" },
+      "caption_fr": "Imprimez ou enregistrez en PDF."
+    }
+  ]
+}

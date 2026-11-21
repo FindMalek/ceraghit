@@ -1,0 +1,59 @@
+{
+  "id": "42",
+  "slug": "marquer-payee-virement",
+  "title_fr": "Confirmer un virement reçu",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10099",
+      "caption_fr": "Ouvrez une commande en attente de paiement.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10098",
+      "caption_fr": "Ouvrez une commande en attente de paiement.",
+      "only": "mobile",
+      "voice": true
+    },
+    { "action": "click", "target": { "text": "CER-100" }, "caption_fr": "Voici la commande." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Marquer payée" },
+      "caption_fr": "Cliquez sur Marquer payée."
+    },
+    {
+      "action": "click",
+      "target": { "role": "combobox", "name": "Reçu par" },
+      "caption_fr": "Choisissez comment vous avez été payé."
+    },
+    {
+      "action": "click",
+      "target": { "role": "option", "name": "Virement bancaire" },
+      "caption_fr": "Choisissez comment vous avez été payé."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Référence du paiement (facultatif)" },
+      "value": "VIR-0042",
+      "caption_fr": "Notez la référence du virement."
+    },
+    { "action": "wait", "caption_fr": "Vérifiez que l'argent est bien arrivé.", "holdMs": 2200 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Confirmer le paiement" },
+      "caption_fr": "Confirmez le paiement."
+    },
+    { "action": "wait", "caption_fr": "La commande est payée, le client est prévenu.", "holdMs": 1800 },
+    { "action": "click", "target": { "text": "CER-100" }, "caption_fr": "Rouvrez la commande.", "holdMs": 800 },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Historique" },
+      "caption_fr": "L'historique garde qui a confirmé, et quand."
+    }
+  ]
+}
