@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { formatMoney, type ShipmentDraft } from "@workspace/sdk"
+import { formatMoney, type ShipmentCustoms, type ShipmentDraft } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import {
@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
-import { showError } from "@workspace/ui/components/error-banner"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { useEffect, useState } from "react"
@@ -86,12 +85,20 @@ export function CreateShipmentDialog({
   })
   const [form, setForm] = useState<Form | null>(null)
   const [insure, setInsure] = useState(false)
+  const [customs, setCustoms] = useState<ShipmentCustoms | null>(null)
+  const [valueText, setValueText] = useState<string[]>([])
 
   useEffect(() => {
     if (open && draft.data) {
       const { consignee, parcel, description, fragile } = draft.data
       setForm({ consignee, parcel, description, fragile })
       setInsure(false)
+      setCustoms(draft.data.customs)
+      setValueText(
+        draft.data.customs?.items.map((i) =>
+          String(i.valueMinor / (draft.data.customs?.currency === "TND" ? 1000 : 100)),
+        ) ?? [],
+      )
     }
   }, [open, draft.data])
 
@@ -103,7 +110,6 @@ export function CreateShipmentDialog({
         queryClient.invalidateQueries({ queryKey: orpc.admin.overview.key() })
         onOpenChange(false)
       },
-      onError: (error) => showError(errorMessage(error)),
     }),
   )
 
@@ -113,12 +119,36 @@ export function CreateShipmentDialog({
   const setParcel = (key: keyof Form["parcel"], value: string) =>
     setForm((f) => (f ? { ...f, parcel: { ...f.parcel, [key]: Number(value.replace(/\D/g, "")) } } : f))
 
+  const setItem = (index: number, key: keyof ShipmentCustoms["items"][number], value: string) =>
+    setCustoms((c) =>
+      c
+        ? {
+            ...c,
+            items: c.items.map((item, i) =>
+              i !== index
+                ? item
+                : key === "valueMinor"
+                  ? {
+                      ...item,
+                      valueMinor:
+                        Math.round(Number(value.replace(",", ".")) * (c.currency === "TND" ? 1000 : 100)) || 0,
+                    }
+                  : key === "quantity"
+                    ? { ...item, quantity: Number(value.replace(/\D/g, "")) }
+                    : { ...item, [key]: value },
+            ),
+          }
+        : c,
+    )
+  const declaredMinor = customs?.items.reduce((sum, i) => sum + i.valueMinor, 0) ?? 0
+
   const submit = () => {
     if (!d || !form) return
     create.mutate({
       orderId,
       ...form,
       insurance: insure ? { amountMinor: d.insuranceSuggestedMinor } : null,
+      customs,
     })
   }
 
@@ -250,6 +280,60 @@ export function CreateShipmentDialog({
                 </p>
               </section>
             )}
+            {customs && (
+              <fieldset className="flex flex-col gap-3" data-testid="shipment-customs">
+                <legend className="mb-1 font-heading text-lg">Déclaration en douane</legend>
+                <p className="text-muted-foreground text-sm">
+                  La valeur déclarée est le prix des pièces, sans la livraison. Montants en {customs.currency}.
+                </p>
+                {customs.items.map((item, i) => (
+                  <div key={`${item.description}-${i}`} className="flex flex-col gap-2 rounded-md border p-3">
+                    <Field
+                      id={`sh-c-desc-${i}`}
+                      label="Description"
+                      value={item.description}
+                      max={50}
+                      onChange={(v) => setItem(i, "description", v)}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field
+                        id={`sh-c-qty-${i}`}
+                        label="Quantité"
+                        type="number"
+                        value={String(item.quantity)}
+                        onChange={(v) => setItem(i, "quantity", v)}
+                      />
+                      <Field
+                        id={`sh-c-value-${i}`}
+                        label={`Valeur (${customs.currency})`}
+                        value={valueText[i] ?? ""}
+                        onChange={(v) => {
+                          setValueText((t) => t.map((x, j) => (j === i ? v : x)))
+                          setItem(i, "valueMinor", v)
+                        }}
+                      />
+                      <Field
+                        id={`sh-c-hs-${i}`}
+                        label="Code SH"
+                        value={item.hsCode}
+                        max={13}
+                        onChange={(v) => setItem(i, "hsCode", v)}
+                      />
+                      <Field
+                        id={`sh-c-origin-${i}`}
+                        label="Origine (pays)"
+                        value={item.originCountry}
+                        max={2}
+                        onChange={(v) => setItem(i, "originCountry", v.toUpperCase())}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <p className="text-sm" data-testid="shipment-customs-total">
+                  Valeur totale déclarée : {formatMoney(declaredMinor, customs.currency)}
+                </p>
+              </fieldset>
+            )}
             <section>
               <h3 className="mb-1 font-heading text-lg">Assurance</h3>
               <div className="flex items-center gap-2 text-sm">
@@ -260,6 +344,11 @@ export function CreateShipmentDialog({
               </div>
             </section>
           </div>
+        )}
+        {create.isError && (
+          <p role="alert" className="text-destructive text-sm" data-testid="shipment-error">
+            {errorMessage(create.error)}
+          </p>
         )}
         <DialogFooter>
           <Button variant="outline" className="h-11" onClick={() => onOpenChange(false)}>

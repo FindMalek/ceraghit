@@ -31,10 +31,12 @@ import {
 } from "../../lib/shipping/resolve"
 import { getShippingSettings, saveShippingSettings } from "../../lib/shipping/settings"
 import {
+  commercialInvoiceDownloadUrl,
   createShipment,
   getOrderShipment,
   labelDownloadUrl,
   prepareShipment,
+  retryCommercialInvoice,
   retryLabel,
 } from "../../lib/shipping/shipments"
 import { adminProcedure } from "../../procedures"
@@ -279,6 +281,31 @@ export const shippingRouter = {
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       await retryLabel(context, input.id)
+      return { ok: true as const }
+    }),
+
+  commercialInvoiceUrl: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/commercial-invoice-url",
+      summary: "A 5 minute signed link to the commercial invoice PDF",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(z.object({ url: z.string() }))
+    .handler(async ({ context, input }) => ({ url: await commercialInvoiceDownloadUrl(context, input.id) })),
+
+  retryCommercialInvoice: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/commercial-invoice",
+      summary: "Fetch and store the commercial invoice again",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      await retryCommercialInvoice(context, input.id)
       return { ok: true as const }
     }),
 }

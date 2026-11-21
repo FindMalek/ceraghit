@@ -41,6 +41,19 @@ One limit to know: on Cloudflare R2 a bucket with a public custom domain serves 
 is an unguessable random uuid that is never published or logged, so it cannot be found, but anyone who is handed the
 key could fetch it anonymously. If that is not acceptable, give labels their own bucket without a public domain.
 
+## International parcels and the commercial invoice
+
+A destination outside Tunisia ships as `EXP` and needs a customs declaration, entered per shipment in the dashboard
+dialog (prefilled from the order lines: title, quantity, weight, unit price x quantity, HS code `691390` as a suggestion,
+origin `TN`). Values are in the order's own currency, never converted or summed across currencies; the total declares the
+pieces only, not the delivery. Every piece needs an HS code of 4 to 10 digits (dots and spaces are removed). Cash on
+delivery stays Tunisia and dinars only. There are no product-level HS fields yet: the owner types the code on each parcel.
+
+The commercial invoice PDF comes from the `ShipmentAttachments` link of the create answer, else from
+`PrintCommercialInvoice`. It is stored as `private/invoices/<uuid>.pdf` next to the label (same rules: signed 5 minute
+link `admin.shipping.commercialInvoiceUrl`, `/files` answers 404, kept by `STORAGE_REFERENCES`). If it cannot be
+stored the shipment is kept with an `INVOICE` error and the card offers `Réessayer la facture commerciale`.
+
 ## Live guard and limits
 
 - `createShippingProvider` refuses `mode: "live"` unless `productTypes`, `labelReportId`, `paymentType` and `deliveredCodes`

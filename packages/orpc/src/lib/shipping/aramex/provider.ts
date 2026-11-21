@@ -212,6 +212,20 @@ export class AramexShippingProvider implements ShippingProvider {
     return { url, pdf }
   }
 
+  async getCommercialInvoice(waybill: string, knownUrl: string | null): Promise<Uint8Array | null> {
+    let url = knownUrl
+    if (!url) {
+      const res = await this.client.printCommercialInvoice({
+        ShipmentNumber: waybill,
+        ProductGroup: "EXP",
+        OriginEntity: this.config.accountEntity,
+        ReportID: this.config.commercialInvoiceReportId,
+      })
+      url = res.CommercialInvoiceInfo?.Url ?? null
+    }
+    return url && isAramexUrl(url) ? this.download(url) : null
+  }
+
   private async download(url: string): Promise<Uint8Array | null> {
     try {
       // A redirect could leave the Aramex hosts: never follow one

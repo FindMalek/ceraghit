@@ -580,6 +580,17 @@ function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
   // A parcel waiting for its pickup, and one cancelled before it left (its order went back to paid, the hold failed).
   const booked = live.find((s) => s.status === "created")
   if (booked) Object.assign(booked, { pickupId: "10000001", pickupGuid: "00000000-0000-4000-8000-000000000001" })
+  // An international parcel whose commercial invoice could not be stored, to show the retry action.
+  const abroad = live.find((s) => s.productGroup === "EXP" && s.status !== "created")
+  if (abroad) {
+    abroad.errors = [
+      {
+        at: now.toISOString(),
+        code: "INVOICE",
+        message: "La facture commerciale n'a pas pu être enregistrée. Utilisez « Réessayer la facture commerciale ».",
+      },
+    ]
+  }
   const unshipped = orders.find((o) => o.status === "paid" && o.country === "TN" && !o.carrier && o.id)
   if (unshipped) {
     live.push({
