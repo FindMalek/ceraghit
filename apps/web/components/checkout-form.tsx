@@ -41,8 +41,13 @@ import { TermsCheckbox } from "./terms-checkbox"
 const FIELDS = ["customerName", "email", "phone", "city", "address", "postalCode", "note"] as const
 type Field = (typeof FIELDS)[number]
 
-const METHOD_LABEL = { online: "methodOnline", cod: "methodCod", transfer: "methodTransfer" } as const
-const HINT_LABEL = { cod: "methodCodHint", transfer: "methodTransferHint" } as const
+const METHOD_LABEL = {
+  online: "methodOnline",
+  cod: "methodCod",
+  transfer: "methodTransfer",
+  payoneer: "methodPayoneer",
+} as const
+const HINT_LABEL = { cod: "methodCodHint", transfer: "methodTransferHint", payoneer: "methodPayoneerHint" } as const
 
 export function CheckoutForm({
   paymentMethods,

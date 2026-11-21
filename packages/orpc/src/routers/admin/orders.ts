@@ -270,7 +270,8 @@ export const ordersRouter = {
         await markPaidManually(context, {
           orderId: order.id,
           adminId,
-          method: order.paymentMethod === "transfer" ? "transfer" : "other",
+          method:
+            order.paymentMethod === "transfer" || order.paymentMethod === "payoneer" ? order.paymentMethod : "other",
           reference: null,
           note: null,
           expectedTotalMinor: order.totalMinor,

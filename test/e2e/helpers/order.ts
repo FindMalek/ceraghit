@@ -23,6 +23,7 @@ export interface PlacedOrder {
 export type OrderChoice =
   | { method: "cod"; country?: "TN" }
   | { method: "transfer"; country: "FR" | "DE" | "BE" | "IT" | "ES" | "CH" }
+  | { method: "payoneer"; country: "FR" | "DE" | "BE" | "IT" | "ES" | "CH" }
   | { method: "online"; country?: "TN" | "FR" }
 
 export type PlaceOrderOptions = { locale: AppLocale; productSlug?: string } & OrderChoice
@@ -123,6 +124,7 @@ const METHOD_KEY = {
   online: "checkout.methodOnline",
   cod: "checkout.methodCod",
   transfer: "checkout.methodTransfer",
+  payoneer: "checkout.methodPayoneer",
 } as const
 
 function escapeRegex(text: string): string {

@@ -10,6 +10,7 @@ import {
   renderStudioNewOrder,
 } from "../emails/confirmation"
 import { deliverMail } from "./mail-log"
+import { getPaymentSettings } from "./settings"
 import { getShopProfile, studioInbox } from "./shop-profile"
 
 async function loadMail(services: Services, orderId: string) {
@@ -18,6 +19,7 @@ async function loadMail(services: Services, orderId: string) {
   if (!order) return null
   const profile = await getShopProfile(db)
   const studio = studioInbox(profile)
+  const { payoneer } = await getPaymentSettings(db, config)
   return {
     order,
     studio,
@@ -26,11 +28,12 @@ async function loadMail(services: Services, orderId: string) {
       bank: bankFromProfile(profile),
       contactEmail: profile.email ?? studio ?? "",
       studio,
+      payoneerLink: payoneer.mode === "static" ? payoneer.staticLink : null,
     },
   }
 }
 
-/** Customer and studio each get one mail when an order is confirmed (paid online, or placed as cash on delivery or bank transfer). */
+/** Customer and studio each get one mail when an order is confirmed (paid online, or placed as cash on delivery, bank transfer or Payoneer). */
 export async function sendOrderEmails(services: Services, orderId: string): Promise<void> {
   try {
     const loaded = await loadMail(services, orderId)

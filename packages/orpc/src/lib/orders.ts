@@ -3,6 +3,7 @@ import { type Db, orderAudit, orderItems, orders, products, productVariants } fr
 import {
   type Currency,
   holdDays,
+  isOfflineMethod,
   type ManualPaymentMethod,
   type OrderInput,
   paymentMethodsFor,
@@ -319,7 +320,7 @@ export async function createOrder(services: Services, input: OrderInput) {
 
   const payPageUrl = orderUrl(config.webUrl, { ...created, locale: input.locale })
   recordOrderCreated({ method: created.paymentMethod, currency: created.currency, country: created.country })
-  if (created.paymentMethod === "cod" || created.paymentMethod === "transfer") {
+  if (isOfflineMethod(created.paymentMethod)) {
     await db.update(orders).set({ paymentProvider: created.paymentMethod }).where(eq(orders.id, created.id))
     await sendOrderEmails(services, created.id)
     return { number: created.number, token: created.publicToken, payUrl: payPageUrl }

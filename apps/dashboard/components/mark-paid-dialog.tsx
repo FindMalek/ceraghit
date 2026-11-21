@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { formatMoney, type ManualPaymentMethod } from "@workspace/sdk"
+import { formatMoney, type ManualPaymentMethod, type PaymentMethod } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import {
   Dialog,
@@ -38,7 +38,7 @@ interface PayableOrder {
   customerName: string
   totalMinor: number
   currency: "TND" | "EUR"
-  paymentMethod: "online" | "cod" | "transfer"
+  paymentMethod: PaymentMethod
 }
 
 export function MarkPaidDialog({
@@ -59,7 +59,7 @@ export function MarkPaidDialog({
 
   useEffect(() => {
     if (!open) return
-    setMethod(order.paymentMethod === "transfer" ? "transfer" : "other")
+    setMethod(order.paymentMethod === "transfer" || order.paymentMethod === "payoneer" ? order.paymentMethod : "other")
     setReference("")
     setNote("")
   }, [open, order.paymentMethod])
@@ -111,7 +111,7 @@ export function MarkPaidDialog({
         </div>
         <p className="text-muted-foreground text-sm">
           Vérifiez que ce montant est bien arrivé sur votre compte avant de confirmer. Le client reçoit un email de
-          confirmation.
+          confirmation.{order.paymentMethod === "payoneer" && " Le total de la commande doit être reçu en entier."}
         </p>
         <DialogFooter>
           <Button variant="outline" className="h-11" onClick={() => onOpenChange(false)}>

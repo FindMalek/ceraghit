@@ -3,7 +3,17 @@ import { type BankDetails, type Currency, carrierDisplayName, formatMoney } from
 import { invoiceUrl } from "../lib/invoices"
 import type { Mail } from "../lib/mailer"
 import { asLocale, EMAIL_COPY } from "./copy"
-import { bankBlock, greeting, itemLines, join, ltr, type MailOrder, orderFooter, totalLines } from "./layout"
+import {
+  bankBlock,
+  confirmationIntro,
+  greeting,
+  itemLines,
+  join,
+  ltr,
+  type MailOrder,
+  orderFooter,
+  totalLines,
+} from "./layout"
 import { orderUrl } from "./order-url"
 import { confirmationHtml, orderExpiredHtml, paymentReceivedHtml, shippedHtml, studioOrderHtml } from "./templates"
 
@@ -27,6 +37,8 @@ export interface MailContext {
   /** Shown to the customer while the bank details are missing, and used for replies. */
   contactEmail: string
   studio: string | null
+  /** The one link of a shop that uses a single Payoneer link for everyone. */
+  payoneerLink?: string | null
 }
 
 export async function renderOrderConfirmation(order: ConfirmationOrder, ctx: MailContext): Promise<Mail> {
@@ -34,6 +46,7 @@ export async function renderOrderConfirmation(order: ConfirmationOrder, ctx: Mai
   const c = EMAIL_COPY[locale]
   const k = c.confirmation
   const transfer = order.paymentMethod === "transfer"
+  const payoneer = order.paymentMethod === "payoneer"
   return {
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
@@ -42,12 +55,15 @@ export async function renderOrderConfirmation(order: ConfirmationOrder, ctx: Mai
     text: join(
       [
         ...greeting(c, order.customerName),
-        order.paymentMethod === "cod" ? k.cod : transfer ? k.transfer : k.paid,
+        confirmationIntro(order.paymentMethod, ctx, k),
         "",
         ...itemLines(order, locale),
         "",
         ...totalLines(order, locale, c),
         ...(transfer ? bankBlock(c, ctx.bank, order.number, ctx.contactEmail, locale) : []),
+        ...(payoneer && ctx.payoneerLink
+          ? ["", ltr(ctx.payoneerLink, locale), `${k.reference}: ${ltr(order.number, locale)}`]
+          : []),
         ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order) }, locale),
       ],
       locale,
@@ -60,12 +76,15 @@ export async function renderStudioNewOrder(order: ConfirmationOrder, ctx: MailCo
   const c = EMAIL_COPY.fr
   const cod = order.paymentMethod === "cod"
   const transfer = order.paymentMethod === "transfer"
-  const subject = `Nouvelle commande ${order.number}${cod ? " (paiement à la livraison)" : transfer ? " (virement à recevoir)" : ""}`
+  const payoneer = order.paymentMethod === "payoneer"
+  const subject = `Nouvelle commande ${order.number}${cod ? " (paiement à la livraison)" : transfer ? " (virement à recevoir)" : payoneer ? " (Payoneer à recevoir)" : ""}`
   const status = cod
     ? "Paiement en espèces à la livraison."
     : transfer
       ? "Virement bancaire à recevoir, contactez le client pour le suivi."
-      : "Payée en ligne."
+      : payoneer
+        ? "Paiement Payoneer : envoyez le lien depuis le dashboard."
+        : "Payée en ligne."
   return {
     to: studio,
     replyTo: order.email,

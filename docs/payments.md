@@ -51,6 +51,14 @@ never qualifies (`gatewayReady`). Until the page is saved once, card follows `ON
 existing deployments keep their behaviour. Transfer orders carry the account from the dashboard settings and the order
 number as the reference; the owner marks the order paid when the money arrives, then shipped.
 
+### payoneer (manual)
+
+`payoneer` is offered abroad in EUR only, when switched on in `/payments`. No gateway is called and Payoneer never
+reports a status: the order stays `pending_payment` with the order number as the reference, and the owner confirms it with
+`markPaidManually` (method Payoneer, audited). `per_order` mode tells the customer a link arrives by email; `static` mode
+shows one shop link (https, `payoneer.com` hosts only, checked by `isPayoneerUrl`) on the order page and in the mail.
+Unpaid Payoneer orders have no automatic release yet: they hold their pieces until paid or cancelled.
+
 ## payoneer
 
 The client wants to be paid through Payoneer. Payoneer sells two different things, and only one of them fits a small

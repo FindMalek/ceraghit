@@ -17,11 +17,47 @@ export const localizedInput = (max = 200) =>
 
 export const productStatusSchema = z.enum(["draft", "published", "archived"])
 export const orderStatusSchema = z.enum(["pending_payment", "paid", "fulfilled", "cancelled", "refunded"])
-export const paymentMethodSchema = z.enum(["online", "cod", "transfer"])
+export const paymentMethodSchema = z.enum(["online", "cod", "transfer", "payoneer"])
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>
 
-export const paymentMethodFlagsSchema = z.object({ online: z.boolean(), cod: z.boolean(), transfer: z.boolean() })
+/** Methods the owner settles by hand: no gateway is called when the order is placed. */
+export const OFFLINE_METHODS = ["cod", "transfer", "payoneer"] as const satisfies readonly PaymentMethod[]
+
+export function isOfflineMethod(method: string): boolean {
+  return (OFFLINE_METHODS as readonly string[]).includes(method)
+}
+
+export const paymentMethodFlagsSchema = z.object({
+  online: z.boolean(),
+  cod: z.boolean(),
+  transfer: z.boolean(),
+  payoneer: z.boolean().default(false),
+})
 export type PaymentMethodFlags = z.infer<typeof paymentMethodFlagsSchema>
+
+/** Only payoneer.com links are ever shown to a customer as a pay button. */
+export function isPayoneerUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === "https:" && (url.hostname === "payoneer.com" || url.hostname.endsWith(".payoneer.com"))
+  } catch {
+    return false
+  }
+}
+
+export const payoneerSettingsSchema = z.object({
+  mode: z.enum(["per_order", "static"]).default("per_order"),
+  staticLink: z.url().max(500).refine(isPayoneerUrl, "Lien Payoneer invalide").nullable().default(null),
+  receiverEmail: z.email().nullable().default(null),
+  note: localizedSchema.nullable().default(null),
+})
+export type PayoneerSettings = z.infer<typeof payoneerSettingsSchema>
+export const DEFAULT_PAYONEER: PayoneerSettings = {
+  mode: "per_order",
+  staticLink: null,
+  receiverEmail: null,
+  note: null,
+}
 
 /** Days an unpaid offline order keeps its pieces, per method; `null` = never expires. */
 export const holdSettingsSchema = z.object({
@@ -33,7 +69,8 @@ export type HoldSettings = z.infer<typeof holdSettingsSchema>
 export const DEFAULT_HOLDS: HoldSettings = { transferDays: 7, codDays: null, warnDays: 2 }
 
 export const paymentSettingsSchema = z.object({
-  methods: paymentMethodFlagsSchema.default({ online: false, cod: true, transfer: true }),
+  methods: paymentMethodFlagsSchema.default({ online: false, cod: true, transfer: true, payoneer: false }),
+  payoneer: payoneerSettingsSchema.default(DEFAULT_PAYONEER),
   holds: holdSettingsSchema.default(DEFAULT_HOLDS),
 })
 export type PaymentSettings = z.infer<typeof paymentSettingsSchema>
@@ -69,14 +106,17 @@ export function paymentMethodsFor(
   if (methods.online && gatewayReady) list.push("online")
   if (methods.cod && order.country === "TN" && order.currency === "TND") list.push("cod")
   if (methods.transfer && order.country !== "TN") list.push("transfer")
+  if (methods.payoneer && order.country !== "TN" && order.currency === "EUR") list.push("payoneer")
   return list
 }
 
 /** French message when a save would leave Tunisia (TND) or abroad (EUR) without any way to pay. */
 export function validatePaymentSettings(
-  settings: Pick<PaymentSettings, "methods">,
+  settings: Pick<PaymentSettings, "methods"> & { payoneer?: PayoneerSettings },
   gatewayReady: boolean,
 ): string | null {
+  if (settings.methods.payoneer && settings.payoneer?.mode === "static" && !settings.payoneer.staticLink)
+    return "Ajoutez le lien Payoneer à afficher aux clients."
   if (paymentMethodsFor({ country: "TN", currency: "TND" }, settings.methods, gatewayReady).length === 0)
     return "Au moins un moyen de paiement doit rester actif pour la Tunisie."
   if (paymentMethodsFor({ country: "FR", currency: "EUR" }, settings.methods, gatewayReady).length === 0)
@@ -446,6 +486,15 @@ export const publicOrderSchema = orderSchema.extend({
   shipping: orderShippingSchema.nullable(),
   /** ISO instant an unpaid transfer or cash order is released, null when it never is. */
   payBefore: z.string().nullable(),
+  /** Only while a Payoneer order is still unpaid. */
+  payoneer: z
+    .object({
+      link: z.string().nullable(),
+      receiverEmail: z.string().nullable(),
+      note: z.string().nullable(),
+      waitingForLink: z.boolean(),
+    })
+    .nullable(),
 })
 
 export const manualPaymentMethodSchema = z.enum(["transfer", "payoneer", "cash", "other"])

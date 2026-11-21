@@ -38,14 +38,21 @@ export const PAYMENT_LABEL = {
   online: "En ligne",
   cod: "Espèces à la livraison",
   transfer: "Virement bancaire",
+  payoneer: "Payoneer (lien de paiement)",
 } as const
 
-export const PAYMENT_SHORT = { online: "En ligne", cod: "Livraison", transfer: "Virement" } as const
+export const PAYMENT_SHORT = {
+  online: "En ligne",
+  cod: "Livraison",
+  transfer: "Virement",
+  payoneer: "Payoneer",
+} as const
 
 export const PAYMENT_TEXT = {
   online: "Paiement en ligne. ",
   cod: "Paiement en espèces à la livraison. ",
   transfer: "Paiement par virement bancaire. ",
+  payoneer: "Paiement via Payoneer. ",
 } as const
 
 export const PAYMENT_PROVIDER: Record<string, string> = {
@@ -53,5 +60,6 @@ export const PAYMENT_PROVIDER: Record<string, string> = {
   demo: "Démo",
   cod: "Espèces",
   transfer: "Virement",
+  payoneer: "Payoneer",
   manual: "Saisie manuelle",
 }

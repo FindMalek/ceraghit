@@ -2,7 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { type HoldSettings, type PaymentMethodFlags, validatePaymentSettings } from "@workspace/sdk"
+import {
+  type HoldSettings,
+  type PaymentMethodFlags,
+  type PayoneerSettings,
+  validatePaymentSettings,
+} from "@workspace/sdk"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -14,11 +19,14 @@ import {
   FieldLabel,
 } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
+import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useState } from "react"
+import { LocalizedField } from "@/components/localized-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { errorMessage } from "@/lib/errors"
+import { fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib/localized"
 
 const METHODS: { key: keyof PaymentMethodFlags; title: string; description: string }[] = [
   {
@@ -36,6 +44,11 @@ const METHODS: { key: keyof PaymentMethodFlags; title: string; description: stri
     title: "Virement bancaire",
     description: "Clients hors de Tunisie. Vous confirmez le paiement quand l'argent arrive.",
   },
+  {
+    key: "payoneer",
+    title: "Payoneer",
+    description: "Clients hors de Tunisie, en euros. Vous confirmez le paiement à réception.",
+  },
 ]
 
 const parseDays = (value: string): number | null => (value.trim() === "" ? null : Number(value))
@@ -48,11 +61,13 @@ const HOLD_FIELDS: { key: keyof HoldSettings; label: string; hint: string }[] = 
 
 function PaymentSettingsBody({
   initial,
+  initialPayoneer,
   initialHolds,
   gatewayReady,
   production,
 }: {
   initial: PaymentMethodFlags
+  initialPayoneer: PayoneerSettings
   initialHolds: HoldSettings
   gatewayReady: boolean
   production: boolean
@@ -60,6 +75,8 @@ function PaymentSettingsBody({
   const queryClient = useQueryClient()
   const [methods, setMethods] = useState(initial)
   const [holds, setHolds] = useState(initialHolds)
+  const [payoneer, setPayoneer] = useState(initialPayoneer)
+  const [payoneerNote, setPayoneerNote] = useState<LocalizedDraft>(toLocalizedDraft(initialPayoneer.note))
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -81,7 +98,16 @@ function PaymentSettingsBody({
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    const settings = { methods: { ...methods, online: methods.online && gatewayReady }, holds }
+    const settings = {
+      methods: { ...methods, online: methods.online && gatewayReady },
+      payoneer: {
+        ...payoneer,
+        staticLink: payoneer.staticLink?.trim() || null,
+        receiverEmail: payoneer.receiverEmail?.trim() || null,
+        note: fromLocalizedDraft(payoneerNote, true),
+      },
+      holds,
+    }
     const days = [holds.transferDays, holds.codDays].filter((d): d is number => d !== null)
     const badDays = days.some((d) => !Number.isInteger(d) || d < 1 || d > 60)
     const badWarn = !Number.isInteger(holds.warnDays) || holds.warnDays < 0 || holds.warnDays > 14
@@ -123,6 +149,72 @@ function PaymentSettingsBody({
             </Field>
           )
         })}
+        {methods.payoneer && (
+          <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
+            <h2 className="font-heading text-2xl">Payoneer</h2>
+            <RadioGroup
+              value={payoneer.mode}
+              onValueChange={(mode) => {
+                setPayoneer((p) => ({ ...p, mode: mode as PayoneerSettings["mode"] }))
+                setSaved(false)
+                setError(null)
+              }}
+            >
+              <Field orientation="horizontal">
+                <RadioGroupItem id="payoneer-per-order" value="per_order" />
+                <FieldLabel htmlFor="payoneer-per-order">Un lien par commande (recommandé)</FieldLabel>
+              </Field>
+              <Field orientation="horizontal">
+                <RadioGroupItem id="payoneer-static" value="static" />
+                <FieldLabel htmlFor="payoneer-static">Un lien unique pour tous</FieldLabel>
+              </Field>
+            </RadioGroup>
+            {payoneer.mode === "static" && (
+              <Field>
+                <FieldLabel htmlFor="payoneer-link">Lien Payoneer</FieldLabel>
+                <Input
+                  id="payoneer-link"
+                  type="url"
+                  dir="ltr"
+                  className="h-11"
+                  placeholder="https://link.payoneer.com/..."
+                  value={payoneer.staticLink ?? ""}
+                  onChange={(e) => {
+                    setPayoneer((p) => ({ ...p, staticLink: e.target.value }))
+                    setSaved(false)
+                    setError(null)
+                  }}
+                />
+              </Field>
+            )}
+            <Field>
+              <FieldLabel htmlFor="payoneer-email">Email Payoneer de réception (facultatif)</FieldLabel>
+              <Input
+                id="payoneer-email"
+                type="email"
+                dir="ltr"
+                className="h-11"
+                value={payoneer.receiverEmail ?? ""}
+                onChange={(e) => {
+                  setPayoneer((p) => ({ ...p, receiverEmail: e.target.value }))
+                  setSaved(false)
+                  setError(null)
+                }}
+              />
+            </Field>
+            <LocalizedField
+              id="payoneer-note"
+              label="Instructions pour le client (facultatif)"
+              value={payoneerNote}
+              multiline
+              onChange={(value) => {
+                setPayoneerNote(value)
+                setSaved(false)
+                setError(null)
+              }}
+            />
+          </section>
+        )}
         <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
           <div>
             <h2 className="font-heading text-2xl">Délai de paiement</h2>
@@ -193,6 +285,7 @@ export function PaymentSettingsForm() {
   return (
     <PaymentSettingsBody
       initial={settings.methods}
+      initialPayoneer={settings.payoneer}
       initialHolds={settings.holds}
       gatewayReady={gatewayReady}
       production={appEnv === "production"}
