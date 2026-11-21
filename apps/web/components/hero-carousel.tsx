@@ -44,8 +44,8 @@ export function HeroCarousel({ slides }: { slides: SiteImage[] }) {
     // biome-ignore lint/a11y/noStaticElementInteractions: hover and focus only pause the timer
     <div
       data-hydrated={ready}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
       className="frame relative mx-auto aspect-[3/4] w-full max-w-md overflow-hidden bg-card"
