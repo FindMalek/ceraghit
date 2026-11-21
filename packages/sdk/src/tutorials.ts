@@ -1256,6 +1256,14 @@ export interface TutorialFilters {
   query?: string
   area?: TutorialArea | null
   audience?: TutorialAudience | null
+  tag?: string | null
+}
+
+/** Every distinct tag, accents folded for sorting, in the spelling of the first video that uses it. */
+export function tutorialTags(list: readonly Tutorial[]): string[] {
+  const seen = new Map<string, string>()
+  for (const t of list) for (const tag of t.tags) if (!seen.has(foldText(tag))) seen.set(foldText(tag), tag)
+  return [...seen.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, tag]) => tag)
 }
 
 /** Every word of the query must appear in the title, the tags or the description. Filters narrow further. */
@@ -1266,6 +1274,7 @@ export function searchTutorials(list: readonly Tutorial[], filters: TutorialFilt
   return list.filter((t) => {
     if (filters.area && t.area !== filters.area) return false
     if (filters.audience && !t.audience.includes(filters.audience)) return false
+    if (filters.tag && !t.tags.some((tag) => foldText(tag) === foldText(filters.tag!))) return false
     if (!words.length) return true
     const haystack = foldText([t.title, ...t.tags, t.description].join(" "))
     return words.every((w) => haystack.includes(w))

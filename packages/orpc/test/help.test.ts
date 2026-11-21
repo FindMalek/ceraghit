@@ -18,13 +18,20 @@ afterAll(async () => {
 })
 
 let manifestBytes: Uint8Array | null = null
+const reads: { key: string; limit: number | undefined }[] = []
 
 test.skipIf(!url)("tutorial links start empty and the owner's saved links come back", async () => {
   const services: Services = {
     db: db!,
     payments: new DemoProvider("https://web.test"),
     mailer: new ConsoleMailer(),
-    storage: { prefix: "pr-7/", read: async () => manifestBytes } as unknown as Services["storage"],
+    storage: {
+      prefix: "pr-7/",
+      read: async (key: string, limit?: number) => {
+        reads.push({ key, limit })
+        return manifestBytes
+      },
+    } as unknown as Services["storage"],
     auth: new AdminAuth(db!),
     now: () => new Date(),
     config: {
@@ -58,6 +65,7 @@ test.skipIf(!url)("tutorial links start empty and the owner's saved links come b
   const files = { desktop: true, mobile: false, captions: true, poster: true }
   manifestBytes = new TextEncoder().encode(JSON.stringify({ videos: { "07-rechercher-produit": files } }))
   expect((await owner.help.library()).manifest.videos).toEqual({ "07-rechercher-produit": files })
+  expect(reads.at(-1)).toEqual({ key: "pr-7/tutorials/manifest.json", limit: 256 * 1024 })
 
   await db!.delete(settings).where(eq(settings.key, "tutorials"))
   if (before) await db!.insert(settings).values(before)

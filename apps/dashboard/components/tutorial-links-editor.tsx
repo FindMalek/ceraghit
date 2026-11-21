@@ -18,7 +18,7 @@ import {
   SheetTitle,
 } from "@workspace/ui/components/sheet"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useEffect, useState } from "react"
 import { errorMessage } from "@/lib/errors"
 
 type Device = "desktop" | "mobile"
@@ -56,6 +56,7 @@ export function TutorialLinksEditor({
   const [drafts, setDrafts] = useState<Drafts>(() => toDrafts(links))
   const [errors, setErrors] = useState<Record<string, true>>({})
   const [filter, setFilter] = useState("")
+  const [focusName, setFocusName] = useState<string | null>(null)
   const shown = searchTutorials(EDITABLE, { query: filter })
   const save = useMutation(
     orpc.admin.help.update.mutationOptions({
@@ -66,6 +67,13 @@ export function TutorialLinksEditor({
       onError: (error) => showError(errorMessage(error)),
     }),
   )
+
+  // An invalid link outside the current filter is shown (filter cleared) and focused, never silently skipped.
+  useEffect(() => {
+    if (!focusName) return
+    document.getElementById(focusName)?.focus()
+    setFocusName(null)
+  }, [focusName])
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
@@ -82,6 +90,11 @@ export function TutorialLinksEditor({
       if (entry.desktop || entry.mobile) value[t.id] = entry
     }
     setErrors(found)
+    const first = Object.keys(found)[0]
+    if (first) {
+      if (!shown.some((t) => first.startsWith(`video-${t.id}-`))) setFilter("")
+      setFocusName(first)
+    }
     const parsed = tutorialLinksSchema.safeParse(value)
     if (Object.keys(found).length || !parsed.success) return
     save.mutate(parsed.data)

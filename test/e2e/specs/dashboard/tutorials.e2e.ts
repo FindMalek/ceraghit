@@ -20,11 +20,11 @@ test("search narrows the library without accents or case, and an empty result of
   tag: ["@fr"],
 }, async ({ page, step }) => {
   await loginAsOwnerAndWait(page)
-  await page.goto(help)
   const cards = page.getByRole("list", { name: "Vidéos" }).getByRole("button")
   const search = page.getByRole("searchbox", { name: "Rechercher une vidéo" })
 
   await step("the library lists every video", async () => {
+    await page.goto(help)
     await expect(cards).toHaveCount(99)
     await expect(page.getByText("99 vidéos")).toBeVisible()
   })
@@ -48,11 +48,11 @@ test("search narrows the library without accents or case, and an empty result of
 
 test("the area chips narrow the list and the reset button brings it back", { tag: ["@fr"] }, async ({ page, step }) => {
   await loginAsOwnerAndWait(page)
-  await page.goto(help)
   const cards = page.getByRole("list", { name: "Vidéos" }).getByRole("button")
-  await expect(cards).toHaveCount(99)
 
   await step("the emails area keeps only its videos", async () => {
+    await page.goto(help)
+    await expect(cards).toHaveCount(99)
     await page.getByRole("button", { name: "Emails et automatismes" }).click()
     await expect(cards).toHaveCount(9)
     await expect(page).toHaveURL(/area=emails/)
@@ -136,10 +136,10 @@ test("a video that is not ready says Bientôt on its card and in the player", { 
   step,
 }) => {
   await loginAsOwnerAndWait(page)
-  await page.goto(help)
   const card = page.getByRole("button", { name: "Payer avec un lien Payoneer (bientôt disponible)" })
 
   await step("the card carries the Bientôt badge, the published one does not", async () => {
+    await page.goto(help)
     await expect(card).toContainText("Bientôt")
     await expect(page.getByRole("button", { name: "Regarder : Rechercher une pièce" })).not.toContainText("Bientôt")
   })
@@ -156,12 +156,13 @@ test("the YouTube links sheet lists the hosted videos and filters them by title"
   step,
 }) => {
   await loginAsOwnerAndWait(page)
-  await page.goto(help)
-  await page.getByRole("button", { name: "Liens YouTube" }).click()
   const sheet = page.getByRole("dialog", { name: "Liens YouTube" })
   const first = sheet.getByText("01 · Découvrir la page d'accueil")
+  const firstDesktop = sheet.locator("fieldset", { hasText: "01 · Découvrir" }).getByRole("textbox").first()
 
   await step("every video that is not marked soon has its two fields", async () => {
+    await page.goto(help)
+    await page.getByRole("button", { name: "Liens YouTube" }).click()
     await expect(first).toBeVisible()
     await expect(sheet.locator("fieldset")).toHaveCount(91)
   })
@@ -175,5 +176,48 @@ test("the YouTube links sheet lists the hosted videos and filters them by title"
     await expect(first).toBeHidden()
     await sheet.getByRole("searchbox").fill("zzzz")
     await expect(sheet.getByText("Aucune vidéo ne correspond.")).toBeVisible()
+  })
+  await step("an invalid link hidden by the filter is shown and focused when saving", async () => {
+    await sheet.getByRole("searchbox").fill("")
+    await firstDesktop.fill("not a link")
+    await sheet.getByRole("searchbox").fill("FACTURE")
+    await expect(first).toBeHidden()
+    await sheet.getByRole("button", { name: "Enregistrer" }).click()
+    await expect(sheet.getByText("Lien YouTube non reconnu")).toBeVisible()
+    await expect(firstDesktop).toBeFocused()
+  })
+})
+
+test("the tag filter keeps only videos carrying that tag, and Back restores the search box", {
+  tag: ["@fr"],
+}, async ({ page, step }) => {
+  await loginAsOwnerAndWait(page)
+  const cards = page.getByRole("list", { name: "Vidéos" }).getByRole("button")
+  const search = page.getByRole("searchbox", { name: "Rechercher une vidéo" })
+
+  await step("choosing a tag narrows the list and lands in the url", async () => {
+    await page.goto(help)
+    await expect(cards).toHaveCount(99)
+    await page.getByRole("combobox", { name: "Filtrer par mot-clé" }).click()
+    await page.getByRole("option", { name: "panier", exact: true }).click()
+    await expect(page).toHaveURL(/tag=panier/)
+    await expect.poll(() => cards.count()).toBeLessThan(99)
+    await expect(cards.first()).toBeVisible()
+  })
+  await step("reset clears the tag", async () => {
+    await page.getByRole("button", { name: "Réinitialiser les filtres" }).click()
+    await expect(cards).toHaveCount(99)
+    await expect(page).not.toHaveURL(/tag=/)
+  })
+  await step("Back puts the earlier search back in the box", async () => {
+    await page.goto(`${help}?q=facture`)
+    await expect(search).toHaveValue("facture")
+    await cards.first().click()
+    await page.keyboard.press("Escape")
+    await search.fill("livraison")
+    await expect(page).toHaveURL(/q=livraison/)
+    await page.goBack()
+    await expect(page).toHaveURL(/q=facture/)
+    await expect(search).toHaveValue("facture")
   })
 })

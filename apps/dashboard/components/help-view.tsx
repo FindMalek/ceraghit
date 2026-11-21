@@ -18,6 +18,7 @@ import {
   type TutorialLinks,
   type TutorialManifest,
   tutorialKeys,
+  tutorialTags,
 } from "@workspace/sdk"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
@@ -34,6 +35,11 @@ import { parseTutorialQuery, type TutorialQuery, toTutorialSearchParams } from "
 const AUDIENCE_OPTIONS = [
   { value: "all" as const, label: "Tous les publics" },
   ...TUTORIAL_AUDIENCES.map((value) => ({ value, label: TUTORIAL_AUDIENCE_LABELS[value] })),
+]
+
+const TAG_OPTIONS = [
+  { value: "all" as string, label: "Tous les mots-clés" },
+  ...tutorialTags(TUTORIALS).map((value) => ({ value, label: value })),
 ]
 
 function Poster({ src }: { src: string | null }) {
@@ -144,6 +150,12 @@ export function HelpView({
     else window.history.replaceState(null, "", url)
   }
 
+  // Back/forward changes the url without touching the input: follow it (typing keeps its own spaces).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only an url change should rewrite the input
+  useEffect(() => {
+    setText((current) => (current.trim() === query.q ? current : query.q))
+  }, [query.q])
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: only typing should schedule an url update
   useEffect(() => {
     if (text.trim() === latest.current.q) return
@@ -152,8 +164,8 @@ export function HelpView({
   }, [text])
 
   const results = useMemo(
-    () => searchTutorials(TUTORIALS, { query: query.q, area: query.area, audience: query.audience }),
-    [query.q, query.area, query.audience],
+    () => searchTutorials(TUTORIALS, { query: query.q, area: query.area, audience: query.audience, tag: query.tag }),
+    [query.q, query.area, query.audience, query.tag],
   )
 
   const isPlayable = (t: Tutorial) => {
@@ -163,10 +175,10 @@ export function HelpView({
   }
   const ready = TUTORIALS.filter(isPlayable).length
   const open = TUTORIALS.find((t) => t.id === query.video) ?? null
-  const filtered = query.q !== "" || query.area !== null || query.audience !== null || text !== ""
+  const filtered = query.q !== "" || query.area !== null || query.audience !== null || query.tag !== null || text !== ""
   const reset = () => {
     setText("")
-    update({ q: "", area: null, audience: null })
+    update({ q: "", area: null, audience: null, tag: null })
   }
 
   return (
@@ -218,6 +230,13 @@ export function HelpView({
               onChange={(value) => update({ audience: value === "all" ? null : value })}
               options={AUDIENCE_OPTIONS}
               className="h-11 w-full md:ml-auto md:w-52"
+            />
+            <SimpleSelect
+              label="Filtrer par mot-clé"
+              value={query.tag ?? "all"}
+              onChange={(value) => update({ tag: value === "all" ? null : value })}
+              options={TAG_OPTIONS}
+              className="h-11 w-full md:w-52"
             />
             {filtered && (
               <Button type="button" variant="ghost" className="h-11" onClick={reset}>

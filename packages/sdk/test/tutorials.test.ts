@@ -9,6 +9,7 @@ import {
   searchTutorials,
   TUTORIALS,
   tutorialSchema,
+  tutorialTags,
   youtubeId,
 } from "../src/tutorials"
 
@@ -147,4 +148,13 @@ test("a video marked soon never plays, even with files or links", () => {
   const soon = TUTORIALS.find((t) => t.status === "soon")!
   const files = { desktop: true, mobile: true, captions: true, poster: true }
   expect(playableSources(soon, files, { desktop: "dQw4w9WgXcQ", mobile: null })).toEqual({})
+})
+
+test("the tag filter matches the tag itself, not the words of the description", () => {
+  const tag = "panier"
+  const byTag = searchTutorials(TUTORIALS, { tag })
+  expect(byTag.length).toBeGreaterThan(0)
+  expect(byTag.every((t) => t.tags.some((x) => foldText(x) === tag))).toBe(true)
+  expect(byTag.length).toBeLessThan(searchTutorials(TUTORIALS, { query: tag }).length)
+  expect(tutorialTags(TUTORIALS)).toContain(tag)
 })
