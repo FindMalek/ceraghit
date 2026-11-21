@@ -125,6 +125,7 @@ describe.skipIf(!url)("payment settings", () => {
       online: true,
       cod: false,
       transfer: true,
+      payoneer: false,
     })
 
     const order = {
@@ -157,6 +158,7 @@ describe.skipIf(!url)("payment settings", () => {
       online: false,
       cod: true,
       transfer: true,
+      payoneer: false,
     })
   })
 

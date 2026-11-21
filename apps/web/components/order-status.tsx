@@ -49,22 +49,32 @@ export function OrderStatus({ number, token }: { number: string; token: string }
   const money = (minor: number) => formatMoney(minor, order.currency, locale)
   const codPending = order.status === "pending_payment" && order.paymentMethod === "cod"
   const transferPending = order.status === "pending_payment" && order.paymentMethod === "transfer"
-  const waiting = order.status === "pending_payment" && !codPending && !transferPending
+  const payoneerPending = order.status === "pending_payment" && order.paymentMethod === "payoneer"
+  const payoneer = payoneerPending ? order.payoneer : null
+  const waiting = order.status === "pending_payment" && !codPending && !transferPending && !payoneerPending
   const stillWaiting = waiting && Date.now() - startedAt.current >= POLL_FOR_MS
   return (
     <div className="space-y-8">
       <div className="frame space-y-3 bg-card/70 p-6 text-center" role="status" aria-live="polite">
         <p className="font-display text-3xl text-gold">
-          {codPending ? t("codTitle") : transferPending ? t("transferTitle") : t(`status.${order.status}`)}
+          {codPending
+            ? t("codTitle")
+            : transferPending
+              ? t("transferTitle")
+              : payoneerPending
+                ? t("payoneerTitle")
+                : t(`status.${order.status}`)}
         </p>
         <p className="text-muted-foreground">
           {codPending
             ? t("codText")
             : transferPending
               ? t("transferText")
-              : stillWaiting
-                ? t("stillPending")
-                : t(`text.${order.status}`)}
+              : payoneerPending
+                ? t(payoneer?.waitingForLink ? "payoneerWaiting" : "payoneerText")
+                : stillWaiting
+                  ? t("stillPending")
+                  : t(`text.${order.status}`)}
         </p>
         {waiting && !stillWaiting && <Spinner className="mx-auto" />}
       </div>
@@ -153,6 +163,39 @@ export function OrderStatus({ number, token }: { number: string; token: string }
               {order.number}
             </dd>
           </dl>
+        </section>
+      )}
+
+      {payoneer && (
+        <section className="frame space-y-4 bg-card/70 p-6">
+          <h2 className="text-3xl">{t("payoneerHeading")}</h2>
+          <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
+            <dt className="text-muted-foreground">{t("reference")}</dt>
+            <dd className="select-all font-heading" dir="ltr">
+              {order.number}
+            </dd>
+            <dt className="text-muted-foreground">{t("total")}</dt>
+            <dd className="font-heading">{money(order.totalMinor)}</dd>
+            {payoneer.receiverEmail && (
+              <>
+                <dt className="text-muted-foreground">{t("payoneerReceiver")}</dt>
+                <dd className="select-all" dir="ltr">
+                  {payoneer.receiverEmail}
+                </dd>
+              </>
+            )}
+          </dl>
+          {payoneer.note && <p className="whitespace-pre-line text-sm">{payoneer.note}</p>}
+          {payoneer.link && (
+            <a
+              href={payoneer.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants({ size: "lg" }), "h-11")}
+            >
+              {t("payoneerPay")}
+            </a>
+          )}
         </section>
       )}
 

@@ -7,6 +7,8 @@ import {
   holdExpiresAt,
   orderInputSchema,
   type PaymentMethod,
+  type PayoneerSettings,
+  pick,
   publicInvoiceViewSchema,
   publicOrderSchema,
   requestUploadInputSchema,
@@ -28,6 +30,16 @@ import { reserveUpload } from "../../lib/uploads"
 import { publicProcedure } from "../../procedures"
 
 const TAG = ["orders"]
+
+function payoneerView(settings: PayoneerSettings, locale: string) {
+  const link = settings.mode === "static" ? settings.staticLink : null
+  return {
+    link,
+    receiverEmail: settings.receiverEmail,
+    note: settings.note ? pick(settings.note, locale) || null : null,
+    waitingForLink: settings.mode === "per_order",
+  }
+}
 
 export const ordersRouter = {
   create: publicProcedure
@@ -58,8 +70,13 @@ export const ordersRouter = {
         status === "pending_payment" && order.paymentMethod === "transfer"
           ? holdExpiresAt(order, (await getPaymentSettings(context.db, context.config)).holds)
           : null
+      const payoneer =
+        order.paymentMethod === "payoneer" && status === "pending_payment"
+          ? payoneerView((await getPaymentSettings(context.db, context.config)).payoneer, order.locale)
+          : null
       return {
         payBefore: payBefore?.toISOString() ?? null,
+        payoneer,
         number: order.number,
         paymentMethod: order.paymentMethod as PaymentMethod,
         status,

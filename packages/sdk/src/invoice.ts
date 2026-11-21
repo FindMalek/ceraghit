@@ -38,6 +38,7 @@ export const INVOICE_COPY = {
     online: "Paiement en ligne",
     cod: "Paiement à la livraison",
     transfer: "Virement bancaire",
+    payoneer: "Payoneer",
     notIssued: "Document provisoire, sans valeur de facture.",
   },
   en: {
@@ -66,6 +67,7 @@ export const INVOICE_COPY = {
     online: "Online payment",
     cod: "Cash on delivery",
     transfer: "Bank transfer",
+    payoneer: "Payoneer",
     notIssued: "Provisional document, not a valid invoice.",
   },
   ar: {
@@ -94,6 +96,7 @@ export const INVOICE_COPY = {
     online: "دفع عبر الإنترنت",
     cod: "الدفع عند الاستلام",
     transfer: "تحويل بنكي",
+    payoneer: "بايونير",
     notIssued: "وثيقة مؤقتة وليست فاتورة صالحة.",
   },
 } as const satisfies Record<InvoiceLocale, Record<string, string>>

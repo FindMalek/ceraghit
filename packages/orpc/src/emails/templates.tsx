@@ -19,7 +19,7 @@ import { invoiceUrl } from "../lib/invoices"
 import { mailColors as c, MAIL_SERIF } from "./brand"
 import type { ConfirmationOrder, MailContext, MailShipment } from "./confirmation"
 import { asLocale, EMAIL_COPY, type Locale } from "./copy"
-import { ltr, type MailOrder } from "./layout"
+import { confirmationIntro, ltr, type MailOrder } from "./layout"
 import { orderUrl } from "./order-url"
 import type { StudioRequest } from "./request"
 
@@ -179,9 +179,10 @@ interface CustomerProps {
   intro: string
   withBank: boolean
   invoiceHref?: string
+  payoneerHref?: string | null
 }
 
-function CustomerOrder({ order, ctx, preview, intro, withBank, invoiceHref }: CustomerProps) {
+function CustomerOrder({ order, ctx, preview, intro, withBank, invoiceHref, payoneerHref }: CustomerProps) {
   const locale = asLocale(order.locale)
   const c1 = EMAIL_COPY[locale]
   return (
@@ -197,6 +198,13 @@ function CustomerOrder({ order, ctx, preview, intro, withBank, invoiceHref }: Cu
       <Items order={order} locale={locale} />
       <Totals order={order} locale={locale} />
       {withBank ? <Bank order={order} ctx={ctx} locale={locale} /> : null}
+      {payoneerHref ? (
+        <TrackLink
+          href={payoneerHref}
+          locale={locale}
+          label={`${c1.confirmation.reference}: ${ltr(order.number, locale)}`}
+        />
+      ) : null}
       <TrackLink href={orderUrl(ctx.webUrl, order)} locale={locale} />
       {invoiceHref ? <TrackLink href={invoiceHref} locale={locale} label={c1.common.invoiceLink} /> : null}
       <Text style={para}>{c1.common.bye}</Text>
@@ -212,8 +220,9 @@ export function ConfirmationEmail({ order, ctx }: { order: ConfirmationOrder; ct
       order={order}
       ctx={ctx}
       preview={k.subject(order.number)}
-      intro={order.paymentMethod === "cod" ? k.cod : transfer ? k.transfer : k.paid}
+      intro={confirmationIntro(order.paymentMethod, ctx, k)}
       withBank={transfer}
+      payoneerHref={order.paymentMethod === "payoneer" ? ctx.payoneerLink : null}
     />
   )
 }

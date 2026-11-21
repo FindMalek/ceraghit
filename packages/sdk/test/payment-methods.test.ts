@@ -1,7 +1,13 @@
 import { describe, expect, test } from "bun:test"
-import { bankFromProfile, paymentMethodsFor, validatePaymentSettings } from "../src/schemas"
+import {
+  bankFromProfile,
+  DEFAULT_PAYONEER,
+  isPayoneerUrl,
+  paymentMethodsFor,
+  validatePaymentSettings,
+} from "../src/schemas"
 
-const all = { online: true, cod: true, transfer: true }
+const all = { online: true, cod: true, transfer: true, payoneer: false }
 
 describe("paymentMethodsFor", () => {
   test("Tunisia in dinars gets card then cash on delivery", () => {
@@ -21,16 +27,45 @@ describe("paymentMethodsFor", () => {
   })
 })
 
+describe("payoneer", () => {
+  const on = { ...all, payoneer: true }
+
+  test("only for customers abroad paying in euros, and only when switched on", () => {
+    expect(paymentMethodsFor({ country: "FR", currency: "EUR" }, on, false)).toEqual(["transfer", "payoneer"])
+    expect(paymentMethodsFor({ country: "FR", currency: "EUR" }, all, false)).toEqual(["transfer"])
+    expect(paymentMethodsFor({ country: "TN", currency: "EUR" }, on, false)).toEqual([])
+    expect(paymentMethodsFor({ country: "FR", currency: "TND" }, on, false)).toEqual(["transfer"])
+  })
+
+  test("a link is shown only when it is an https payoneer.com address", () => {
+    expect(isPayoneerUrl("https://link.payoneer.com/pay/abc")).toBe(true)
+    expect(isPayoneerUrl("https://payoneer.com.evil.tld/pay")).toBe(false)
+    expect(isPayoneerUrl("http://payoneer.com/pay")).toBe(false)
+    expect(isPayoneerUrl("javascript:alert(1)")).toBe(false)
+  })
+
+  test("a single link for everyone needs that link", () => {
+    const settings = { methods: on, payoneer: { ...DEFAULT_PAYONEER, mode: "static" as const } }
+    expect(validatePaymentSettings(settings, false)).toMatch(/lien Payoneer/)
+    const withLink = { ...settings, payoneer: { ...settings.payoneer, staticLink: "https://link.payoneer.com/x" } }
+    expect(validatePaymentSettings(withLink, false)).toBeNull()
+  })
+})
+
 describe("validatePaymentSettings", () => {
   test("refuses leaving Tunisia or abroad without any method", () => {
-    expect(validatePaymentSettings({ methods: { online: false, cod: false, transfer: true } }, true)).toMatch(/Tunisie/)
-    expect(validatePaymentSettings({ methods: { online: false, cod: true, transfer: false } }, true)).toMatch(
-      /étranger/,
-    )
-    expect(validatePaymentSettings({ methods: { online: true, cod: false, transfer: false } }, false)).toMatch(
-      /Tunisie/,
-    )
-    expect(validatePaymentSettings({ methods: { online: true, cod: false, transfer: false } }, true)).toBeNull()
+    expect(
+      validatePaymentSettings({ methods: { online: false, cod: false, transfer: true, payoneer: false } }, true),
+    ).toMatch(/Tunisie/)
+    expect(
+      validatePaymentSettings({ methods: { online: false, cod: true, transfer: false, payoneer: false } }, true),
+    ).toMatch(/étranger/)
+    expect(
+      validatePaymentSettings({ methods: { online: true, cod: false, transfer: false, payoneer: false } }, false),
+    ).toMatch(/Tunisie/)
+    expect(
+      validatePaymentSettings({ methods: { online: true, cod: false, transfer: false, payoneer: false } }, true),
+    ).toBeNull()
   })
 })
 

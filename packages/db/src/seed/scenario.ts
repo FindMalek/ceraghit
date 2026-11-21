@@ -357,6 +357,57 @@ export function buildScenario(
     unitMinor: waiting.priceEur,
     quantity: 1,
   })
+  // One Payoneer order still waiting for its link and one the owner confirmed.
+  for (const [number, paid] of [
+    ["CER-10098", false],
+    ["CER-10097", true],
+  ] as const) {
+    const orderId = crypto.randomUUID()
+    const paidAt = paid ? new Date(now.getTime() - 2 * 864e5) : null
+    const createdAt = new Date(now.getTime() - (paid ? 3 : 1) * 864e5)
+    out.orders.push({
+      id: orderId,
+      number,
+      publicToken: `demo-${number}`,
+      status: paid ? "paid" : "pending_payment",
+      currency: "EUR",
+      subtotalMinor: waiting.priceEur,
+      shippingMinor: 0,
+      totalMinor: waiting.priceEur,
+      customerName: paid ? "Hugo Martin" : "Inès Lambert",
+      email: `payoneer.${number.toLowerCase()}@example.com`,
+      phone: "+33 6 00 00 00 00",
+      country: "FR",
+      city: "Lyon",
+      address: "8 rue de la République",
+      locale: "fr",
+      paymentMethod: "payoneer",
+      paymentProvider: "payoneer",
+      paymentRef: null,
+      paidAt,
+      createdAt,
+    })
+    out.items.push({
+      orderId,
+      productId: waiting.id,
+      ref: waiting.ref,
+      title: waiting.title,
+      unitMinor: waiting.priceEur,
+      quantity: 1,
+    })
+    if (paidAt) {
+      out.audit.push({
+        orderId,
+        adminId: null,
+        action: "mark_paid_manually",
+        fromStatus: "pending_payment",
+        toStatus: "paid",
+        method: "payoneer",
+        note: "démo",
+        createdAt: paidAt,
+      })
+    }
+  }
   const confirmed = out.orders.filter((o) => o.status === "paid" || o.status === "fulfilled")
   const [sent, failed] = [confirmed[0], confirmed[1]]
   for (const [order, ok] of [

@@ -75,7 +75,7 @@ const settings: PublicSettings = {
   shippingRates: DEFAULT_SHIPPING_RATES,
   shippingNote: null,
   onlinePayments: false,
-  paymentMethods: { online: false, cod: true, transfer: true },
+  paymentMethods: { online: false, cod: true, transfer: true, payoneer: false },
   profile: {
     displayName: "Ceraghit",
     legalName: "Ceraghit Creation SARL",

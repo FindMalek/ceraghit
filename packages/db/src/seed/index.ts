@@ -206,7 +206,7 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
     await tx.insert(jobRuns).values(scenario.jobRuns)
     await tx
       .insert(settings)
-      .values({ key: "payments", value: { methods: { online: true, cod: true, transfer: true } } })
+      .values({ key: "payments", value: { methods: { online: true, cod: true, transfer: true, payoneer: true } } })
       .onConflictDoNothing()
     done.demo = true
   })
