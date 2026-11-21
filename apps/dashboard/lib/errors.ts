@@ -53,6 +53,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Only paid orders get an invoice/, () => "Seules les commandes payées reçoivent une facture."],
   [/^Some required steps are not complete/, () => "Terminez d'abord les étapes obligatoires."],
   [/^Commande introuvable\.?$/, () => "Commande introuvable."],
+  [/^Expédition introuvable\.?$/, () => "Expédition introuvable."],
   [/^Cette commande ne peut pas être expédiée/, (m) => m.input ?? ""],
   [/^Seule une commande expédiée/, (m) => m.input ?? ""],
   [/^Le lien de suivi doit commencer/, (m) => m.input ?? ""],
