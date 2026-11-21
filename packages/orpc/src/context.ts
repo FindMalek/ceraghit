@@ -33,6 +33,8 @@ export interface Services {
     secureCookies: boolean
     /** Card payment until the owner saves the payments page in the dashboard (then the DB row wins). */
     onlinePayments: boolean
+    /** ARAMEX_FAKE: Aramex calls are answered by the sandbox stand-in (the api refuses it in production). */
+    aramexFake?: boolean
     /** Bearer token of the daily GitHub job that calls /cron/cleanup-uploads. Unset: the route does not exist. */
     cronSecret?: string
     /** Names the api answers on `POST /cron/<name>`; the dashboard shows the other catalogued jobs as not active yet. */

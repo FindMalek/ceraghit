@@ -40,16 +40,30 @@ PR with `pnpm pr:screenshots`. The HTML report is in `test/e2e/artifacts/report`
 
 ### In CI
 
-The `e2e` job in `.github/workflows/ci.yml` runs the whole suite on every PR and on `main`, in parallel with `lint`,
-`types`, `test` and `build`. It uploads `test/e2e/artifacts/` as the artifact `e2e-artifacts` (screenshots, report,
-`results.json`, traces and videos of failures; 14 days) and writes totals per project and the flaky tests to the job
-summary. Browsers are cached on the Playwright version.
+`ci.yml` calls `.github/workflows/e2e-shards.yml` on every PR and on `main`, in parallel with `lint`, `types`, `test` and
+`build`. Every job owns a runner, so each has its own Postgres, Garage and Mailpit on the default ports:
+
+- `storefront (1..4/4)`: `pnpm e2e --project=setup`, then the `desktop-*` and `mobile-*` projects with
+  `--no-deps --shard=i/4`.
+- `dashboard chain`: `E2E_SUITE=dashboard`, the serial `dashboard-*` then `journeys-*` projects, alone on their stack.
+- `report`: merges the blob reports into one HTML report and writes totals per project and the flaky tests to the job
+  summary.
+- `e2e` (in `ci.yml`): the single gate, green only when every shard is. Require this one.
+
+Why by hand: Playwright runs a project's dependencies and never splits a dependency graph across shards, so a plain
+`--shard` on the full config runs everything in shard 1 and nothing in the others. Shards are cut by project and file
+(`fullyParallel: false`), only with `--no-deps`, after `setup` has run. If a shard is much slower than the others, change
+the shard count in `e2e-shards.yml`.
+
+Artifacts (14 days): `e2e-artifacts-<job>` (screenshots, traces and videos of failures, `results.json`), `e2e-report`
+(merged HTML report and `results.json`). `.github/workflows/e2e-nightly.yml` runs the same suite every night at 02:00 UTC
+and on demand; a red night opens one `nightly e2e failed` issue and comments on it the next nights.
 
 Screenshots of a run for a PR body:
 
 ```bash
-gh run download <run-id> -n e2e-artifacts -D /tmp/e2e-<pr>
-pnpm pr:screenshots /tmp/e2e-<pr>/screenshots
+gh run download <run-id> -p 'e2e-artifacts-*' -D /tmp/e2e-<pr>
+pnpm pr:screenshots /tmp/e2e-<pr>/e2e-artifacts-storefront-1/screenshots
 ```
 
 ### Writing a spec
