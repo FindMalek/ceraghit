@@ -1,7 +1,7 @@
 "use client"
 
 import { CheckIcon, CopyIcon } from "@phosphor-icons/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { formatMoney, isPayoneerUrl } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
@@ -59,6 +59,9 @@ export function PayoneerLinkBlock({ order }: { order: PayoneerOrder }) {
     }),
   )
 
+  const settings = useQuery(orpc.admin.settings.getPayments.queryOptions())
+  const staticMode = settings.data?.settings.payoneer.mode === "static"
+
   const submit = () => {
     const value = link.trim()
     if (!isPayoneerUrl(value)) {
@@ -67,6 +70,18 @@ export function PayoneerLinkBlock({ order }: { order: PayoneerOrder }) {
     }
     setError(null)
     save.mutate({ id: order.id, link: value })
+  }
+
+  if (staticMode) {
+    return (
+      <section>
+        <h2 className="mb-1 font-heading text-2xl">Lien de paiement Payoneer</h2>
+        <p className="text-muted-foreground text-sm">
+          Votre boutique utilise un seul lien Payoneer pour toutes les commandes : le client le voit déjà sur sa
+          commande. Pour envoyer un lien par commande, changez le mode dans Paiements.
+        </p>
+      </section>
+    )
   }
 
   return (

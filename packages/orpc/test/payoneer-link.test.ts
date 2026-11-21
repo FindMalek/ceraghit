@@ -153,6 +153,27 @@ describe.skipIf(!url)("payoneer link", () => {
     expect(await audits(id, "payment_link_set")).toHaveLength(1)
   })
 
+  test("in single shop link mode the owner cannot set a per-order link", async () => {
+    const { id } = await place()
+    await savePaymentSettings(db, {
+      methods: { online: false, cod: true, transfer: true, payoneer: true },
+      payoneer: { ...DEFAULT_PAYONEER, mode: "static", staticLink: "https://link.payoneer.com/pay/shop" },
+      holds: DEFAULT_HOLDS,
+    })
+    try {
+      await expect(
+        owner().admin.orders.setPaymentLink({ id, link: "https://link.payoneer.com/pay/mine" }),
+      ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+      expect(await audits(id, "payment_link_set")).toHaveLength(0)
+    } finally {
+      await savePaymentSettings(db, {
+        methods: { online: false, cod: true, transfer: true, payoneer: true },
+        payoneer: DEFAULT_PAYONEER,
+        holds: DEFAULT_HOLDS,
+      })
+    }
+  })
+
   test("only payoneer.com links on a pending payoneer order, and a link is never reused", async () => {
     const a = await place()
     const b = await place()

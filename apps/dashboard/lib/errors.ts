@@ -51,6 +51,10 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
     /^A payment link can only be set on a pending Payoneer order/,
     () => "Un lien de paiement ne peut être ajouté qu'à une commande Payoneer en attente de paiement.",
   ],
+  [
+    /^Payoneer uses one shop-wide link/,
+    () => "Payoneer utilise un seul lien pour toute la boutique : les liens par commande sont désactivés.",
+  ],
   [/^This link is already used on another order/, () => "Ce lien est déjà utilisé sur une autre commande."],
   [/^Card payments are confirmed by the gateway only/, () => "Un paiement par carte est confirmé automatiquement."],
   [/^The amount changed, reload the order/, () => "Le montant a changé, rechargez la commande."],

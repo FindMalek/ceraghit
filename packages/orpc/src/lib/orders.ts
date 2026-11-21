@@ -516,6 +516,9 @@ export async function setPaymentLink(
   const { db } = services
   const link = input.link.trim()
   if (!isPayoneerUrl(link)) throw new ORPCError("BAD_REQUEST", { message: "Use a link from payoneer.com." })
+  if ((await getPaymentSettings(db, services.config)).payoneer.mode === "static") {
+    throw new ORPCError("BAD_REQUEST", { message: "Payoneer uses one shop-wide link, per-order links are off." })
+  }
   const changed = await db.transaction(async (tx) => {
     const [order] = await tx.select().from(orders).where(eq(orders.id, input.orderId)).limit(1).for("update")
     if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
