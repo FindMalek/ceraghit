@@ -31,3 +31,11 @@ export const releaseHoldsTask = schedules.task({
   cron: { pattern: releaseHolds.cron, timezone: releaseHolds.timezone },
   run: () => callCron(releaseHolds.name),
 })
+
+const trackShipments = spec("track-shipments")
+
+export const trackShipmentsTask = schedules.task({
+  id: trackShipments.name,
+  cron: { pattern: trackShipments.cron, timezone: trackShipments.timezone },
+  run: () => callCron(trackShipments.name),
+})
