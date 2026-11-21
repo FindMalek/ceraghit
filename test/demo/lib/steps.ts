@@ -33,6 +33,8 @@ const step = z.object({
   caption_ar: z.string().optional(),
   holdMs: z.number().int().min(0).optional(),
   only: z.enum(["desktop", "mobile"]).optional(),
+  /** A device-only step is captioned but silent; `voice: true` makes it speak (and pay for) its own line. */
+  voice: z.boolean().optional(),
 })
 
 export const videoSchema = z.object({

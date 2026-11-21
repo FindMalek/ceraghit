@@ -8,13 +8,13 @@ brew install ffmpeg            # once (or point FFMPEG and FFPROBE at your binar
 pnpm dev                       # api, web and dashboard on the demo data (pnpm demo:reset first, with pnpm dev stopped)
 pnpm demo:videos               # every video, both devices
 pnpm demo:videos -- 03         # one video
-pnpm demo:videos -- 03 --device=mobile --zoom --voice
+pnpm demo:videos -- 03 --device=mobile --zoom --voice=draft
 ```
 
 Output goes to `test/demo/out/videos/NN-sujet-desktop.mp4`, `NN-sujet-mobile.mp4`, plus `.fr.srt` and `.fr.vtt`
-(`.ar.*` when every step has `caption_ar`). `out/` is gitignored: never commit a video.
+(`.ar.*` when every step has `caption_ar`). `out/` (videos only) is gitignored: never commit a video.
 
-Flags: `--voice` narrates every caption, `--zoom` eases the camera toward the clicked area, `--burn` burns the French
+Flags: `--plan` prints the narration cost and exits, `--voice=draft|final` narrates (see Voiceover; bare `--voice` is draft), `--zoom` eases the camera toward the clicked area, `--burn` burns the French
 captions into the picture (needs ffmpeg with libass), `--device=desktop|mobile`.
 
 ## Safety
@@ -35,19 +35,44 @@ Mobile runs the iPhone 14 viewport, user agent and touch on Chromium, so the sam
 
 ## Voiceover
 
-`--voice` reads each step's `caption_fr` aloud. `TTS_PROVIDER` is `elevenlabs` (default) or `say` (free macOS French
-voice, `say -v Thomas`). ElevenLabs reads `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` and optional
-`ELEVENLABS_MODEL_ID` (default `eleven_multilingual_v2`) from the environment, normally your local `.env`. Without a key
-it falls back to `say` with a warning.
+`--voice=draft` (or bare `--voice`) reads captions with the free macOS French voice (`say -v Thomas`) so pacing and
+wording can be reviewed at zero cost. Only `--voice=final` calls ElevenLabs; it needs `ELEVENLABS_API_KEY` and
+`ELEVENLABS_VOICE_ID` in your local `.env` and refuses to run without them. `ELEVENLABS_MODEL_ID` defaults to
+`eleven_flash_v2_5` (supports French, 0.5 credit per character); set `eleven_multilingual_v2` (1 credit) for the
+richer voice. The cache key includes the model, so lines cached with another model are generated again.
 
-Every line is cached in `out/tts-cache/` by a hash of provider, voice, model and text, so a re-run only bills changed
-lines; the run prints the characters billed. All lines are generated before the recording starts, and each step lasts at
-least as long as its narration, so voice and screen stay in sync.
+Lines are cached in `~/.cache/ceraghit-demo/tts` (`TTS_CACHE_DIR` overrides) by a hash of provider, voice, model and text. All lines are generated before
+recording starts, and each step lasts at least as long as its narration, so voice and screen stay in sync.
+
+### Budget workflow
+
+The tutorial budget is limited (`ELEVENLABS_CREDIT_BUDGET`, default 29000 credits, about 58000 flash characters).
+
+1. `pnpm demo:videos -- --plan` (dry run, no network): per video the unique spoken lines, characters, how many are
+   already cached or shared with an earlier video (both cost 0), credits at the model's rate, and the budget left. It warns on a spoken line over 140
+   characters (`NARRATION_MAX_LINE`) or a video over 700 spoken characters (`NARRATION_MAX_VIDEO`). Captions are free:
+   the voice gives the point, the caption carries the details.
+2. Draft pass: `pnpm demo:videos -- 03 --voice=draft`, fix wording and timing until it is right. Free.
+3. Final pass: `pnpm demo:videos -- 03 --voice=final`. It refuses to start when the new (uncached) credits exceed what is
+   left, naming the numbers. Any edit to a line is a new line and costs again, so finish drafts first.
+
+One voice-over serves both devices: the narration script is the video's ordered steps, and desktop and mobile play the
+same clip for the same step (a line is billed once, even across videos). A step with `only` gets its caption on that
+device but no voice, unless it has `"voice": true`, which gives it its own paid line. `CREDIT_PER_CHAR` must be above 0 and can only raise the model's rate, never lower it (unknown models count 1 and the
+plan says so). An invalid `ELEVENLABS_CREDIT_BUDGET` (`-5`, `29,000`) is an error, not the default.
+
+The ledger and the cache are shared by every checkout, so they live outside the repo: the ledger in
+`~/.config/ceraghit/demo/credits.json` (`ELEVENLABS_LEDGER` overrides), the cache above, both private to your user.
+The ledger holds counts and dates only, never text or keys, and is updated after every billed line, so Ctrl-C or a
+failure keeps the record. A final run holds a lock on it for the whole pass, so two final runs cannot both pass the gate
+on stale numbers. A corrupt ledger stops the run; fix or delete it. Limit: only spend made by this tool is counted, so
+characters used elsewhere on the account (the ElevenLabs site, other tools) are not in the ledger; check the real
+balance on your account before a big final pass.
 
 ## Add a video
 
 Copy `videos/03-connexion.json`, change `id`, `slug`, `title_fr` and the steps. A step has an `action`
 (`goto click tap fill type select upload hover scroll press wait drag`), a Playwright-style `target` (`role`+`name`,
 `label`, `text` or `testId`, never CSS), a required `caption_fr` (about 42 characters per line, two lines, vouvoiement),
-and `only: "desktop" | "mobile"` for steps that differ. `{{ADMIN_EMAIL}}` style values read the environment. To change a
+and `only: "desktop" | "mobile"` for steps that differ (silent unless `voice: true`). `{{ADMIN_EMAIL}}` style values read the environment. To change a
 caption, edit the JSON and re-run that video.
