@@ -25,6 +25,7 @@ const DASHBOARD_SPECS = [
   "list-filters",
   "orders",
   "order-mails",
+  "invoice",
   "konnect-keys",
 ] as const
 const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) =>
