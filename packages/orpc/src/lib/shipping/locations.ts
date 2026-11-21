@@ -45,7 +45,35 @@ async function writeRow(db: Db, country: string, value: CitiesRow): Promise<void
 const withTimeout = <T>(work: Promise<T>, ms: number): Promise<T> =>
   Promise.race([work, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))])
 
-async function fetchFromAramex(services: Services, country: string): Promise<string[] | null> {
+const FAILURE_PAUSE_MS = 60_000
+const failedAt = new Map<string, number>()
+const inflight = new Map<string, Promise<string[] | null>>()
+
+/** For tests: forget the pause after a failed refresh. */
+export function resetCitiesFailures(): void {
+  failedAt.clear()
+  inflight.clear()
+}
+
+/** One call at a time per country, and a minute of rest after a failure, so a down Aramex is not asked per visitor. */
+function fetchFromAramex(services: Services, country: string, force: boolean): Promise<string[] | null> {
+  const last = failedAt.get(country)
+  if (!force && last !== undefined && Math.abs(services.now().getTime() - last) < FAILURE_PAUSE_MS) {
+    return Promise.resolve(null)
+  }
+  const running = inflight.get(country)
+  if (running) return running
+  const call = askAramex(services, country).then((list) => {
+    if (list === null) failedAt.set(country, services.now().getTime())
+    else failedAt.delete(country)
+    return list
+  })
+  inflight.set(country, call)
+  void call.finally(() => inflight.delete(country))
+  return call
+}
+
+async function askAramex(services: Services, country: string): Promise<string[] | null> {
   try {
     const { provider, degraded } = await resolveShipping(services)
     if (degraded || provider.id !== "aramex") return null
@@ -66,9 +94,9 @@ export async function getCities(services: Services, country: string, opts: { for
   if (mode?.provider !== "aramex") {
     return row?.fixture ? { cities: row.cities, source: "cache", fetchedAt: row.fetchedAt } : none()
   }
-  const fresh = row && !opts.force && services.now().getTime() - Date.parse(row.fetchedAt) < TTL_MS
+  const fresh = row && !row.fixture && !opts.force && services.now().getTime() - Date.parse(row.fetchedAt) < TTL_MS
   if (row && fresh) return { cities: row.cities, source: "cache", fetchedAt: row.fetchedAt }
-  const list = await fetchFromAramex(services, country)
+  const list = await fetchFromAramex(services, country, opts.force === true)
   if (list && list.length > 0) {
     const fetchedAt = services.now().toISOString()
     await writeRow(services.db, country, { cities: list, fetchedAt })
@@ -104,8 +132,13 @@ export async function checkAddress(
       return { ok: false, suggestions: [], message: "Aramex n'est pas configuré." }
     }
     const { suggestions } = await provider.validateAddress(address)
-    const same = suggestions.some((s) => normaliseCity(s.city) === normaliseCity(address.city))
-    if (suggestions.length === 0 || same) return { ok: true, suggestions: [], message: "Adresse reconnue." }
+    // Street, city and postcode must all match: a correction of any of them is shown, not only a different city.
+    const same = (s: ShipAddress) =>
+      normaliseCity(s.line1) === normaliseCity(address.line1) &&
+      normaliseCity(s.city) === normaliseCity(address.city) &&
+      (!s.postalCode || normaliseCity(s.postalCode) === normaliseCity(address.postalCode ?? ""))
+    if (suggestions.length === 0 || suggestions.some(same))
+      return { ok: true, suggestions: [], message: "Adresse reconnue." }
     return { ok: false, suggestions, message: "Aramex propose une autre adresse." }
   } catch {
     return { ok: false, suggestions: [], message: "Aramex ne répond pas. Réessayez dans un instant." }

@@ -55,6 +55,14 @@ export function createFakeAramexFetch(): typeof fetch {
       const sent = JSON.parse(String(init?.body ?? "{}")) as { Address?: { City?: string; Line1?: string } }
       const typed = sent.Address?.City ?? ""
       const known = FAKE_CITIES.some((c) => c.toLowerCase() === typed.toLowerCase())
+      if (known && (sent.Address?.Line1 ?? "").toLowerCase().includes("habib bourgiba")) {
+        return reply({
+          Transaction: null,
+          Notifications: [],
+          HasErrors: false,
+          SuggestedAddresses: [{ Line1: "Avenue Habib Bourguiba", City: typed, PostCode: "1000", CountryCode: "TN" }],
+        })
+      }
       return reply({
         Transaction: null,
         Notifications: [],

@@ -8,6 +8,7 @@ import {
   orders,
   products,
   productVariants,
+  rateLimits,
   settings,
 } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
@@ -20,7 +21,7 @@ import { createOrder } from "../src/lib/orders"
 import { DemoProvider } from "../src/lib/payments"
 import { parseKeyring } from "../src/lib/secrets"
 import { createFakeAramexFetch, FAKE_CITIES } from "../src/lib/shipping/aramex/fake"
-import { getCities, searchCities } from "../src/lib/shipping/locations"
+import { getCities, resetCitiesFailures, searchCities } from "../src/lib/shipping/locations"
 import { adminRouter } from "../src/routers/admin"
 import { publicRouter } from "../src/routers/public"
 
@@ -76,6 +77,7 @@ describe.skipIf(!url)("aramex city list and address checks", () => {
   const clear = async () => {
     calls.length = 0
     down = false
+    resetCitiesFailures()
     now = new Date()
     await db.delete(settings).where(eq(settings.key, TN_KEY))
   }
@@ -213,5 +215,65 @@ describe.skipIf(!url)("aramex city list and address checks", () => {
     await db.update(orders).set({ city: "Sousse" }).where(eq(orders.id, row!.id))
     down = false
     expect(await owner().shipping.checkAddress({ orderId: row!.id })).toMatchObject({ ok: true })
+  })
+
+  test("a demo list is not fresh once Aramex is on: it is fetched and replaces the demo list", async () => {
+    await clear()
+    await db
+      .insert(settings)
+      .values({ key: TN_KEY, value: { cities: ["Tunis"], fetchedAt: now.toISOString(), fixture: true } })
+    const got = await getCities(base, "TN")
+    expect(got.source).toBe("aramex")
+    expect(got.cities.length).toBe(FAKE_CITIES.length)
+    expect(cityCalls()).toBe(1)
+  })
+
+  test("a failing Aramex is asked once a minute, not once per visitor", async () => {
+    await clear()
+    down = true
+    await Promise.all([getCities(base, "TN"), getCities(base, "TN"), getCities(base, "TN")])
+    // one refresh is up to three http calls (the client retries a network error twice), never one per visitor
+    const burst = cityCalls()
+    expect(burst).toBeLessThanOrEqual(3)
+    await getCities(base, "TN")
+    expect(cityCalls()).toBe(burst)
+  })
+
+  test("the address check shows a street or postcode correction, not only a city mismatch", async () => {
+    await clear()
+    const [row] = await db
+      .insert(orders)
+      .values({
+        number: `LOC2-${Date.now().toString(36)}`,
+        publicToken: "t",
+        status: "paid",
+        paymentMethod: "transfer",
+        currency: "TND",
+        subtotalMinor: 1000,
+        totalMinor: 1000,
+        customerName: "Locations Buyer",
+        email: "locations-street@example.test",
+        phone: "+21620000000",
+        country: "TN",
+        city: "Tunis",
+        address: "avenue habib bourgiba",
+        locale: "fr",
+      })
+      .returning({ id: orders.id })
+    expect(await owner().shipping.checkAddress({ orderId: row!.id })).toMatchObject({
+      ok: false,
+      suggestions: [{ line1: "Avenue Habib Bourguiba", city: "Tunis", postalCode: "1000" }],
+    })
+  })
+
+  test("the public city search is rate limited", async () => {
+    await clear()
+    await db.delete(rateLimits).where(like(rateLimits.key, "shippingCities:%"))
+    await getCities(base, "TN")
+    for (let i = 0; i < 60; i++) await visitor().catalog.shippingCities({ country: "TN" })
+    await expect(visitor().catalog.shippingCities({ country: "TN" })).rejects.toMatchObject({
+      data: { reason: "too_many_requests" },
+    })
+    await db.delete(rateLimits).where(like(rateLimits.key, "shippingCities:%"))
   })
 })
