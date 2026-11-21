@@ -36,6 +36,13 @@ test("fields with a separator, quote or line break are quoted and quotes doubled
   expect(csvField("two\nlines")).toBe('"two\nlines"')
 })
 
+test("a text that Excel would run as a formula is neutralised, amounts are not", () => {
+  expect(csvField("=HYPERLINK(1)")).toBe("'=HYPERLINK(1)")
+  expect(csvField("@sum")).toBe("'@sum")
+  expect(csvField("+33 6 00")).toBe("'+33 6 00")
+  expect(csvField("-5.00")).toBe("-5.00")
+})
+
 test("amounts are exact decimals with a dot, per currency", () => {
   expect(decimalAmount(91_000, "TND")).toBe("91.000")
   expect(decimalAmount(42_500, "TND")).toBe("42.500")

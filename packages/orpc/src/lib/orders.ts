@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { type Db, orderAudit, orderItems, orders, products, productVariants } from "@workspace/db"
+import { type Db, mailLog, orderAudit, orderItems, orders, products, productVariants } from "@workspace/db"
 import {
   type Currency,
   holdDays,
@@ -522,7 +522,7 @@ export async function setPaymentLink(
     if (order.status !== "pending_payment" || order.paymentMethod !== "payoneer") {
       throw new ORPCError("BAD_REQUEST", { message: "A payment link can only be set on a pending Payoneer order." })
     }
-    if (order.paymentRef === link) return false
+    if (order.paymentRef === link) return "same"
     const [taken] = await tx
       .select({ id: orders.id })
       .from(orders)
@@ -539,9 +539,24 @@ export async function setPaymentLink(
       method: "payoneer",
       reference: linkReference(link),
     })
-    return true
+    return "new"
   })
-  if (!changed) return { ok: true, emailed: false }
+  if (changed === "same") {
+    // the same link again only mails when the earlier mail never went out
+    const [sent] = await db
+      .select({ id: mailLog.id })
+      .from(mailLog)
+      .where(
+        and(
+          eq(mailLog.orderId, input.orderId),
+          eq(mailLog.kind, "payment_link"),
+          eq(mailLog.status, "sent"),
+          sql`position(${link} in ${mailLog.text}) > 0`,
+        ),
+      )
+      .limit(1)
+    if (sent) return { ok: true, emailed: false }
+  }
   return { ok: true, emailed: await sendPaymentLinkEmail(services, input.orderId) }
 }
 

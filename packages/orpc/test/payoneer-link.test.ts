@@ -139,6 +139,20 @@ describe.skipIf(!url)("payoneer link", () => {
     expect(await audits(id, "payment_link_set")).toHaveLength(2)
   })
 
+  test("the same link is mailed again when the first mail never went out", async () => {
+    const { placed, id } = await place()
+    const link = "https://link.payoneer.com/pay/retry"
+    const failing: Services = { ...services, mailer: { send: async () => Promise.reject(new Error("smtp down")) } }
+    const asOwner = createRouterClient(appRouter, {
+      context: (): Context => createContext(failing, visitorHeaders({ cookie, "x-csrf-token": "orpc" })),
+    })
+    expect(await asOwner.admin.orders.setPaymentLink({ id, link })).toEqual({ ok: true, emailed: false })
+    expect(await owner().admin.orders.setPaymentLink({ id, link })).toEqual({ ok: true, emailed: true })
+    expect(mailsFor(placed.number).filter((m) => m.text.includes(link))).toHaveLength(1)
+    expect(await owner().admin.orders.setPaymentLink({ id, link })).toEqual({ ok: true, emailed: false })
+    expect(await audits(id, "payment_link_set")).toHaveLength(1)
+  })
+
   test("only payoneer.com links on a pending payoneer order, and a link is never reused", async () => {
     const a = await place()
     const b = await place()

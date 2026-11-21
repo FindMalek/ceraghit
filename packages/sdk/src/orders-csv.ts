@@ -40,7 +40,9 @@ const BOM = "﻿"
 
 /** RFC 4180: quote a field that holds a separator, a quote or a line break, double the quotes inside. */
 export function csvField(value: string | number): string {
-  const text = String(value)
+  // a text starting with = + - @ would run as a formula in Excel; plain negative amounts stay as they are
+  const raw = String(value)
+  const text = /^[=+\-@\t\r]/.test(raw) && !/^-\d+(\.\d+)?$/.test(raw) ? `'${raw}` : raw
   return /[";\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
