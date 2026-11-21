@@ -124,10 +124,11 @@ export async function orderId(number: string): Promise<string> {
   return row.id
 }
 
-/** How many mails of each kind the api logged for an order. */
-export async function mailKinds(number: string): Promise<Record<string, number>> {
+/** How many mails of each kind the api logged for an order, of any status or only those with `status` (e.g. "sent"). */
+export async function mailKinds(number: string, status?: string): Promise<Record<string, number>> {
   const rows = await sql<{ kind: string; n: number }[]>`
     select m.kind, count(*)::int as n from mail_log m join orders o on o.id = m.order_id
-    where o.number = ${number} group by m.kind`
+    where o.number = ${number} and (${status ?? null}::text is null or m.status::text = ${status ?? null})
+    group by m.kind`
   return Object.fromEntries(rows.map((r) => [r.kind, r.n]))
 }
