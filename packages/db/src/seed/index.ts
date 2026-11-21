@@ -1,4 +1,4 @@
-import { count, eq } from "drizzle-orm"
+import { count, eq, inArray } from "drizzle-orm"
 import type { Db } from "../index"
 import { hashPassword } from "../password"
 import {
@@ -18,7 +18,14 @@ import {
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
-import { DEMO_HIDDEN_HERO, DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA, ensureSiteImages } from "./media"
+import {
+  DEMO_HIDDEN_HERO,
+  DEMO_MAIN_SECOND_REF,
+  DEMO_MEDIA_BY_REF,
+  DEMO_UNUSED_MEDIA,
+  ensureSiteImages,
+  syncBundledMedia,
+} from "./media"
 import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS } from "./scenario"
 import { localize } from "./translations"
 
@@ -52,6 +59,12 @@ export interface SeedOptions {
 }
 
 export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean; catalog: boolean; demo: boolean }> {
+  const done = await seedRows(db, opts)
+  await syncBundledMedia(db)
+  return done
+}
+
+async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; catalog: boolean; demo: boolean }> {
   if (opts.demo && process.env.APP_ENV === "production")
     throw new Error("the demo seed is refused when APP_ENV=production")
   const done = { admin: false, catalog: false, demo: false }
@@ -64,6 +77,7 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
       .onConflictDoUpdate({ target: admins.email, set: { passwordHash } })
     done.admin = true
   }
+  await syncBundledMedia(db)
   await ensureSiteImages(db, { demo: opts.demo })
   if (!opts.catalog && !opts.demo) return done
 
@@ -124,19 +138,8 @@ export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean;
         : [],
     )
     const paths = [...new Set(CATALOGUE.flatMap((p) => p.images))]
-    const mediaRows = await tx
-      .insert(media)
-      .values(
-        paths.map((path) => ({
-          key: path,
-          source: "bundled" as const,
-          filename: path.split("/").pop() ?? "image.webp",
-          confirmedAt: new Date(),
-          ...demoByPath.get(path),
-        })),
-      )
-      .onConflictDoNothing({ target: media.key })
-      .returning({ id: media.id, key: media.key })
+    for (const [path, demo] of demoByPath) if (demo) await tx.update(media).set(demo).where(eq(media.key, path))
+    const mediaRows = await tx.select({ id: media.id, key: media.key }).from(media).where(inArray(media.key, paths))
     if (opts.demo)
       await tx
         .insert(media)
