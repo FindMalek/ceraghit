@@ -30,17 +30,25 @@ test("changing the studio photo and the logo in the dashboard changes the storef
   await loginAsOwnerAndWait(page)
   const pick = async (slot: string, label: string, n: number) => {
     const section = page.locator(`#${slot}`)
-    await section.getByRole("button", { name: `Actions pour ${label} 1` }).click()
-    await page.getByRole("menuitem", { name: "Remplacer…" }).click()
-    const dialog = page.getByRole("dialog")
-    await expect(dialog).toBeVisible()
-    // The first photos of the library are the ones in use; take one further down.
-    await dialog.locator("button[data-tile]").nth(n).click()
-    await dialog.getByRole("button", { name: "Choisir", exact: true }).click()
-    await expect(dialog).toBeHidden()
+    const preview = section.getByTestId(`${slot}-tile`).first().locator("img")
+    const before = await preview.getAttribute("src")
+    // The library order varies with what other specs uploaded: take the first photo that is not already in the slot.
+    for (let k = 0; k < 8; k++) {
+      await section.getByRole("button", { name: `Actions pour ${label} 1` }).click()
+      await page.getByRole("menuitem", { name: "Remplacer…" }).click()
+      const dialog = page.getByRole("dialog")
+      await expect(dialog).toBeVisible()
+      await dialog
+        .locator("button[data-tile]")
+        .nth(n + k)
+        .click()
+      await dialog.getByRole("button", { name: "Choisir", exact: true }).click()
+      await expect(dialog).toBeHidden()
+      if ((await preview.getAttribute("src")) !== before) break
+    }
     await section.getByRole("button", { name: "Enregistrer" }).click()
     await expect(section.getByText("Images enregistrées.")).toBeVisible()
-    return section.getByTestId(`${slot}-tile`).first().locator("img").getAttribute("src")
+    return preview.getAttribute("src")
   }
   let studio = ""
   let logo = ""
