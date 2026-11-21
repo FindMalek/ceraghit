@@ -20,11 +20,12 @@ import { useLocale, useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import { Link, useRouter } from "@/i18n/navigation"
 import { lineKey, useCartStore } from "@/lib/cart-store"
-import { useApiErrorMessage } from "@/lib/errors"
+import { errorReason, useApiErrorMessage } from "@/lib/errors"
 import { rememberOrderToken } from "@/lib/order-tokens"
 import { useHydrated } from "@/lib/use-hydrated"
 import { useShippingQuote } from "@/lib/use-shipping-quote"
 import { useCartTotals } from "./cart-summary"
+import { CityField } from "./city-field"
 import { CountrySelect } from "./country-select"
 import { useCurrency } from "./currency-provider"
 import { FormField } from "./form-field"
@@ -93,6 +94,7 @@ export function CheckoutForm({
       },
       onError: (error) => {
         showError(apiError(error, t("failed")))
+        if (errorReason(error) === "invalid_city") setErrors((e) => ({ ...e, city: t("errors.cityList") }))
         // A changed delivery price: show the new one so the customer can place the order again knowing it.
         quote.refetch()
         router.refresh()
@@ -185,12 +187,13 @@ export function CheckoutForm({
               onChange={setCountry}
               autoComplete="country"
             />
-            <FormField
-              id="city"
+            <CityField
+              country={country}
               label={t("city")}
-              autoComplete="address-level2"
+              emptyLabel={t("cityEmpty")}
               error={errors.city}
-              onChange={(event) => setCity(event.target.value)}
+              value={city}
+              onChange={setCity}
             />
           </div>
           <FormField id="address" label={t("address")} autoComplete="street-address" error={errors.address} />

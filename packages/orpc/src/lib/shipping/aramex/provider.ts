@@ -305,6 +305,24 @@ export class AramexShippingProvider implements ShippingProvider {
     await this.client.cancelPickup({ PickupGUID: guid, Comments: reason })
   }
 
+  async fetchCities(country: string): Promise<string[]> {
+    return (await this.client.fetchCities({ CountryCode: country })).Cities
+  }
+
+  async validateAddress(a: ShipAddress): Promise<{ suggestions: ShipAddress[] }> {
+    const res = await this.client.validateAddress({ Address: address(a) })
+    const text = (value: unknown) => (typeof value === "string" ? value : "")
+    return {
+      suggestions: res.SuggestedAddresses.map((s) => ({
+        ...a,
+        line1: text(s.Line1) || a.line1,
+        city: text(s.City) || a.city,
+        ...(text(s.PostCode) ? { postalCode: text(s.PostCode) } : {}),
+        country: text(s.CountryCode) || a.country,
+      })),
+    }
+  }
+
   async testConnection() {
     const steps: string[] = []
     let step: "login" | "rate" = "login"

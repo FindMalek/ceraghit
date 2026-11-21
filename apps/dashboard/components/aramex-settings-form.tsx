@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useState } from "react"
+import { AramexCities } from "@/components/aramex-cities"
 import { IntegrationSourceBadge } from "@/components/integration-source-badge"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { SecretInput } from "@/components/secret-input"
@@ -490,6 +491,8 @@ function Body({
           )}
           {result && <TestResult result={result} />}
         </section>
+
+        <AramexCities />
 
         {needsAramex && <FieldError>Renseignez les identifiants Aramex avant de choisir Aramex.</FieldError>}
         {error && <FieldError>{error}</FieldError>}

@@ -25,6 +25,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@workspace/ui/components/table"
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
+import { AddressCheck } from "@/components/address-check"
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { CreateShipmentDialog } from "@/components/create-shipment-dialog"
 import { DownloadInvoiceButton } from "@/components/download-invoice-button"
@@ -255,6 +256,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                     <br />
                     {[order.postalCode, order.city].filter(Boolean).join(" ")}, {countryName(order.country, "fr")}
                   </p>
+                  {order.status !== "fulfilled" && <AddressCheck orderId={order.id} />}
                   {order.note && <p className="frame mt-2 p-2">« {order.note} »</p>}
                 </section>
                 <section>

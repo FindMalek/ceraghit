@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
-import { buildScenario, DEMO_DESCRIPTIONS } from "../../src/seed/scenario"
+import { buildScenario, DEMO_DESCRIPTIONS, DEMO_TN_CITIES } from "../../src/seed/scenario"
 
 const products = [
   { id: "a", ref: "0010", title: "Curda Seca", priceTnd: 40_000, priceEur: 1_200 },
@@ -167,4 +167,11 @@ test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cas
 test("the demo has a piece whose main photo is not the first one", () => {
   const product = CATALOGUE.find((p) => p.ref === DEMO_MAIN_SECOND_REF)
   expect(product?.images.length).toBeGreaterThan(1)
+})
+
+test("every Tunisian demo order city is in the demo city list", () => {
+  const { orders } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const tunisian = orders.filter((o) => o.country === "TN")
+  expect(tunisian.length).toBeGreaterThan(0)
+  for (const o of tunisian) expect(DEMO_TN_CITIES).toContain(o.city)
 })

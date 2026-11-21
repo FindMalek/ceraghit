@@ -19,6 +19,7 @@ export const LIMITS = {
   orderCreate: { max: 10, windowMs: 10 * MINUTE },
   orderGet: { max: 60, windowMs: 10 * MINUTE },
   shippingQuote: { max: 30, windowMs: MINUTE },
+  shippingCities: { max: 60, windowMs: MINUTE },
   requestCreate: { max: 5, windowMs: 60 * MINUTE },
   mailDomain: { max: 6, windowMs: 10 * MINUTE },
   mailTest: { max: 5, windowMs: 10 * MINUTE },

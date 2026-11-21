@@ -27,7 +27,7 @@ import {
   ensureSiteImages,
   syncBundledMedia,
 } from "./media"
-import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS } from "./scenario"
+import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS, DEMO_TN_CITIES } from "./scenario"
 import { localize } from "./translations"
 
 export { buildScenario } from "./scenario"
@@ -209,6 +209,13 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
     await tx
       .insert(settings)
       .values({ key: "payments", value: { methods: { online: true, cod: true, transfer: true, payoneer: true } } })
+      .onConflictDoNothing()
+    await tx
+      .insert(settings)
+      .values({
+        key: "aramex:cities:TN",
+        value: { cities: DEMO_TN_CITIES, fetchedAt: new Date().toISOString(), fixture: true },
+      })
       .onConflictDoNothing()
     await tx
       .insert(settings)

@@ -22,6 +22,7 @@ import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentLinkEmail, sendPayme
 import { DemoProvider, type PaymentCheck, resolvePayments } from "./payments"
 import { unitMinor } from "./pricing"
 import { effectivePaymentMethods, getPaymentSettings } from "./settings"
+import { canonicalCity, getCities } from "./shipping/locations"
 import { quoteShipping } from "./shipping/quote"
 
 /** A pending order holds its stock this long, then the pieces go back on sale. */
@@ -255,12 +256,23 @@ export async function createOrder(services: Services, input: OrderInput) {
     return { row, variant, quantity: item.quantity }
   })
 
+  // A Tunisian city the carrier does not know breaks rates and labels: the customer picks one of its list. No list, no check.
+  let city = input.city
+  if (input.country === "TN") {
+    const known = (await getCities(services, "TN")).cities
+    if (known.length > 0) {
+      const canonical = canonicalCity(known, input.city)
+      if (!canonical) throw publicError("BAD_REQUEST", "invalid_city", "Pick a city from the list.")
+      city = canonical
+    }
+  }
+
   const unit = ({ row, variant }: (typeof lines)[number]) => unitMinor(row, variant, input.currency)
   const subtotal = lines.reduce((sum, l) => sum + unit(l) * l.quantity, 0)
   const quote = await quoteShipping(services, {
     lines: lines.map(({ row, quantity }) => ({ ...row, quantity })),
     country: input.country,
-    city: input.city,
+    city,
     ...(input.postalCode ? { postalCode: input.postalCode } : {}),
     currency: input.currency,
     subtotalMinor: subtotal,
@@ -312,7 +324,7 @@ export async function createOrder(services: Services, input: OrderInput) {
       email: input.email.toLowerCase(),
       phone: input.phone,
       country: input.country,
-      city: input.city,
+      city,
       address: input.address,
       postalCode: input.postalCode,
       note: input.note,

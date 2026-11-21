@@ -118,6 +118,7 @@
     "delivery": "Delivery address",
     "country": "Country",
     "city": "City",
+    "cityEmpty": "No city found",
     "address": "Address",
     "postalCode": "Postal code",
     "note": "Note for the studio",
@@ -138,6 +139,7 @@
       "phone": "Enter a phone number.",
       "country": "Enter your country.",
       "city": "Enter your city.",
+      "cityList": "Pick a city from the list.",
       "address": "Enter your address.",
       "items": "Your cart is empty.",
       "terms": "You must accept the terms and conditions of sale to pay."
@@ -561,6 +563,7 @@
       "out_of_stock": "A piece in your cart is no longer in stock.",
       "order_too_big": "This order is too big to ship online, please send us a request.",
       "shipping_changed": "The delivery price changed, check the total and place the order again.",
+      "invalid_city": "Pick a city from the list.",
       "order_failed": "The order could not be created, please try again.",
       "order_not_found": "Order not found.",
       "payment_not_found": "Payment not found.",

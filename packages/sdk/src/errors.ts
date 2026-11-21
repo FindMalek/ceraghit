@@ -10,6 +10,7 @@ export const PUBLIC_ERROR_REASONS = [
   "out_of_stock",
   "order_too_big",
   "shipping_changed",
+  "invalid_city",
   "order_failed",
   "order_not_found",
   "payment_not_found",

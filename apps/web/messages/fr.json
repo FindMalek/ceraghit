@@ -118,6 +118,7 @@
     "delivery": "Adresse de livraison",
     "country": "Pays",
     "city": "Ville",
+    "cityEmpty": "Aucune ville trouvée",
     "address": "Adresse",
     "postalCode": "Code postal",
     "note": "Note pour l'atelier",
@@ -138,6 +139,7 @@
       "phone": "Indiquez un numéro de téléphone.",
       "country": "Indiquez votre pays.",
       "city": "Indiquez votre ville.",
+      "cityList": "Choisissez une ville dans la liste.",
       "address": "Indiquez votre adresse.",
       "items": "Votre panier est vide.",
       "terms": "Vous devez accepter les conditions générales de vente pour payer."
@@ -561,6 +563,7 @@
       "out_of_stock": "Une pièce de votre panier n'est plus en stock.",
       "order_too_big": "Cette commande est trop volumineuse pour être expédiée en ligne, envoyez-nous une demande.",
       "shipping_changed": "Le prix de livraison a changé, vérifiez le total puis validez à nouveau.",
+      "invalid_city": "Choisissez une ville dans la liste.",
       "order_failed": "La commande n'a pas pu être créée, réessayez.",
       "order_not_found": "Commande introuvable.",
       "payment_not_found": "Paiement introuvable.",

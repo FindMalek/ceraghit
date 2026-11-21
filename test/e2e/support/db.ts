@@ -26,6 +26,11 @@ export async function orderRow(number: string): Promise<OrderRow> {
   return row
 }
 
+/** After a spec refreshed the city list from the simulated Aramex: serve it again in manual mode, like the demo list. */
+export async function markCitiesAsDemo(): Promise<void> {
+  await sql`update settings set value = jsonb_set(value, '{fixture}', 'true') where key = 'aramex:cities:TN'`
+}
+
 export async function orderCount(): Promise<number> {
   const [row] = await sql<{ n: number }[]>`select count(*)::int as n from orders`
   return row?.n ?? 0
