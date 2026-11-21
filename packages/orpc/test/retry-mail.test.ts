@@ -17,6 +17,7 @@ describe.skipIf(!url)("retry-mail", () => {
   let down = true
   const mailer: Mailer = {
     async send(mail) {
+      // rows other test files left failed in the shared database always go out, so they never clog the queue
       if (mail.to.startsWith(tag)) {
         sent.push(mail)
         if (down) throw new MailError("resend 503: down", true, 503)
@@ -64,28 +65,42 @@ describe.skipIf(!url)("retry-mail", () => {
     await runMigrations(db)
     await failed("fresh")
     await failed("old", { createdAt: new Date(Date.now() - 3 * 864e5) })
-    await failed("exhausted", { attempts: 9 })
+    await failed("exhausted", { attempts: 7 })
   })
   afterAll(async () => {
     await db.delete(mailLog).where(like(mailLog.to, `${tag}-%`))
   })
 
-  test("resends recent failures once the provider is back, skips stale or exhausted ones, and is a no-op after", async () => {
-    const stillDown = await retryFailedMails(services)
-    expect(stillDown).toMatchObject({ sent: 0 })
+  test("resends recent failures once the provider is back, skips stale or over-budget ones, and is a no-op after", async () => {
+    await retryFailedMails(services)
     expect((await statusOf("fresh")).status).toBe("failed")
+    const fresh = await statusOf("fresh")
+    expect(fresh.attempts).toBe(6)
 
     down = false
     sent.length = 0
-    const result = await retryFailedMails(services)
-    expect(result.sent).toBeGreaterThanOrEqual(1)
+    await retryFailedMails(services)
     expect(sent.map((m) => m.subject)).toEqual(["fresh"])
     expect((await statusOf("fresh")).status).toBe("resent")
     expect((await statusOf("old")).status).toBe("failed")
+    // 7 recorded attempts plus the 3 of one resend would pass the cap of 9
     expect((await statusOf("exhausted")).status).toBe("failed")
+    expect((await statusOf("exhausted")).attempts).toBe(7)
 
     sent.length = 0
     await retryFailedMails(services)
     expect(sent).toEqual([])
+  })
+
+  test("every attempt on one failed row carries the same idempotency key, so a lost reply cannot send it twice", async () => {
+    down = true
+    await failed("keyed")
+    const row = await statusOf("keyed")
+    sent.length = 0
+    await retryFailedMails(services)
+    down = false
+    await retryFailedMails(services)
+    const keys = new Set(sent.filter((m) => m.subject === "keyed").map((m) => m.idempotencyKey))
+    expect([...keys]).toEqual([row.id])
   })
 })
