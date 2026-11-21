@@ -110,7 +110,7 @@ async function konnectView(context: Parameters<typeof describeIntegration>[0]) {
   const configured = !!masked.secrets.apiKey?.configured && walletId !== ""
   return {
     configured,
-    source: masked.source === "db" ? ("vault" as const) : masked.source,
+    source: !configured ? ("none" as const) : masked.source === "db" ? ("vault" as const) : masked.source,
     mode: configured ? (masked.config.mode === "live" ? ("live" as const) : ("test" as const)) : null,
     walletIdMasked: walletId ? `••••${walletId.slice(-4)}` : null,
     keyLast4: masked.secrets.apiKey?.hint?.slice(-4) ?? null,

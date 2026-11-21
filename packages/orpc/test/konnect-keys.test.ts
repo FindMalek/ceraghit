@@ -81,6 +81,18 @@ describe.skipIf(!url)("konnect keys", () => {
     expect(JSON.stringify(view)).not.toContain(SENTINEL)
   })
 
+  test("an env with only a mode is not a configuration", async () => {
+    await reset()
+    const partial = withEnv("preview", {
+      config: {
+        ...base.config,
+        appEnv: "preview",
+        envCredentials: { konnect: { apiKey: "", walletId: "", mode: "test" } },
+      },
+    })
+    expect(await as(partial).settings.konnect.get()).toMatchObject({ configured: false, source: "none", mode: null })
+  })
+
   test("saved keys win over the env default, which is used again once cleared", async () => {
     await reset()
     const preview = withEnv("preview")

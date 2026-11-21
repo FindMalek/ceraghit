@@ -51,7 +51,7 @@ export const KONNECT_NEEDS_LIVE = "La production exige les clés Konnect réelle
  */
 export async function resolvePayments(services: Services): Promise<PaymentProvider> {
   const found = await getIntegration(services, "konnect")
-  if (!found || found.source !== "db") return services.payments
+  if (found?.source !== "db") return services.payments
   const apiKey = found.secrets.apiKey
   const walletId = found.config.walletId
   if (!apiKey || typeof walletId !== "string" || !walletId) return services.payments
