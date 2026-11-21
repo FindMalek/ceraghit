@@ -219,7 +219,15 @@ export const shippingRouter = {
     .route({ method: "POST", path: "/admin/pickups", summary: "Book an Aramex pickup at the studio", tags: TAG })
     .input(pickupInputSchema)
     .output(z.object({ pickupId: z.string() }))
-    .handler(({ context, input }) => createPickup(context, input)),
+    .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "shipmentAction",
+        "too_many_requests",
+        "Trop d'essais, réessayez dans quelques minutes.",
+      )
+      return createPickup(context, input)
+    }),
 
   cancelPickup: adminProcedure
     .route({
@@ -231,6 +239,12 @@ export const shippingRouter = {
     .input(z.object({ pickupId: z.string(), reason: z.string().trim().min(3).max(200) }))
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "shipmentAction",
+        "too_many_requests",
+        "Trop d'essais, réessayez dans quelques minutes.",
+      )
       await cancelPickup(context, input.pickupId, input.reason)
       return { ok: true as const }
     }),
@@ -244,7 +258,15 @@ export const shippingRouter = {
     })
     .input(z.object({ id: z.string(), reason: z.string().trim().min(3).max(200) }))
     .output(z.object({ held: z.boolean(), message: z.string() }))
-    .handler(({ context, input }) => cancelShipment(context, context.admin.id, input.id, input.reason)),
+    .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "shipmentAction",
+        "too_many_requests",
+        "Trop d'essais, réessayez dans quelques minutes.",
+      )
+      return cancelShipment(context, context.admin.id, input.id, input.reason)
+    }),
 
   retryLabel: adminProcedure
     .route({

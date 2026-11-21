@@ -102,7 +102,7 @@ export async function createPickup(
   await db
     .update(shipments)
     .set({ pickupId: created.id, pickupGuid: created.guid })
-    .where(and(inArray(shipments.id, input.shipmentIds), isNull(shipments.pickupGuid)))
+    .where(and(inArray(shipments.id, input.shipmentIds), isNull(shipments.pickupGuid), eq(shipments.status, "created")))
   return { pickupId: created.id }
 }
 
@@ -169,10 +169,10 @@ export async function cancelShipment(
     const [done] = await tx
       .update(shipments)
       .set({ status: "cancelled", errors: failure ? [...row.errors, failure].slice(-20) : row.errors })
-      .where(and(eq(shipments.id, id), eq(shipments.status, "created")))
+      .where(and(eq(shipments.id, id), eq(shipments.status, "created"), isNull(shipments.pickupGuid)))
       .returning({ orderId: shipments.orderId })
     if (!done) throw new ORPCError("BAD_REQUEST", { message: WITH_ARAMEX })
-    await revertOrderShipped(tx, done.orderId, adminId)
+    await revertOrderShipped(tx, done.orderId, adminId, reason)
   })
   return { held, message }
 }

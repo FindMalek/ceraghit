@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server"
-import { orders } from "@workspace/db"
+import { orderAudit, orders } from "@workspace/db"
 import { type CarrierId, isHttpsUrl, trackingUrlFor } from "@workspace/sdk"
-import { and, eq, or, sql } from "drizzle-orm"
+import { and, desc, eq, or, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { sendShippedEmail } from "./order-emails"
 import { recordAudit, type Tx } from "./orders"
@@ -80,10 +80,25 @@ export async function markOrderShipped(
  * Undoes `markOrderShipped` for a parcel that never left (its Aramex label was cancelled): back to paid, or for a cash
  * order that only counted as sold when it shipped, back to awaiting payment. The shipped email cannot be recalled.
  */
-export async function revertOrderShipped(tx: Tx, orderId: string, adminId: string | null): Promise<void> {
+export async function revertOrderShipped(
+  tx: Tx,
+  orderId: string,
+  adminId: string | null,
+  reason?: string,
+): Promise<void> {
   const [before] = await tx.select().from(orders).where(eq(orders.id, orderId)).for("update")
   if (!before || before.status !== "fulfilled") return
-  const cash = before.paymentMethod === "cod" && before.paymentProvider === "cod"
+  // From the order's own history: only an order that shipped while unpaid (cash on delivery) becomes unpaid again.
+  // One the owner marked paid before shipping keeps its paidAt and its audited manual payment.
+  const [shipping] = await tx
+    .select({ from: orderAudit.fromStatus })
+    .from(orderAudit)
+    .where(
+      and(eq(orderAudit.orderId, orderId), eq(orderAudit.action, "set_status"), eq(orderAudit.toStatus, "fulfilled")),
+    )
+    .orderBy(desc(orderAudit.createdAt))
+    .limit(1)
+  const cash = shipping?.from === "pending_payment"
   const status = cash ? ("pending_payment" as const) : ("paid" as const)
   await tx
     .update(orders)
@@ -103,7 +118,7 @@ export async function revertOrderShipped(tx: Tx, orderId: string, adminId: strin
     action: "set_status",
     fromStatus: "fulfilled",
     toStatus: status,
-    note: "Expédition annulée",
+    note: reason ? `Expédition annulée : ${reason}` : "Expédition annulée",
   })
 }
 

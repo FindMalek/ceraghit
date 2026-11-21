@@ -16,10 +16,10 @@ const dayOf = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/
 
 /** The next day that is not a Sunday, as YYYY-MM-DD in Africa/Tunis. */
 function nextWorkingDay(): string {
-  const d = new Date()
-  do d.setDate(d.getDate() + 1)
-  while (d.getDay() === 0)
-  return dayOf(d)
+  const d = new Date(`${dayOf(new Date())}T12:00:00Z`)
+  do d.setUTCDate(d.getUTCDate() + 1)
+  while (d.getUTCDay() === 0)
+  return d.toISOString().slice(0, 10)
 }
 
 /** Pickup booking and cancellation for a parcel whose label was just created. Aramex has no real cancel: it is a hold. */
@@ -63,9 +63,17 @@ export function ShipmentActions({ shipment: s }: { shipment: AdminShipment }) {
     }),
   )
 
-  if (s.status !== "created" || s.provider !== "aramex") {
-    return s.status === "cancelled" && done ? <p role="status">{done}</p> : null
+  if (s.status === "cancelled") {
+    const hold = s.errors.find((e) => e.code === "HOLD")
+    return hold ? (
+      <p role="alert" data-testid="hold-warning" className="text-destructive text-sm">
+        {hold.message}
+      </p>
+    ) : done ? (
+      <p role="status">{done}</p>
+    ) : null
   }
+  if (s.status !== "created" || s.provider !== "aramex") return null
   return (
     <div className="flex flex-col gap-2" data-testid="shipment-actions">
       {s.pickupId ? (
@@ -121,7 +129,7 @@ export function ShipmentActions({ shipment: s }: { shipment: AdminShipment }) {
         open={confirm}
         onOpenChange={setConfirm}
         title="Annuler l'expédition ?"
-        description="L'expédition sera mise en attente chez Aramex et la commande repassera « payée » (ou « à payer à la livraison »). L'e-mail d'expédition déjà envoyé au client ne peut pas être annulé."
+        description="L'expédition sera mise en attente chez Aramex et la commande repassera « payée » (ou « à payer à la livraison »). L'e-mail d'expédition déjà envoyé au client ne peut pas être annulé. La mise en attente peut échouer : si le colis est déjà parti, Aramex peut encore le récupérer, appelez votre agence."
         confirmLabel="Annuler l'expédition"
         destructive
         onConfirm={() => cancel.mutate({ id: s.id, reason: REASON })}

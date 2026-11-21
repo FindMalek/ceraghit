@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { createDb, orders, shipments } from "@workspace/db"
+import { createDb, orderAudit, orders, shipments } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { eq, like } from "drizzle-orm"
 import type { Services } from "../src/context"
@@ -57,7 +57,12 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
   const window = { date: monday, readyTime: "09:00", closingTime: "17:00" }
 
   const ids: Record<string, { order: string; shipment: string }> = {}
-  const mk = async (key: string, order: Partial<typeof orders.$inferInsert>, status: "created" | "in_transit") => {
+  const mk = async (
+    key: string,
+    order: Partial<typeof orders.$inferInsert>,
+    status: "created" | "in_transit",
+    shippedFrom: "paid" | "pending_payment" = "paid",
+  ) => {
     const [o] = await db
       .insert(orders)
       .values({
@@ -95,6 +100,9 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
         weightGrams: 1500,
       })
       .returning({ id: shipments.id })
+    await db
+      .insert(orderAudit)
+      .values({ orderId: o!.id, action: "set_status", fromStatus: shippedFrom, toStatus: "fulfilled" })
     ids[key] = { order: o!.id, shipment: s!.id }
   }
 
@@ -102,7 +110,13 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     await runMigrations(db)
     await mk("A", {}, "created")
     await mk("B", {}, "created")
-    await mk("C", { paymentMethod: "cod", paymentProvider: "cod", paidAt: new Date("2096-05-09T10:00:00Z") }, "created")
+    await mk(
+      "C",
+      { paymentMethod: "cod", paymentProvider: "cod", paidAt: new Date("2096-05-09T10:00:00Z") },
+      "created",
+      "pending_payment",
+    )
+    await mk("F", { paymentMethod: "cod", paymentProvider: "cod", paidAt: new Date("2096-05-08T10:00:00Z") }, "created")
     await mk("D", {}, "in_transit")
     await mk("E", {}, "created")
   })
@@ -163,6 +177,13 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
 
     await cancelShipment(services, null, ids.C!.shipment, "erreur d'adresse", carrier)
     expect(await order("C")).toMatchObject({ status: "pending_payment", paidAt: null, paymentProvider: "cod" })
+  })
+
+  test("a cash order the owner marked paid before shipping keeps its payment when the shipment is cancelled", async () => {
+    await cancelShipment(services, null, ids.F!.shipment, "erreur d'adresse", carrier)
+    expect(await order("F")).toMatchObject({ status: "paid", paidAt: new Date("2096-05-08T10:00:00Z") })
+    const audit = await db.select().from(orderAudit).where(eq(orderAudit.orderId, ids.F!.order))
+    expect(audit.at(-1)?.note).toContain("erreur d'adresse")
   })
 
   test("a parcel already moving cannot be cancelled and nothing changes", async () => {

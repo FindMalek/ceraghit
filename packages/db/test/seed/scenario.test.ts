@@ -154,7 +154,7 @@ test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cas
   const { orders, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
   expect(shipments.length).toBeGreaterThan(0)
   expect(new Set(shipments.map((s) => s.status)).size).toBeGreaterThan(2)
-  for (const s of shipments) {
+  for (const s of shipments.filter((x) => x.status !== "cancelled")) {
     const o = orders.find((x) => x.id === s.orderId)
     expect(o).toMatchObject({ status: "fulfilled", carrier: "aramex", trackingNumber: s.waybill })
     expect(s).toMatchObject({ environment: "fake", currency: o?.currency })
@@ -162,6 +162,19 @@ test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cas
     if (o?.country === "TN") expect(s.productGroup).toBe("DOM")
     if (s.codAmountMinor != null) expect([o?.country, o?.currency, o?.paymentMethod]).toEqual(["TN", "TND", "cod"])
   }
+})
+
+test("demo shipments include a booked pickup and a cancelled parcel whose order is back to paid", () => {
+  const { orders, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const booked = shipments.filter((s) => s.pickupId)
+  expect(booked.length).toBeGreaterThan(0)
+  for (const s of booked) expect([s.status, !!s.pickupGuid]).toEqual(["created", true])
+  const cancelled = shipments.find((s) => s.status === "cancelled")
+  expect(cancelled?.errors?.[0]?.code).toBe("HOLD")
+  const order = orders.find((o) => o.id === cancelled?.orderId)
+  expect(order).toMatchObject({ status: "paid", country: "TN" })
+  expect(order?.carrier ?? null).toBeNull()
+  expect(shipments.filter((s) => s.orderId === cancelled?.orderId && s.status !== "cancelled")).toHaveLength(0)
 })
 
 test("the demo has a piece whose main photo is not the first one", () => {
