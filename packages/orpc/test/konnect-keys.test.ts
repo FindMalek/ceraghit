@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createRouterClient } from "@orpc/server"
-import { admins, createDb, integrationCredentials, orderItems, orders, products } from "@workspace/db"
+import { admins, createDb, integrationCredentials, orderItems, orders, products, productVariants } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { and, eq, like } from "drizzle-orm"
+import { and, eq, like, notExists } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
@@ -201,10 +201,15 @@ describe.skipIf(!url)("konnect keys", () => {
     await reset()
     await seed(db, { catalog: true })
     const piece = await db.query.products.findFirst({
-      where: and(eq(products.status, "published"), eq(products.quoteOnly, false), eq(products.unique, false)),
-      with: { variants: true },
+      where: and(
+        eq(products.status, "published"),
+        eq(products.quoteOnly, false),
+        eq(products.unique, false),
+        notExists(db.select().from(productVariants).where(eq(productVariants.productId, products.id))),
+      ),
+      orderBy: products.slug,
     })
-    if (!piece || piece.variants.length > 0) throw new Error("no plain published piece in the seed")
+    if (!piece) throw new Error("no plain published piece in the seed")
     await db.update(products).set({ stock: 50 }).where(eq(products.id, piece.id))
     const email = `konnect-keys-${Date.now()}@example.test`
     const calls: string[] = []
