@@ -19,7 +19,12 @@ import { sql } from "drizzle-orm"
 import { CRON_JOBS, type CronJob } from "./cron"
 
 async function paymentsHealth(services: Services, db: boolean): Promise<string> {
-  const payments = db ? await resolvePayments(services).catch(() => services.payments) : services.payments
+  const payments = db
+    ? await resolvePayments(services).catch((error) => {
+        console.error("[health] payments fallback", error instanceof Error ? error.message : "resolve failed")
+        return services.payments
+      })
+    : services.payments
   return `${payments.name}:${payments.mode}`
 }
 

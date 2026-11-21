@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { locations } from "@workspace/db"
+import { locations, orders } from "@workspace/db"
 import {
   holdSettingsSchema,
   locationInputSchema,
@@ -12,7 +12,7 @@ import {
   uploadTargetSchema,
   validatePaymentSettings,
 } from "@workspace/sdk"
-import { asc, desc, eq } from "drizzle-orm"
+import { and, asc, count, desc, eq } from "drizzle-orm"
 import { z } from "zod"
 import {
   assertVaultReadable,
@@ -21,13 +21,7 @@ import {
   getIntegration,
   saveIntegration,
 } from "../../lib/integrations"
-import {
-  gatewayReady,
-  KONNECT_LIVE_ONLY_PRODUCTION,
-  KONNECT_NEEDS_LIVE,
-  resolvePayments,
-  testKonnectKey,
-} from "../../lib/payments"
+import { assertKonnectMode, gatewayReady, resolvePayments, testKonnectKey } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings, getSettings, savePaymentSettings, saveSettings } from "../../lib/settings"
 import { getShopProfile, updateShopProfile } from "../../lib/shop-profile"
@@ -91,6 +85,7 @@ const konnectViewSchema = z.object({
   mode: z.enum(["test", "live"]).nullable(),
   walletIdMasked: z.string().nullable(),
   keyLast4: z.string().nullable(),
+  pendingOnlineOrders: z.number().int(),
 })
 const konnectInputSchema = z.object({
   apiKey: z.string().trim().min(10).max(500),
@@ -98,17 +93,16 @@ const konnectInputSchema = z.object({
   mode: z.enum(["test", "live"]),
 })
 
-function assertKonnectMode(appEnv: string, mode: "test" | "live") {
-  if (mode === "live" && appEnv !== "production")
-    throw new ORPCError("BAD_REQUEST", { message: KONNECT_LIVE_ONLY_PRODUCTION })
-  if (mode === "test" && appEnv === "production") throw new ORPCError("BAD_REQUEST", { message: KONNECT_NEEDS_LIVE })
-}
-
 async function konnectView(context: Parameters<typeof describeIntegration>[0]) {
   const masked = await describeIntegration(context, "konnect")
   const walletId = typeof masked.config.walletId === "string" ? masked.config.walletId : ""
   const configured = !!masked.secrets.apiKey?.configured && walletId !== ""
+  const [pending] = await context.db
+    .select({ n: count() })
+    .from(orders)
+    .where(and(eq(orders.status, "pending_payment"), eq(orders.paymentMethod, "online")))
   return {
+    pendingOnlineOrders: pending?.n ?? 0,
     configured,
     source: !configured ? ("none" as const) : masked.source === "db" ? ("vault" as const) : masked.source,
     mode: configured ? (masked.config.mode === "live" ? ("live" as const) : ("test" as const)) : null,

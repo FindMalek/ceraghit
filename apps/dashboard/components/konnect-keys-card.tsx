@@ -74,12 +74,17 @@ export function KonnectKeysCard({ production }: { production: boolean }) {
   }
 
   const source = view.data?.source ?? "none"
+  const storedLive = view.data?.mode ? view.data.mode === "live" : production
+  const pending = view.data?.pendingOnlineOrders ?? 0
   return (
     <form onSubmit={submit} className="px-4 pt-6 md:max-w-3xl md:px-6">
       <FieldGroup className="gap-4 rounded-lg border bg-card p-4">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-heading text-2xl">Clés Konnect</h2>
-          <Badge variant={production ? "default" : "secondary"}>{production ? "Live" : "Test (sandbox)"}</Badge>
+          <Badge variant={storedLive ? "default" : "secondary"}>{storedLive ? "Live" : "Test (sandbox)"}</Badge>
+          {view.data?.mode && storedLive !== production && (
+            <Badge variant="destructive">Ne correspond pas à cet environnement : ces clés ne sont pas utilisées</Badge>
+          )}
           <Badge variant={source === "none" ? "outline" : "secondary"}>
             {source === "vault" ? "Enregistrées ici" : source === "env" ? "Valeur du serveur" : "Non configurées"}
           </Badge>
@@ -88,20 +93,27 @@ export function KonnectKeysCard({ production }: { production: boolean }) {
           Vous trouvez ces deux valeurs dans votre espace Konnect, rubrique Intégration. Elles sont chiffrées et ne
           s'affichent plus après l'enregistrement.
         </FieldDescription>
+        {pending > 0 && (
+          <FieldDescription className="text-foreground">
+            {pending} commande{pending > 1 ? "s" : ""} en ligne attend{pending > 1 ? "ent" : ""} un paiement. Changer ou
+            supprimer les clés maintenant peut empêcher d'enregistrer un paiement réellement reçu : attendez qu'elles
+            soient payées ou expirées.
+          </FieldDescription>
+        )}
         <Field>
           <FieldLabel htmlFor="konnect-api-key">Clé API</FieldLabel>
           <Input
             id="konnect-api-key"
             type="password"
-            autoComplete="off"
+            autoComplete="new-password"
             className="h-11"
-            placeholder={view.data?.keyLast4 ? `•••• ${view.data.keyLast4}` : ""}
             value={apiKey}
             onChange={(e) => {
               setApiKey(e.target.value)
               reset()
             }}
           />
+          {view.data?.keyLast4 && <FieldDescription>Clé enregistrée : •••• {view.data.keyLast4}</FieldDescription>}
         </Field>
         <Field>
           <FieldLabel htmlFor="konnect-wallet">Identifiant du portefeuille (wallet ID)</FieldLabel>
@@ -109,13 +121,13 @@ export function KonnectKeysCard({ production }: { production: boolean }) {
             id="konnect-wallet"
             autoComplete="off"
             className="h-11"
-            placeholder={view.data?.walletIdMasked ?? ""}
             value={walletId}
             onChange={(e) => {
               setWalletId(e.target.value)
               reset()
             }}
           />
+          {view.data?.walletIdMasked && <FieldDescription>Enregistré : {view.data.walletIdMasked}</FieldDescription>}
         </Field>
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
@@ -139,7 +151,14 @@ export function KonnectKeysCard({ production }: { production: boolean }) {
               className="h-11 sm:ml-auto"
               disabled={clear.isPending}
               onClick={() => {
-                if (window.confirm("Supprimer les clés Konnect enregistrées ?")) clear.mutate({})
+                if (
+                  window.confirm(
+                    pending > 0
+                      ? `${pending} commande(s) en ligne attendent un paiement : supprimer les clés peut empêcher d'enregistrer un paiement reçu. Continuer ?`
+                      : "Supprimer les clés Konnect enregistrées ?",
+                  )
+                )
+                  clear.mutate({})
               }}
             >
               Supprimer les clés

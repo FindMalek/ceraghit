@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import {
+  admins,
   categories,
   createDb,
   invoiceCounters,
@@ -14,9 +15,12 @@ import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { eq, inArray, like } from "drizzle-orm"
 import type { Services } from "../src/context"
+import { clearIntegration, saveIntegration } from "../src/lib/integrations"
 import type { Mail } from "../src/lib/mailer"
 import { settleOrder } from "../src/lib/orders"
 import type { PaymentCheck, PaymentProvider } from "../src/lib/payments"
+import { DemoProvider } from "../src/lib/payments"
+import { parseKeyring } from "../src/lib/secrets"
 import { getPaymentResponse } from "./fixtures/konnect"
 
 const url = process.env.DATABASE_URL
@@ -125,6 +129,42 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     await db.delete(invoiceCounters).where(eq(invoiceCounters.year, 2096))
     await db.delete(products).where(eq(products.id, productId))
     await db.delete(categories).where(eq(categories.slug, "tst-st"))
+  })
+
+  test("a konnect order is never judged by the demo gateway when the keys are gone", async () => {
+    const o = await order()
+    const demoOnly = { ...services, payments: new DemoProvider("https://web.test") } as Services
+    await settleOrder(demoOnly, o.paymentRef!)
+    expect(await statusOf(o.id)).toBe("pending_payment")
+  })
+
+  test("settleOrder asks the gateway built from the saved keys, not the env one", async () => {
+    const o = await order()
+    const { payment } = getPaymentResponse({ orderId: o.number, amount: 3_400, token: "EUR" })
+    const [admin] = await db.select({ id: admins.id }).from(admins).limit(1)
+    const withKeys = {
+      ...services,
+      payments: {
+        name: "demo",
+        mode: "test",
+        init: async () => ({ payUrl: "x", ref: "x" }),
+        check: async () => {
+          throw new Error("the env gateway must not be asked")
+        },
+      },
+      secrets: parseKeyring(`1:${Buffer.alloc(32, 5).toString("base64")}`),
+      http: (async () => Response.json({ payment })) as unknown as typeof fetch,
+    } as unknown as Services
+    try {
+      await saveIntegration(withKeys, admin!.id, "konnect", {
+        config: { walletId: "wallet-123456", mode: "test" },
+        secrets: { apiKey: "settle-test-key-0001" },
+      })
+      await settleOrder(withKeys, o.paymentRef!)
+      expect(await statusOf(o.id)).toBe("paid")
+    } finally {
+      await clearIntegration(db, "konnect", admin!.id, new Date())
+    }
   })
 
   test("a matching paid answer pays once even with concurrent calls, and sends one email set", async () => {

@@ -1,3 +1,4 @@
+import { ORPCError } from "@orpc/server"
 import type { Db } from "@workspace/db"
 import { demoRef, newDemoNonce, orders, parseDemoRef } from "@workspace/db"
 import type { Currency } from "@workspace/sdk"
@@ -45,9 +46,16 @@ const KONNECT_HOSTS = { test: "https://api.preprod.konnect.network/api/v2", live
 export const KONNECT_LIVE_ONLY_PRODUCTION = "Les clés Konnect réelles ne sont acceptées qu'en production."
 export const KONNECT_NEEDS_LIVE = "La production exige les clés Konnect réelles."
 
+export function assertKonnectMode(appEnv: AppEnv, mode: "test" | "live"): void {
+  if (mode === "live" && appEnv !== "production") {
+    throw new ORPCError("BAD_REQUEST", { message: KONNECT_LIVE_ONLY_PRODUCTION })
+  }
+  if (mode === "test" && appEnv === "production") throw new ORPCError("BAD_REQUEST", { message: KONNECT_NEEDS_LIVE })
+}
+
 /**
  * The gateway to use right now: keys the owner saved in the dashboard win, then the env-built default
- * (`services.payments`). Live keys saved outside production are ignored, never used.
+ * (`services.payments`). A saved key whose mode does not match the environment (test in production, live elsewhere) is ignored, never used.
  */
 export async function resolvePayments(services: Services): Promise<PaymentProvider> {
   const found = await getIntegration(services, "konnect")
@@ -56,7 +64,7 @@ export async function resolvePayments(services: Services): Promise<PaymentProvid
   const walletId = found.config.walletId
   if (!apiKey || typeof walletId !== "string" || !walletId) return services.payments
   const mode = found.config.mode === "live" ? "live" : "test"
-  if (mode === "live" && services.config.appEnv !== "production") return services.payments
+  if ((services.config.appEnv === "production") !== (mode === "live")) return services.payments
   return new KonnectProvider(apiKey, walletId, mode, services.http)
 }
 

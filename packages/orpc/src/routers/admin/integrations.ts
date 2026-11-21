@@ -6,6 +6,7 @@ import {
 } from "@workspace/sdk"
 import { z } from "zod"
 import { clearIntegration, describeIntegration, saveIntegration } from "../../lib/integrations"
+import { assertKonnectMode } from "../../lib/payments"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -40,6 +41,8 @@ export const integrationsRouter = {
     .input(saveIntegrationInputSchema)
     .output(maskedIntegrationSchema)
     .handler(async ({ context, input }) => {
+      const mode = input.provider === "konnect" ? input.config?.mode : undefined
+      if (mode === "test" || mode === "live") assertKonnectMode(context.config.appEnv, mode)
       await saveIntegration(context, context.admin.id, input.provider, { config: input.config, secrets: input.secrets })
       return describeIntegration(context, input.provider)
     }),

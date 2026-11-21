@@ -58,8 +58,15 @@ vault provider `konnect`, see `secrets.md`). `resolvePayments` picks the gateway
 win, then the env-built default (`KONNECT_*` env, else the demo gateway). Saved `live` keys are never used outside
 production, and the dashboard refuses to save `test` keys in production. "Tester la connexion" asks Konnect for a payment
 that cannot exist (401/403 means the key is refused, 404 means accepted) and never calls `init-payment`; it does not
-verify the wallet id. Changing account while online orders are pending leaves them to the expiry hold. There is no
-per-process cache: the vault row is read per call.
+verify the wallet id. A saved key only counts when its mode matches the
+environment (live in production, test elsewhere); otherwise the env default is used. There is no per-process cache: the
+vault row is read per call.
+
+Warning, fail closed: changing or clearing the keys (or losing `SECRETS_KEY`) while online orders are `pending_payment`
+can leave a real payment unrecorded. `settleOrder` never asks the demo gateway about an order created with Konnect: it
+logs and leaves the order pending, so the order is not cancelled and the stock is not released, but it is not marked
+paid either until Konnect can be asked again (same keys back) or the owner uses `markPaidManually`. The dashboard shows
+how many online orders are waiting and asks for confirmation before deleting the keys.
 
 ## payoneer
 

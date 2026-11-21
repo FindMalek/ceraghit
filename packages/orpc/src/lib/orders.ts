@@ -325,8 +325,8 @@ export async function createOrder(services: Services, input: OrderInput) {
     return { number: created.number, token: created.publicToken, payUrl: payPageUrl }
   }
 
-  const payments = await resolvePayments(services)
   try {
+    const payments = await resolvePayments(services)
     const checkout = await payments.init({
       orderNumber: created.number,
       amountMinor: created.totalMinor,
@@ -450,9 +450,13 @@ export async function markPaidManually(
  */
 export async function settleOrder(services: Services, ref: string): Promise<{ number: string; status: string } | null> {
   const { db, now } = services
-  const payments = await resolvePayments(services)
   const [order] = await db.select().from(orders).where(eq(orders.paymentRef, ref)).limit(1)
   if (!order) return null
+  const payments = await resolvePayments(services)
+  if (order.paymentProvider === "konnect" && payments.name !== "konnect") {
+    console.error(`[settle ${order.number}] konnect order but no konnect keys: left unchanged`)
+    return { number: order.number, status: order.status }
+  }
   if (order.status === "cancelled" && order.paymentMethod === "online") {
     const [seen] = await db
       .select({ id: orderAudit.id })
