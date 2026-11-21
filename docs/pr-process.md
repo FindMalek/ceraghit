@@ -24,7 +24,7 @@ pnpm pr:screenshots shots/ --key 128    # any folder, explicit key
 pnpm pr:screenshots shots/ --dry-run    # print the markdown, no git writes
 ```
 
-From CI: `gh run download <run-id> -n e2e-artifacts -D e2e` then `pnpm pr:screenshots e2e/screenshots`.
+From CI: `gh run download <run-id> -p 'e2e-artifacts-*' -D e2e` then `pnpm pr:screenshots e2e/e2e-artifacts-<job>/screenshots`.
 
 The script commits the images to the orphan branch `pr-assets` under `<key>/` (key = the branch's PR number, else the
 branch name) without touching your checkout, retries when another agent pushed at the same time, and prints markdown

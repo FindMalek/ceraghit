@@ -1,0 +1,94 @@
+# The e2e suite, split in jobs that each own a runner, hence their own Postgres, Garage and Mailpit on the default ports.
+# Playwright never splits a project dependency graph across shards (everything linked to `setup` lands in one shard),
+# so the suite is cut by hand:
+#   storefront  desktop-* and mobile-* projects, `setup` first, then `--no-deps --shard=i/N` (split by project and file)
+#   dashboard   the serial chain (dashboard-*, journeys-*) on its own stack, in the order playwright.config.ts defines
+# Called by ci.yml (every PR and main) and e2e-nightly.yml.
+
+name: e2e shards
+
+on:
+  workflow_call:
+
+env:
+  TURBO_API: ${{ vars.TURBO_API }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  NEXT_TELEMETRY_DISABLED: "1"
+  CI: "true"
+
+jobs:
+  storefront:
+    name: storefront (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-setup
+      - name: Sign in the owner
+        run: pnpm e2e --project=setup
+      - name: Storefront shard
+        run: pnpm e2e --project='desktop-*' --project='mobile-*' --no-deps --shard=${{ matrix.shard }}/4
+        env:
+          E2E_SKIP_PREPARE: "1"
+      - uses: ./.github/actions/e2e-upload
+        if: always()
+        with:
+          name: storefront-${{ matrix.shard }}
+
+  dashboard:
+    name: dashboard chain
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_SUITE: dashboard
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/e2e-setup
+      - run: pnpm e2e --project='dashboard-*' --project='journeys-*'
+      - uses: ./.github/actions/e2e-upload
+        if: always()
+        with:
+          name: dashboard
+
+  report:
+    name: report
+    needs: [storefront, dashboard]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          dest: ${{ runner.temp }}/setup-pnpm
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: e2e-blob-*
+          path: test/e2e/all-blob
+          merge-multiple: true
+      - name: Merge the reports
+        env:
+          PLAYWRIGHT_HTML_OPEN: never
+          PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/test/e2e/merged/report
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/test/e2e/merged/results.json
+        run: |
+          pnpm --filter @workspace/e2e exec playwright merge-reports --reporter=html,json ./all-blob
+          bun test/e2e/scripts/summary.ts test/e2e/merged/results.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: e2e-report
+          path: test/e2e/merged/
+          retention-days: 14
+          if-no-files-found: warn

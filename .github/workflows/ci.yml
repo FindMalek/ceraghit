@@ -99,56 +99,23 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
+  e2e-shards:
+    uses: ./.github/workflows/e2e-shards.yml
+    secrets: inherit
+
+  # One stable check name for the sharded run: this is the job to require.
   e2e:
+    needs: e2e-shards
+    if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      CI: "true"
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-        with:
-          dest: ${{ runner.temp }}/setup-pnpm
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.2
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - name: Read the Playwright version
-        id: playwright
-        run: echo "version=$(node -p "require('./test/e2e/package.json').devDependencies['@playwright/test']")" >> "$GITHUB_OUTPUT"
-      - name: Playwright browsers cache
-        id: browsers
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
-      - name: Install browsers
-        if: steps.browsers.outputs.cache-hit != 'true'
-        run: pnpm e2e:install
-      - name: Install browser system dependencies
-        if: steps.browsers.outputs.cache-hit == 'true'
-        run: pnpm --filter @workspace/e2e exec playwright install-deps chromium
-      - run: pnpm e2e
-      - name: Summary
-        if: always()
-        run: bun test/e2e/scripts/summary.ts
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: e2e-artifacts
-          path: |
-            test/e2e/artifacts/
-            !test/e2e/artifacts/.auth/**
-          retention-days: 14
-          if-no-files-found: warn
-      - name: Stop services
-        if: always()
-        run: docker compose -f test/e2e/docker-compose.e2e.yml -p ceraghit-e2e down -v
+      - name: Every e2e shard passed
+        env:
+          RESULT: ${{ needs.e2e-shards.result }}
+        run: |
+          echo "e2e shards: $RESULT"
+          [ "$RESULT" = "success" ]
 
   audit:
     runs-on: ubuntu-latest
