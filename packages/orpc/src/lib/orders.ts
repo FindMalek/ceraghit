@@ -16,7 +16,7 @@ import { findProducts } from "./catalog"
 import { tryIssueInvoice } from "./invoices"
 import { recordAmountPaid, recordOrderCreated, recordOrderPaid, recordPaymentSettle } from "./metrics"
 import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentReceivedEmail } from "./order-emails"
-import type { PaymentCheck } from "./payments"
+import { type PaymentCheck, resolvePayments } from "./payments"
 import { unitMinor } from "./pricing"
 import { effectivePaymentMethods, getPaymentSettings } from "./settings"
 import { quoteShipping } from "./shipping/quote"
@@ -187,7 +187,7 @@ function newNumber(): string {
 }
 
 export async function createOrder(services: Services, input: OrderInput) {
-  const { db, payments, config, now } = services
+  const { db, config, now } = services
   const allowed = paymentMethodsFor(input, await effectivePaymentMethods(services), true)
   if (allowed.length === 0) {
     throw publicError(
@@ -325,6 +325,7 @@ export async function createOrder(services: Services, input: OrderInput) {
     return { number: created.number, token: created.publicToken, payUrl: payPageUrl }
   }
 
+  const payments = await resolvePayments(services)
   try {
     const checkout = await payments.init({
       orderNumber: created.number,
@@ -448,7 +449,8 @@ export async function markPaidManually(
  * the only place an order becomes paid: the amount, currency and order number must all match what we created.
  */
 export async function settleOrder(services: Services, ref: string): Promise<{ number: string; status: string } | null> {
-  const { db, payments, now } = services
+  const { db, now } = services
+  const payments = await resolvePayments(services)
   const [order] = await db.select().from(orders).where(eq(orders.paymentRef, ref)).limit(1)
   if (!order) return null
   if (order.status === "cancelled" && order.paymentMethod === "online") {

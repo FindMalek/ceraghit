@@ -51,6 +51,16 @@ never qualifies (`gatewayReady`). Until the page is saved once, card follows `ON
 existing deployments keep their behaviour. Transfer orders carry the account from the dashboard settings and the order
 number as the reference; the owner marks the order paid when the money arrives, then shipped.
 
+### konnect keys
+
+The owner enters the API key and wallet id in the "Clés Konnect" block of the same page (`admin.settings.konnect.*`,
+vault provider `konnect`, see `secrets.md`). `resolvePayments` picks the gateway on every checkout and settle: saved keys
+win, then the env-built default (`KONNECT_*` env, else the demo gateway). Saved `live` keys are never used outside
+production, and the dashboard refuses to save `test` keys in production. "Tester la connexion" asks Konnect for a payment
+that cannot exist (401/403 means the key is refused, 404 means accepted) and never calls `init-payment`; it does not
+verify the wallet id. Changing account while online orders are pending leaves them to the expiry hold. There is no
+per-process cache: the vault row is read per call.
+
 ## payoneer
 
 The client wants to be paid through Payoneer. Payoneer sells two different things, and only one of them fits a small

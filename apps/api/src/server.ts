@@ -8,6 +8,7 @@ import {
   appRouter,
   createContext,
   effectivePaymentMethods,
+  resolvePayments,
   runJob,
   type Services,
   settleOrder,
@@ -16,6 +17,11 @@ import {
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
 import { CRON_JOBS, type CronJob } from "./cron"
+
+async function paymentsHealth(services: Services, db: boolean): Promise<string> {
+  const payments = db ? await resolvePayments(services).catch(() => services.payments) : services.payments
+  return `${payments.name}:${payments.mode}`
+}
 
 const DOCS_REDIRECTS = ["/", "/docs"]
 const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
@@ -90,7 +96,7 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
         {
           ok: db,
           db,
-          payments: `${services.payments.name}:${services.payments.mode}`,
+          payments: await paymentsHealth(services, db),
           shipping: db ? await shippingHealth(services) : null,
           onlinePayments: db ? (await effectivePaymentMethods(services)).online : null,
           env: services.config.deployEnv,

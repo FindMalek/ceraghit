@@ -14,7 +14,21 @@ import {
 } from "@workspace/sdk"
 import { asc, desc, eq } from "drizzle-orm"
 import { z } from "zod"
-import { gatewayReady } from "../../lib/payments"
+import {
+  assertVaultReadable,
+  clearIntegration,
+  describeIntegration,
+  getIntegration,
+  saveIntegration,
+} from "../../lib/integrations"
+import {
+  gatewayReady,
+  KONNECT_LIVE_ONLY_PRODUCTION,
+  KONNECT_NEEDS_LIVE,
+  resolvePayments,
+  testKonnectKey,
+} from "../../lib/payments"
+import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings, getSettings, savePaymentSettings, saveSettings } from "../../lib/settings"
 import { getShopProfile, updateShopProfile } from "../../lib/shop-profile"
 import { reserveUpload, storageUsage } from "../../lib/uploads"
@@ -71,7 +85,84 @@ export const locationsRouter = {
     }),
 }
 
+const konnectViewSchema = z.object({
+  configured: z.boolean(),
+  source: z.enum(["vault", "env", "none"]),
+  mode: z.enum(["test", "live"]).nullable(),
+  walletIdMasked: z.string().nullable(),
+  keyLast4: z.string().nullable(),
+})
+const konnectInputSchema = z.object({
+  apiKey: z.string().trim().min(10).max(500),
+  walletId: z.string().trim().min(6).max(100),
+  mode: z.enum(["test", "live"]),
+})
+
+function assertKonnectMode(appEnv: string, mode: "test" | "live") {
+  if (mode === "live" && appEnv !== "production")
+    throw new ORPCError("BAD_REQUEST", { message: KONNECT_LIVE_ONLY_PRODUCTION })
+  if (mode === "test" && appEnv === "production") throw new ORPCError("BAD_REQUEST", { message: KONNECT_NEEDS_LIVE })
+}
+
+async function konnectView(context: Parameters<typeof describeIntegration>[0]) {
+  const masked = await describeIntegration(context, "konnect")
+  const walletId = typeof masked.config.walletId === "string" ? masked.config.walletId : ""
+  const configured = !!masked.secrets.apiKey?.configured && walletId !== ""
+  return {
+    configured,
+    source: masked.source === "db" ? ("vault" as const) : masked.source,
+    mode: configured ? (masked.config.mode === "live" ? ("live" as const) : ("test" as const)) : null,
+    walletIdMasked: walletId ? `••••${walletId.slice(-4)}` : null,
+    keyLast4: masked.secrets.apiKey?.hint?.slice(-4) ?? null,
+  }
+}
+
+const konnectRouter = {
+  get: adminProcedure
+    .route({ method: "GET", path: "/admin/settings/konnect", summary: "Konnect keys, masked", tags: TAG })
+    .output(konnectViewSchema)
+    .handler(({ context }) => konnectView(context)),
+
+  save: adminProcedure
+    .route({ method: "PUT", path: "/admin/settings/konnect", summary: "Save the Konnect keys", tags: TAG })
+    .input(konnectInputSchema)
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      assertKonnectMode(context.config.appEnv, input.mode)
+      await saveIntegration(context, context.admin.id, "konnect", {
+        config: { walletId: input.walletId, mode: input.mode },
+        secrets: { apiKey: input.apiKey },
+      })
+      return { ok: true as const }
+    }),
+
+  test: adminProcedure
+    .route({ method: "POST", path: "/admin/settings/konnect/test", summary: "Try the Konnect key", tags: TAG })
+    .input(konnectInputSchema.partial())
+    .output(z.object({ ok: z.boolean(), message: z.string() }))
+    .handler(async ({ context, input }) => {
+      await enforceLimit(context, "konnectTest", "too_many_requests", "Trop d'essais, réessayez dans quelques minutes.")
+      await assertVaultReadable(context)
+      const saved = await getIntegration(context, "konnect")
+      const apiKey = input.apiKey ?? saved?.secrets.apiKey
+      if (!apiKey)
+        throw new ORPCError("PRECONDITION_FAILED", { message: "Saisissez la clé API Konnect avant de tester." })
+      const mode = input.mode ?? (saved?.config.mode === "live" ? "live" : "test")
+      assertKonnectMode(context.config.appEnv, mode)
+      return testKonnectKey(apiKey, mode, context.http)
+    }),
+
+  clear: adminProcedure
+    .route({ method: "DELETE", path: "/admin/settings/konnect", summary: "Remove the saved Konnect keys", tags: TAG })
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context }) => {
+      await clearIntegration(context.db, "konnect", context.admin.id, context.now())
+      return { ok: true as const }
+    }),
+}
+
 export const settingsRouter = {
+  konnect: konnectRouter,
   get: adminProcedure
     .route({ method: "GET", path: "/admin/settings", summary: "Contact details and delivery fees", tags: TAG })
     .output(studioSettingsSchema)
@@ -114,8 +205,8 @@ export const settingsRouter = {
     )
     .handler(async ({ context }) => ({
       settings: await getPaymentSettings(context.db, context.config),
-      gatewayReady: gatewayReady(context),
-      gateway: { name: context.payments.name, mode: context.payments.mode },
+      gatewayReady: await gatewayReady(context),
+      gateway: await resolvePayments(context).then((p) => ({ name: p.name, mode: p.mode })),
       appEnv: context.config.appEnv,
     })),
 
@@ -124,7 +215,7 @@ export const settingsRouter = {
     .input(paymentSettingsSchema.extend({ holds: holdSettingsSchema.optional() }))
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      const ready = gatewayReady(context)
+      const ready = await gatewayReady(context)
       if (input.methods.online && !ready) {
         throw new ORPCError("BAD_REQUEST", { message: "Card payment needs the Konnect live keys." })
       }

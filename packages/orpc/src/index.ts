@@ -12,7 +12,13 @@ export {
   ResendMailer,
 } from "./lib/mailer"
 export { releaseExpiredHolds, sendExpiryMails, settleOrder } from "./lib/orders"
-export { assertNoDemoInProduction, DemoProvider, KonnectProvider, type PaymentProvider } from "./lib/payments"
+export {
+  assertNoDemoInProduction,
+  DemoProvider,
+  KonnectProvider,
+  type PaymentProvider,
+  resolvePayments,
+} from "./lib/payments"
 export { sweepRateLimits } from "./lib/rate-limit"
 export { effectivePaymentMethods } from "./lib/settings"
 export { resolveShippingProvider, shippingHealth } from "./lib/shipping/resolve"
