@@ -72,7 +72,8 @@ test("a big picture is shrunk to WebP in the browser, a copy is not stored twice
   await step("drop a 3200 x 2200 PNG on the upload zone", async () => {
     const png = await drawn(page, "image/png", 3200, 2200)
     await page.locator('input[type="file"]').first().setInputFiles({ name, mimeType: "image/png", buffer: png })
-    await expect.poll(async () => (await mediaRows(`grande-photo-${id}%`)).length).toBe(1)
+    // The row exists from the sign call on; wait for the confirmed one, after the bytes arrived.
+    await expect.poll(async () => (await mediaRows(`grande-photo-${id}%`)).filter((r) => r.confirmed).length).toBe(1)
   })
 
   await step("it is a confirmed WebP no wider than 2400 pixels", async () => {
