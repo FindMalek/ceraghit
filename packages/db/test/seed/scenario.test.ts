@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
-import { buildScenario, DEMO_DESCRIPTIONS, DEMO_TN_CITIES } from "../../src/seed/scenario"
+import { buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS, DEMO_TN_CITIES } from "../../src/seed/scenario"
 
 const products = [
   { id: "a", ref: "0010", title: "Curda Seca", priceTnd: 40_000, priceEur: 1_200 },
@@ -174,4 +174,10 @@ test("every Tunisian demo order city is in the demo city list", () => {
   const tunisian = orders.filter((o) => o.country === "TN")
   expect(tunisian.length).toBeGreaterThan(0)
   for (const o of tunisian) expect(DEMO_TN_CITIES).toContain(o.city)
+})
+
+test("one demo location has a bundled photo so the atelier card shows an image", () => {
+  const withPhoto = DEMO_LOCATIONS.filter((l) => l.image)
+  expect(withPhoto).toHaveLength(1)
+  expect(withPhoto[0]?.image).toStartWith("/catalogue/")
 })

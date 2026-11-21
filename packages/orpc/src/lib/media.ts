@@ -356,3 +356,8 @@ export async function resolveImageMedia(
   if (!row) throw new ORPCError("BAD_REQUEST", { message: "A photo is no longer available." })
   return { imageMediaId: mediaId, image: mediaSrc(row) }
 }
+
+export const fkViolation = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  ((error as { code?: string }).code === "23503" || fkViolation((error as { cause?: unknown }).cause))

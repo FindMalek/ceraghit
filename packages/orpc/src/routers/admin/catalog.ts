@@ -14,7 +14,7 @@ import { findProducts, imageMediaColumns, toCategory, toProduct } from "../../li
 import { resolveImageMedia } from "../../lib/media"
 import { saveProductImages } from "../../lib/product-images"
 import { syncVariants } from "../../lib/variants"
-import { adminProcedure } from "../../procedures"
+import { adminProcedure, mediaFkGuard } from "../../procedures"
 
 const TAG = ["admin"]
 const idInput = z.object({ id: z.string() })
@@ -197,6 +197,7 @@ export const categoriesRouter = {
   create: adminProcedure
     .route({ method: "POST", path: "/admin/categories", summary: "Create a category", tags: TAG })
     .input(categoryInputSchema)
+    .use(mediaFkGuard)
     .output(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
       const picture = await resolveImageMedia(context.db, input.imageMediaId)
@@ -225,6 +226,7 @@ export const categoriesRouter = {
   update: adminProcedure
     .route({ method: "PUT", path: "/admin/categories/{id}", summary: "Update a category", tags: TAG })
     .input(categoryInputSchema.extend({ id: z.string() }))
+    .use(mediaFkGuard)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       const { id, ...values } = input

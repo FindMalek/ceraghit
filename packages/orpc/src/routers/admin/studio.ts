@@ -29,7 +29,7 @@ import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings, getSettings, savePaymentSettings, saveSettings } from "../../lib/settings"
 import { getShopProfile, updateShopProfile } from "../../lib/shop-profile"
 import { reserveUpload, storageUsage } from "../../lib/uploads"
-import { adminProcedure } from "../../procedures"
+import { adminProcedure, mediaFkGuard } from "../../procedures"
 
 const TAG = ["admin"]
 const EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif" } as const
@@ -50,6 +50,7 @@ export const locationsRouter = {
   create: adminProcedure
     .route({ method: "POST", path: "/admin/locations", summary: "Add a location", tags: TAG })
     .input(locationInputSchema)
+    .use(mediaFkGuard)
     .output(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
       const picture = await resolveImageMedia(context.db, input.imageMediaId)
@@ -68,6 +69,7 @@ export const locationsRouter = {
   update: adminProcedure
     .route({ method: "PUT", path: "/admin/locations/{id}", summary: "Edit a location", tags: TAG })
     .input(locationInputSchema.extend({ id: z.string() }))
+    .use(mediaFkGuard)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       const { id, ...values } = input
