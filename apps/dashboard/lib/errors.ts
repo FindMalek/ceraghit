@@ -41,6 +41,10 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
       " introuvable.",
   ],
   [/^An order that is (\w+) cannot become (\w+)\.?$/, () => "Cette commande ne peut pas passer à ce statut."],
+  [
+    /^An unpaid order cannot be refunded/,
+    () => "Une commande non payée ne peut pas être remboursée, annulez-la plutôt.",
+  ],
   [/^This order cannot be marked paid/, () => "Cette commande ne peut pas être marquée payée."],
   [/^Card payments are confirmed by the gateway only/, () => "Un paiement par carte est confirmé automatiquement."],
   [/^The amount changed, reload the order/, () => "Le montant a changé, rechargez la commande."],
