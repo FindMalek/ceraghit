@@ -63,10 +63,11 @@ export const DEFAULT_PAYONEER: PayoneerSettings = {
 export const holdSettingsSchema = z.object({
   transferDays: z.number().int().min(1).max(60).nullable().default(7),
   codDays: z.number().int().min(1).max(60).nullable().default(null),
+  payoneerDays: z.number().int().min(1).max(60).nullable().default(7),
   warnDays: z.number().int().min(0).max(14).default(2),
 })
 export type HoldSettings = z.infer<typeof holdSettingsSchema>
-export const DEFAULT_HOLDS: HoldSettings = { transferDays: 7, codDays: null, warnDays: 2 }
+export const DEFAULT_HOLDS: HoldSettings = { transferDays: 7, codDays: null, payoneerDays: 7, warnDays: 2 }
 
 export const paymentSettingsSchema = z.object({
   methods: paymentMethodFlagsSchema.default({ online: false, cod: true, transfer: true, payoneer: false }),
@@ -79,6 +80,7 @@ export type PaymentSettings = z.infer<typeof paymentSettingsSchema>
 export function holdDays(paymentMethod: string, holds: HoldSettings): number | null {
   if (paymentMethod === "transfer") return holds.transferDays
   if (paymentMethod === "cod") return holds.codDays
+  if (paymentMethod === "payoneer") return holds.payoneerDays
   return null
 }
 
@@ -528,7 +530,13 @@ export const adminOrderSchema = orderSchema.extend({
   note: z.string().nullable(),
   locale: z.string(),
   paymentProvider: z.string().nullable(),
+  /** The gateway reference of a card order; null for the other methods. */
   paymentRef: z.string().nullable(),
+  /** Payoneer orders: the link the owner sent, and when. */
+  paymentLink: z.string().nullable(),
+  paymentLinkSetAt: z.string().nullable(),
+  /** Reference typed by the owner when he confirmed a manual payment (latest audit row). */
+  paymentReference: z.string().nullable(),
   shipping: orderShippingSchema.nullable(),
 })
 

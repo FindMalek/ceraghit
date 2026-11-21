@@ -20,7 +20,7 @@ import { renderStudioRequest } from "../../emails/request"
 import { publicError } from "../../errors"
 import { invoiceView, issueInvoice } from "../../lib/invoices"
 import { deliverMail } from "../../lib/mail-log"
-import { createOrder, settleOrder } from "../../lib/orders"
+import { createOrder, paymentReferences, settleOrder } from "../../lib/orders"
 import { DemoProvider, resolvePayments } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings } from "../../lib/settings"
@@ -31,13 +31,13 @@ import { publicProcedure } from "../../procedures"
 
 const TAG = ["orders"]
 
-function payoneerView(settings: PayoneerSettings, locale: string) {
-  const link = settings.mode === "static" ? settings.staticLink : null
+function payoneerView(settings: PayoneerSettings, locale: string, orderLink: string | null) {
+  const link = settings.mode === "static" ? settings.staticLink : orderLink
   return {
     link,
     receiverEmail: settings.receiverEmail,
     note: settings.note ? pick(settings.note, locale) || null : null,
-    waitingForLink: settings.mode === "per_order",
+    waitingForLink: link === null,
   }
 }
 
@@ -64,7 +64,9 @@ export const ordersRouter = {
       if (!order) throw publicError("NOT_FOUND", "order_not_found", "Order not found.")
       // The customer lands here right after paying, often before the webhook: ask the gateway now.
       const settled =
-        order.status === "pending_payment" && order.paymentRef ? await settleOrder(context, order.paymentRef) : null
+        order.status === "pending_payment" && order.paymentMethod === "online" && order.paymentRef
+          ? await settleOrder(context, order.paymentRef)
+          : null
       const status = (settled?.status ?? order.status) as typeof order.status
       const payBefore =
         status === "pending_payment" && order.paymentMethod === "transfer"
@@ -72,7 +74,11 @@ export const ordersRouter = {
           : null
       const payoneer =
         order.paymentMethod === "payoneer" && status === "pending_payment"
-          ? payoneerView((await getPaymentSettings(context.db, context.config)).payoneer, order.locale)
+          ? payoneerView(
+              (await getPaymentSettings(context.db, context.config)).payoneer,
+              order.locale,
+              order.paymentRef,
+            )
           : null
       return {
         payBefore: payBefore?.toISOString() ?? null,
@@ -119,7 +125,13 @@ export const ordersRouter = {
         orderId: _orderId,
         canIssue: _canIssue,
         ...view
-      } = invoiceView(order, invoice, await getShopProfile(context.db))
+      } = invoiceView(
+        order,
+        invoice,
+        await getShopProfile(context.db),
+        undefined,
+        (await paymentReferences(context.db, [order.id])).get(order.id) ?? null,
+      )
       return view
     }),
 

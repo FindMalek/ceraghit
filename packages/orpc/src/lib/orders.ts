@@ -4,12 +4,13 @@ import {
   type Currency,
   holdDays,
   isOfflineMethod,
+  isPayoneerUrl,
   type ManualPaymentMethod,
   type OrderInput,
   paymentMethodsFor,
   pick,
 } from "@workspace/sdk"
-import { and, count, eq, gt, inArray, isNull, lt, ne, or, sql } from "drizzle-orm"
+import { and, count, desc, eq, gt, inArray, isNull, lt, ne, or, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { orderUrl } from "../emails/order-url"
 import { publicError } from "../errors"
@@ -17,7 +18,7 @@ import { findProducts } from "./catalog"
 import { getIntegration } from "./integrations"
 import { tryIssueInvoice } from "./invoices"
 import { recordAmountPaid, recordOrderCreated, recordOrderPaid, recordPaymentSettle } from "./metrics"
-import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentReceivedEmail } from "./order-emails"
+import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentLinkEmail, sendPaymentReceivedEmail } from "./order-emails"
 import { DemoProvider, type PaymentCheck, resolvePayments } from "./payments"
 import { unitMinor } from "./pricing"
 import { effectivePaymentMethods, getPaymentSettings } from "./settings"
@@ -32,7 +33,13 @@ type OrderStatus = typeof orders.$inferSelect.status
 export interface AuditRow {
   orderId: string
   adminId: string | null
-  action: "mark_paid_manually" | "set_status" | "gateway_mismatch" | "late_payment" | "hold_expired"
+  action:
+    | "mark_paid_manually"
+    | "payment_link_set"
+    | "set_status"
+    | "gateway_mismatch"
+    | "late_payment"
+    | "hold_expired"
   fromStatus: OrderStatus
   toStatus: OrderStatus
   method?: string | null
@@ -90,7 +97,7 @@ export const LAZY_SWEEP_LIMIT = 20
 
 /**
  * Cancels unpaid orders past their hold and puts the pieces back. Card orders hold 45 minutes; transfer and cash on
- * delivery orders hold the days the owner set (never for a method set to null). Each release goes through
+ * delivery and Payoneer orders hold the days the owner set (never for a method set to null). Each release goes through
  * `cancelOrder` (row lock, restock, audit). It never sends mail: `sendExpiryMails` does, from the cron.
  * `limit` caps the offline releases of one call, `only` (tests) restricts it to those orders.
  */
@@ -139,7 +146,7 @@ export async function releaseExpiredHolds(
 
   const { holds } = await getPaymentSettings(db, services.config)
   let offline = 0
-  for (const method of ["transfer", "cod"] as const) {
+  for (const method of ["transfer", "cod", "payoneer"] as const) {
     const days = holdDays(method, holds)
     if (days === null) continue
     const room = opts.limit === undefined ? undefined : opts.limit - offline
@@ -464,6 +471,80 @@ export async function markPaidManually(
   return { status: "paid", alreadyPaid: false }
 }
 
+/** The reference the owner typed when he confirmed each order's payment (newest `mark_paid_manually` row). */
+export async function paymentReferences(db: Db, orderIds: string[]): Promise<Map<string, string>> {
+  if (orderIds.length === 0) return new Map()
+  const rows = await db
+    .selectDistinctOn([orderAudit.orderId], { orderId: orderAudit.orderId, reference: orderAudit.reference })
+    .from(orderAudit)
+    .where(
+      and(
+        inArray(orderAudit.orderId, orderIds),
+        eq(orderAudit.action, "mark_paid_manually"),
+        sql`${orderAudit.reference} is not null`,
+      ),
+    )
+    .orderBy(orderAudit.orderId, desc(orderAudit.createdAt))
+  return new Map(rows.map((r) => [r.orderId, r.reference as string]))
+}
+
+/** When the owner last set each order's Payoneer link. */
+export async function paymentLinkDates(db: Db, orderIds: string[]): Promise<Map<string, Date>> {
+  if (orderIds.length === 0) return new Map()
+  const rows = await db
+    .select({ orderId: orderAudit.orderId, at: sql<Date>`max(${orderAudit.createdAt})` })
+    .from(orderAudit)
+    .where(and(inArray(orderAudit.orderId, orderIds), eq(orderAudit.action, "payment_link_set")))
+    .groupBy(orderAudit.orderId)
+  return new Map(rows.map((r) => [r.orderId, new Date(r.at)]))
+}
+
+/** The link shown in the audit row: host and path, never the query string (it may carry a token). */
+const linkReference = (link: string): string => {
+  const url = new URL(link)
+  return `${url.host}${url.pathname}`
+}
+
+/**
+ * The owner pastes the Payoneer link he made for this order. It lives in `paymentRef` (a Payoneer order has no
+ * gateway reference), the audit row says when. The same link twice changes nothing and mails nothing.
+ */
+export async function setPaymentLink(
+  services: Services,
+  input: { orderId: string; adminId: string; link: string },
+): Promise<{ ok: true; emailed: boolean }> {
+  const { db } = services
+  const link = input.link.trim()
+  if (!isPayoneerUrl(link)) throw new ORPCError("BAD_REQUEST", { message: "Use a link from payoneer.com." })
+  const changed = await db.transaction(async (tx) => {
+    const [order] = await tx.select().from(orders).where(eq(orders.id, input.orderId)).limit(1).for("update")
+    if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
+    if (order.status !== "pending_payment" || order.paymentMethod !== "payoneer") {
+      throw new ORPCError("BAD_REQUEST", { message: "A payment link can only be set on a pending Payoneer order." })
+    }
+    if (order.paymentRef === link) return false
+    const [taken] = await tx
+      .select({ id: orders.id })
+      .from(orders)
+      .where(and(eq(orders.paymentRef, link), ne(orders.id, order.id)))
+      .limit(1)
+    if (taken) throw new ORPCError("CONFLICT", { message: "This link is already used on another order." })
+    await tx.update(orders).set({ paymentRef: link }).where(eq(orders.id, order.id))
+    await recordAudit(tx, {
+      orderId: order.id,
+      adminId: input.adminId,
+      action: "payment_link_set",
+      fromStatus: "pending_payment",
+      toStatus: "pending_payment",
+      method: "payoneer",
+      reference: linkReference(link),
+    })
+    return true
+  })
+  if (!changed) return { ok: true, emailed: false }
+  return { ok: true, emailed: await sendPaymentLinkEmail(services, input.orderId) }
+}
+
 export const KONNECT_KEYS_LOCKED = `Des commandes en ligne attendent encore un paiement (moins de ${HOLD_MINUTES} minutes) : changez ou supprimez les clés quand ces commandes sont payées ou ont expiré.`
 
 /**
@@ -504,7 +585,8 @@ export async function assertKonnectUnlocked(
 export async function settleOrder(services: Services, ref: string): Promise<{ number: string; status: string } | null> {
   const { db, now } = services
   const [order] = await db.select().from(orders).where(eq(orders.paymentRef, ref)).limit(1)
-  if (!order) return null
+  // Offline orders (a Payoneer order keeps its link in paymentRef) change status only through markPaidManually.
+  if (!order || order.paymentMethod !== "online") return null
   const resolved = await resolvePayments(services)
   const payments =
     order.paymentProvider === "demo" && resolved.name !== "demo" ? new DemoProvider(services.config.webUrl) : resolved

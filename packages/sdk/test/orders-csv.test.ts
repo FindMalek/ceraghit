@@ -23,7 +23,9 @@ const order = (over: Partial<CsvOrder> = {}): CsvOrder => ({
   subtotalMinor: 80_000,
   shippingMinor: 11_000,
   totalMinor: 91_000,
+  paymentMethod: "online",
   paymentProvider: "konnect",
+  paymentReference: null,
   paymentRef: "ref1",
   ...over,
 })
@@ -53,8 +55,27 @@ test("the orders file has a BOM on request, CRLF lines, studio-time dates and a 
   expect(lines[1]).toContain('"Amel ""Mimi"" Trabelsi; Tunis"')
   expect(lines[1]).toContain("2026-10-02T00:30:00+01:00")
   expect(lines[1]).toContain("0200 x2;80.000;11.000;91.000;TND")
-  expect(lines[3]).toBe("TOTAL;;;;;;;2 commandes;85.000;11.000;96.000;TND;;")
+  expect(lines[3]).toBe("TOTAL;;;;;;;2 commandes;85.000;11.000;96.000;TND;;;")
   expect(buildOrdersCsv([order()], "TND").startsWith("﻿")).toBe(false)
+})
+
+test("a Payoneer order shows its method and the reference the owner typed, in euros only", () => {
+  const csv = buildOrdersCsv(
+    [
+      order({
+        currency: "EUR",
+        paymentMethod: "payoneer",
+        paymentProvider: "payoneer",
+        paymentReference: "PAYONEER-REQ-1",
+        paymentRef: null,
+        totalMinor: 3_450,
+        subtotalMinor: 3_450,
+        shippingMinor: 0,
+      }),
+    ],
+    "EUR",
+  )
+  expect(csv.split("\r\n")[1]).toEndWith(";34.50;EUR;Payoneer;payoneer;PAYONEER-REQ-1")
 })
 
 test("an order in the other currency is refused instead of being summed", () => {

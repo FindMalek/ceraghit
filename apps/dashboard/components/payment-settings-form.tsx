@@ -57,6 +57,7 @@ const parseDays = (value: string): number | null => (value.trim() === "" ? null 
 const HOLD_FIELDS: { key: keyof HoldSettings; label: string; hint: string }[] = [
   { key: "transferDays", label: "Virement : annuler après (jours)", hint: "Vide = jamais." },
   { key: "codDays", label: "Paiement à la livraison : annuler après (jours)", hint: "Vide = jamais." },
+  { key: "payoneerDays", label: "Payoneer : annuler après (jours)", hint: "Vide = jamais." },
   { key: "warnDays", label: "Prévenir (jours avant)", hint: "Un badge « Expire le » apparaît dans les commandes." },
 ]
 
@@ -109,7 +110,7 @@ function PaymentSettingsBody({
       },
       holds,
     }
-    const days = [holds.transferDays, holds.codDays].filter((d): d is number => d !== null)
+    const days = [holds.transferDays, holds.codDays, holds.payoneerDays].filter((d): d is number => d !== null)
     const badDays = days.some((d) => !Number.isInteger(d) || d < 1 || d > 60)
     const badWarn = !Number.isInteger(holds.warnDays) || holds.warnDays < 0 || holds.warnDays > 14
     const invalid =
