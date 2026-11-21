@@ -8,7 +8,7 @@
       "action": "fill",
       "target": { "role": "textbox", "name": "Numéro, nom ou email" },
       "value": "CER-10099",
-      "caption_fr": "Ouvrez une commande en attente de virement.",
+      "caption_fr": "Ouvrez une commande en attente de paiement.",
       "only": "desktop",
       "voice": true
     },
@@ -16,7 +16,7 @@
       "action": "fill",
       "target": { "role": "textbox", "name": "Numéro, nom ou email" },
       "value": "CER-10098",
-      "caption_fr": "Ouvrez une commande en attente de virement.",
+      "caption_fr": "Ouvrez une commande en attente de paiement.",
       "only": "mobile",
       "voice": true
     },
