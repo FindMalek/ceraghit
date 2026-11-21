@@ -32,6 +32,20 @@ describe.skipIf(!url)("shipments table", () => {
       .returning({ id: orders.id })
     return row!.id
   }
+  /** The Postgres error code and constraint, whichever way the driver wraps the error. */
+  const pgError = async (run: () => Promise<unknown>) => {
+    try {
+      await run()
+    } catch (error) {
+      const e = error as {
+        code?: string
+        constraint_name?: string
+        cause?: { code?: string; constraint_name?: string }
+      }
+      return { code: e.code ?? e.cause?.code, constraint: e.constraint_name ?? e.cause?.constraint_name }
+    }
+    return null
+  }
   const shipment = async (orderId: string, waybill: string, over: Partial<typeof shipments.$inferInsert> = {}) => {
     await db.insert(shipments).values({
       orderId,
@@ -70,7 +84,10 @@ describe.skipIf(!url)("shipments table", () => {
   test("an order has one active shipment, a new one is allowed once the first is cancelled", async () => {
     const id = await order()
     await shipment(id, `${tag}-W2`)
-    await expect(shipment(id, `${tag}-W3`)).rejects.toThrow()
+    expect(await pgError(() => shipment(id, `${tag}-W3`))).toEqual({
+      code: "23505",
+      constraint: "shipments_active_order_idx",
+    })
     await db
       .update(shipments)
       .set({ status: "cancelled" })
@@ -81,12 +98,19 @@ describe.skipIf(!url)("shipments table", () => {
 
   test("a waybill belongs to one shipment", async () => {
     await shipment(await order(), `${tag}-W4`)
-    await expect(shipment(await order(), `${tag}-W4`)).rejects.toThrow()
+    const other = await order()
+    expect(await pgError(() => shipment(other, `${tag}-W4`))).toEqual({
+      code: "23505",
+      constraint: "shipments_waybill_idx",
+    })
   })
 
   test("an order that has a shipment cannot be deleted", async () => {
     const id = await order()
     await shipment(id, `${tag}-W5`)
-    await expect(Promise.resolve().then(() => db.delete(orders).where(eq(orders.id, id)))).rejects.toThrow()
+    expect(await pgError(async () => db.delete(orders).where(eq(orders.id, id)))).toEqual({
+      code: "23503",
+      constraint: "shipments_order_id_orders_id_fk",
+    })
   })
 })

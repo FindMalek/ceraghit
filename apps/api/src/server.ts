@@ -123,7 +123,9 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
     if (pathname.startsWith("/files/")) {
       if (!services.storage) return Response.json({ message: "Storage is not configured." }, { status: 404 })
       const key = decodeURIComponent(pathname.slice("/files/".length))
-      if (!key.startsWith(services.storage.prefix) || key.includes("..")) {
+      // `private/` holds carrier labels: only ever read through a short-lived signed link, never this public redirect.
+      const isPrivate = key.slice(services.storage.prefix.length).startsWith("private/")
+      if (!key.startsWith(services.storage.prefix) || key.includes("..") || isPrivate) {
         return Response.json({ message: "Not found." }, { status: 404 })
       }
       return new Response(null, {

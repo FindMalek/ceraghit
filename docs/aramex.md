@@ -24,6 +24,16 @@ Test host (`ws.dev.aramex.net`), WCF date format, `LabelFileContents` shape, `Ve
 `ReportID`, ProductType codes, PaymentType, `CODS`/`INSR` service codes, tracking `UpdateCode` values (`SH005` delivered),
 Contact `Type`, unit strings. All of them live in `endpoints.ts` and `aramex/provider.ts` (`AramexConfig`).
 
+## Labels are private
+
+A shipment label is a PDF in the bucket under `private/labels/<random uuid>.pdf`. The dashboard only reads it through a
+short-lived signed link (`Storage.signedGet`, 5 minutes, saved as an attachment). The api never serves it:
+`/files/*` answers 404 for any key under `private/`, and the cleanup job only deletes from the image folders.
+
+One limit to know: on Cloudflare R2 a bucket with a public custom domain serves every object by its key. The label key
+is an unguessable random uuid that is never published or logged, so it cannot be found, but anyone who is handed the
+key could fetch it anonymously. If that is not acceptable, give labels their own bucket without a public domain.
+
 ## Live guard and limits
 
 - `createShippingProvider` refuses `mode: "live"` unless `productTypes`, `labelReportId`, `paymentType` and `deliveredCodes`

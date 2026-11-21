@@ -321,7 +321,7 @@ export const shipments = pgTable(
     currency: currency("currency").notNull(),
     weightGrams: integer("weight_grams").notNull(),
     pieces: integer("pieces").notNull().default(1),
-    /** Bucket key of the label PDF, private: never served through `/files`. */
+    /** Bucket key of the label PDF, under `private/labels/`: read only through a signed link, `/files` refuses it. */
     labelKey: text("label_key"),
     /** The carrier's own label link, it may expire. */
     labelUrl: text("label_url"),

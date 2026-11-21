@@ -97,3 +97,34 @@ test.skipIf(!process.env.DATABASE_URL)("/health shows only the saved provider an
   await db.delete(settings).where(eq(settings.key, "shipping"))
   expect(body.shipping).toBe("aramex:preview")
 })
+
+test("/files redirects a public key but never a private one such as a carrier label", async () => {
+  const services = {
+    db: {},
+    payments: { name: "demo", mode: "test" },
+    storage: {
+      bucket: "b",
+      prefix: "pr-1/",
+      readUrl: async (key: string) => `https://cdn.test/${key}`,
+    },
+    config: {
+      webUrl: "http://localhost:3000",
+      apiPublicUrl: "http://localhost:3001",
+      appEnv: "preview",
+      deployEnv: "local",
+      secureCookies: true,
+      onlinePayments: false,
+    },
+  } as unknown as Services
+  const fetch = createServer(services)
+  const open = await fetch(get("/files/pr-1/media/vase.webp"))
+  expect(open.status).toBe(302)
+  expect(open.headers.get("location")).toBe("https://cdn.test/pr-1/media/vase.webp")
+  for (const path of [
+    "/files/pr-1/private/labels/a.pdf",
+    "/files/pr-1/private/x",
+    `/files/${encodeURIComponent("pr-1/private/labels/a.pdf")}`,
+  ]) {
+    expect((await fetch(get(path))).status, path).toBe(404)
+  }
+})
