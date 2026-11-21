@@ -109,6 +109,8 @@ export const shippingSettingsViewSchema = z.object({
   aramex: maskedIntegrationSchema,
   appEnv: z.enum(["local", "preview", "production"]),
   degraded: z.literal("missing-credentials").nullable(),
+  /** ARAMEX_FAKE: nothing is sent to Aramex, the answers come from a stand-in. */
+  simulated: z.boolean(),
 })
 
 export const saveShippingInputSchema = z.object({

@@ -251,7 +251,7 @@
       "failed": "L'envoi a échoué, réessayez.",
       "tooMany": "Trop d'envois, réessayez bientôt.",
       "type": "Format non pris en charge (JPEG, PNG ou WebP).",
-      "tooLarge": "Photo trop lourde (5 Mo maximum)."
+      "tooLarge": "Photo trop lourde (2 Mo maximum)."
     }
   },
   "atelier": {
@@ -574,6 +574,7 @@
       "too_many_lookups": "Trop de tentatives, réessayez dans quelques minutes.",
       "too_many_requests": "Trop de demandes, réessayez plus tard.",
       "photo_missing": "Une photo n'a pas été envoyée, ajoutez-la de nouveau.",
+      "photo_unreadable": "Une photo n'a pas pu être lue, envoyez-la à nouveau.",
       "storage_full": "L'espace de stockage est plein."
     }
   }

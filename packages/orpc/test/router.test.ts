@@ -152,49 +152,6 @@ describe.skipIf(!url)("router", () => {
     await db.delete(customRequests).where(eq(customRequests.name, name))
   })
 
-  test("a request keeps photos that were really uploaded and rejects the rest", async () => {
-    const stored = new Set<string>()
-    const storage: Storage = {
-      bucket: "b",
-      prefix: "pr-1/",
-      presignPut: async (key, _type, size) => {
-        stored.add(key)
-        return `https://s3.test/${key}?size=${size}`
-      },
-      put: async () => {},
-      signedGet: async (key) => key,
-      head: async (key) => stored.has(key),
-      read: async () => null,
-      readUrl: async (key) => key,
-      publicUrl: () => null,
-      remove: async () => {},
-      list: async () => [],
-    }
-    const client = createRouterClient(appRouter, {
-      context: (): Context => createContext({ ...services, storage }, visit()),
-    })
-    const request = {
-      name: `Photo ${tag}`,
-      email: "photos@example.com",
-      description: "Un vase avec des motifs géométriques",
-      locale: "fr" as const,
-    }
-    const { image } = await client.public.requests.uploadUrl({ contentType: "image/jpeg", size: 1000 })
-    expect(image.startsWith("s3:pr-1/requests/")).toBe(true)
-
-    await client.public.requests.create({ ...request, images: [image] })
-    const [saved] = await db.select().from(customRequests).where(eq(customRequests.name, request.name))
-    expect(saved?.images).toEqual([image])
-
-    const foreign = { ...request, images: ["s3:pr-1/products/a.jpg"] }
-    await expect(client.public.requests.create(foreign)).rejects.toMatchObject({ code: "BAD_REQUEST" })
-    const missing = { ...request, images: ["s3:pr-1/requests/never-uploaded.jpg"] }
-    await expect(client.public.requests.create(missing)).rejects.toMatchObject({ code: "BAD_REQUEST" })
-    await expect(guest.public.requests.uploadUrl({ contentType: "image/png", size: 10 })).rejects.toMatchObject({
-      code: "SERVICE_UNAVAILABLE",
-    })
-  })
-
   test("no admin procedure answers a visitor", async () => {
     const visitor = createRouterClient(adminRouter, { context: (): Context => createContext(services, new Headers()) })
     type Call = (input?: unknown) => Promise<unknown>

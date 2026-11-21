@@ -26,13 +26,16 @@ Contact `Type`, unit strings. All of them live in `endpoints.ts` and `aramex/pro
 
 ## Labels are private
 
-This is the storage and access policy the shipment work builds on. Today only the pieces below exist: `Storage.put` and
-`Storage.signedGet` and the `/files/*` guard. The service that creates a shipment and stores its label, and the dashboard
-download, come in later PRs (#192 and the label download issue), so no application code writes or serves a label yet.
+`createShipment` (`packages/orpc/src/lib/shipping/shipments.ts`) stores the label PDF in the bucket under
+`private/labels/<random uuid>.pdf` and counts it in `uploads` (folder `labels`). The dashboard only reads it through a
+short-lived signed link (`admin.shipping.labelUrl`, `Storage.signedGet`, 5 minutes, attachment or inline to print). The
+api never serves it: `/files/*` answers 404 for any key under `private/`, and the cleanup job only deletes from the image
+folders. On top of that the label of an open parcel, and of one closed less than 90 days ago, is registered in
+`STORAGE_REFERENCES`, so the cleanup keeps it whatever folder rule it uses.
 
-A shipment label will be a PDF in the bucket under `private/labels/<random uuid>.pdf`. The dashboard will only read it
-through a short-lived signed link (`Storage.signedGet`, 5 minutes, saved as an attachment). The api never serves it:
-`/files/*` answers 404 for any key under `private/`, and the cleanup job only deletes from the image folders.
+If the label cannot be stored the shipment is kept with a `LABEL` error and the dashboard offers `Réessayer l'étiquette`.
+`ARAMEX_FAKE=true` (never in production) answers every call from `aramex/fake.ts`, including a demo label PDF, so
+previews and e2e create shipments with `environment: "fake"` and nothing leaves the process.
 
 One limit to know: on Cloudflare R2 a bucket with a public custom domain serves every object by its key. The label key
 is an unguessable random uuid that is never published or logged, so it cannot be found, but anyone who is handed the

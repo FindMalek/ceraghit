@@ -15,6 +15,7 @@ import {
   products,
   productVariants,
   settings,
+  shipments,
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
@@ -201,6 +202,7 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
     )
     await tx.insert(orders).values(scenario.orders)
     await tx.insert(orderItems).values(scenario.items)
+    if (scenario.shipments.length) await tx.insert(shipments).values(scenario.shipments)
     if (scenario.audit.length) await tx.insert(orderAudit).values(scenario.audit)
     if (scenario.mail.length) await tx.insert(mailLog).values(scenario.mail)
     await tx.insert(jobRuns).values(scenario.jobRuns)
@@ -214,6 +216,10 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
         key: "aramex:cities:TN",
         value: { cities: DEMO_TN_CITIES, fetchedAt: new Date().toISOString(), fixture: true },
       })
+      .onConflictDoNothing()
+    await tx
+      .insert(settings)
+      .values({ key: "shipping", value: { provider: "manual", quoteFromProvider: false } })
       .onConflictDoNothing()
     done.demo = true
   })

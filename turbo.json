@@ -22,6 +22,13 @@
       "dependsOn": ["^check-types"]
     },
     "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/*/src/**",
+        "$TURBO_ROOT$/packages/db/drizzle/**",
+        "$TURBO_ROOT$/apps/web/public/**",
+        "$TURBO_ROOT$/apps/*/**/*.{ts,tsx,json,css}"
+      ],
       "env": ["DATABASE_URL"]
     },
     "dev": {
@@ -43,10 +50,6 @@
     },
     "db:seed:catalog": {
       "cache": false
-    },
-    "dashboard#test": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/orpc/src/**"],
-      "env": ["DATABASE_URL"]
     },
     "api#test": {
       "dependsOn": ["@workspace/orpc#test"],

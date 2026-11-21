@@ -265,6 +265,10 @@ describe.skipIf(!url)("shipping settings", () => {
     })
     expect(await shippingHealth({ ...base, secrets: null })).toBe("aramex:preview")
     expect(await shippingHealth(base)).toBe("aramex:preview")
+    const simulated = { ...base, config: { ...base.config, aramexFake: true } }
+    expect(await shippingHealth(simulated)).toBe("aramex:fake")
+    expect((await as(simulated).shipping.getSettings({})).simulated).toBe(true)
+    expect((await owner().shipping.getSettings({})).simulated).toBe(false)
   })
 
   test("the fake aramex answers by credentials and never reaches the network", async () => {
