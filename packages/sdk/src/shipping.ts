@@ -1,5 +1,24 @@
-import { EU_PLUS } from "./countries"
+import { z } from "zod"
+import { SHIPPING_COUNTRIES as COUNTRIES, EU_PLUS } from "./countries"
 import type { Currency, ShippingRates } from "./schemas"
+
+export const shippingCitiesInputSchema = z.object({
+  country: z.enum(COUNTRIES),
+  q: z.string().trim().max(40).default(""),
+})
+export const shippingCitiesSchema = z.object({
+  cities: z.array(z.string()).max(50),
+  /** True when the customer must pick one of them: Tunisia with a list from the carrier. */
+  strict: z.boolean(),
+})
+
+export const addressSuggestionSchema = z.object({ line1: z.string(), city: z.string(), postalCode: z.string() })
+export const addressCheckSchema = z.object({
+  ok: z.boolean(),
+  suggestions: z.array(addressSuggestionSchema).max(5),
+  message: z.string(),
+})
+export const citiesRefreshSchema = z.object({ count: z.number().int(), fetchedAt: z.string().nullable() })
 
 export interface ShippingItem {
   weightGrams: number

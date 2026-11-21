@@ -5,6 +5,8 @@ import {
   productQuerySchema,
   productSchema,
   publicSettingsSchema,
+  shippingCitiesInputSchema,
+  shippingCitiesSchema,
   shippingQuoteInputSchema,
   shippingQuoteSchema,
 } from "@workspace/sdk"
@@ -14,8 +16,9 @@ import { publicError } from "../../errors"
 import { findProducts, toCategory, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
-import { withinLimit } from "../../lib/rate-limit"
+import { enforceLimit, withinLimit } from "../../lib/rate-limit"
 import { effectivePaymentMethods, getSettings } from "../../lib/settings"
+import { getCities, searchCities } from "../../lib/shipping/locations"
 import { quoteShipping } from "../../lib/shipping/quote"
 import { getShopProfile, publicShopProfile } from "../../lib/shop-profile"
 import { publicProcedure } from "../../procedures"
@@ -119,6 +122,24 @@ export const catalogRouter = {
         onlinePayments: paymentMethods.online,
         paymentMethods,
         profile: publicShopProfile(profile),
+      }
+    }),
+
+  shippingCities: publicProcedure
+    .route({
+      method: "GET",
+      path: "/shipping/cities",
+      summary: "Cities the carrier delivers to, searchable",
+      tags: TAG,
+    })
+    .input(shippingCitiesInputSchema)
+    .output(shippingCitiesSchema)
+    .handler(async ({ context, input }) => {
+      await enforceLimit(context, "shippingCities", "too_many_requests", "Too many requests, try again in a minute.")
+      const { cities } = await getCities(context, input.country)
+      return {
+        cities: searchCities(cities, input.q),
+        strict: input.country === "TN" && cities.length > 0,
       }
     }),
 

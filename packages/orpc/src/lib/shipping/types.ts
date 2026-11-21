@@ -125,4 +125,8 @@ export interface ShippingProvider {
   createPickup(req: PickupRequest): Promise<{ id: string; guid: string }>
   cancelPickup(guid: string, reason: string): Promise<void>
   testConnection(): Promise<ConnectionResult>
+  /** The city names the carrier knows for an ISO-2 country. Manual: none. */
+  fetchCities(country: string): Promise<string[]>
+  /** Addresses the carrier suggests instead of the one given (empty when it is fine as typed). */
+  validateAddress(address: ShipAddress): Promise<{ suggestions: ShipAddress[] }>
 }

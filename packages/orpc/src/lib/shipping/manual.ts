@@ -28,6 +28,12 @@ export class ManualShippingProvider implements ShippingProvider {
   async cancelPickup(): Promise<never> {
     throw new ShippingError("unsupported")
   }
+  async fetchCities() {
+    return []
+  }
+  async validateAddress() {
+    return { suggestions: [] }
+  }
   async testConnection() {
     return { ok: true as const }
   }

@@ -1,3 +1,18 @@
+export const FAKE_CITIES = [
+  "Ariana",
+  "Bizerte",
+  "Djerba Houmt Souk",
+  "Gabès",
+  "Hammamet",
+  "Kairouan",
+  "La Marsa",
+  "Monastir",
+  "Nabeul",
+  "Sfax",
+  "Sousse",
+  "Tunis",
+]
+
 const COUNTRIES = {
   Transaction: null,
   Notifications: [],
@@ -34,6 +49,21 @@ export function createFakeAramexFetch(): typeof fetch {
       .ClientInfo
     const reply = (body: unknown) => new Response(JSON.stringify(body))
     if (info?.Password === "fake-bad-login") return reply(LOGIN_ERROR)
+    if (url.endsWith("/FetchCities"))
+      return reply({ Transaction: null, Notifications: [], HasErrors: false, Cities: FAKE_CITIES })
+    if (url.endsWith("/ValidateAddress")) {
+      const sent = JSON.parse(String(init?.body ?? "{}")) as { Address?: { City?: string; Line1?: string } }
+      const typed = sent.Address?.City ?? ""
+      const known = FAKE_CITIES.some((c) => c.toLowerCase() === typed.toLowerCase())
+      return reply({
+        Transaction: null,
+        Notifications: [],
+        HasErrors: false,
+        SuggestedAddresses: known
+          ? []
+          : [{ Line1: sent.Address?.Line1 ?? "", City: "Sousse", PostCode: "4000", CountryCode: "TN" }],
+      })
+    }
     if (url.endsWith("/FetchCountries")) return reply(COUNTRIES)
     if (url.endsWith("/CalculateRate")) return reply(info?.AccountPin === "fake-bad-rate" ? RATE_ERROR : RATE)
     return reply({ Transaction: null, Notifications: [], HasErrors: false })

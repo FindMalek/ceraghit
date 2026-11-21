@@ -1,14 +1,20 @@
 import { ORPCError } from "@orpc/server"
+import { orders } from "@workspace/db"
 import {
+  addressCheckSchema,
   aramexConfigSchema,
+  citiesRefreshSchema,
   connectionResultSchema,
+  SHIPPING_COUNTRIES,
   saveShippingInputSchema,
   shippingSettingsViewSchema,
   testShippingInputSchema,
 } from "@workspace/sdk"
+import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { assertVaultReadable, describeIntegration, getIntegration, saveIntegration } from "../../lib/integrations"
 import { enforceLimit } from "../../lib/rate-limit"
+import { checkAddress, getCities } from "../../lib/shipping/locations"
 import {
   ARAMEX_MISSING,
   aramexComplete,
@@ -69,6 +75,57 @@ export const shippingRouter = {
       }
       await saveShippingSettings(context.db, input.mode)
       return view(context)
+    }),
+
+  checkAddress: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipping/check-address",
+      summary: "Ask Aramex whether an order's address is recognised",
+      tags: TAG,
+    })
+    .input(z.object({ orderId: z.string() }))
+    .output(addressCheckSchema)
+    .handler(async ({ context, input }) => {
+      const [order] = await context.db.select().from(orders).where(eq(orders.id, input.orderId)).limit(1)
+      if (!order) throw new ORPCError("NOT_FOUND", { message: "Commande introuvable." })
+      const result = await checkAddress(context, {
+        name: order.customerName,
+        phone: order.phone,
+        line1: order.address,
+        city: order.city,
+        country: order.country,
+        ...(order.postalCode ? { postalCode: order.postalCode } : {}),
+      })
+      return {
+        ok: result.ok,
+        message: result.message,
+        suggestions: result.suggestions.slice(0, 5).map((s) => ({
+          line1: s.line1,
+          city: s.city,
+          postalCode: s.postalCode ?? "",
+        })),
+      }
+    }),
+
+  refreshCities: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipping/cities/refresh",
+      summary: "Fetch the Aramex city list again",
+      tags: TAG,
+    })
+    .input(z.object({ country: z.enum(SHIPPING_COUNTRIES) }))
+    .output(citiesRefreshSchema)
+    .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "shippingTest",
+        "too_many_requests",
+        "Trop d'essais, réessayez dans quelques minutes.",
+      )
+      const { cities, fetchedAt } = await getCities(context, input.country, { force: true })
+      return { count: cities.length, fetchedAt }
     }),
 
   testConnection: adminProcedure
