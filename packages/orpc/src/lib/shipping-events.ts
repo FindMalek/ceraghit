@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { orders } from "@workspace/db"
+import { orders, shipments } from "@workspace/db"
 import { type CarrierId, isHttpsUrl, trackingUrlFor } from "@workspace/sdk"
 import { and, eq, or, sql } from "drizzle-orm"
 import type { Services } from "../context"
@@ -82,6 +82,23 @@ export async function onOrderShipped(services: Services, orderId: string): Promi
   await services.hooks?.orderShipped?.(orderId)
 }
 
+/** Where a "delivered" email plugs in later. A failing hook never breaks the polling. */
+export async function onShipmentDelivered(services: Services, shipmentId: string): Promise<void> {
+  try {
+    await services.hooks?.shipmentDelivered?.(shipmentId)
+  } catch {
+    console.error("[shipment-hook] delivered failed", shipmentId)
+  }
+}
+
+export async function onShipmentException(services: Services, shipmentId: string): Promise<void> {
+  try {
+    await services.hooks?.shipmentException?.(shipmentId)
+  } catch {
+    console.error("[shipment-hook] exception failed", shipmentId)
+  }
+}
+
 /** Edits the tracking of an order that already shipped. Does not fire the hook again. */
 export async function updateOrderTracking(services: Services, orderId: string, input: ShipInput): Promise<void> {
   const columns = trackingColumns(input)
@@ -93,7 +110,17 @@ export async function updateOrderTracking(services: Services, orderId: string, i
   if (!row) throw new ORPCError("BAD_REQUEST", { message: "Seule une commande expédiée peut changer de suivi." })
 }
 
-export function toShipping(o: typeof orders.$inferSelect) {
+/** The status of an order's live parcel, for the customer page only (the owner sees the whole shipment). */
+export async function parcelOf(services: Services, orderId: string) {
+  const [parcel] = await services.db
+    .select({ status: shipments.status, lastEvent: shipments.lastEvent, deliveredAt: shipments.deliveredAt })
+    .from(shipments)
+    .where(and(eq(shipments.orderId, orderId), sql`${shipments.status} <> 'cancelled'`))
+    .limit(1)
+  return parcel ?? null
+}
+
+export function toShipping(o: typeof orders.$inferSelect, parcel: Awaited<ReturnType<typeof parcelOf>> = null) {
   if (!o.carrier) return null
   return {
     carrier: o.carrier as CarrierId,
@@ -101,5 +128,7 @@ export function toShipping(o: typeof orders.$inferSelect) {
     trackingNumber: o.trackingNumber,
     trackingUrl: o.trackingUrl,
     shippedAt: o.shippedAt?.toISOString() ?? null,
+    parcelStatus: parcel?.status ?? null,
+    parcelStatusAt: parcel ? (parcel.deliveredAt?.toISOString() ?? parcel.lastEvent?.at ?? null) : null,
   }
 }

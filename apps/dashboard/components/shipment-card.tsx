@@ -9,6 +9,7 @@ import { showError } from "@workspace/ui/components/error-banner"
 import { useState } from "react"
 import { EnvironmentChip } from "@/components/create-shipment-dialog"
 import { Tone } from "@/components/status-badge"
+import { formatDate } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
 const TONES = { delivered: "good", exception: "bad", returned: "bad", cancelled: "quiet", on_hold: "warn" } as const
@@ -30,9 +31,17 @@ export function ShipmentCard({ orderId }: { orderId: string }) {
       onError: (error) => showError(errorMessage(error)),
     }),
   )
+  const refresh = useMutation(
+    orpc.admin.shipping.refresh.mutationOptions({
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: orpc.admin.shipping.shipmentOf.key() }),
+      onError: (error) => showError(errorMessage(error)),
+    }),
+  )
   const s = shipment.data
   if (!s) return null
   const labelError = s.errors.find((e) => e.code === "LABEL")
+  const trackingErrors = s.errors.filter((e) => e.code !== "LABEL")
+  const closed = ["delivered", "returned", "cancelled"].includes(s.status)
 
   return (
     <section aria-label="Expédition Aramex" data-testid="shipment-card" className="flex flex-col gap-2">
@@ -67,6 +76,12 @@ export function ShipmentCard({ orderId }: { orderId: string }) {
             <Tone tone={TONES[s.status as keyof typeof TONES] ?? "info"}>{SHIPMENT_STATUS_LABELS[s.status]}</Tone>
           </dd>
         </div>
+        {s.deliveredAt && (
+          <div className="flex flex-wrap gap-2">
+            <dt className="text-muted-foreground">Livrée le</dt>
+            <dd>{formatDate(s.deliveredAt)}</dd>
+          </div>
+        )}
         {s.codAmountMinor !== null && (
           <div className="flex flex-wrap gap-2">
             <dt className="text-muted-foreground">À encaisser</dt>
@@ -74,6 +89,47 @@ export function ShipmentCard({ orderId }: { orderId: string }) {
           </div>
         )}
       </dl>
+      <div className="flex flex-col gap-2" data-testid="shipment-timeline">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-heading text-xl">Suivi du colis</h3>
+          {!closed && (
+            <Button
+              variant="outline"
+              className="h-11"
+              disabled={refresh.isPending}
+              onClick={() => refresh.mutate({ id: s.id })}
+            >
+              Actualiser
+            </Button>
+          )}
+        </div>
+        <p className="text-muted-foreground text-sm" data-testid="shipment-polled">
+          {s.lastPolledAt ? `Dernière mise à jour : ${formatDate(s.lastPolledAt)}` : "Pas encore de mise à jour."}
+        </p>
+        {s.events.length > 0 && (
+          <ol className="flex flex-col gap-2 border-s ps-4 text-sm">
+            {s.events.map((e) => (
+              <li key={`${e.code}-${e.at}`} data-testid="shipment-event">
+                <p className="font-medium">{e.description}</p>
+                <p className="text-muted-foreground">
+                  {formatDate(e.at)}
+                  {e.location ? ` · ${e.location}` : ""}
+                </p>
+              </li>
+            ))}
+          </ol>
+        )}
+        {trackingErrors.length > 0 && (
+          <details className="text-sm">
+            <summary className="cursor-pointer">Problèmes de suivi</summary>
+            <ul className="mt-1 flex flex-col gap-1 text-muted-foreground">
+              {trackingErrors.map((e) => (
+                <li key={`${e.code}-${e.at}`}>{e.message}</li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </div>
       {s.hasLabel ? (
         <div className="flex flex-wrap gap-2">
           <Button

@@ -94,6 +94,10 @@ export const adminShipmentSchema = z.object({
   currency: currencySchema,
   hasLabel: z.boolean(),
   errors: z.array(z.object({ at: z.string(), code: z.string(), message: z.string() })),
+  /** Newest first. */
+  events: z.array(z.object({ code: z.string(), description: z.string(), at: z.string(), location: z.string() })),
+  lastPolledAt: z.string().nullable(),
+  deliveredAt: z.string().nullable(),
   createdAt: z.string(),
 })
 export type AdminShipment = z.infer<typeof adminShipmentSchema>

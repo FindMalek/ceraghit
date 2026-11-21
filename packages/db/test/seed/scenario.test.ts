@@ -153,7 +153,13 @@ test("demo media describe their own product and include a tagged and an unused p
 test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cash on delivery in dinars only", () => {
   const { orders, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
   expect(shipments.length).toBeGreaterThan(0)
-  expect(new Set(shipments.map((s) => s.status)).size).toBeGreaterThan(2)
+  expect(new Set(shipments.map((s) => s.status))).toContain("exception")
+  expect(new Set(shipments.map((s) => s.status))).toContain("delivered")
+  for (const s of shipments) {
+    expect(s.lastEvent).toEqual(s.events?.at(-1) ?? null)
+    expect(s.status === "delivered").toBe(s.deliveredAt != null)
+    expect(s.status === "exception").toBe(!!s.lastEvent?.problemCode)
+  }
   for (const s of shipments) {
     const o = orders.find((x) => x.id === s.orderId)
     expect(o).toMatchObject({ status: "fulfilled", carrier: "aramex", trackingNumber: s.waybill })

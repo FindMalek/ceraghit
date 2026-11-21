@@ -1,11 +1,21 @@
-import { shipments } from "@workspace/db"
+import { type ShipmentEvent, shipments } from "@workspace/db"
 import { and, asc, eq, notInArray, sql } from "drizzle-orm"
 import type { Services } from "../../context"
+import { onShipmentDelivered, onShipmentException } from "../shipping-events"
+import { looksDelivered, mapAramexStatus } from "./aramex/status"
 import { resolveShipping } from "./resolve"
 import type { ShippingProvider } from "./types"
 
 const BATCH = 30
 const FINISHED = ["delivered", "returned", "cancelled"] as const
+const MAX_EVENTS = 100
+
+/** Old and new events, one per (code, at), oldest first, the newest 100 kept. */
+export function mergeEvents(known: ShipmentEvent[], fresh: ShipmentEvent[]): ShipmentEvent[] {
+  const byKey = new Map<string, ShipmentEvent>()
+  for (const e of [...known, ...fresh]) byKey.set(`${e.code}|${e.at}`, e)
+  return [...byKey.values()].sort((a, b) => a.at.localeCompare(b.at)).slice(-MAX_EVENTS)
+}
 
 export interface TrackingReport {
   polled: number
@@ -21,6 +31,7 @@ export interface TrackingReport {
 export async function trackShipments(
   services: Services,
   provider?: ShippingProvider,
+  opts: { shipmentId?: string } = {},
 ): Promise<TrackingReport | { skipped: string }> {
   const { db, now } = services
   let carrier = provider
@@ -32,9 +43,15 @@ export async function trackShipments(
   if (carrier.id === "manual") return { skipped: "manual shipping" }
 
   const open = await db
-    .select({ id: shipments.id, waybill: shipments.waybill })
+    .select({ id: shipments.id, waybill: shipments.waybill, status: shipments.status, events: shipments.events })
     .from(shipments)
-    .where(and(eq(shipments.provider, carrier.id), notInArray(shipments.status, [...FINISHED])))
+    .where(
+      and(
+        eq(shipments.provider, carrier.id),
+        notInArray(shipments.status, [...FINISHED]),
+        opts.shipmentId ? eq(shipments.id, opts.shipmentId) : undefined,
+      ),
+    )
     .orderBy(sql`${shipments.lastPolledAt} asc nulls first`, asc(shipments.createdAt))
     .limit(BATCH)
   const report: TrackingReport = { polled: open.length, updated: 0, delivered: 0 }
@@ -50,19 +67,28 @@ export async function trackShipments(
       await db.update(shipments).set({ lastPolledAt: polledAt }).where(eq(shipments.id, row.id))
       continue
     }
-    const events = [...found.events].sort((a, b) => a.at.localeCompare(b.at))
-    const isDelivered = found.delivered === true
+    const events = mergeEvents(row.events, found.events)
+    // The "delivered?" answer only matters near the end of the journey; the provider already read it from the codes.
+    const delivered = looksDelivered(events) ? found.delivered : false
+    const status = mapAramexStatus(events, delivered, row.status)
+    const closing = status === "delivered"
     await db
       .update(shipments)
       .set({
         events,
         lastEvent: events.at(-1) ?? null,
         lastPolledAt: polledAt,
-        ...(isDelivered ? { status: "delivered" as const, deliveredAt: polledAt } : {}),
+        status,
+        ...(closing ? { deliveredAt: new Date(events.at(-1)?.at ?? polledAt) } : {}),
       })
       .where(eq(shipments.id, row.id))
     report.updated++
-    if (isDelivered) report.delivered++
+    if (closing) {
+      report.delivered++
+      await onShipmentDelivered(services, row.id)
+    } else if (status === "exception" && row.status !== "exception") {
+      await onShipmentException(services, row.id)
+    }
   }
   return report
 }
