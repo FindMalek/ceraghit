@@ -56,7 +56,7 @@ export default defineConfig<E2EOptions>({
     ["json", { outputFile: "artifacts/results.json" }],
   ],
   retries: 0,
-  workers: process.env.CI ? 2 : undefined,
+  workers: process.env.CI ? 4 : undefined,
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   use: {
