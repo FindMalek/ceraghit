@@ -93,7 +93,7 @@ export function createStorage(config: StorageConfig): Storage | null {
       presign(
         "GET",
         key,
-        expiresSeconds,
+        Math.min(Math.max(1, Math.floor(expiresSeconds)), 3600),
         undefined,
         false,
         filename

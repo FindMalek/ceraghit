@@ -124,6 +124,9 @@ test("/files redirects a public key but never a private one such as a carrier la
     "/files/pr-1/private/labels/a.pdf",
     "/files/pr-1/private/x",
     `/files/${encodeURIComponent("pr-1/private/labels/a.pdf")}`,
+    `/files/${encodeURIComponent("pr-1/./private/labels/a.pdf")}`,
+    `/files/${encodeURIComponent("pr-1//private/labels/a.pdf")}`,
+    `/files/${encodeURIComponent("pr-1/media/../private/labels/a.pdf")}`,
   ]) {
     expect((await fetch(get(path))).status, path).toBe(404)
   }

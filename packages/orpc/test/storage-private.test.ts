@@ -33,6 +33,11 @@ describe("private files", () => {
     expect(url.searchParams.get("response-content-disposition")).toBe('attachment; filename="etiquette__12_34_.pdf"')
   })
 
+  test("a private link never lives longer than an hour, whatever is asked", async () => {
+    const url = new URL(await storage.signedGet("pr-1/private/labels/x.pdf", 7 * 86_400))
+    expect(url.searchParams.get("X-Amz-Expires")).toBe("3600")
+  })
+
   test("an object is written with a signed PUT and its content type", async () => {
     let seen: Request | undefined
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
