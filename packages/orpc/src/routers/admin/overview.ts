@@ -1,6 +1,6 @@
 import { customRequests, mailLog, orderItems, orders, products } from "@workspace/db"
 import { statsRangeSchema, statsSchema } from "@workspace/sdk"
-import { and, asc, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm"
 import { LAZY_SWEEP_LIMIT, releaseExpiredHolds } from "../../lib/orders"
 import { adminProcedure } from "../../procedures"
 
@@ -14,8 +14,9 @@ export const overview = adminProcedure
     const { db } = context
     const now = context.now()
     await releaseExpiredHolds(context, now, { limit: LAZY_SWEEP_LIMIT })
-    const since = new Date(now.getTime() - input.days * 864e5)
-    const inRange = and(inArray(orders.status, PAID), gte(orders.paidAt, since))
+    const since = sql`(date_trunc('day', ${now.toISOString()}::timestamptz at time zone 'Africa/Tunis') - make_interval(days => ${input.days - 1})) at time zone 'Africa/Tunis'`
+    const until = sql`(date_trunc('day', ${now.toISOString()}::timestamptz at time zone 'Africa/Tunis') + interval '1 day') at time zone 'Africa/Tunis'`
+    const inRange = and(inArray(orders.status, PAID), gte(orders.paidAt, since), lt(orders.paidAt, until))
 
     const totals = await db
       .select({

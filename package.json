@@ -12,6 +12,7 @@
     "test": "turbo test",
     "lint": "biome ci .",
     "check": "biome check --write .",
+    "media:manifest": "node scripts/media-manifest.mjs",
     "db:up": "docker compose -f docker/docker-compose.yml up -d",
     "db:down": "docker compose -f docker/docker-compose.yml down",
     "demo:reset": "scripts/demo-reset.sh",
