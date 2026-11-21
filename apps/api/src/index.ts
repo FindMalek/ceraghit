@@ -10,7 +10,7 @@ import { CRON_JOBS } from "./cron"
 import { loadEnv } from "./env"
 import { startLogger, withRequestLogging } from "./logger"
 import { createMailer, mailTransport } from "./mailer"
-import { createServer } from "./server"
+import { createServer, rememberPeer } from "./server"
 import { flushAfter, startTelemetry } from "./telemetry"
 
 const env = loadEnv()
@@ -70,6 +70,7 @@ const fetch = flushAfter(
         cronSecret: env.CRON_SECRET,
         cronJobs: Object.keys(CRON_JOBS),
         proxySecret: env.PROXY_SECRET,
+        trustedProxyHops: env.TRUSTED_PROXY_HOPS,
         emailFrom: env.EMAIL_FROM,
         resendApiKey: env.RESEND_API_KEY,
         envCredentials: {
@@ -99,4 +100,11 @@ if (telemetry.enabled) {
 }
 
 /** Bun serves this default export directly, and Vercel's function entry (api/index.ts) re-exports it. */
-export default { port: env.PORT, hostname: "0.0.0.0", fetch }
+export default {
+  port: env.PORT,
+  hostname: "0.0.0.0",
+  fetch: (request: Request, server?: { requestIP?: (request: Request) => { address: string } | null }) => {
+    rememberPeer(request, server?.requestIP?.(request)?.address)
+    return fetch(request)
+  },
+}

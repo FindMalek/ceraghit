@@ -69,7 +69,7 @@ describe.skipIf(!url)("rate limits", () => {
       db,
       headers: new Headers({ "x-forwarded-for": address }),
       now: () => clock,
-      config: {},
+      config: { appEnv: "local" },
     })
     clock = new Date()
     const here = `4.4.4.${tag}`
