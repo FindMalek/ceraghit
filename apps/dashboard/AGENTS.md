@@ -9,8 +9,8 @@ Owner dashboard for Ceraghit (French UI). Talks only to the api's `admin` router
 - Money: every product has a TND price (millimes) and an EUR price (cents). Inputs are plain decimals converted with
   `inputToMinor` / `minorToInput` (`lib/money.ts`). Stats show the two currencies side by side, never summed.
 - Text that can be translated uses `LocalizedField` (FR required, EN/AR optional) and `lib/localized.ts`.
-- Images upload straight to the bucket through `admin.uploads.sign` (`components/image-field.tsx`), a pasted `/path`
-  or URL is the fallback when storage isn't configured.
+- Pictures are chosen from the media library with `MediaPicker` (uploads go through its upload tab); category and
+  location forms use `components/media-image-field.tsx` and store a media id, never a pasted path or URL.
 - Product quick actions (publish, stock) resend the whole product with `productToInput(product, patch)`.
 - Shipping: products carry packed weight and box size (product form), the rate card lives in Réglages
   (`components/shipping-rates-editor.tsx`, draft/validation in `lib/shipping-draft.ts`), and `/shipping` prices a cart

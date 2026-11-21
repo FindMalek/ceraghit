@@ -33,7 +33,7 @@ export function CategoryTiles({
             {category.image && (
               <Image
                 src={imageSrc(category.image)}
-                alt=""
+                alt={pick(category.imageAlt, locale)}
                 fill
                 priority={i < 4}
                 sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
