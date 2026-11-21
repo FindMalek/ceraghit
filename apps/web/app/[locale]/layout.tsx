@@ -12,9 +12,11 @@ import { Providers } from "@/components/providers"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { routing } from "@/i18n/routing"
+import { getSiteImages } from "@/lib/api"
 import { getCurrency } from "@/lib/currency-server"
 import { FONT_VARIABLES } from "@/lib/fonts"
 import { SITE } from "@/lib/site"
+import { siteImages } from "@/lib/site-images"
 
 /** Every page carries the per-request CSP nonce, so none of them can be prerendered. */
 export const dynamic = "force-dynamic"
@@ -27,12 +29,12 @@ const OG_LOCALES: Record<string, string> = { fr: "fr_FR", en: "en_US", ar: "ar_A
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: "meta" })
+  const [t, images] = await Promise.all([getTranslations({ locale, namespace: "meta" }), getSiteImages()])
   return {
     metadataBase: new URL(SITE.url),
     title: { default: t("title"), template: `%s · ${SITE.name}` },
     description: t("description"),
-    icons: { icon: "/logo.webp" },
+    icons: { icon: siteImages("logo", images, locale)[0]?.src ?? "/logo.webp" },
     openGraph: {
       title: t("title"),
       description: t("description"),
@@ -57,16 +59,25 @@ export default async function LocaleLayout({
   const { locale } = await params
   if (!hasLocale(routing.locales, locale)) notFound()
   setRequestLocale(locale)
-  const [messages, currency, t, nonce] = await Promise.all([
+  const [messages, currency, t, nonce, images] = await Promise.all([
     getMessages(),
     getCurrency(),
     getTranslations("nav"),
     headers().then((list) => list.get("x-nonce") ?? undefined),
+    getSiteImages(),
   ])
+  const texture = siteImages("texture", images, locale)[0]?.src
   const rtl = locale === "ar"
   return (
     <html lang={locale} dir={rtl ? "rtl" : "ltr"} className={cn(FONT_VARIABLES)} suppressHydrationWarning>
-      <body className="min-h-dvh text-[1.0625rem] leading-relaxed">
+      <body
+        className="min-h-dvh text-[1.0625rem] leading-relaxed"
+        style={
+          texture && texture !== "/texture.webp"
+            ? ({ "--brand-texture": `url("${texture}")` } as React.CSSProperties)
+            : undefined
+        }
+      >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers currency={currency} nonce={nonce}>
             <a

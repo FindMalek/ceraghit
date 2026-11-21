@@ -102,7 +102,7 @@ function postalAddressJsonLd(profile: PublicShopProfile): JsonLd | null {
   }
 }
 
-export function organizationJsonLd(settings: PublicSettings): JsonLd {
+export function organizationJsonLd(settings: PublicSettings, logo = "/logo.webp"): JsonLd {
   const { profile } = settings
   const address = postalAddressJsonLd(profile)
   const telephone = profile.phones[0] ?? settings.phones[0]
@@ -113,8 +113,8 @@ export function organizationJsonLd(settings: PublicSettings): JsonLd {
     name: shopName(profile),
     ...(clean(profile.legalName) ? { legalName: clean(profile.legalName) } : {}),
     url: SITE.url,
-    logo: absoluteUrl("/logo.webp"),
-    image: absoluteUrl("/logo.webp"),
+    logo: absoluteImage(logo),
+    image: absoluteImage(logo),
     founder: { "@type": "Person", name: SITE.artist },
     ...(address ? { address } : {}),
     ...(telephone ? { telephone } : {}),

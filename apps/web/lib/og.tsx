@@ -49,8 +49,7 @@ export async function ogPhoto(image: string | undefined): Promise<string | undef
   if (!image) return undefined
   try {
     let bytes: Buffer
-    if (process.env.NODE_ENV !== "production") {
-      if (!image.startsWith("/")) return undefined
+    if (process.env.NODE_ENV !== "production" && image.startsWith("/") && !image.startsWith("/api/")) {
       bytes = await readFile(join(process.cwd(), "public", image))
     } else {
       const res = await fetch(absoluteImage(image))

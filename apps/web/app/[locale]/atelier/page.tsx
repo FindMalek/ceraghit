@@ -3,10 +3,11 @@ import { imageSrc, pick } from "@workspace/sdk"
 import { getLocale, getTranslations } from "next-intl/server"
 import Image from "@/components/photo"
 import { SectionHeading } from "@/components/section-heading"
-import { getLocations, getSettings } from "@/lib/api"
+import { getLocations, getSettings, getSiteImages } from "@/lib/api"
 import { formatAddress } from "@/lib/profile"
 import { pageMetadata } from "@/lib/seo"
-import { EDITO_KEYS, PROCESS_PHOTOS, STUDIO_PHOTOS } from "@/lib/site"
+import { EDITO_KEYS } from "@/lib/site"
+import { siteImages } from "@/lib/site-images"
 
 export const dynamic = "force-dynamic"
 
@@ -21,13 +22,16 @@ export async function generateMetadata() {
 }
 
 export default async function AtelierPage() {
-  const [t, edito, locale, locations, settings] = await Promise.all([
+  const [t, edito, locale, locations, settings, images] = await Promise.all([
     getTranslations("atelier"),
     getTranslations("edito"),
     getLocale(),
     getLocations(),
     getSettings(),
+    getSiteImages(),
   ])
+  const steps = siteImages("process", images, locale)
+  const studio = siteImages("studio", images, locale)
   const address = formatAddress(settings.profile)
   return (
     <div className="mx-auto max-w-6xl space-y-20 px-4 py-10">
@@ -47,16 +51,28 @@ export default async function AtelierPage() {
       <section className="space-y-8">
         <SectionHeading title={t("process")} />
         <ul className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {PROCESS_PHOTOS.map((src) => (
-            <li key={src} className="frame relative aspect-square overflow-hidden bg-card">
-              <Image src={src} alt="" fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />
+          {steps.map((photo) => (
+            <li key={photo.src} className="frame relative aspect-square overflow-hidden bg-card">
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                fill
+                sizes="(min-width: 768px) 25vw, 50vw"
+                className="object-cover"
+              />
             </li>
           ))}
         </ul>
         <ul className="grid gap-4 sm:grid-cols-3">
-          {STUDIO_PHOTOS.map((photo) => (
+          {studio.map((photo) => (
             <li key={photo.src} className="frame relative aspect-[4/5] overflow-hidden bg-card">
-              <Image src={photo.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" className="object-cover" />
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                fill
+                sizes="(min-width: 640px) 33vw, 100vw"
+                className="object-cover"
+              />
             </li>
           ))}
         </ul>

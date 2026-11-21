@@ -13,7 +13,6 @@ import { getCategories, getProducts, getSettings, getSiteImages } from "@/lib/ap
 import { getCurrency } from "@/lib/currency-server"
 import { organizationJsonLd } from "@/lib/json-ld"
 import { pageMetadata } from "@/lib/seo"
-import { STUDIO_PHOTOS } from "@/lib/site"
 import { siteImages } from "@/lib/site-images"
 
 export const dynamic = "force-dynamic"
@@ -44,19 +43,14 @@ export default async function HomePage() {
     getSettings(),
     getSiteImages(),
   ])
+  const logo = siteImages("logo", images, locale)[0]?.src ?? "/logo.webp"
+  const studio = siteImages("studio", images, locale)
   return (
     <>
-      <JsonLd data={organizationJsonLd(settings)} />
+      <JsonLd data={organizationJsonLd(settings, logo)} />
       <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 lg:grid-cols-2 lg:py-20">
         <div className="space-y-6 text-center lg:text-start">
-          <Image
-            src="/logo.webp"
-            alt=""
-            width={96}
-            height={96}
-            priority
-            className="mx-auto size-24 rounded-full lg:mx-0"
-          />
+          <Image src={logo} alt="" width={96} height={96} priority className="mx-auto size-24 rounded-full lg:mx-0" />
           <p className="font-script text-5xl text-gold">{t("kicker")}</p>
           <h1 className="text-7xl xl:text-9xl">Ceraghit</h1>
           <p className="mx-auto max-w-md text-lg text-muted-foreground lg:mx-0">{t("subtitle")}</p>
@@ -129,9 +123,15 @@ export default async function HomePage() {
       <section className="mx-auto max-w-7xl space-y-8 px-4 py-12">
         <SectionHeading title={t("studio")} />
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {STUDIO_PHOTOS.map((photo) => (
+          {studio.map((photo) => (
             <li key={photo.src} className="frame relative aspect-[4/5] overflow-hidden bg-card">
-              <Image src={photo.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" className="object-cover" />
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                fill
+                sizes="(min-width: 640px) 33vw, 100vw"
+                className="object-cover"
+              />
             </li>
           ))}
         </ul>

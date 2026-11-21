@@ -18,7 +18,9 @@ import {
   TruckIcon,
   WarningIcon,
 } from "@phosphor-icons/react"
-import { browserClient } from "@workspace/orpc/react"
+import { useQuery } from "@tanstack/react-query"
+import { browserClient, orpc } from "@workspace/orpc/react"
+import { imageSrc } from "@workspace/sdk"
 import { Logo } from "@workspace/ui/brand/logo"
 import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import {
@@ -65,6 +67,8 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
   const remaining = useSetupStatus().data?.remaining ?? 0
+  const logoEntry = useQuery(orpc.admin.site.images.queryOptions()).data?.logo[0]
+  const logo = logoEntry?.image.startsWith("s3:") ? imageSrc(logoEntry.image, webUrl) : undefined
   const failedMails = useFailedMails()
   const nav = failedMails > 0 ? [...NAV.slice(0, 5), EMAILS_NAV, ...NAV.slice(5)] : NAV
   const signOut = async () => {
@@ -77,7 +81,7 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/" />}>
-              <Logo />
+              <Logo src={logo} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
