@@ -59,6 +59,13 @@ export async function placeOrder(page: Page, options: PlaceOrderOptions): Promis
   await page.getByRole("button", { name: t(locale, "product.add") }).click()
   await page.goto(`${E2E.webUrl}${localePath(locale, "/checkout")}`)
 
+  return completeCheckout(page, options)
+}
+
+/** Fills the checkout form on the page that is open, submits it and reads the order from the redirect. */
+export async function completeCheckout(page: Page, options: PlaceOrderOptions): Promise<PlacedOrder> {
+  const { locale } = options
+  const country = options.country ?? "TN"
   await page.getByLabel(t(locale, "checkout.name")).fill(CUSTOMER.customerName)
   await page.getByLabel(t(locale, "checkout.email")).fill(CUSTOMER.email)
   await page.getByLabel(t(locale, "checkout.phone")).fill(CUSTOMER.phone)

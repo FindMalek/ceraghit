@@ -46,7 +46,13 @@ export function buildCsp(options: CspOptions): string {
   const dashboard = app === "dashboard"
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
-    "script-src": ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'", ...(dev ? ["'unsafe-eval'"] : [])],
+    "script-src": [
+      "'self'",
+      `'nonce-${nonce}'`,
+      "'strict-dynamic'",
+      ...(dashboard ? ["'wasm-unsafe-eval'"] : []),
+      ...(dev ? ["'unsafe-eval'"] : []),
+    ],
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": [
       "'self'",
@@ -57,7 +63,12 @@ export function buildCsp(options: CspOptions): string {
       ...(dashboard ? [YOUTUBE_THUMBNAIL_ORIGIN] : []),
     ],
     "font-src": ["'self'"],
-    "connect-src": ["'self'", ...(uploadHost ? [uploadHost] : []), ...(dev ? ["ws:", "wss:"] : [])],
+    "connect-src": [
+      "'self'",
+      ...(dashboard ? ["data:"] : []),
+      ...(uploadHost ? [uploadHost] : []),
+      ...(dev ? ["ws:", "wss:"] : []),
+    ],
     "frame-src": dashboard ? [YOUTUBE_EMBED_ORIGIN] : ["'none'"],
     "frame-ancestors": ["'none'"],
     "form-action": dashboard ? ["'self'"] : ["'self'", KONNECT_FORM_ORIGIN],
