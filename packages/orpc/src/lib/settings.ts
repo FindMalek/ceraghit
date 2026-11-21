@@ -6,14 +6,13 @@ import {
   DEFAULT_HOLDS,
   DEFAULT_PAYONEER,
   DEFAULT_SHIPPING_RATES,
-  EMPTY_TUTORIAL_LINKS,
   type PaymentMethodFlags,
   type PaymentSettings,
   paymentSettingsSchema,
+  readTutorialLinks,
   type StudioSettings,
   studioSettingsSchema,
   type TutorialLinks,
-  tutorialLinksSchema,
 } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
@@ -110,8 +109,7 @@ const TUTORIALS_KEY = "tutorials"
 
 export async function getTutorialLinks(db: Db): Promise<TutorialLinks> {
   const [row] = await db.select().from(settings).where(eq(settings.key, TUTORIALS_KEY)).limit(1)
-  const parsed = tutorialLinksSchema.safeParse(row?.value)
-  return parsed.success ? parsed.data : EMPTY_TUTORIAL_LINKS
+  return readTutorialLinks(row?.value)
 }
 
 export async function saveTutorialLinks(db: Db, value: TutorialLinks): Promise<void> {

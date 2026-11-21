@@ -63,6 +63,8 @@ export function buildCsp(options: CspOptions): string {
       ...(dashboard ? [YOUTUBE_THUMBNAIL_ORIGIN] : []),
     ],
     "font-src": ["'self'"],
+    // Tutorial videos and their caption tracks: /api/files redirects to the bucket or CDN, which must be allowed here.
+    "media-src": ["'self'", ...(dashboard ? buckets : [])],
     "connect-src": [
       "'self'",
       ...(dashboard ? ["data:"] : []),
