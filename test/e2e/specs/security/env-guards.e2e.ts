@@ -47,7 +47,9 @@ function boot(env: Record<string, string>): { code: number | null; output: strin
 /** Puts the evidence on a page so the step screenshot shows what the api answered. */
 async function show(page: Page, title: string, body: string): Promise<void> {
   const esc = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;")
-  await page.setContent(`<body style="font:15px monospace;padding:24px"><h3>${esc(title)}</h3><pre>${esc(body.slice(0, 1500))}</pre></body>`)
+  await page.setContent(
+    `<body style="font:15px monospace;padding:24px"><h3>${esc(title)}</h3><pre>${esc(body.slice(0, 1500))}</pre></body>`,
+  )
 }
 
 const REFUSED = [

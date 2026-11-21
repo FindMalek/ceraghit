@@ -40,10 +40,9 @@ async function clearVault(api: APIRequestContext): Promise<void> {
     await api.delete(`${E2E.apiUrl}/v1/admin/integrations/${provider}`, { headers: HEADERS })
 }
 
-test("saved provider secrets never leave the vault, and a save that leaves a field out keeps it", { tag: ["@fr", "@desktop"] }, async ({
-  page,
-  step,
-}) => {
+test("saved provider secrets never leave the vault, and a save that leaves a field out keeps it", {
+  tag: ["@fr", "@desktop"],
+}, async ({ page, step }) => {
   const suffix = randomBytes(6).toString("hex")
   const sentinel = { groq: `sk_e2e_groq_${suffix}`, aramexPassword: `pw_e2e_${suffix}`, aramexPin: `pin_e2e_${suffix}` }
   const all = Object.values(sentinel)
@@ -99,7 +98,10 @@ test("saved provider secrets never leave the vault, and a save that leaves a fie
       for (const path of DASHBOARD_PAGES) {
         await page.goto(`${E2E.dashboardUrl}${path}`)
         scan(`dashboard ${path}`, await page.content())
-        scan(`dashboard ${path} (RSC)`, await (await api.get(`${E2E.dashboardUrl}${path}`, { headers: { rsc: "1" } })).text())
+        scan(
+          `dashboard ${path} (RSC)`,
+          await (await api.get(`${E2E.dashboardUrl}${path}`, { headers: { rsc: "1" } })).text(),
+        )
       }
       await page.goto(`${E2E.dashboardUrl}/payments`)
     })
