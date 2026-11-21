@@ -27,6 +27,16 @@ test("dashboard policy allows the youtube embed and its thumbnails, nothing else
   expect(csp).toContain("form-action 'self';")
 })
 
+test("only the dashboard may compile the wasm the invoice pdf renderer ships as a data url", () => {
+  const dashboard = buildCsp({ ...base, app: "dashboard" })
+  expect(dashboard).toContain("'wasm-unsafe-eval'")
+  expect(dashboard).toContain("connect-src 'self' data: https://s3.example.net;")
+  expect(dashboard).not.toContain("'unsafe-eval'")
+  const web = buildCsp({ ...base, app: "web" })
+  expect(web).not.toContain("wasm-unsafe-eval")
+  expect(web).not.toContain("data: https://s3.example.net;")
+})
+
 test("HSTS is sent in production only, and the dev server may eval", () => {
   expect(securityHeaders({ ...base, app: "web" })["Strict-Transport-Security"]).toBe(HSTS)
   expect(securityHeaders({ ...base, app: "web", appEnv: "preview" })["Strict-Transport-Security"]).toBeUndefined()
