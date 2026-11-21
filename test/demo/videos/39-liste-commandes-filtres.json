@@ -1,0 +1,85 @@
+{
+  "id": "39",
+  "slug": "liste-commandes-filtres",
+  "title_fr": "La liste des commandes, recherche et filtres",
+  "start": {
+    "app": "dashboard",
+    "path": "/orders",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Chaque commande est payée dans sa devise.",
+      "holdMs": 1500
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "Lambert",
+      "caption_fr": "Cherchez un nom, un numéro ou un email."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "zzzz",
+      "caption_fr": "Sans résultat, un message vous le dit."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "",
+      "caption_fr": "Effacez la recherche.",
+      "holdMs": 800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Filtrer par statut"
+      },
+      "caption_fr": "Filtrez par statut."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "En attente de paiement"
+      },
+      "caption_fr": "Ici, les commandes à encaisser."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Expire le"
+      },
+      "caption_fr": "Ce badge annonce la date limite."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Filtrer par statut"
+      },
+      "caption_fr": "Revenez à toutes les commandes."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Toutes les commandes"
+      },
+      "caption_fr": "Revenez à toutes les commandes.",
+      "holdMs": 800
+    }
+  ]
+}

@@ -36,7 +36,7 @@ export function parseArgs(argv: string[]): Args {
         )
       flags.add(arg.slice(2))
     } else if (/^\d{2}$/.test(arg)) ids.push(arg)
-    else throw new Error(`unexpected argument "${arg}": video ids are two digits, like 03`)
+    else throw new Error(`unexpected argument "${arg}": video ids are two digits, like 34`)
   }
   return { flags, voice, device, ids }
 }

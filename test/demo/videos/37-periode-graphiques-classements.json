@@ -1,0 +1,42 @@
+{
+  "id": "37",
+  "slug": "periode-graphiques-classements",
+  "title_fr": "Période, graphiques et classements",
+  "start": { "app": "dashboard", "path": "/", "loggedIn": true },
+  "steps": [
+    {
+      "action": "click",
+      "target": { "role": "combobox", "name": "Période" },
+      "caption_fr": "Ouvrez le sélecteur de période."
+    },
+    {
+      "action": "click",
+      "target": { "role": "option", "name": "7 derniers jours" },
+      "caption_fr": "Sept jours : tout se recalcule."
+    },
+    {
+      "action": "click",
+      "target": { "role": "combobox", "name": "Période" },
+      "caption_fr": "Ou plus long, sur quatre-vingt-dix jours."
+    },
+    {
+      "action": "click",
+      "target": { "role": "option", "name": "90 derniers jours" },
+      "caption_fr": "Les graphiques suivent la période."
+    },
+    { "action": "hover", "target": { "text": "Ventes par jour, euros" }, "caption_fr": "Un graphique par devise." },
+    {
+      "action": "hover",
+      "target": { "text": "Pièces les plus vendues" },
+      "caption_fr": "Les pièces les plus vendues."
+    },
+    { "action": "hover", "target": { "text": "Commandes par pays" }, "caption_fr": "Les commandes par pays." },
+    { "action": "hover", "target": { "text": "Stock faible" }, "caption_fr": "Le stock faible : quoi refaire." },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "0001 Haut-relief" },
+      "caption_fr": "Un clic ouvre la fiche du produit."
+    },
+    { "action": "wait", "caption_fr": "Vous pouvez réapprovisionner ici.", "holdMs": 1500 }
+  ]
+}

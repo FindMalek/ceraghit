@@ -1,0 +1,50 @@
+{
+  "id": "40",
+  "slug": "detail-commande",
+  "title_fr": "Ouvrir une commande",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10030",
+      "caption_fr": "Retrouvez la commande par son numéro."
+    },
+    { "action": "click", "target": { "text": "CER-10030" }, "caption_fr": "Ouvrez-la d'un clic." },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Client" },
+      "caption_fr": "Ici, les coordonnées du client."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Appeler" },
+      "caption_fr": "Appelez ou écrivez en un clic."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Pièces" },
+      "caption_fr": "Les pièces, la livraison et le total."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Paiement" },
+      "caption_fr": "Le mode et la référence du paiement."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Livraison" },
+      "caption_fr": "Le transporteur et le suivi du colis."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Copier le numéro de suivi" },
+      "caption_fr": "Copiez le numéro de suivi."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Historique" },
+      "caption_fr": "L'historique garde chaque changement."
+    }
+  ]
+}

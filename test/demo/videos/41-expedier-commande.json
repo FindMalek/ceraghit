@@ -1,0 +1,119 @@
+{
+  "id": "41",
+  "slug": "expedier-commande",
+  "title_fr": "Marquer une commande expédiée",
+  "start": {
+    "app": "dashboard",
+    "path": "/orders",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "CER-10011",
+      "caption_fr": "Retrouvez la commande à expédier.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "CER-10013",
+      "caption_fr": "Retrouvez la commande à expédier.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "CER-100"
+      },
+      "caption_fr": "Ouvrez-la d'un clic."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Marquer expédiée"
+      },
+      "caption_fr": "Cliquez sur Marquer expédiée."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Transporteur"
+      },
+      "caption_fr": "Choisissez le transporteur."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Autre transporteur"
+      },
+      "caption_fr": "Un autre transporteur demande son nom."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Confirmer l'expédition"
+      },
+      "caption_fr": "Sans nom, un message vous prévient."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Transporteur"
+      },
+      "caption_fr": "Prenons la Poste Tunisienne."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Rapid-Poste"
+      },
+      "caption_fr": "Prenons la Poste Tunisienne.",
+      "holdMs": 600
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Numéro de suivi"
+      },
+      "value": "RR123456789TN",
+      "caption_fr": "Saisissez le numéro de suivi."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien de suivi"
+      },
+      "value": "https://suivi.example.test/RR123456789TN",
+      "caption_fr": "Le lien de suivi est facultatif."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Confirmer l'expédition"
+      },
+      "caption_fr": "Confirmez l'expédition."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le client reçoit un email avec le suivi.",
+      "holdMs": 1800
+    }
+  ]
+}
