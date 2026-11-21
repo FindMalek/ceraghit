@@ -26,6 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { CreateShipmentDialog } from "@/components/create-shipment-dialog"
 import { DownloadInvoiceButton } from "@/components/download-invoice-button"
 import { ExportOrdersDialog } from "@/components/export-orders-dialog"
 import { MANUAL_METHOD_LABEL, MarkPaidDialog } from "@/components/mark-paid-dialog"
@@ -33,6 +34,7 @@ import { PageBody, PageHeader } from "@/components/page-header"
 import { PayoneerLinkBlock } from "@/components/payoneer-link-block"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { ShipOrderDialog } from "@/components/ship-order-dialog"
+import { ShipmentCard } from "@/components/shipment-card"
 import { SimpleSelect } from "@/components/simple-select"
 import { HoldBadge, LinkBadge, OrderStatusBadge } from "@/components/status-badge"
 import { formatDate, formatDayYear, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
@@ -177,11 +179,18 @@ function History({ orderId }: { orderId: string }) {
   )
 }
 
+const INTERNATIONAL_LATER = "Les envois internationaux arrivent avec la déclaration en douane."
+const canCreateShipment = (o: { status: string; paymentMethod: string }) =>
+  o.status === "paid" || (o.status === "pending_payment" && o.paymentMethod === "cod")
+
 function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [pending, setPending] = useState<Action | null>(null)
   const [editTracking, setEditTracking] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [createShipment, setCreateShipment] = useState(false)
+  const shippingSettings = useQuery(orpc.admin.shipping.getSettings.queryOptions({ input: {} }))
+  const aramexOn = shippingSettings.data?.mode.provider === "aramex" && shippingSettings.data.degraded === null
   const setStatus = useMutation(
     orpc.admin.orders.setStatus.mutationOptions({
       onSuccess: () => {
@@ -353,6 +362,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                     </div>
                   </section>
                 )}
+                <ShipmentCard orderId={order.id} />
                 <History orderId={order.id} />
               </div>
               <SheetFooter className="sticky bottom-0 flex-row flex-wrap justify-end border-t bg-background/95 backdrop-blur">
@@ -367,10 +377,20 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                 {(order.status === "paid" || order.status === "fulfilled") && (
                   <DownloadInvoiceButton orderId={order.id} />
                 )}
+                {aramexOn && canCreateShipment(order) && (
+                  <Button
+                    className="h-11"
+                    disabled={order.country !== "TN"}
+                    title={order.country !== "TN" ? INTERNATIONAL_LATER : undefined}
+                    onClick={() => setCreateShipment(true)}
+                  >
+                    Créer l'expédition Aramex
+                  </Button>
+                )}
                 {actionsFor(order.status, order.paymentMethod).map((action) => (
                   <Button
                     key={action.to}
-                    variant={action.destructive ? "outline" : "default"}
+                    variant={action.destructive || (aramexOn && action.to === "fulfilled") ? "outline" : "default"}
                     className="h-11"
                     onClick={() => setPending(action)}
                   >
@@ -397,6 +417,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
           onDone={onClose}
         />
       )}
+      {order && <CreateShipmentDialog orderId={order.id} open={createShipment} onOpenChange={setCreateShipment} />}
       {order && (
         <MarkPaidDialog
           order={order}

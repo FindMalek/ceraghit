@@ -35,11 +35,21 @@ const DASHBOARD_SPECS: string[] = (() => {
   const first = DASHBOARD_FIRST.filter((spec) => found.includes(spec))
   return [...first, ...found.filter((spec) => !first.includes(spec))]
 })()
+/**
+ * `E2E_SUITE=dashboard` runs the serial chain on its own (CI gives it a job and a stack of its own), so its first link
+ * needs only `setup`. Playwright runs a project's dependencies, and dependency graphs are never split by `--shard`,
+ * so the storefront projects are sharded in a separate invocation with `--no-deps` (see docs/testing.md).
+ */
+const CHAIN_ALONE = process.env.E2E_SUITE === "dashboard"
 const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) =>
   DASHBOARD_SPECS.map((spec, s) => {
     const index = d * DASHBOARD_SPECS.length + s
     const previous =
-      index === 0 ? LOCALES.flatMap(({ locale }) => [`desktop-${locale}`, `mobile-${locale}`]) : [prevName(index)]
+      index > 0
+        ? [prevName(index)]
+        : CHAIN_ALONE
+          ? []
+          : LOCALES.flatMap(({ locale }) => [`desktop-${locale}`, `mobile-${locale}`])
     return {
       name: `dashboard-${spec}-${device}`,
       testMatch: new RegExp(`dashboard/${spec}\\.e2e\\.ts`),
@@ -86,6 +96,7 @@ export default defineConfig<E2EOptions>({
     ["list"],
     ["html", { outputFolder: "artifacts/report", open: "never" }],
     ["json", { outputFile: "artifacts/results.json" }],
+    ...(process.env.CI ? [["blob", { outputDir: "artifacts/blob" }] as const] : []),
   ],
   retries: 0,
   workers: process.env.CI ? 2 : undefined,

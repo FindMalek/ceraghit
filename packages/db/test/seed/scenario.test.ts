@@ -150,6 +150,20 @@ test("demo media describe their own product and include a tagged and an unused p
   expect(CATALOGUE.flatMap((p) => p.images)).not.toContain(DEMO_UNUSED_MEDIA.key)
 })
 
+test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cash on delivery in dinars only", () => {
+  const { orders, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  expect(shipments.length).toBeGreaterThan(0)
+  expect(new Set(shipments.map((s) => s.status)).size).toBeGreaterThan(2)
+  for (const s of shipments) {
+    const o = orders.find((x) => x.id === s.orderId)
+    expect(o).toMatchObject({ status: "fulfilled", carrier: "aramex", trackingNumber: s.waybill })
+    expect(s).toMatchObject({ environment: "fake", currency: o?.currency })
+    expect(s.labelKey).toBeUndefined()
+    if (o?.country === "TN") expect(s.productGroup).toBe("DOM")
+    if (s.codAmountMinor != null) expect([o?.country, o?.currency, o?.paymentMethod]).toEqual(["TN", "TND", "cod"])
+  }
+})
+
 test("the demo has a piece whose main photo is not the first one", () => {
   const product = CATALOGUE.find((p) => p.ref === DEMO_MAIN_SECOND_REF)
   expect(product?.images.length).toBeGreaterThan(1)

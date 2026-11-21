@@ -99,6 +99,7 @@ function Body({
   aramex,
   appEnv,
   degraded,
+  simulated,
   saved,
   setSaved,
 }: {
@@ -106,6 +107,7 @@ function Body({
   aramex: MaskedIntegration
   appEnv: "local" | "preview" | "production"
   degraded: "missing-credentials" | null
+  simulated: boolean
   saved: boolean
   setSaved: (saved: boolean) => void
 }) {
@@ -200,6 +202,11 @@ function Body({
   return (
     <form onSubmit={submit} className="flex min-h-full flex-col">
       <FieldGroup className="gap-6 px-4 py-6 md:max-w-3xl md:px-6">
+        {simulated && (
+          <p role="status" data-testid="aramex-simulated" className="rounded-lg border bg-muted p-3 text-sm">
+            Aramex simulé : aucune donnée n'est envoyée à Aramex.
+          </p>
+        )}
         {!production && (
           <p className="rounded-lg border bg-muted p-3 text-sm">
             Aramex reste en mode test hors production : aucun colis réel ne sera créé.
@@ -522,7 +529,7 @@ export function AramexSettingsForm() {
       </div>
     )
   }
-  const { mode, aramex, appEnv, degraded } = query.data
+  const { mode, aramex, appEnv, degraded, simulated } = query.data
   return (
     <Body
       key={aramex.updatedAt ?? "new"}
@@ -530,6 +537,7 @@ export function AramexSettingsForm() {
       aramex={aramex}
       appEnv={appEnv}
       degraded={degraded}
+      simulated={simulated}
       saved={saved}
       setSaved={setSaved}
     />

@@ -1,5 +1,5 @@
 import { mailLog } from "@workspace/db"
-import { and, eq, lt, ne } from "drizzle-orm"
+import { and, asc, eq, gt, lt, lte, ne } from "drizzle-orm"
 import type { Services } from "../context"
 import { type Mail, MailError } from "./mailer"
 import { recordEmail } from "./metrics"
@@ -32,7 +32,9 @@ function describe(error: unknown): string {
  *
  * `inline` is for request paths a customer waits on: one attempt, no pause. The failure row is the retry queue, the
  * owner resends from the dashboard. Otherwise transient errors are retried twice with a pause.
- * `existingId` is a failed row being resent: it is updated instead of adding a second row.
+ * `existingId` is a failed row being resent: it is updated instead of adding a second row, and its id is the
+ * idempotency key, so every retry of that row (this call, the cron, the owner's button) is one message for Resend
+ * (which keeps keys for 24 h).
  */
 export async function deliverMail(
   services: Services,
@@ -43,7 +45,7 @@ export async function deliverMail(
   const { db, mailer, now } = services
   const sleep = services.sleep ?? sleepFor
   const maxAttempts = opts.inline ? 1 : MAX_ATTEMPTS
-  const keyed = { ...mail, idempotencyKey: crypto.randomUUID() }
+  const keyed = { ...mail, idempotencyKey: opts.existingId ?? crypto.randomUUID() }
   let attempts = 0
   let providerId: string | null = null
   let error: string | null = null
@@ -119,4 +121,34 @@ export async function purgeMailLog(services: Pick<Services, "db" | "now">): Prom
     .where(and(lt(mailLog.createdAt, before), ne(mailLog.status, "failed")))
     .returning({ id: mailLog.id })
   return rows.length
+}
+
+const RETRY_BATCH = 20
+const RETRY_MAX_ATTEMPTS = 9
+/** One resend makes up to this many attempts, so a row only starts one while the whole call still fits the cap. */
+const ATTEMPTS_PER_RESEND = 3
+const RETRY_WINDOW_HOURS = 24
+
+/**
+ * Sends failed mails again, oldest first. Each resend already retries transient errors, so a row is given up on after
+ * 9 attempts in total or 24 hours, and then waits for the owner in the dashboard. A resent row leaves the queue, which
+ * makes a second run a no-op.
+ */
+export async function retryFailedMails(services: Services): Promise<{ retried: number; sent: number; failed: number }> {
+  const since = new Date(services.now().getTime() - RETRY_WINDOW_HOURS * 3600e3)
+  const rows = await services.db
+    .select({ id: mailLog.id })
+    .from(mailLog)
+    .where(
+      and(
+        eq(mailLog.status, "failed"),
+        gt(mailLog.createdAt, since),
+        lte(mailLog.attempts, RETRY_MAX_ATTEMPTS - ATTEMPTS_PER_RESEND),
+      ),
+    )
+    .orderBy(asc(mailLog.createdAt))
+    .limit(RETRY_BATCH)
+  let sent = 0
+  for (const { id } of rows) if (await resendMail(services, id)) sent++
+  return { retried: rows.length, sent, failed: rows.length - sent }
 }
