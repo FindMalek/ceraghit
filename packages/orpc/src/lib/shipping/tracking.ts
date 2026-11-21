@@ -1,5 +1,5 @@
 import { type ShipmentEvent, shipments } from "@workspace/db"
-import { and, asc, eq, ne, notInArray, sql } from "drizzle-orm"
+import { and, asc, eq, notInArray, sql } from "drizzle-orm"
 import type { Services } from "../../context"
 import { onShipmentDelivered, onShipmentException } from "../shipping-events"
 import { looksDelivered, mapAramexStatus } from "./aramex/status"
@@ -43,7 +43,13 @@ export async function trackShipments(
   if (carrier.id === "manual") return { skipped: "manual shipping" }
 
   const open = await db
-    .select({ id: shipments.id, waybill: shipments.waybill, status: shipments.status, events: shipments.events })
+    .select({
+      id: shipments.id,
+      waybill: shipments.waybill,
+      status: shipments.status,
+      events: shipments.events,
+      lastPolledAt: shipments.lastPolledAt,
+    })
     .from(shipments)
     .where(
       and(
@@ -72,23 +78,29 @@ export async function trackShipments(
     const delivered = looksDelivered(events) ? found.delivered : false
     const status = mapAramexStatus(events, delivered, row.status)
     const closing = status === "delivered"
-    await db
+    // Compare-and-set on what this poll read: a slower poll that started before another one finished updates nothing,
+    // so it can neither overwrite newer events nor move a closed parcel back, and fires no hook.
+    const [moved] = await db
       .update(shipments)
       .set({
         events,
         lastEvent: events.at(-1) ?? null,
         lastPolledAt: polledAt,
+        status,
+        ...(closing ? { deliveredAt: new Date(events.at(-1)?.at ?? polledAt) } : {}),
       })
-      .where(eq(shipments.id, row.id))
-    report.updated++
-    if (status === row.status) continue
-    // Atomic: a cron run and a refresh answering at once move the parcel (and fire the hook) only once.
-    const [moved] = await db
-      .update(shipments)
-      .set({ status, ...(closing ? { deliveredAt: new Date(events.at(-1)?.at ?? polledAt) } : {}) })
-      .where(and(eq(shipments.id, row.id), ne(shipments.status, status)))
+      .where(
+        and(
+          eq(shipments.id, row.id),
+          eq(shipments.status, row.status),
+          notInArray(shipments.status, [...FINISHED]),
+          sql`${shipments.lastPolledAt} is not distinct from ${row.lastPolledAt?.toISOString() ?? null}::timestamptz`,
+        ),
+      )
       .returning({ id: shipments.id })
     if (!moved) continue
+    report.updated++
+    if (status === row.status) continue
     if (closing) {
       report.delivered++
       await onShipmentDelivered(services, row.id)

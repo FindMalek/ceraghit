@@ -43,7 +43,7 @@ describe.skipIf(!url)("track-shipments", () => {
   })
   const carrier = (results: TrackResult[]) =>
     ({ id: "aramex", track: async () => results }) as unknown as ShippingProvider
-  const waybills = [`${tag}-A`, `${tag}-B`, `${tag}-C`, `${tag}-D`]
+  const waybills = [`${tag}-A`, `${tag}-B`, `${tag}-C`, `${tag}-D`, `${tag}-E`]
 
   beforeAll(async () => {
     await runMigrations(db)
@@ -151,6 +151,45 @@ describe.skipIf(!url)("track-shipments", () => {
     const report = await trackShipments(services, answer, { shipmentId: target.id })
     expect(report).toMatchObject({ polled: 1, updated: 1 })
     expect((await row(waybills[3]!)).status).toBe("picked_up")
+  })
+
+  test("a slow poll that read the parcel before a fast one delivered it changes nothing and fires no hook", async () => {
+    const incidents: string[] = []
+    const hooked = {
+      ...services,
+      hooks: { shipmentException: async (id: string) => void incidents.push(id) },
+    } as Services
+    const id = (await row(waybills[4]!)).id
+    const slow = {
+      id: "aramex",
+      track: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150))
+        return [
+          {
+            waybill: waybills[4]!,
+            notFound: false,
+            delivered: false,
+            events: [{ ...event("SH047", "2096-05-10T06:00:00Z"), problemCode: "P10" }],
+          },
+        ]
+      },
+    } as unknown as ShippingProvider
+    const fast = carrier([
+      {
+        waybill: waybills[4]!,
+        notFound: false,
+        delivered: true,
+        events: [event("SH005", "2096-05-10T09:00:00Z")],
+      },
+    ])
+    await Promise.all([
+      trackShipments(services, slow, { shipmentId: id }),
+      trackShipments(hooked, fast, { shipmentId: id }),
+    ])
+    const final = await row(waybills[4]!)
+    expect(final.status).toBe("delivered")
+    expect(final.events.map((e) => e.code)).toEqual(["SH005"])
+    expect(incidents).toEqual([])
   })
 
   test("does nothing while shipping is manual", async () => {
