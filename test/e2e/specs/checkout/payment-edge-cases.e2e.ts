@@ -124,7 +124,8 @@ test("a double click on the order button creates one order", async ({ page, step
 
   await step("one unit taken and one confirmation per recipient", async () => {
     expect(await stockOf(piece.id)).toBe(before - 1)
-    await expect.poll(async () => Object.keys(await mailKinds(number)).length).toBeGreaterThan(0)
-    for (const count of Object.values(await mailKinds(number))) expect(count).toBe(1)
+    const both = { order_confirmation: 1, order_studio: 1 }
+    await expect.poll(async () => mailKinds(number, "sent")).toEqual(both)
+    expect(await mailKinds(number), "no failed or duplicate row").toEqual(both)
   })
 })
