@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { createDb, orderItems, orders, products, settings } from "@workspace/db"
+import { createDb, orderItems, orders, products, productVariants, settings } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { and, eq, like } from "drizzle-orm"
+import { and, eq, like, notExists } from "drizzle-orm"
 import type { Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { createOrder } from "../src/lib/orders"
@@ -53,10 +53,15 @@ describe.skipIf(!url)("the delivery price the customer saw", () => {
     await runMigrations(db)
     await seed(db, { catalog: true })
     const piece = await db.query.products.findFirst({
-      where: and(eq(products.status, "published"), eq(products.quoteOnly, false), eq(products.unique, false)),
-      with: { variants: true },
+      where: and(
+        eq(products.status, "published"),
+        eq(products.quoteOnly, false),
+        eq(products.unique, false),
+        notExists(db.select().from(productVariants).where(eq(productVariants.productId, products.id))),
+      ),
+      orderBy: products.slug,
     })
-    if (!piece || piece.variants.length > 0) throw new Error("no plain published piece in the seed")
+    if (!piece) throw new Error("no plain published piece in the seed")
     productId = piece.id
     await db.update(products).set({ stock: 50 }).where(eq(products.id, productId))
     stock = 50
