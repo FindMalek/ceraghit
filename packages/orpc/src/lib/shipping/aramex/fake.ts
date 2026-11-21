@@ -1,3 +1,5 @@
+import { isAramexUrl } from "./endpoints"
+
 const COUNTRIES = {
   Transaction: null,
   Notifications: [],
@@ -27,9 +29,11 @@ const RATE_ERROR = {
  * ARAMEX_FAKE=true, which `apps/api/src/env.ts` refuses with APP_ENV=production.
  * Password `fake-bad-login` fails the login step, PIN `fake-bad-rate` fails the rate step, anything else works.
  */
-export function createFakeAramexFetch(): typeof fetch {
+export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof fetch {
   return (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
+    // The api hands this to every outbound call (Resend, ...): only Aramex is answered here, nothing else is faked.
+    if (!isAramexUrl(url)) return passthrough(input, init)
     const info = (JSON.parse(String(init?.body ?? "{}")) as { ClientInfo?: { Password?: string; AccountPin?: string } })
       .ClientInfo
     const reply = (body: unknown) => new Response(JSON.stringify(body))
