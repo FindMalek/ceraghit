@@ -249,7 +249,7 @@ test("invoice numbers follow each other without gaps, stay the same when reopene
     const results = await Promise.all([issue(a), issue(a), issue(b), issue(b)])
     for (const res of results) expect(res.ok()).toBe(true)
     const [ia, ib] = [await invoiceOf(a), await invoiceOf(b)]
-    expect([ia?.seq, ib?.seq].sort()).toEqual([first, first + 1])
+    expect([ia?.seq, ib?.seq].sort((x, y) => (x ?? 0) - (y ?? 0))).toEqual([first, first + 1])
     expect(await invoiceCountOf(a)).toBe(1)
     expect(await invoiceCountOf(b)).toBe(1)
     expect(await lastSeq(year), "no number was burned").toBe(first + 1)
