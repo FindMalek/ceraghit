@@ -1,4 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
+import { captureDownload, hideFile, showFile } from "./files"
+import { assertLoopbackUrls, spoofedIp } from "./guard"
+import { applyNetwork, parseNetwork } from "./net"
 import type { Device, Step, Target } from "./steps"
 
 export const DEFAULT_HOLD_MS = 1200
@@ -57,6 +60,8 @@ export interface PacerOptions {
   baseUrl: (app: "web" | "dashboard") => string
   app: "web" | "dashboard"
   assetsDir: string
+  /** Where `download` steps keep their files. */
+  downloadsDir?: string
   zoom: boolean
   seed?: number
 }
@@ -133,7 +138,28 @@ export function createPacer(options: PacerOptions): Pacer {
     },
     async run(step, value) {
       const { action, target } = step
+      await hideFile(page)
       switch (action) {
+        case "ip": {
+          assertLoopbackUrls([options.baseUrl("web"), options.baseUrl("dashboard")])
+          await page.context().setExtraHTTPHeaders({ "x-forwarded-for": spoofedIp(value) })
+          break
+        }
+        case "clear-cookies":
+          await page.context().clearCookies()
+          break
+        case "back":
+          await page.goBack()
+          break
+        case "network":
+          await applyNetwork(page.context(), parseNetwork(value))
+          break
+        case "download": {
+          if (!target) throw new Error("download needs a target")
+          const file = await captureDownload(page, options.downloadsDir ?? "out/downloads", () => press(target))
+          await showFile(page, file)
+          break
+        }
         case "goto": {
           await page.goto(new URL(value ?? "/", options.baseUrl(options.app)).toString())
           break
