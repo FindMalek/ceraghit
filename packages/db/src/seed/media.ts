@@ -101,11 +101,13 @@ export async function syncBundledMedia(db: Db): Promise<{ inserted: number; upda
         inserted++
         continue
       }
+      // Size, dimensions and hash describe the bundled file, not the owner's choices (alt, filename, tags, keep stay
+      // theirs): they follow the manifest, so a database seeded with older values is brought up to date.
       const set: Partial<typeof media.$inferInsert> = {}
-      if (!row.bytes) set.bytes = m.bytes
-      if (row.width == null) set.width = m.width
-      if (row.height == null) set.height = m.height
-      if (row.hash == null && hashFree) {
+      if (row.bytes !== m.bytes) set.bytes = m.bytes
+      if (row.width !== m.width) set.width = m.width
+      if (row.height !== m.height) set.height = m.height
+      if (row.hash !== m.hash && hashFree) {
         set.hash = m.hash
         takenHashes.add(m.hash)
       }

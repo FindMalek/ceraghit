@@ -49,4 +49,22 @@ describe.skipIf(!url)("bundled media sync", () => {
     const rows = await db.select({ key: media.key }).from(media).where(inArray(media.key, keys))
     expect(rows.length).toBe(keys.length)
   })
+
+  test("a row seeded with older file facts is brought up to the manifest, owner edits stay", async () => {
+    await db
+      .update(media)
+      .set({ width: 1079, height: 1560, bytes: 1, alt: { fr: "Texte du studio" }, tags: ["perso"] })
+      .where(eq(media.key, sample.key))
+
+    await syncBundledMedia(db)
+
+    const [row] = await db.select().from(media).where(eq(media.key, sample.key))
+    expect(row).toMatchObject({
+      width: sample.width,
+      height: sample.height,
+      bytes: sample.bytes,
+      alt: { fr: "Texte du studio" },
+      tags: ["perso"],
+    })
+  })
 })
