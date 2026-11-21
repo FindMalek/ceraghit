@@ -50,7 +50,8 @@ export function buildCsp(options: CspOptions): string {
       "'self'",
       `'nonce-${nonce}'`,
       "'strict-dynamic'",
-      ...(dashboard ? ["'wasm-unsafe-eval'"] : []),
+      // The dashboard compiles the invoice pdf renderer; the storefront compiles the WebP encoder of the photo upload.
+      "'wasm-unsafe-eval'",
       ...(dev ? ["'unsafe-eval'"] : []),
     ],
     "style-src": ["'self'", "'unsafe-inline'"],
