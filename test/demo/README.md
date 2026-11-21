@@ -12,7 +12,7 @@ pnpm demo:videos -- 03 --device=mobile --zoom --voice=draft
 ```
 
 Output goes to `test/demo/out/videos/NN-sujet-desktop.mp4`, `NN-sujet-mobile.mp4`, plus `.fr.srt` and `.fr.vtt`
-(`.ar.*` when every step has `caption_ar`). `out/` is gitignored: never commit a video.
+(`.ar.*` when every step has `caption_ar`). `out/` (videos only) is gitignored: never commit a video.
 
 Flags: `--plan` prints the narration cost and exits, `--voice=draft|final` narrates (see Voiceover; bare `--voice` is draft), `--zoom` eases the camera toward the clicked area, `--burn` burns the French
 captions into the picture (needs ffmpeg with libass), `--device=desktop|mobile`.
@@ -41,7 +41,7 @@ wording can be reviewed at zero cost. Only `--voice=final` calls ElevenLabs; it 
 `eleven_flash_v2_5` (supports French, 0.5 credit per character); set `eleven_multilingual_v2` (1 credit) for the
 richer voice. The cache key includes the model, so lines cached with another model are generated again.
 
-Lines are cached in `out/tts-cache/` by a hash of provider, voice, model and text. All lines are generated before
+Lines are cached in `~/.cache/ceraghit-demo/tts` (`TTS_CACHE_DIR` overrides) by a hash of provider, voice, model and text. All lines are generated before
 recording starts, and each step lasts at least as long as its narration, so voice and screen stay in sync.
 
 ### Budget workflow
@@ -49,7 +49,7 @@ recording starts, and each step lasts at least as long as its narration, so voic
 The tutorial budget is limited (`ELEVENLABS_CREDIT_BUDGET`, default 29000 credits, about 58000 flash characters).
 
 1. `pnpm demo:videos -- --plan` (dry run, no network): per video the unique spoken lines, characters, how many are
-   already cached (cost 0), credits at the model's rate, and the budget left. It warns on a spoken line over 140
+   already cached or shared with an earlier video (both cost 0), credits at the model's rate, and the budget left. It warns on a spoken line over 140
    characters (`NARRATION_MAX_LINE`) or a video over 700 spoken characters (`NARRATION_MAX_VIDEO`). Captions are free:
    the voice gives the point, the caption carries the details.
 2. Draft pass: `pnpm demo:videos -- 03 --voice=draft`, fix wording and timing until it is right. Free.
@@ -58,9 +58,16 @@ The tutorial budget is limited (`ELEVENLABS_CREDIT_BUDGET`, default 29000 credit
 
 One voice-over serves both devices: the narration script is the video's ordered steps, and desktop and mobile play the
 same clip for the same step (a line is billed once, even across videos). A step with `only` gets its caption on that
-device but no voice, unless it has `"voice": true`, which gives it its own paid line. `CREDIT_PER_CHAR` overrides the
-model's rate (unknown models count 1 and the plan says so). Billed characters per run are added to
-`out/.credits.json` (counts and dates only, never text or keys); delete it to reset the used total.
+device but no voice, unless it has `"voice": true`, which gives it its own paid line. `CREDIT_PER_CHAR` must be above 0 and can only raise the model's rate, never lower it (unknown models count 1 and the
+plan says so). An invalid `ELEVENLABS_CREDIT_BUDGET` (`-5`, `29,000`) is an error, not the default.
+
+The ledger and the cache are shared by every checkout, so they live outside the repo: the ledger in
+`~/.config/ceraghit/demo/credits.json` (`ELEVENLABS_LEDGER` overrides), the cache above, both private to your user.
+The ledger holds counts and dates only, never text or keys, and is updated after every billed line, so Ctrl-C or a
+failure keeps the record. A final run holds a lock on it for the whole pass, so two final runs cannot both pass the gate
+on stale numbers. A corrupt ledger stops the run; fix or delete it. Limit: only spend made by this tool is counted, so
+characters used elsewhere on the account (the ElevenLabs site, other tools) are not in the ledger; check the real
+balance on your account before a big final pass.
 
 ## Add a video
 

@@ -6,21 +6,13 @@ import { chromium, devices } from "@playwright/test"
 import { parseArgs } from "./lib/args"
 import { type Caption, toSrt, toVtt } from "./lib/captions"
 import { assertAdminCredentials, assertSafe } from "./lib/guard"
-import {
-  assertBudget,
-  buildPlan,
-  creditRate,
-  formatPlan,
-  narrationFor,
-  readLedger,
-  recordRun,
-  uniqueLines,
-} from "./lib/narration"
+import { buildPlan, formatPlan, ledgerPath, narrationFor, readLedger, ttsCacheDir } from "./lib/narration"
 import { installOverlay } from "./lib/overlay"
 import { createPacer, DEFAULT_HOLD_MS, STILL_MS, sleep } from "./lib/pacing"
 import { type AudioClip, frameSize, mux, startRecording } from "./lib/recorder"
 import { fileBase, parseVideo, stepsFor, type Video } from "./lib/steps"
-import { cacheName, createTts, isCachedFile, type Narration } from "./lib/tts"
+import { planIsCached } from "./lib/tts"
+import { prepareVoice } from "./lib/voice"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, "../..")
@@ -49,18 +41,18 @@ function loadVideos(): Video[] {
     .filter((v) => ids.length === 0 || ids.includes(v.id))
 }
 
-const ledgerFile = join(out, ".credits.json")
+const ledgerFile = ledgerPath(env)
+const cacheDir = ttsCacheDir(env)
 
 async function main() {
   if (flag("plan")) {
     const planned = loadVideos()
     if (planned.length === 0) throw new Error(`no video matches ${ids.join(", ") || "(none found)"}`)
-    const cacheDir = join(out, "tts-cache")
     const plan = buildPlan(planned, {
       env,
       ledger: readLedger(ledgerFile),
       devices: only ? [only] : undefined,
-      isCached: (text) => isCachedFile(join(cacheDir, cacheName("elevenlabs", env, text))),
+      isCached: planIsCached(cacheDir, env),
     })
     console.info(formatPlan(plan))
     return
@@ -71,32 +63,16 @@ async function main() {
   if (videos.some((v) => v.start.loggedIn)) assertAdminCredentials(env)
   mkdirSync(join(out, "videos"), { recursive: true })
 
-  const cacheDir = join(out, "tts-cache")
-  const tts = voice
-    ? createTts({
-        env: { ...env, TTS_PROVIDER: voice === "final" ? "elevenlabs" : "say" },
-        cacheDir,
-        warn: (m) => console.warn(`warning: ${m}`),
-      })
-    : null
-  const clips = new Map<string, Narration>()
-  if (tts) {
-    const devices = only ? [only] : undefined
-    if (voice === "final") {
-      assertBudget(
-        buildPlan(videos, { env, ledger: readLedger(ledgerFile), devices, isCached: (t) => tts.isCached(t) }),
-      )
-    }
-    try {
-      for (const video of videos) {
-        for (const line of uniqueLines(video, devices)) {
-          if (!clips.has(line)) clips.set(line, await tts.narrate(line))
-        }
-      }
-    } finally {
-      if (voice === "final") recordRun(ledgerFile, tts.billedChars(), creditRate(env).rate)
-    }
-  }
+  const clips = await prepareVoice({
+    voice,
+    videos,
+    device: only,
+    env,
+    cacheDir,
+    ledgerFile,
+    warn: (m) => console.warn(`warning: ${m}`),
+    handleSignals: true,
+  })
   const browser = await chromium.launch()
   const produced: string[] = []
 
@@ -146,7 +122,7 @@ async function main() {
           const startMs = recording.now()
           console.info(`${base} ${i + 1}/${steps.length} ${step.action}`)
           const line = lines[i]
-          const narration = tts && line ? clips.get(line) : undefined
+          const narration = line ? clips.get(line) : undefined
           if (narration) audio.push({ file: narration.file, atMs: startMs })
           await pacer.run(step, substitute(step.value))
           const spoken = narration ? narration.durationMs + 250 : 0
@@ -183,8 +159,7 @@ async function main() {
     }
   }
   await browser.close()
-  if (tts)
-    console.info(`voice: ${tts.provider}, ${tts.billedChars()} characters billed this run (cached lines are free)`)
+  if (voice) console.info(`voice: ${voice}, ${clips.size} lines (cached and draft lines cost no credits)`)
   console.info(produced.join("\n"))
 }
 

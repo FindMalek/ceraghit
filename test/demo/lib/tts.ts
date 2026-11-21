@@ -63,6 +63,11 @@ export function isCachedFile(file: string): boolean {
   return existsSync(file) && readFileSync(file).length > 0
 }
 
+/** The dry-run plan's cache check: the exact file `narrate` would use for an ElevenLabs line. */
+export function planIsCached(cacheDir: string, env: TtsEnv): (text: string) => boolean {
+  return (text) => isCachedFile(join(cacheDir, cacheName("elevenlabs", env, text)))
+}
+
 export function pickProvider(env: TtsEnv): { provider: TtsProvider; fellBack: boolean } {
   const explicit = env.TTS_PROVIDER
   if (explicit && explicit !== "say" && explicit !== "elevenlabs") {
@@ -109,7 +114,7 @@ export function createTts(options: TtsOptions): Tts {
   if (fellBack) {
     options.warn?.("ELEVENLABS_API_KEY or ELEVENLABS_VOICE_ID is not set: using the free macOS voice (say -v Thomas)")
   }
-  mkdirSync(cacheDir, { recursive: true })
+  mkdirSync(cacheDir, { recursive: true, mode: 0o700 })
   const model = env.ELEVENLABS_MODEL_ID || DEFAULT_MODEL
   const voice = env.ELEVENLABS_VOICE_ID ?? ""
 
@@ -137,7 +142,7 @@ export function createTts(options: TtsOptions): Tts {
     }
     if (!res.ok) throw new Error(`ElevenLabs answered ${res.status}`)
     const part = `${file}.part`
-    writeFileSync(part, Buffer.from(await res.arrayBuffer()))
+    writeFileSync(part, Buffer.from(await res.arrayBuffer()), { mode: 0o600 })
     renameSync(part, file)
     billed += text.length
   }
