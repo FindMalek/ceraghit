@@ -21,7 +21,8 @@ export const getProducts = (query: ProductQuery): Promise<Product[]> => soft(api
 export const getLocations = () => soft(api.public.catalog.locations(), [])
 export const getSettings = (): Promise<PublicSettings> => soft(api.public.catalog.settings(), FALLBACK_SETTINGS)
 
-export const getSiteImages = (): Promise<Partial<PublicSiteImages>> => soft<Partial<PublicSiteImages>>(api.public.site.images(), {})
+export const getSiteImages = (): Promise<Partial<PublicSiteImages>> =>
+  soft<Partial<PublicSiteImages>>(api.public.site.images(), {})
 
 export async function getProduct(slug: string): Promise<Product | null> {
   try {
