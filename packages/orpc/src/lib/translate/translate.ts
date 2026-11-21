@@ -32,6 +32,27 @@ export function studioMonth(now: Date): string {
   return `${year}-${month}`
 }
 
+/**
+ * Opens the new studio month: the quota counts the row of the current month, so a zero row is created for it and the
+ * month that just closed is reported (its row stays as history). Idempotent: the row is created once, and running it
+ * mid-month leaves the counts already there.
+ */
+export async function rolloverAiUsage(
+  services: Pick<Services, "db">,
+  now: Date,
+): Promise<{ month: string; opened: number; closedRequests: number }> {
+  const month = studioMonth(now)
+  const [year, number] = month.split("-").map(Number) as [number, number]
+  const previous = number === 1 ? `${year - 1}-12` : `${year}-${String(number - 1).padStart(2, "0")}`
+  const created = await services.db
+    .insert(aiUsage)
+    .values({ month, updatedAt: now })
+    .onConflictDoNothing()
+    .returning({ month: aiUsage.month })
+  const closed = await readUsage(services.db, previous)
+  return { month, opened: created.length, closedRequests: closed.requests }
+}
+
 async function readUsage(db: Services["db"], month: string): Promise<AiUsage> {
   const [row] = await db.select().from(aiUsage).where(eq(aiUsage.month, month)).limit(1)
   return {
