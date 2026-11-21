@@ -1,0 +1,40 @@
+# The full e2e suite every night (02:00 UTC, 03:00 in Tunis) and on demand. A red night opens, or comments on, one issue.
+
+name: e2e nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-nightly
+  cancel-in-progress: false
+
+jobs:
+  shards:
+    uses: ./.github/workflows/e2e-shards.yml
+    secrets: inherit
+
+  notify:
+    needs: shards
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open or update the nightly issue
+        run: |
+          title="nightly e2e failed"
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The nightly run failed: $RUN_URL. Merged report in the artifact \`e2e-report\`."
+          fi
