@@ -70,8 +70,13 @@ test.describe("confirmation mails", () => {
           expect(buyer.text).toContain(copy.common.hello("Test Client"))
           expect(buyer.text).toContain(method === "cod" ? copy.confirmation.cod : copy.confirmation.transfer)
           expect(buyer.text).toContain(copy.common.total)
-          const sign = currency === "EUR" ? "€" : "DT"
-          expect(buyer.text.includes(sign) || buyer.text.includes("TND") || buyer.text.includes("د.ت")).toBe(true)
+          if (currency === "EUR") {
+            expect(buyer.text).toContain("€")
+            expect(buyer.text).not.toMatch(/DT|د\.ت/)
+          } else {
+            expect(buyer.text).toContain(appLocale === "ar" ? "د.ت" : "DT")
+            expect(buyer.text).not.toContain("€")
+          }
           const link = buyer.text.match(
             new RegExp(`${E2E.webUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\S*/order/${order.number}\\?t=([\\w-]+)`),
           )
@@ -81,7 +86,7 @@ test.describe("confirmation mails", () => {
           expectClean(buyer.text)
         })
 
-        await step("the studio mail is French, tied to the buyer by reply-to and has no public token", async () => {
+        await step("the studio mail is French, has the right suffix and no public token", async () => {
           const { studio: mail } = await orderMails(order.number)
           expect(mail.subject).toBe(`Nouvelle commande ${order.number} ${studio}`)
           expect(mail.text).toContain("Test Client")
