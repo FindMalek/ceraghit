@@ -79,10 +79,18 @@ test(
       ;({ number, token } = await placeOrder(page, { locale: appLocale, method: "online", productSlug: piece.slug }))
       ref = demoRef(page.url())
       await ageOrder(number, 46)
+      await expect
+        .poll(async () => {
+          await page.request.post(`${E2E.apiUrl}/cron/release-holds`, {
+            headers: { authorization: `Bearer ${E2E.cronSecret}` },
+          })
+          return (await orderRow(number)).status
+        })
+        .toBe("cancelled")
       await page.goto(`${E2E.webUrl}/order/${number}?t=${token}`)
     })
 
-    await step("opening the order cancels it and frees the stock", async () => {
+    await step("the order page shows it cancelled and the stock is back", async () => {
       await expect(page.getByRole("status").first()).toContainText(t(appLocale, "order.status.cancelled"))
       expect((await orderRow(number)).status).toBe("cancelled")
       expect(await stockOf(piece.id)).toBe(before)
