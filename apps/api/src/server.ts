@@ -31,6 +31,17 @@ const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
  */
 const PAYMENT_REF = /^[A-Za-z0-9_-]{1,100}$/
 
+/** Letters, digits, dot, dash and underscore in `/`-separated segments: every key the app creates fits. */
+const SAFE_KEY = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/
+
+function decodeKey(path: string): string | null {
+  try {
+    return decodeURIComponent(path)
+  } catch {
+    return null
+  }
+}
+
 export function createServer(services: Services, jobs: Record<string, CronJob> = CRON_JOBS) {
   const rpc = new RPCHandler(appRouter, {
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
@@ -122,13 +133,19 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
     }
     if (pathname.startsWith("/files/")) {
       if (!services.storage) return Response.json({ message: "Storage is not configured." }, { status: 404 })
-      const key = decodeURIComponent(pathname.slice("/files/".length))
-      // `private/` holds carrier labels: only ever read through a short-lived signed link, never this public redirect.
-      // Dot and empty segments are refused too: `pr-1%2F.%2Fprivate%2F..` decodes to a key the URL parser later
-      // normalises into the private one.
-      const rest = key.slice(services.storage.prefix.length)
-      const oddSegment = key.split("/").some((segment) => segment === "." || segment === ".." || segment === "")
-      if (!key.startsWith(services.storage.prefix) || oddSegment || rest.split("/")[0] === "private") {
+      const key = decodeKey(pathname.slice("/files/".length))
+      // Only the characters the app writes into keys are served. Anything else (a `%`, a backslash, a tab, a dot
+      // segment) is refused instead of reasoned about: the URL parser that later builds the signed link normalises
+      // all of those, so a decoded key could otherwise turn into a different one. `private/` holds carrier labels,
+      // only ever read through a short-lived signed link, never this public redirect.
+      const rest = key?.slice(services.storage.prefix.length) ?? ""
+      if (
+        key === null ||
+        !SAFE_KEY.test(key) ||
+        !key.startsWith(services.storage.prefix) ||
+        key.split("/").some((segment) => segment === "." || segment === "..") ||
+        rest.split("/")[0] === "private"
+      ) {
         return Response.json({ message: "Not found." }, { status: 404 })
       }
       return new Response(null, {
