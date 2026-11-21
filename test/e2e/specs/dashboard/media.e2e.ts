@@ -22,8 +22,9 @@ async function drawn(page: Page, type: "image/png" | "image/webp", width: number
       canvas.height = height
       const ctx = canvas.getContext("2d") as CanvasRenderingContext2D
       const gradient = ctx.createLinearGradient(0, 0, width, height)
-      gradient.addColorStop(0, "#c46a3c")
-      gradient.addColorStop(1, "#3c6ac4")
+      const tint = () => Math.floor(Math.random() * 256)
+      gradient.addColorStop(0, `rgb(${tint()}, ${tint()}, ${tint()})`)
+      gradient.addColorStop(1, `rgb(${tint()}, ${tint()}, ${tint()})`)
       ctx.fillStyle = gradient
       ctx.fillRect(0, 0, width, height)
       const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b as Blob), type, 0.8))
