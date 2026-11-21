@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { orders, shipments } from "@workspace/db"
 import type { OpenShipment, PickupInput } from "@workspace/sdk"
-import { and, asc, eq, inArray, isNotNull, isNull } from "drizzle-orm"
+import { and, asc, eq, inArray, isNotNull, isNull, like, sql } from "drizzle-orm"
 import type { Services } from "../../context"
 import { revertOrderShipped } from "../shipping-events"
 import { AramexError } from "./aramex/errors"
@@ -41,7 +41,29 @@ function windowOf(input: PickupInput, now: Date) {
   return { ready, closing, last: new Date(closing.getTime() - 3600e3) }
 }
 
+/** A booking reserves its parcels for the length of the Aramex calls; a reservation older than this is a crashed request. */
+const RESERVATION_TTL_MS = 2 * 60_000
+
+/**
+ * Frees parcels left with a `reserve:<ms>:<uuid>` token and no pickup id by a crash between reserving and releasing.
+ * A token that does not carry a timestamp (written before it did) is stale too.
+ */
+export async function clearStaleReservations(services: Services): Promise<void> {
+  const cutoff = services.now().getTime() - RESERVATION_TTL_MS
+  await services.db
+    .update(shipments)
+    .set({ pickupGuid: null })
+    .where(
+      and(
+        like(shipments.pickupGuid, "reserve:%"),
+        isNull(shipments.pickupId),
+        sql`case when ${shipments.pickupGuid} ~ '^reserve:[0-9]{10,16}:' then split_part(${shipments.pickupGuid}, ':', 2)::bigint else 0 end < ${cutoff}`,
+      ),
+    )
+}
+
 export async function listOpenShipments(services: Services): Promise<OpenShipment[]> {
+  await clearStaleReservations(services)
   const rows = await services.db
     .select({
       id: shipments.id,
@@ -81,6 +103,7 @@ export async function createPickup(
   use?: ShippingProvider,
 ): Promise<{ pickupId: string }> {
   const { db, now } = services
+  await clearStaleReservations(services)
   const rows = await db.select().from(shipments).where(inArray(shipments.id, input.shipmentIds))
   if (
     rows.length !== new Set(input.shipmentIds).size ||
@@ -95,7 +118,7 @@ export async function createPickup(
   const window = windowOf(input, now())
 
   // Reserved before Aramex is called: two requests cannot both book the same parcel.
-  const token = `reserve:${crypto.randomUUID()}`
+  const token = `reserve:${now().getTime()}:${crypto.randomUUID()}`
   const ids = rows.map((s) => s.id)
   const reserved = await db
     .update(shipments)
@@ -139,10 +162,13 @@ export async function createPickup(
     owner(error)
   }
   try {
-    await db
+    const saved = await db
       .update(shipments)
       .set({ pickupId: created.id, pickupGuid: created.guid })
       .where(and(inArray(shipments.id, ids), eq(shipments.pickupGuid, token)))
+      .returning({ id: shipments.id })
+    // A reservation cleared as stale in the meantime: the booking is not recorded, so undo it like a failed save.
+    if (saved.length !== ids.length) throw new Error("reservation lost")
   } catch {
     // The pickup exists at Aramex: undo it there, and if that fails too tell the owner how to find it.
     const undone = await provider.cancelPickup(created.guid, "Enregistrement impossible").then(
@@ -203,6 +229,7 @@ export async function cancelShipment(
   use?: ShippingProvider,
 ): Promise<{ held: boolean; message: string }> {
   const { db, now } = services
+  await clearStaleReservations(services)
   const [row] = await db.select().from(shipments).where(eq(shipments.id, id)).limit(1)
   if (!row) throw new ORPCError("NOT_FOUND", { message: "Expédition introuvable." })
   const release = await claimOrder(services, row.orderId).catch((error: unknown) => {
@@ -222,7 +249,9 @@ export async function cancelShipment(
       await provider.cancel(fresh.waybill, `Annulée par l'expéditeur: ${reason}`)
       held = true
       message = "Expédition annulée et mise en attente chez Aramex. Si le colis est déjà parti, appelez votre agence."
-    } catch {
+    } catch (error) {
+      // Another Aramex environment than the parcel's: nothing is held or cancelled, like booking or cancelling a pickup.
+      if (error instanceof ORPCError && error.message === ENV_MISMATCH) throw error
       failure = { at: now().toISOString(), code: "HOLD", message: HOLD_FAILED }
       message = HOLD_FAILED
     }
