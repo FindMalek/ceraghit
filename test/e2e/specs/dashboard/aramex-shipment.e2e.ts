@@ -64,15 +64,24 @@ test(
     await step("confirming creates the shipment, ships the order and counts the cash sale", async () => {
       await page.getByRole("button", { name: "Créer l'expédition et l'étiquette" }).click()
       await expect(page.getByTestId("shipment-waybill")).toContainText("FAKE")
+      await page.getByTestId("shipment-card").scrollIntoViewIfNeeded()
       const order = await orderRow(number)
       expect(order.status).toBe("fulfilled")
       expect(order.paidAt).not.toBeNull()
     })
 
     await step("the label opens through a signed link and /files never serves it", async () => {
-      const popup = page.waitForEvent("popup")
+      await page.evaluate(() => {
+        const opened: string[] = []
+        ;(window as unknown as { opened: string[] }).opened = opened
+        window.open = (url) => {
+          opened.push(String(url))
+          return null
+        }
+      })
       await page.getByRole("button", { name: "Télécharger l'étiquette (PDF)" }).click()
-      const link = new URL((await popup).url())
+      await expect.poll(() => page.evaluate(() => (window as unknown as { opened: string[] }).opened.length)).toBe(1)
+      const link = new URL(await page.evaluate(() => (window as unknown as { opened: string[] }).opened[0]!))
       expect(link.searchParams.get("X-Amz-Signature")).toBeTruthy()
       const pdf = await page.request.get(link.toString())
       expect(pdf.ok()).toBe(true)
