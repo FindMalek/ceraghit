@@ -8,7 +8,7 @@ export {
   STORAGE_REFERENCES,
 } from "./lib/cleanup"
 export { type JobCounts, type JobOutcome, runJob } from "./lib/jobs"
-export { purgeMailLog } from "./lib/mail-log"
+export { purgeMailLog, retryFailedMails } from "./lib/mail-log"
 export {
   ConsoleMailer,
   type Mail,
