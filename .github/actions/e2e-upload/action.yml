@@ -1,0 +1,28 @@
+# Uploads what one e2e job produced: the blob for the merged report, and the screenshots, traces and videos.
+name: e2e upload
+description: Upload the Playwright artifacts of one e2e job, and stop its services
+inputs:
+  name:
+    description: Job name used in the artifact names
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/upload-artifact@v7
+      with:
+        name: e2e-blob-${{ inputs.name }}
+        path: test/e2e/artifacts/blob/
+        retention-days: 1
+        if-no-files-found: ignore
+    - uses: actions/upload-artifact@v7
+      with:
+        name: e2e-artifacts-${{ inputs.name }}
+        path: |
+          test/e2e/artifacts/
+          !test/e2e/artifacts/.auth/**
+          !test/e2e/artifacts/blob/**
+        retention-days: 14
+        if-no-files-found: warn
+    - name: Stop services
+      shell: bash
+      run: docker compose -f test/e2e/docker-compose.e2e.yml -p ceraghit-e2e down -v
