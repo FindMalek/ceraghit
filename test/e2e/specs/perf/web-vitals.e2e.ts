@@ -66,68 +66,83 @@ async function vitals(page: Page): Promise<Vitals> {
 const median = (values: number[]): number => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)] ?? 0
 
 async function firstProductSlug(page: Page): Promise<string> {
-  const list = (await (await page.request.get(`${E2E.apiUrl}/v1/products`)).json()) as { slug: string; images: unknown[] }[]
+  const list = (await (await page.request.get(`${E2E.apiUrl}/v1/products`)).json()) as {
+    slug: string
+    images: unknown[]
+  }[]
   const withPhotos = list.find((p) => p.images.length >= 2)
   if (!withPhotos) throw new Error("no product with several photos in the demo seed")
   return withPhotos.slug
 }
 
-test("home: LCP and CLS stay inside the budget and the hero image is light", ONCE, async ({
-  browser,
-  isMobile,
-  step,
-}, testInfo) => {
-  const device = isMobile ? "mobile" : "desktop"
-  const runs: Vitals[] = []
-  let images: Img[] = []
-  let page: Page | undefined
-  for (let run = 0; run < 3; run++) {
-    const context = await browser.newContext(testInfo.project.use as BrowserContextOptions)
-    page = await context.newPage()
-    await page.addInitScript(OBSERVE)
-    await throttle(page, isMobile)
-    images = recordImages(page)
-    await page.goto(E2E.webUrl)
-    runs.push(await vitals(page))
-    if (run < 2) await context.close()
-  }
-  if (!page) throw new Error("no page")
-
-  await step(`the home page loads fast on ${device}`, async () => {
-    const lcp = median(runs.map((r) => r.lcp))
-    testInfo.annotations.push({ type: "lcp", description: `${Math.round(lcp)} ms, element ${runs[0]?.lcpUrl}` })
-    expect(lcp, "median LCP").toBeLessThanOrEqual(BUDGETS.lcpMs[device])
-    expect(median(runs.map((r) => r.cls)), "median CLS").toBeLessThanOrEqual(BUDGETS.cls)
-  }, page)
-
-  await step("the images of the first viewport are WebP and light", async () => {
-    const hero = images.find((img) => runs[0]?.lcpUrl && img.url === runs[0].lcpUrl)
-    if (hero) expect(hero.bytes, `hero ${hero.url}`).toBeLessThanOrEqual(BUDGETS.heroBytes[device])
-    for (const img of images) {
-      expect(img.type, img.url).toMatch(/image\/(webp|avif|svg\+xml|png|x-icon|vnd\.microsoft\.icon)/)
-      expect(img.bytes, img.url).toBeLessThanOrEqual(BUDGETS.imageBytes)
+test(
+  "home: LCP and CLS stay inside the budget and the hero image is light",
+  ONCE,
+  async ({ browser, isMobile, step }, testInfo) => {
+    const device = isMobile ? "mobile" : "desktop"
+    const runs: Vitals[] = []
+    let images: Img[] = []
+    let page: Page | undefined
+    for (let run = 0; run < 3; run++) {
+      const context = await browser.newContext(testInfo.project.use as BrowserContextOptions)
+      page = await context.newPage()
+      await page.addInitScript(OBSERVE)
+      await throttle(page, isMobile)
+      images = recordImages(page)
+      await page.goto(E2E.webUrl)
+      runs.push(await vitals(page))
+      if (run < 2) await context.close()
     }
-    const total = images.reduce((sum, img) => sum + img.bytes, 0)
-    expect(total, "image bytes on load").toBeLessThanOrEqual(BUDGETS.homeImagesBytes)
-  }, page)
+    if (!page) throw new Error("no page")
 
-  await step("the LCP image is not lazy and every optimised image reserves its space", async () => {
-    // Plain <img> (the logo) have a fixed CSS size, the CLS budget above covers them; next/image must carry its size.
-    const report = await page!.evaluate(() =>
-      [...document.images].map((img) => ({
-        src: img.currentSrc || img.src,
-        lazy: img.loading === "lazy",
-        optimised: img.hasAttribute("data-nimg"),
-        sized: img.hasAttribute("width") && img.hasAttribute("height"),
-        fill: img.getAttribute("data-nimg") === "fill",
-      })),
+    await step(
+      `the home page loads fast on ${device}`,
+      async () => {
+        const lcp = median(runs.map((r) => r.lcp))
+        testInfo.annotations.push({ type: "lcp", description: `${Math.round(lcp)} ms, element ${runs[0]?.lcpUrl}` })
+        expect(lcp, "median LCP").toBeLessThanOrEqual(BUDGETS.lcpMs[device])
+        expect(median(runs.map((r) => r.cls)), "median CLS").toBeLessThanOrEqual(BUDGETS.cls)
+      },
+      page,
     )
-    const unsized = report.filter((img) => img.optimised && !img.fill && !img.sized).map((img) => img.src)
-    expect(unsized, "next/image without width and height").toEqual([])
-    const lcpUrl = runs[0]?.lcpUrl
-    if (lcpUrl) expect(report.find((img) => img.src === lcpUrl)?.lazy, "LCP image is lazy").toBe(false)
-  }, page)
-})
+
+    await step(
+      "the images of the first viewport are WebP and light",
+      async () => {
+        const hero = images.find((img) => runs[0]?.lcpUrl && img.url === runs[0].lcpUrl)
+        if (hero) expect(hero.bytes, `hero ${hero.url}`).toBeLessThanOrEqual(BUDGETS.heroBytes[device])
+        for (const img of images) {
+          expect(img.type, img.url).toMatch(/image\/(webp|avif|svg\+xml|png|x-icon|vnd\.microsoft\.icon)/)
+          expect(img.bytes, img.url).toBeLessThanOrEqual(BUDGETS.imageBytes)
+        }
+        const total = images.reduce((sum, img) => sum + img.bytes, 0)
+        expect(total, "image bytes on load").toBeLessThanOrEqual(BUDGETS.homeImagesBytes)
+      },
+      page,
+    )
+
+    await step(
+      "the LCP image is not lazy and every optimised image reserves its space",
+      async () => {
+        // Plain <img> (the logo) have a fixed CSS size, the CLS budget above covers them; next/image must carry its size.
+        const report = await page!.evaluate(() =>
+          [...document.images].map((img) => ({
+            src: img.currentSrc || img.src,
+            lazy: img.loading === "lazy",
+            optimised: img.hasAttribute("data-nimg"),
+            sized: img.hasAttribute("width") && img.hasAttribute("height"),
+            fill: img.getAttribute("data-nimg") === "fill",
+          })),
+        )
+        const unsized = report.filter((img) => img.optimised && !img.fill && !img.sized).map((img) => img.src)
+        expect(unsized, "next/image without width and height").toEqual([])
+        const lcpUrl = runs[0]?.lcpUrl
+        if (lcpUrl) expect(report.find((img) => img.src === lcpUrl)?.lazy, "LCP image is lazy").toBe(false)
+      },
+      page,
+    )
+  },
+)
 
 test("shop: the grid only loads the first viewport and a few more", ONCE, async ({ page, isMobile, step }) => {
   test.fixme(isMobile, "#350 the shop loads the category tiles and the cards eagerly on a phone")
@@ -150,11 +165,7 @@ test("shop: the grid only loads the first viewport and a few more", ONCE, async 
   })
 })
 
-test("product: the gallery does not shift the layout and photos stay light", ONCE, async ({
-  page,
-  isMobile,
-  step,
-}) => {
+test("product: the gallery does not shift the layout and photos stay light", ONCE, async ({ page, isMobile, step }) => {
   test.fixme(isMobile, "#351 the product page LCP is 6.2 s on throttled mobile")
   await page.addInitScript(OBSERVE)
   await throttle(page, isMobile)
@@ -164,7 +175,9 @@ test("product: the gallery does not shift the layout and photos stay light", ONC
   await step("the product page loads inside the budget", async () => {
     await page.goto(`${E2E.webUrl}/product/${slug}`)
     const result = await vitals(page)
-    expect(result.lcp, `LCP element ${result.lcpUrl}`).toBeLessThanOrEqual(BUDGETS.lcpMs[isMobile ? "mobile" : "desktop"])
+    expect(result.lcp, `LCP element ${result.lcpUrl}`).toBeLessThanOrEqual(
+      BUDGETS.lcpMs[isMobile ? "mobile" : "desktop"],
+    )
     expect(result.cls, "CLS").toBeLessThanOrEqual(BUDGETS.cls)
     for (const img of images) expect(img.bytes, img.url).toBeLessThanOrEqual(BUDGETS.imageBytes)
   })
@@ -195,12 +208,18 @@ test("mobile asks for smaller images than desktop", { tag: ["@fr", "@desktop"] }
     return images.reduce((sum, img) => sum + img.bytes, 0)
   }
   const shown = await browser.newPage()
-  await step("the same page weighs less on a phone viewport", async () => {
-    const desktop = await total(1440, 900)
-    const phone = await total(390, 844)
-    await shown.setContent(`<body style="font:16px monospace;padding:24px"><h3>image bytes on the home page</h3><pre>desktop ${desktop}\nphone   ${phone}</pre></body>`)
-    expect(phone).toBeLessThan(desktop)
-  }, shown)
+  await step(
+    "the same page weighs less on a phone viewport",
+    async () => {
+      const desktop = await total(1440, 900)
+      const phone = await total(390, 844)
+      await shown.setContent(
+        `<body style="font:16px monospace;padding:24px"><h3>image bytes on the home page</h3><pre>desktop ${desktop}\nphone   ${phone}</pre></body>`,
+      )
+      expect(phone).toBeLessThan(desktop)
+    },
+    shown,
+  )
   await shown.close()
 })
 
@@ -225,20 +244,35 @@ test("fonts are self-hosted, light, and the Arabic one only loads on /ar", { tag
   const page = await browser.newPage()
   let french: { url: string; bytes: number }[] = []
   let arabic: { url: string; bytes: number }[] = []
-  await step("the French page serves its fonts from its own origin, within the budget", async () => {
-    french = await fonts("/")
-    await page.setContent(`<body style="font:14px monospace;padding:24px"><h3>fonts on /</h3><pre>${french.map((f) => `${f.bytes}  ${f.url}`).join("\n")}</pre></body>`)
-    expect(french.length).toBeGreaterThan(0)
-    for (const font of french) expect(new URL(font.url).origin, font.url).toBe(E2E.webUrl)
-    expect(french.reduce((sum, f) => sum + f.bytes, 0)).toBeLessThanOrEqual(BUDGETS.fontBytes.latin)
-  }, page)
-  await step("the Arabic font is only fetched on /ar", async () => {
-    arabic = await fonts("/ar")
-    const urls = new Set(french.map((f) => f.url))
-    const extra = arabic.filter((f) => !urls.has(f.url))
-    await page.setContent(`<body style="font:14px monospace;padding:24px"><h3>fonts only on /ar</h3><pre>${extra.map((f) => `${f.bytes}  ${f.url}`).join("\n")}</pre></body>`)
-    expect(extra.length, `the Arabic page brings its own font: fr ${JSON.stringify(french)} ar ${JSON.stringify(arabic)}`).toBeGreaterThan(0)
-    expect(arabic.reduce((sum, f) => sum + f.bytes, 0)).toBeLessThanOrEqual(BUDGETS.fontBytes.arabic)
-  }, page)
+  await step(
+    "the French page serves its fonts from its own origin, within the budget",
+    async () => {
+      french = await fonts("/")
+      await page.setContent(
+        `<body style="font:14px monospace;padding:24px"><h3>fonts on /</h3><pre>${french.map((f) => `${f.bytes}  ${f.url}`).join("\n")}</pre></body>`,
+      )
+      expect(french.length).toBeGreaterThan(0)
+      for (const font of french) expect(new URL(font.url).origin, font.url).toBe(E2E.webUrl)
+      expect(french.reduce((sum, f) => sum + f.bytes, 0)).toBeLessThanOrEqual(BUDGETS.fontBytes.latin)
+    },
+    page,
+  )
+  await step(
+    "the Arabic font is only fetched on /ar",
+    async () => {
+      arabic = await fonts("/ar")
+      const urls = new Set(french.map((f) => f.url))
+      const extra = arabic.filter((f) => !urls.has(f.url))
+      await page.setContent(
+        `<body style="font:14px monospace;padding:24px"><h3>fonts only on /ar</h3><pre>${extra.map((f) => `${f.bytes}  ${f.url}`).join("\n")}</pre></body>`,
+      )
+      expect(
+        extra.length,
+        `the Arabic page brings its own font: fr ${JSON.stringify(french)} ar ${JSON.stringify(arabic)}`,
+      ).toBeGreaterThan(0)
+      expect(arabic.reduce((sum, f) => sum + f.bytes, 0)).toBeLessThanOrEqual(BUDGETS.fontBytes.arabic)
+    },
+    page,
+  )
   await page.close()
 })
