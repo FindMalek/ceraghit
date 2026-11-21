@@ -1,3 +1,5 @@
+import { readdirSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 import { defineConfig, devices } from "@playwright/test"
 import { apiEnv, E2E, nextEnv } from "./env"
 import type { AppLocale, E2EOptions } from "./fixtures"
@@ -17,22 +19,22 @@ function grepInvert(locale: AppLocale, device: "desktop" | "mobile"): RegExp | u
 /**
  * Dashboard specs reset the shop profile, the lockout counters and sessions, which every other spec relies on,
  * so each file runs alone, after the storefront projects, desktop before mobile.
+ *
+ * Specs are discovered from `specs/dashboard/*.e2e.ts`: adding a file needs no edit here, so PRs never conflict on it.
+ * Order: the files in DASHBOARD_FIRST (they reset what the others rely on), then everything else by file name.
+ * Name a spec so it sorts where it must run; a spec that needs an earlier state belongs in DASHBOARD_FIRST.
  */
-const DASHBOARD_SPECS = [
-  "auth",
-  "onboarding",
-  "product-gallery",
-  "list-filters",
-  "orders",
-  "order-mails",
-  "statistics",
-  "invoice",
-  "konnect-keys",
-  "products-crud",
-  "payoneer",
-  "tutorials",
-  "storage-meter",
-] as const
+const DASHBOARD_FIRST = ["auth", "onboarding"]
+const DASHBOARD_SUFFIX = ".e2e.ts"
+const DASHBOARD_DIR = fileURLToPath(new URL("./specs/dashboard", import.meta.url))
+const DASHBOARD_SPECS: string[] = (() => {
+  const found = readdirSync(DASHBOARD_DIR)
+    .filter((file) => file.endsWith(DASHBOARD_SUFFIX))
+    .map((file) => file.slice(0, -DASHBOARD_SUFFIX.length))
+    .sort()
+  const first = DASHBOARD_FIRST.filter((spec) => found.includes(spec))
+  return [...first, ...found.filter((spec) => !first.includes(spec))]
+})()
 const DASHBOARD_PROJECTS = (["desktop", "mobile"] as const).flatMap((device, d) =>
   DASHBOARD_SPECS.map((spec, s) => {
     const index = d * DASHBOARD_SPECS.length + s

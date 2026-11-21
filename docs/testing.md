@@ -56,6 +56,9 @@ pnpm pr:screenshots /tmp/e2e-<pr>/screenshots
 
 - One file per feature: `test/e2e/specs/<feature>.e2e.ts`. Import `test` and `expect` from `../fixtures`.
 - Wrap every user-visible step in `step(title, fn)`, so a screenshot exists even when the test passes.
+- Specs that sign in to the dashboard or change shop-wide state go in `test/e2e/specs/dashboard/`: they are discovered
+  by file name (no list to edit), run one at a time after the storefront specs, `auth` and `onboarding` first, then
+  alphabetically.
 - Select by role, label or accessible name, never by CSS class. Copy comes from `helpers/messages.ts` (`t(locale, key)`),
   not from string literals.
 - Never `waitForTimeout`: wait for a URL, a role or a text.
