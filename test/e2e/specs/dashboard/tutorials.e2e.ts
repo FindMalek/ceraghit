@@ -214,6 +214,7 @@ test("the tag filter keeps only videos carrying that tag, and Back restores the 
     await expect(search).toHaveValue("facture")
     await cards.first().click()
     await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog")).toBeHidden()
     await search.fill("livraison")
     await expect(page).toHaveURL(/q=livraison/)
     await page.goBack()
