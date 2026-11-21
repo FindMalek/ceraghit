@@ -45,7 +45,10 @@ const HOUR = 3600e3
  * Tracking answered from the waybill alone, so a demo or an e2e picks its story: a waybill containing `DELIVERED`
  * ends delivered, `PROBLEM` ends on a delivery incident, anything else was picked up and is in transit.
  */
-function fakeTracking(waybill: string, now = Date.now()) {
+function fakeTracking(waybill: string) {
+  // Fixed per waybill, never the clock: polling twice must give the same events, or the timeline fills with copies.
+  const seed = [...waybill].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7) >>> 0
+  const now = Date.UTC(2026, 0, 1) + (seed % 4000) * HOUR
   const update = (code: string, description: string, hoursAgo: number, location: string, problem = "") => ({
     WaybillNumber: waybill,
     UpdateCode: code,
