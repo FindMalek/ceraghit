@@ -19,7 +19,7 @@ const DEVICES: Device[] = ["desktop", "mobile"]
 
 export const DEFAULT_BUDGET = 29000
 export const DEFAULT_MAX_LINE = 140
-export const DEFAULT_MAX_VIDEO = 700
+export const DEFAULT_MAX_VIDEO = 450
 
 /** Credits per character by ElevenLabs model. */
 const MODEL_RATES: Record<string, number> = {
