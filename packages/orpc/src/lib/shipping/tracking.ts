@@ -1,5 +1,5 @@
 import { type ShipmentEvent, shipments } from "@workspace/db"
-import { and, asc, eq, notInArray, sql } from "drizzle-orm"
+import { and, asc, eq, ne, notInArray, sql } from "drizzle-orm"
 import type { Services } from "../../context"
 import { onShipmentDelivered, onShipmentException } from "../shipping-events"
 import { looksDelivered, mapAramexStatus } from "./aramex/status"
@@ -78,15 +78,21 @@ export async function trackShipments(
         events,
         lastEvent: events.at(-1) ?? null,
         lastPolledAt: polledAt,
-        status,
-        ...(closing ? { deliveredAt: new Date(events.at(-1)?.at ?? polledAt) } : {}),
       })
       .where(eq(shipments.id, row.id))
     report.updated++
+    if (status === row.status) continue
+    // Atomic: a cron run and a refresh answering at once move the parcel (and fire the hook) only once.
+    const [moved] = await db
+      .update(shipments)
+      .set({ status, ...(closing ? { deliveredAt: new Date(events.at(-1)?.at ?? polledAt) } : {}) })
+      .where(and(eq(shipments.id, row.id), ne(shipments.status, status)))
+      .returning({ id: shipments.id })
+    if (!moved) continue
     if (closing) {
       report.delivered++
       await onShipmentDelivered(services, row.id)
-    } else if (status === "exception" && row.status !== "exception") {
+    } else if (status === "exception") {
       await onShipmentException(services, row.id)
     }
   }

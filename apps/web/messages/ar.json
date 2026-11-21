@@ -185,7 +185,7 @@
     "trackingNo": "رقم التتبع",
     "trackParcel": "تتبع الطرد",
     "parcelCreated": "تم إنشاء الملصق",
-    "parcelPickedUp": "تم تسليم الطرد",
+    "parcelPickedUp": "استلمت أرامكس الطرد",
     "parcelInTransit": "في الطريق إليك",
     "parcelOutForDelivery": "قيد التوصيل اليوم",
     "parcelDelivered": "تم التسليم في {date}",

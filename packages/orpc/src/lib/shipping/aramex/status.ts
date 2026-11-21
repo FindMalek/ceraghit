@@ -15,7 +15,7 @@ const BY_CODE: Record<string, ShipmentStatus> = {
 
 const KEYWORDS: [ShipmentStatus, string[]][] = [
   ["returned", ["returned to shipper"]],
-  ["exception", ["not delivered", "undelivered", "on hold", "refused", "incorrect", "address"]],
+  ["exception", ["not delivered", "undelivered", "on hold", "refused", "incorrect"]],
   ["delivered", ["delivered", "collected by consignee"]],
   ["out_for_delivery", ["out for delivery"]],
   ["picked_up", ["picked up", "received at origin"]],
