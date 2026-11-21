@@ -1,5 +1,6 @@
 import { count, eq, inArray } from "drizzle-orm"
 import type { Db } from "../index"
+import { withSeedLock } from "../migrate"
 import { hashPassword } from "../password"
 import {
   admins,
@@ -60,9 +61,11 @@ export interface SeedOptions {
 }
 
 export async function seed(db: Db, opts: SeedOptions): Promise<{ admin: boolean; catalog: boolean; demo: boolean }> {
-  const done = await seedRows(db, opts)
-  await syncBundledMedia(db)
-  return done
+  return withSeedLock(db, async () => {
+    const done = await seedRows(db, opts)
+    await syncBundledMedia(db)
+    return done
+  })
 }
 
 async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; catalog: boolean; demo: boolean }> {

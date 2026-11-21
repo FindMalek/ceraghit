@@ -338,3 +338,26 @@ export async function confirmMedia(db: Db, storage: Storage, id: string): Promis
   await db.update(media).set({ confirmedAt: new Date() }).where(eq(media.id, id))
   return (await getMedia(db, id)) as Media
 }
+
+/**
+ * What to write on an owner row (category, location) for a picked library photo: `undefined` leaves the columns alone,
+ * `null` clears them, an id must be a confirmed photo. The legacy `image` string follows so older readers keep working.
+ */
+export async function resolveImageMedia(
+  db: Db,
+  mediaId: string | null | undefined,
+): Promise<{ imageMediaId: string | null; image: string | null } | Record<string, never>> {
+  if (mediaId === undefined) return {}
+  if (mediaId === null) return { imageMediaId: null, image: null }
+  const [row] = await db
+    .select({ key: media.key, source: media.source })
+    .from(media)
+    .where(and(eq(media.id, mediaId), sql`${media.confirmedAt} is not null`))
+  if (!row) throw new ORPCError("BAD_REQUEST", { message: "A photo is no longer available." })
+  return { imageMediaId: mediaId, image: mediaSrc(row) }
+}
+
+export const fkViolation = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  ((error as { code?: string }).code === "23503" || fkViolation((error as { cause?: unknown }).cause))

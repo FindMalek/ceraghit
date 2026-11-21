@@ -1,6 +1,6 @@
 import "server-only"
 import { createServerClient } from "@workspace/orpc/server"
-import type { Category, Product, PublicSettings } from "@workspace/sdk"
+import type { Category, Product, PublicSettings, PublicSiteImages } from "@workspace/sdk"
 import { FALLBACK_SETTINGS } from "./settings"
 
 const api = createServerClient()
@@ -20,6 +20,9 @@ export const getCategories = (): Promise<Category[]> => soft(api.public.catalog.
 export const getProducts = (query: ProductQuery): Promise<Product[]> => soft(api.public.catalog.products(query), [])
 export const getLocations = () => soft(api.public.catalog.locations(), [])
 export const getSettings = (): Promise<PublicSettings> => soft(api.public.catalog.settings(), FALLBACK_SETTINGS)
+
+export const getSiteImages = (): Promise<Partial<PublicSiteImages>> =>
+  soft<Partial<PublicSiteImages>>(api.public.site.images(), {})
 
 export async function getProduct(slug: string): Promise<Product | null> {
   try {

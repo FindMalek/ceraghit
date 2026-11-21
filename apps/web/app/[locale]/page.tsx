@@ -9,11 +9,12 @@ import Image from "@/components/photo"
 import { ProductGrid } from "@/components/product-card"
 import { SectionHeading } from "@/components/section-heading"
 import { Link } from "@/i18n/navigation"
-import { getCategories, getProducts, getSettings } from "@/lib/api"
+import { getCategories, getProducts, getSettings, getSiteImages } from "@/lib/api"
 import { getCurrency } from "@/lib/currency-server"
 import { organizationJsonLd } from "@/lib/json-ld"
 import { pageMetadata } from "@/lib/seo"
-import { HERO_PHOTOS, STUDIO_PHOTOS } from "@/lib/site"
+import { STUDIO_PHOTOS } from "@/lib/site"
+import { siteImages } from "@/lib/site-images"
 
 export const dynamic = "force-dynamic"
 
@@ -37,10 +38,11 @@ export default async function HomePage() {
     getLocale(),
     getCurrency(),
   ])
-  const [categories, featured, settings] = await Promise.all([
+  const [categories, featured, settings, images] = await Promise.all([
     getCategories(),
     getProducts({ featured: true, sort: "featured", currency, limit: 8 }),
     getSettings(),
+    getSiteImages(),
   ])
   return (
     <>
@@ -70,7 +72,7 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-        <HeroCarousel images={HERO_PHOTOS} />
+        <HeroCarousel slides={siteImages("hero", images, locale)} />
       </section>
 
       {featured.length > 0 && (
@@ -93,7 +95,7 @@ export default async function HomePage() {
                   {category.image && (
                     <Image
                       src={imageSrc(category.image)}
-                      alt=""
+                      alt={pick(category.imageAlt, locale)}
                       fill
                       sizes="(min-width: 1024px) 25vw, 50vw"
                       className="object-cover opacity-60 transition duration-500 group-hover:scale-105 group-hover:opacity-80"

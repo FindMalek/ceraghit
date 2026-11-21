@@ -75,7 +75,7 @@ function timedClient(client: Client, onSlow: (slow: SlowQuery) => void): Client 
 export function createDb(url: string, max = 10, options: Options = {}) {
   const client = postgres(url, { max, onnotice: () => {} })
   const timed = options.onSlowQuery ? timedClient(client, options.onSlowQuery) : client
-  return Object.assign(drizzle(timed, { schema }), { close: () => client.end() })
+  return Object.assign(drizzle(timed, { schema }), { url, close: () => client.end() })
 }
 
 export type Db = ReturnType<typeof createDb>

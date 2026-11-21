@@ -1,4 +1,4 @@
-import { categories, locations, products } from "@workspace/db"
+import { categories, locations, media, products } from "@workspace/db"
 import {
   categorySchema,
   locationSchema,
@@ -10,10 +10,10 @@ import {
   shippingQuoteInputSchema,
   shippingQuoteSchema,
 } from "@workspace/sdk"
-import { and, asc, count, desc, eq, ilike, inArray, or, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, getTableColumns, ilike, inArray, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { publicError } from "../../errors"
-import { findProducts, toCategory, toProduct } from "../../lib/catalog"
+import { findProducts, imageMediaColumns, toCategory, toLocation, toProduct } from "../../lib/catalog"
 import { sweepExpiredHolds } from "../../lib/orders"
 import { unitMinor } from "../../lib/pricing"
 import { enforceLimit, withinLimit } from "../../lib/rate-limit"
@@ -37,14 +37,17 @@ export const catalogRouter = {
           name: categories.name,
           description: categories.description,
           image: categories.image,
+          imageMediaId: categories.imageMediaId,
+          ...imageMediaColumns,
           visible: categories.visible,
           position: categories.position,
           productCount: count(products.id),
         })
         .from(categories)
         .leftJoin(products, and(eq(products.categoryId, categories.id), eq(products.status, "published")))
+        .leftJoin(media, eq(media.id, categories.imageMediaId))
         .where(eq(categories.visible, true))
-        .groupBy(categories.id)
+        .groupBy(categories.id, media.id)
         .orderBy(asc(categories.position), asc(categories.slug))
       return rows.map(toCategory)
     }),
@@ -102,9 +105,15 @@ export const catalogRouter = {
   locations: publicProcedure
     .route({ method: "GET", path: "/locations", summary: "Workshop and studio locations", tags: TAG })
     .output(z.array(locationSchema))
-    .handler(({ context }) =>
-      context.db.select().from(locations).where(eq(locations.visible, true)).orderBy(asc(locations.position)),
-    ),
+    .handler(async ({ context }) => {
+      const rows = await context.db
+        .select({ ...getTableColumns(locations), ...imageMediaColumns })
+        .from(locations)
+        .leftJoin(media, eq(media.id, locations.imageMediaId))
+        .where(eq(locations.visible, true))
+        .orderBy(asc(locations.position))
+      return rows.map(toLocation)
+    }),
 
   settings: publicProcedure
     .route({ method: "GET", path: "/settings", summary: "Contact details and delivery fees", tags: TAG })

@@ -129,6 +129,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     address: "Avenue Habib Bourguiba",
     city: "Nabeul",
     country: "Tunisie",
+    image: "/catalogue/studio-interior.webp",
     phone: "+216 20 000 000",
     hours: {
       fr: "Du mardi au samedi, 10h à 18h",
