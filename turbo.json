@@ -44,6 +44,10 @@
     "db:seed:catalog": {
       "cache": false
     },
+    "dashboard#test": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/orpc/src/**"],
+      "env": ["DATABASE_URL"]
+    },
     "api#test": {
       "dependsOn": ["@workspace/orpc#test"],
       "env": ["DATABASE_URL"]
