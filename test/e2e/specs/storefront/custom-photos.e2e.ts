@@ -49,6 +49,17 @@ test("a photo on a custom request is stored as a bounded WebP, whatever file was
     .context()
     .setExtraHTTPHeaders({ "x-forwarded-for": `10.${randomInt(256)}.${randomInt(256)}.${randomInt(1, 255)}` })
   await page.goto(home("/custom"))
+  await step("the page's policy lets wasm compile (the WebP encoder fallback for Safari)", async () => {
+    const compiled = await page.evaluate(async () => {
+      try {
+        await WebAssembly.instantiate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]))
+        return true
+      } catch {
+        return false
+      }
+    })
+    expect(compiled).toBe(true)
+  })
   await step("fill the form and pick a PNG", async () => {
     await page.getByLabel(t(appLocale, "custom.name")).fill(`Photo ${id}`)
     await page.getByLabel(t(appLocale, "custom.email")).fill(email)
