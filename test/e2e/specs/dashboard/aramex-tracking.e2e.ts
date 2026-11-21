@@ -67,15 +67,18 @@ test("the owner follows a parcel on the order and the customer sees it on the or
     await expect(page.getByTestId("shipment-polled")).toContainText("Dernière mise à jour")
   })
 
-  await step("the customer reads the status in French, English and Arabic", async () => {
-    const orderUrl = (locale: string) => `${E2E.webUrl}/${locale}/order/${number}?t=${token}`
-    await page.goto(orderUrl("fr"))
-    await expect(page.getByTestId("parcel-status")).toHaveText("En cours d'acheminement")
-    await page.goto(orderUrl("en"))
-    await expect(page.getByTestId("parcel-status")).toHaveText("On its way to you")
-    await page.goto(orderUrl("ar"))
-    await expect(page.getByTestId("parcel-status")).toHaveText("في الطريق إليك")
-  })
+  const orderUrl = (locale: string) => `${E2E.webUrl}/${locale}/order/${number}?t=${token}`
+  const statuses = [
+    ["fr", "French", "En cours d'acheminement"],
+    ["en", "English", "On its way to you"],
+    ["ar", "Arabic", "في الطريق إليك"],
+  ] as const
+  for (const [locale, name, text] of statuses) {
+    await step(`the customer reads the status in ${name}`, async () => {
+      await page.goto(orderUrl(locale))
+      await expect(page.getByTestId("parcel-status")).toHaveText(text)
+    })
+  }
 
   await step("a delivered parcel closes the shipment, no refresh is offered", async () => {
     await setShipmentWaybill(number, `FAKE-DELIVERED-${Date.now()}`)
