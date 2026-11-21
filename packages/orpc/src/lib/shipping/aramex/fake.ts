@@ -83,6 +83,12 @@ const LABEL_PDF = Buffer.from(
     "5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\ntrailer<</Root 1 0 R/Size 6>>\n%%EOF\n",
 ).toString("base64")
 
+const INVOICE_URL = "https://ws.dev.aramex.net/fake/commercial-invoice.pdf"
+const INVOICE_PDF = Buffer.from(LABEL_PDF, "base64")
+  .toString()
+  .replace("DEMO LABEL - not a real parcel", "DEMO COMMERCIAL INVOICE - not real")
+const INVOICE_ATTACHMENT = { Name: "CommercialInvoice", Type: "CommercialInvoice", Url: INVOICE_URL }
+
 /**
  * Sandbox-only stand-in for Aramex (screenshots, demos): nothing leaves the process. The api only wires it when
  * ARAMEX_FAKE=true, which `apps/api/src/env.ts` refuses with APP_ENV=production.
@@ -96,6 +102,7 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
     const info = (JSON.parse(String(init?.body ?? "{}")) as { ClientInfo?: { Password?: string; AccountPin?: string } })
       .ClientInfo
     const reply = (body: unknown) => new Response(JSON.stringify(body))
+    if (url === INVOICE_URL) return new Response(INVOICE_PDF)
     if (info?.Password === "fake-bad-login") return reply(LOGIN_ERROR)
     if (url.endsWith("/FetchCities"))
       return reply({ Transaction: null, Notifications: [], HasErrors: false, Cities: FAKE_CITIES })
@@ -157,8 +164,15 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
     }
     if (url.endsWith("/FetchCountries")) return reply(COUNTRIES)
     if (url.endsWith("/CreateShipments")) {
-      const sent = JSON.parse(String(init?.body ?? "{}")) as { Shipments?: { Reference1?: string }[] }
+      const sent = JSON.parse(String(init?.body ?? "{}")) as {
+        Shipments?: { Reference1?: string; Details?: { ProductGroup?: string } }[]
+      }
       const reference = sent.Shipments?.[0]?.Reference1 ?? ""
+      // A reference ending -FAKE-NOINVOICE gets no attachment, to show the PrintCommercialInvoice fallback.
+      const attachments =
+        sent.Shipments?.[0]?.Details?.ProductGroup === "EXP" && !reference.endsWith("-FAKE-NOINVOICE")
+          ? [INVOICE_ATTACHMENT]
+          : []
       if (reference.endsWith("-FAKE-REFUSED")) {
         return reply({
           HasErrors: false,
@@ -184,7 +198,7 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
             HasErrors: false,
             Notifications: [],
             ShipmentLabel: { LabelURL: null, LabelFileContents: LABEL_PDF },
-            ShipmentAttachments: [],
+            ShipmentAttachments: attachments,
           },
         ],
       })
@@ -195,6 +209,14 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
         Notifications: [],
         ShipmentNumber: "",
         ShipmentLabel: { LabelURL: null, LabelFileContents: LABEL_PDF },
+      })
+    }
+    if (url.endsWith("/PrintCommercialInvoice")) {
+      return reply({
+        Transaction: null,
+        Notifications: [],
+        HasErrors: false,
+        CommercialInvoiceInfo: INVOICE_ATTACHMENT,
       })
     }
     if (url.endsWith("/CalculateRate")) return reply(info?.AccountPin === "fake-bad-rate" ? RATE_ERROR : RATE)

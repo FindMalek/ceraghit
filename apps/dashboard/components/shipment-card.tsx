@@ -32,6 +32,18 @@ export function ShipmentCard({ orderId }: { orderId: string }) {
       onError: (error) => showError(errorMessage(error)),
     }),
   )
+  const invoice = useMutation(
+    orpc.admin.shipping.commercialInvoiceUrl.mutationOptions({
+      onSuccess: ({ url }) => window.open(url, "_blank", "noopener,noreferrer"),
+      onError: (error) => showError(errorMessage(error)),
+    }),
+  )
+  const retryInvoice = useMutation(
+    orpc.admin.shipping.retryCommercialInvoice.mutationOptions({
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: orpc.admin.shipping.shipmentOf.key() }),
+      onError: (error) => showError(errorMessage(error)),
+    }),
+  )
   const refresh = useMutation(
     orpc.admin.shipping.refresh.mutationOptions({
       onSuccess: () => queryClient.invalidateQueries({ queryKey: orpc.admin.shipping.shipmentOf.key() }),
@@ -40,8 +52,9 @@ export function ShipmentCard({ orderId }: { orderId: string }) {
   )
   const s = shipment.data
   if (!s) return null
+  const invoiceError = s.errors.find((e) => e.code === "INVOICE")
   const labelError = s.errors.find((e) => e.code === "LABEL")
-  const trackingErrors = s.errors.filter((e) => e.code !== "LABEL")
+  const trackingErrors = s.errors.filter((e) => e.code !== "LABEL" && e.code !== "INVOICE")
   const closed = ["delivered", "returned", "cancelled"].includes(s.status)
 
   return (
@@ -162,6 +175,30 @@ export function ShipmentCard({ orderId }: { orderId: string }) {
         </div>
       ) : (
         <p className="text-muted-foreground text-sm">Étiquette indisponible (données de démonstration).</p>
+      )}
+      {s.hasCommercialInvoice && (
+        <Button
+          variant="outline"
+          className="h-11 self-start"
+          disabled={invoice.isPending}
+          onClick={() => invoice.mutate({ id: s.id })}
+        >
+          Facture commerciale (PDF)
+        </Button>
+      )}
+      {invoiceError && !s.hasCommercialInvoice && (
+        <div className="flex flex-col gap-2">
+          <p role="alert" className="text-destructive text-sm">
+            {invoiceError.message}
+          </p>
+          <Button
+            className="h-11 self-start"
+            disabled={retryInvoice.isPending}
+            onClick={() => retryInvoice.mutate({ id: s.id })}
+          >
+            Réessayer la facture commerciale
+          </Button>
+        </div>
       )}
     </section>
   )

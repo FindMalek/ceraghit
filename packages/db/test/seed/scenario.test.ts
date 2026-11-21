@@ -165,7 +165,8 @@ test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cas
     expect(o).toMatchObject({ status: "fulfilled", carrier: "aramex", trackingNumber: s.waybill })
     expect(s).toMatchObject({ environment: "fake", currency: o?.currency })
     expect(s.labelKey).toBeUndefined()
-    if (o?.country === "TN") expect(s.productGroup).toBe("DOM")
+    expect(s.productGroup).toBe(o?.country === "TN" ? "DOM" : "EXP")
+    expect(s.commercialInvoiceKey ?? null).toBeNull()
     if (s.codAmountMinor != null) expect([o?.country, o?.currency, o?.paymentMethod]).toEqual(["TN", "TND", "cod"])
   }
 })
@@ -181,6 +182,13 @@ test("demo shipments include a booked pickup and a cancelled parcel whose order 
   expect(order).toMatchObject({ status: "paid", country: "TN" })
   expect(order?.carrier ?? null).toBeNull()
   expect(shipments.filter((s) => s.orderId === cancelled?.orderId && s.status !== "cancelled")).toHaveLength(0)
+})
+
+test("a demo international parcel is waiting for its commercial invoice", () => {
+  const { shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const missing = shipments.filter((s) => s.errors?.some((e) => e.code === "INVOICE"))
+  expect(missing.length).toBeGreaterThan(0)
+  for (const s of missing) expect(s.productGroup).toBe("EXP")
 })
 
 test("the demo has a piece whose main photo is not the first one", () => {

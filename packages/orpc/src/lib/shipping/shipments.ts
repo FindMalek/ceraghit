@@ -1,6 +1,14 @@
 import { ORPCError } from "@orpc/server"
 import { type Db, orderItems, orders, products, settings, shipments, uploads } from "@workspace/db"
-import type { AdminShipment, ShipmentDraft, ShipmentDraftInput, ShippingItem } from "@workspace/sdk"
+import {
+  type AdminShipment,
+  DEFAULT_HS_CODE,
+  normalizeHsCode,
+  type ShipmentCustoms,
+  type ShipmentDraft,
+  type ShipmentDraftInput,
+  type ShippingItem,
+} from "@workspace/sdk"
 import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm"
 import type { Services } from "../../context"
 import { STORAGE_REFERENCES } from "../cleanup"
@@ -23,7 +31,10 @@ export const NOT_CONFIGURED = "Aramex n'est pas configuré : choisissez Aramex e
 export const CANNOT_SHIP = "Cette commande ne peut pas être expédiée dans son état actuel."
 export const ALREADY_SHIPPED = "Une expédition existe déjà pour cette commande."
 export const COD_TUNISIA_ONLY = "Le paiement à la livraison n'existe qu'en Tunisie."
-export const INTERNATIONAL_LATER = "Les envois internationaux arrivent avec la déclaration en douane."
+export const CUSTOMS_MISSING = "Ajoutez le code douanier (SH) de chaque pièce."
+export const CUSTOMS_CURRENCY = "La valeur déclarée doit être dans la devise de la commande."
+export const INVOICE_FAILED =
+  "La facture commerciale n'a pas pu être enregistrée. Utilisez « Réessayer la facture commerciale »."
 export const NO_ANSWER = (number: string) =>
   `Aramex n'a pas répondu. Vérifiez sur votre espace Aramex avant de réessayer (référence ${number}).`
 export const TOO_BIG = "Ce colis dépasse les limites Aramex (30 kg, 150 cm) : expédiez-le manuellement."
@@ -79,6 +90,8 @@ export async function prepareShipment(services: Services, orderId: string): Prom
       productId: orderItems.productId,
       quantity: orderItems.quantity,
       ref: orderItems.ref,
+      title: orderItems.title,
+      unitMinor: orderItems.unitMinor,
       weightGrams: products.weightGrams,
       lengthCm: products.lengthCm,
       widthCm: products.widthCm,
@@ -112,7 +125,6 @@ export async function prepareShipment(services: Services, orderId: string): Prom
   else if (await activeShipment(db, orderId)) blocked = ALREADY_SHIPPED
   else if (parcel.weightGrams > 30_000 || [parcel.lengthCm, parcel.widthCm, parcel.heightCm].some((d) => d > 150))
     blocked = TOO_BIG
-  else if (order.country !== "TN") blocked = INTERNATIONAL_LATER
   else if (isCod(order) && !cod) blocked = COD_TUNISIA_ONLY
 
   return {
@@ -136,6 +148,36 @@ export async function prepareShipment(services: Services, orderId: string): Prom
     insuranceSuggestedMinor: order.subtotalMinor,
     blocked,
     warnings,
+    customs:
+      order.country === "TN"
+        ? null
+        : {
+            currency: order.currency,
+            items: rows.map((r) => ({
+              description: r.title.slice(0, 50),
+              quantity: r.quantity,
+              weightGrams: Math.min((r.weightGrams ?? DEFAULT_GRAMS) * r.quantity, 30_000),
+              valueMinor: r.unitMinor * r.quantity,
+              hsCode: DEFAULT_HS_CODE,
+              originCountry: "TN",
+            })),
+          },
+  }
+}
+
+/** Goods declared in the order's own currency: valid HS codes and values, never converted or summed across currencies. */
+function checkedCustoms(input: ShipmentDraftInput, currency: "TND" | "EUR") {
+  const declared: ShipmentCustoms | null | undefined = input.customs
+  if (!declared) throw new ORPCError("BAD_REQUEST", { message: CUSTOMS_MISSING })
+  if (declared.currency !== currency) throw new ORPCError("BAD_REQUEST", { message: CUSTOMS_CURRENCY })
+  const items = declared.items.map((i) => ({ ...i, hsCode: normalizeHsCode(i.hsCode) }))
+  if (items.some((i) => !i.hsCode)) throw new ORPCError("BAD_REQUEST", { message: CUSTOMS_MISSING })
+  return {
+    currency,
+    valueMinor: items.reduce((sum, i) => sum + i.valueMinor, 0),
+    // Aramex takes one GoodsOriginCountry per shipment (`Details`), so it is the first piece's; each item keeps its own CountryOfOrigin.
+    originCountry: items[0]!.originCountry,
+    items: items.map((i) => ({ ...i, hsCode: i.hsCode! })),
   }
 }
 
@@ -178,10 +220,14 @@ export async function shipperAddress(services: Services, config: Record<string, 
 }
 
 /** The label PDF goes under `private/labels/<uuid>.pdf`: an unguessable key `/files` refuses and only a signed link reads. */
-async function storeLabel(services: Services, bytes: Uint8Array): Promise<string> {
+async function storeLabel(
+  services: Services,
+  bytes: Uint8Array,
+  dir: "labels" | "invoices" = "labels",
+): Promise<string> {
   const { storage } = services
   if (!storage) throw new Error("storage is not configured")
-  const key = `${storage.prefix}private/labels/${crypto.randomUUID()}.pdf`
+  const key = `${storage.prefix}private/${dir}/${crypto.randomUUID()}.pdf`
   await reserveUpload(services.db, { key, folder: LABEL_FOLDER, contentType: "application/pdf", bytes: bytes.length })
   try {
     await storage.put(key, bytes, "application/pdf")
@@ -209,12 +255,12 @@ export async function createShipment(
     throw new ORPCError("BAD_REQUEST", { message: COD_TUNISIA_ONLY })
   }
   if (input.consignee.country !== order.country) throw new ORPCError("BAD_REQUEST", { message: COUNTRY_CHANGED })
-  if (input.consignee.country !== "TN") throw new ORPCError("BAD_REQUEST", { message: INTERNATIONAL_LATER })
+  const customs = input.consignee.country === "TN" ? undefined : checkedCustoms(input, order.currency)
 
   const { provider, environment, config } = await aramexFor(services, CREATE_TIMEOUT_MS)
   const release = await claimOrder(services, order.id)
   try {
-    return await createClaimed(services, adminId, input, order, cod, { provider, environment, config })
+    return await createClaimed(services, adminId, input, order, cod, customs, { provider, environment, config })
   } finally {
     await release()
   }
@@ -246,6 +292,7 @@ async function createClaimed(
   input: ShipmentDraftInput,
   order: typeof orders.$inferSelect,
   cod: boolean,
+  customs: ReturnType<typeof checkedCustoms> | undefined,
   { provider, environment, config }: Awaited<ReturnType<typeof aramexFor>>,
 ): Promise<{ shipmentId: string; waybill: string }> {
   const { db } = services
@@ -271,6 +318,7 @@ async function createClaimed(
       description: input.description,
       fragile: input.fragile,
       ...(cod ? { cod: { amountMinor: order.totalMinor, currency: "TND" as const } } : {}),
+      ...(customs ? { customs } : {}),
       ...(input.insurance ? { insurance: { amountMinor: input.insurance.amountMinor, currency: order.currency } } : {}),
       shipDate: services.now(),
     })
@@ -313,6 +361,9 @@ async function createClaimed(
   const shipmentId = row[0]!.id
 
   await attachLabel(services, shipmentId, created.waybill, created.productGroup, provider, created.label.pdf)
+  if (created.productGroup === "EXP") {
+    await attachInvoice(services, shipmentId, created.waybill, provider, created.commercialInvoiceUrl)
+  }
   await markOrderShipped(services, order.id, { carrier: "aramex", trackingNumber: created.waybill }, { adminId })
   await tryIssueInvoice(db, order.id, services.now())
   return { shipmentId, waybill: created.waybill }
@@ -348,6 +399,65 @@ async function attachLabel(
       .where(eq(shipments.id, shipmentId))
     return false
   }
+}
+
+const invoiceError = (message: string) => ({ at: new Date().toISOString(), code: "INVOICE", message })
+
+/** Stores the commercial invoice next to the label; on failure the shipment stays with an INVOICE error to retry. */
+async function attachInvoice(
+  services: Services,
+  shipmentId: string,
+  waybill: string,
+  provider: ShippingProvider,
+  knownUrl: string | null,
+): Promise<boolean> {
+  try {
+    const bytes = await provider.getCommercialInvoice(waybill, knownUrl)
+    if (!bytes) throw new Error("no invoice bytes")
+    const key = await storeLabel(services, bytes, "invoices")
+    await services.db
+      .update(shipments)
+      .set({
+        commercialInvoiceKey: key,
+        errors: sql`(select coalesce(jsonb_agg(e), '[]'::jsonb) from jsonb_array_elements(${shipments.errors}) e where e->>'code' <> 'INVOICE')`,
+      })
+      .where(eq(shipments.id, shipmentId))
+    return true
+  } catch (error) {
+    console.error(`[shipment] invoice ${waybill} ${error instanceof AramexError ? error.code : "failed"}`)
+    await services.db
+      .update(shipments)
+      .set({
+        errors: sql`(select coalesce(jsonb_agg(e), '[]'::jsonb) from jsonb_array_elements(${shipments.errors}) e where e->>'code' <> 'INVOICE') || ${JSON.stringify([invoiceError(INVOICE_FAILED)])}::jsonb`,
+      })
+      .where(eq(shipments.id, shipmentId))
+    return false
+  }
+}
+
+/** One retry at a time per order (same claim as the creation), so two parallel retries cannot store two invoices. */
+export async function retryCommercialInvoice(services: Services, shipmentId: string): Promise<void> {
+  const first = await loadShipment(services.db, shipmentId)
+  if (first.productGroup !== "EXP" || first.commercialInvoiceKey) return
+  const { provider } = await aramexFor(services, CREATE_TIMEOUT_MS)
+  const release = await claimOrder(services, first.orderId)
+  try {
+    const row = await loadShipment(services.db, shipmentId)
+    if (row.commercialInvoiceKey) return
+    if (!(await attachInvoice(services, row.id, row.waybill, provider, null))) {
+      throw new ORPCError("BAD_REQUEST", { message: INVOICE_FAILED })
+    }
+  } finally {
+    await release()
+  }
+}
+
+export async function commercialInvoiceDownloadUrl(services: Services, shipmentId: string): Promise<string> {
+  const row = await loadShipment(services.db, shipmentId)
+  if (!row.commercialInvoiceKey || !services.storage) {
+    throw new ORPCError("NOT_FOUND", { message: "Facture commerciale indisponible." })
+  }
+  return services.storage.signedGet(row.commercialInvoiceKey, 300, `${row.waybill}-facture-commerciale.pdf`)
 }
 
 async function loadShipment(db: Db, shipmentId: string) {
@@ -397,6 +507,7 @@ export async function getOrderShipment(db: Db, orderId: string): Promise<AdminSh
     insuranceMinor: row.insuranceMinor,
     currency: row.currency,
     hasLabel: row.labelKey !== null,
+    hasCommercialInvoice: row.commercialInvoiceKey !== null,
     pickupId: row.pickupId,
     errors: row.errors,
     events: [...row.events]
