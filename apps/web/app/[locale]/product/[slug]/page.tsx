@@ -92,7 +92,7 @@ export default async function ProductPage({ params }: Params) {
             </p>
           </div>
 
-          {product.description && <p className="text-lg">{pick(product.description, locale)}</p>}
+          {product.description && <p className="whitespace-pre-line text-lg">{pick(product.description, locale)}</p>}
 
           {specs.length > 0 && (
             <dl className="divide-y divide-border border-border border-y">

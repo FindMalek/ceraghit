@@ -1,4 +1,4 @@
-// Usage: pnpm demo:videos [-- 03 [05 ...]] [--voice] [--zoom] [--burn] [--device=desktop|mobile]
+// Usage: pnpm demo:videos [-- 03 [05 ...]] [--plan] [--voice[=draft|final]] [--zoom] [--burn] [--device=desktop|mobile]
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -6,11 +6,13 @@ import { chromium, devices } from "@playwright/test"
 import { parseArgs } from "./lib/args"
 import { type Caption, toSrt, toVtt } from "./lib/captions"
 import { assertAdminCredentials, assertSafe } from "./lib/guard"
+import { buildPlan, formatPlan, ledgerPath, narrationFor, readLedger, ttsCacheDir } from "./lib/narration"
 import { installOverlay } from "./lib/overlay"
 import { createPacer, DEFAULT_HOLD_MS, STILL_MS, sleep } from "./lib/pacing"
 import { type AudioClip, frameSize, mux, startRecording } from "./lib/recorder"
 import { fileBase, parseVideo, stepsFor, type Video } from "./lib/steps"
-import { createTts, type Narration } from "./lib/tts"
+import { planIsCached } from "./lib/tts"
+import { prepareVoice } from "./lib/voice"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, "../..")
@@ -20,7 +22,7 @@ const videosDir = join(here, "videos")
 if (existsSync(join(root, ".env"))) process.loadEnvFile(join(root, ".env"))
 
 const env: Record<string, string | undefined> = process.env
-const { flags, device: only, ids } = parseArgs(process.argv.slice(2))
+const { flags, voice, device: only, ids } = parseArgs(process.argv.slice(2))
 const flag = (name: string) => flags.has(name)
 
 const urls = {
@@ -39,16 +41,38 @@ function loadVideos(): Video[] {
     .filter((v) => ids.length === 0 || ids.includes(v.id))
 }
 
+const ledgerFile = ledgerPath(env)
+const cacheDir = ttsCacheDir(env)
+
 async function main() {
+  if (flag("plan")) {
+    const planned = loadVideos()
+    if (planned.length === 0) throw new Error(`no video matches ${ids.join(", ") || "(none found)"}`)
+    const plan = buildPlan(planned, {
+      env,
+      ledger: readLedger(ledgerFile),
+      devices: only ? [only] : undefined,
+      isCached: planIsCached(cacheDir, env),
+    })
+    console.info(formatPlan(plan))
+    return
+  }
   await assertSafe({ ...env, WEB_URL: urls.web, DASHBOARD_URL: urls.dashboard })
   const videos = loadVideos()
   if (videos.length === 0) throw new Error(`no video matches ${ids.join(", ") || "(none found)"}`)
   if (videos.some((v) => v.start.loggedIn)) assertAdminCredentials(env)
   mkdirSync(join(out, "videos"), { recursive: true })
 
-  const tts = flag("voice")
-    ? createTts({ env, cacheDir: join(out, "tts-cache"), warn: (m) => console.warn(`warning: ${m}`) })
-    : null
+  const clips = await prepareVoice({
+    voice,
+    videos,
+    device: only,
+    env,
+    cacheDir,
+    ledgerFile,
+    warn: (m) => console.warn(`warning: ${m}`),
+    handleSignals: true,
+  })
   const browser = await chromium.launch()
   const produced: string[] = []
 
@@ -56,8 +80,7 @@ async function main() {
     for (const device of ["desktop", "mobile"] as const) {
       if (only && only !== device) continue
       const steps = stepsFor(video, device)
-      const narrations: Narration[] = []
-      if (tts) for (const s of steps) narrations.push(await tts.narrate(s.caption_fr))
+      const lines = narrationFor(video, device)
 
       const { defaultBrowserType: _ignored, ...iphone } = devices["iPhone 14"]
       const viewport = device === "desktop" ? { width: 1440, height: 900 } : iphone.viewport
@@ -93,13 +116,14 @@ async function main() {
           zoom: flag("zoom"),
         })
         const captions: Caption[] = []
-        const clips: AudioClip[] = []
+        const audio: AudioClip[] = []
         await sleep(STILL_MS)
         for (const [i, step] of steps.entries()) {
           const startMs = recording.now()
           console.info(`${base} ${i + 1}/${steps.length} ${step.action}`)
-          const narration = narrations[i]
-          if (narration) clips.push({ file: narration.file, atMs: startMs })
+          const line = lines[i]
+          const narration = line ? clips.get(line) : undefined
+          if (narration) audio.push({ file: narration.file, atMs: startMs })
           await pacer.run(step, substitute(step.value))
           const spoken = narration ? narration.durationMs + 250 : 0
           await sleep(Math.max(step.holdMs ?? DEFAULT_HOLD_MS, spoken - (recording.now() - startMs)))
@@ -121,7 +145,7 @@ async function main() {
           writeFileSync(join(out, "videos", `${base}.ar.srt`), toSrt(ar))
           writeFileSync(join(out, "videos", `${base}.ar.vtt`), toVtt(ar))
         }
-        if (clips.length > 0 || flag("burn")) mux(raw, finalFile, clips, flag("burn") ? srt : undefined)
+        if (audio.length > 0 || flag("burn")) mux(raw, finalFile, audio, flag("burn") ? srt : undefined)
         else renameSync(raw, finalFile)
       } catch (error) {
         for (const f of [...written, finalFile]) rmSync(f, { force: true })
@@ -135,8 +159,7 @@ async function main() {
     }
   }
   await browser.close()
-  if (tts)
-    console.info(`voice: ${tts.provider}, ${tts.billedChars()} characters billed this run (cached lines are free)`)
+  if (voice) console.info(`voice: ${voice}, ${clips.size} lines (cached and draft lines cost no credits)`)
   console.info(produced.join("\n"))
 }
 

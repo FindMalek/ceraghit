@@ -23,6 +23,13 @@ export interface Storage {
    * With `size` the content type and length are part of the signature: the bucket refuses any other upload.
    */
   presignPut(key: string, contentType: string, size?: number): Promise<string>
+  /** Writes an object from the server (a carrier label), which a browser never touches. */
+  put(key: string, body: Uint8Array, contentType: string): Promise<void>
+  /**
+   * A short-lived signed GET, never the public CDN url: for files that must stay private, like carrier labels. With a
+   * `filename` the browser saves it under that name instead of showing it.
+   */
+  signedGet(key: string, expiresSeconds?: number, filename?: string): Promise<string>
   /** Whether the object exists, used to check a customer's upload really happened before saving its key. */
   head(key: string): Promise<boolean>
   /**
@@ -55,8 +62,10 @@ export function createStorage(config: StorageConfig): Storage | null {
     expires: number,
     headers?: Record<string, string>,
     bind = false,
+    params: Record<string, string> = {},
   ) {
     const url = new URL(urlFor(key))
+    for (const [name, value] of Object.entries(params)) url.searchParams.set(name, value)
     url.searchParams.set("X-Amz-Expires", String(expires))
     const signed = await aws.sign(new Request(url, { method, headers }), {
       aws: { signQuery: true, allHeaders: bind },
@@ -71,6 +80,26 @@ export function createStorage(config: StorageConfig): Storage | null {
       size === undefined
         ? presign("PUT", key, 600, { "content-type": contentType })
         : presign("PUT", key, 600, { "content-type": contentType, "content-length": String(size) }, true),
+    put: (key, body, contentType) =>
+      traced("s3.put", key, async () => {
+        const res = await aws.fetch(urlFor(key), {
+          method: "PUT",
+          body: Buffer.from(body),
+          headers: { "content-type": contentType },
+        })
+        if (!res.ok) throw new Error(`bucket write failed (${res.status})`)
+      }),
+    signedGet: (key, expiresSeconds = 300, filename) =>
+      presign(
+        "GET",
+        key,
+        Math.min(Math.max(1, Math.floor(expiresSeconds)), 3600),
+        undefined,
+        false,
+        filename
+          ? { "response-content-disposition": `attachment; filename="${filename.replace(/[^\w.-]/g, "_")}"` }
+          : {},
+      ),
     head: (key) => traced("s3.head", key, async () => (await aws.fetch(urlFor(key), { method: "HEAD" })).ok),
     read: (key, maxBytes) =>
       traced("s3.read", key, async () => {
