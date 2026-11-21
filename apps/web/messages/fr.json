@@ -118,7 +118,6 @@
     "delivery": "Adresse de livraison",
     "country": "Pays",
     "city": "Ville",
-    "cityPick": "Choisissez votre ville",
     "cityEmpty": "Aucune ville trouvée",
     "address": "Adresse",
     "postalCode": "Code postal",

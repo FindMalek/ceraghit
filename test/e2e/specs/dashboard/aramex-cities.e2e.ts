@@ -2,6 +2,7 @@ import type { APIRequestContext } from "@playwright/test"
 import { E2E } from "../../env"
 import { createOrderViaApi, expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { completeSetup, openDb } from "../../helpers/db"
+import { markCitiesAsDemo } from "../../support/db"
 
 test.beforeAll(async () => {
   const db = openDb()
@@ -22,6 +23,7 @@ test.afterAll(async ({ browser }) => {
   await loginAsOwnerAndWait(page)
   await rpc(page.request, "shipping/saveSettings", { mode: { provider: "manual", quoteFromProvider: false } })
   await page.close()
+  await markCitiesAsDemo()
 })
 
 test("the owner refreshes the city list and checks an order address with Aramex", { tag: ["@fr"] }, async ({

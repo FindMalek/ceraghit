@@ -190,7 +190,6 @@ export function CheckoutForm({
             <CityField
               country={country}
               label={t("city")}
-              pickLabel={t("cityPick")}
               emptyLabel={t("cityEmpty")}
               error={errors.city}
               value={city}
