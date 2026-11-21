@@ -1,0 +1,85 @@
+{
+  "id": "51",
+  "slug": "creer-produit",
+  "title_fr": "Créer un produit",
+  "start": { "app": "dashboard", "path": "/products/new", "loggedIn": true },
+  "steps": [
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Créer le produit" },
+      "caption_fr": "Un formulaire vide signale ce qui manque."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Référence *" },
+      "value": "0001",
+      "caption_fr": "Saisissez la référence de la pièce."
+    },
+    {
+      "action": "click",
+      "target": { "role": "combobox", "name": "Catégorie" },
+      "caption_fr": "Choisissez la catégorie."
+    },
+    {
+      "action": "click",
+      "target": { "role": "option", "name": "Curda Seca" },
+      "caption_fr": "Choisissez la catégorie."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Titre" },
+      "value": "Plat bleu",
+      "caption_fr": "Le titre en français est obligatoire."
+    },
+    {
+      "action": "click",
+      "target": { "role": "tab", "name": "English" },
+      "caption_fr": "L'anglais et l'arabe sont facultatifs."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Prix TND *" },
+      "value": "85",
+      "caption_fr": "Les deux prix sont obligatoires."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Prix EUR *" },
+      "value": "28",
+      "caption_fr": "Les deux prix sont obligatoires."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Créer le produit" },
+      "caption_fr": "Cliquez sur Créer le produit."
+    },
+    { "action": "wait", "caption_fr": "Cette référence existe déjà, changez-la.", "holdMs": 2000 },
+    {
+      "action": "fill",
+      "target": { "label": "Référence *" },
+      "value": "0900",
+      "caption_fr": "Saisissez une référence libre.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Référence *" },
+      "value": "0901",
+      "caption_fr": "Saisissez une référence libre.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "hover",
+      "target": { "role": "switch", "name": "Pièce unique" },
+      "caption_fr": "Pièce unique : un seul exemplaire."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Créer le produit" },
+      "caption_fr": "Créez-le : sans photo, il reste brouillon."
+    },
+    { "action": "wait", "caption_fr": "Le produit est créé.", "holdMs": 1800 }
+  ]
+}

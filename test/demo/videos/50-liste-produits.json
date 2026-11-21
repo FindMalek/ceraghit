@@ -1,0 +1,55 @@
+{
+  "id": "50",
+  "slug": "liste-produits",
+  "title_fr": "La liste des produits",
+  "start": { "app": "dashboard", "path": "/products", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Le catalogue : prix, stock et photos.", "holdMs": 1500 },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Référence ou nom" },
+      "value": "lampe",
+      "caption_fr": "Cherchez par référence ou par nom."
+    },
+    {
+      "action": "click",
+      "target": { "role": "combobox", "name": "Filtrer par statut" },
+      "caption_fr": "Filtrez par statut."
+    },
+    { "action": "click", "target": { "role": "option", "name": "Publié" }, "caption_fr": "Filtrez par statut." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter une pièce au stock" },
+      "caption_fr": "Les boutons plus et moins changent le stock."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Retirer une pièce du stock" },
+      "caption_fr": "Les boutons plus et moins changent le stock.",
+      "holdMs": 800
+    },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Référence ou nom" },
+      "value": "zzzz",
+      "caption_fr": "Sans résultat, un message vous le dit."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Réinitialiser les filtres" },
+      "caption_fr": "Réinitialisez les filtres d'un clic."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Pièce unique" },
+      "caption_fr": "Ce badge marque une pièce unique.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Nouveau produit" },
+      "caption_fr": "Nouveau produit crée une fiche."
+    }
+  ]
+}
