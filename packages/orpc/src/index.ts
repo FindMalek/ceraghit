@@ -22,6 +22,7 @@ export {
 export { sweepRateLimits } from "./lib/rate-limit"
 export { effectivePaymentMethods } from "./lib/settings"
 export { resolveShippingProvider, shippingHealth } from "./lib/shipping/resolve"
+export { trackShipments } from "./lib/shipping/tracking"
 export { createStorage, type Storage } from "./lib/storage"
 export { adminProcedure, o, publicProcedure } from "./procedures"
 export { type AppRouter, type AppRouterClient, appRouter } from "./routers"
