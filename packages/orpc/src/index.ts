@@ -2,7 +2,7 @@ export { type AppEnv, type Context, createContext, type Services } from "./conte
 export { AdminAuth } from "./lib/auth"
 export { type CleanupReport, cleanupUploads, STORAGE_REFERENCES } from "./lib/cleanup"
 export { type JobCounts, type JobOutcome, runJob } from "./lib/jobs"
-export { purgeMailLog } from "./lib/mail-log"
+export { purgeMailLog, retryFailedMails } from "./lib/mail-log"
 export {
   ConsoleMailer,
   type Mail,

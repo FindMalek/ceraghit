@@ -40,6 +40,14 @@ export const aiUsageRolloverTask = schedules.task({
   run: () => callCron(aiUsageRollover.name),
 })
 
+const retryMail = spec("retry-mail")
+
+export const retryMailTask = schedules.task({
+  id: retryMail.name,
+  cron: { pattern: retryMail.cron, timezone: retryMail.timezone },
+  run: () => callCron(retryMail.name),
+})
+
 const trackShipments = spec("track-shipments")
 
 export const trackShipmentsTask = schedules.task({

@@ -3,6 +3,7 @@ import {
   type JobCounts,
   purgeMailLog,
   releaseExpiredHolds,
+  retryFailedMails,
   rolloverAiUsage,
   type Services,
   sendExpiryMails,
@@ -54,6 +55,11 @@ export const CRON_JOBS: Record<string, CronJob> = {
   },
   "ai-usage-rollover": {
     run: (services, now) => rolloverAiUsage(services, now),
+  },
+  "retry-mail": {
+    async run(services) {
+      return await retryFailedMails(services)
+    },
   },
   /** A no-op while shipping is manual or the Aramex credentials are missing. */
   "track-shipments": {
