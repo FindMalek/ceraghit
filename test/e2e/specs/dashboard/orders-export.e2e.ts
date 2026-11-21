@@ -4,7 +4,7 @@ import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { BUYER } from "../../helpers/checkout"
 import { completeSetup, openDb } from "../../helpers/db"
 import { pieceFor } from "../../support/catalogue"
-import { orderId } from "../../support/db"
+import { deleteOrdersLike, orderId } from "../../support/db"
 
 test.beforeAll(async () => {
   const db = openDb()
@@ -44,6 +44,13 @@ function parseCsv(text: string): string[][] {
   }
   return rows
 }
+
+const created: string[] = []
+
+/** The awkward rows would break the naive `;` split of the other export spec, which runs again on the mobile project. */
+test.afterEach(async () => {
+  for (const number of created.splice(0)) await deleteOrdersLike(number)
+})
 
 test(
   "the csv export keeps awkward customer text in its own cell and never turns it into a formula",
@@ -85,6 +92,7 @@ test(
           },
         })
         expect(shipped.ok()).toBe(true)
+        created.push(number)
         placed.push({ number, name: who.customerName, city: who.city })
       }
     })
