@@ -25,7 +25,13 @@ export function moveDuration(distance: number): number {
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 
+/** Only visible matches count: a list renders a table and cards, and the hidden one must not be picked on the other device. */
 export function locate(page: Page, target: Target): Locator {
+  const visible = anyMatch(page, target).filter({ visible: true })
+  return target.nth === undefined ? visible : visible.nth(target.nth)
+}
+
+function anyMatch(page: Page, target: Target): Locator {
   if (target.testId) return page.getByTestId(target.testId)
   if (target.role) {
     return page.getByRole(target.role as Parameters<Page["getByRole"]>[0], target.name ? { name: target.name } : {})
@@ -62,7 +68,9 @@ export function createPacer(options: PacerOptions): Pacer {
 
   async function centerOf(target: Target): Promise<Point> {
     const el = locate(page, target).first()
-    await el.scrollIntoViewIfNeeded()
+    // Centered, not just "in view": a sticky header must not sit on top of the point we click.
+    await el.waitFor({ state: "visible" })
+    await el.evaluate((n) => n.scrollIntoView({ block: "center", inline: "nearest" }))
     const box = await el.boundingBox()
     if (!box) throw new Error("the target has no box")
     return { x: box.x + box.width / 2, y: box.y + box.height / 2 }
@@ -95,6 +103,12 @@ export function createPacer(options: PacerOptions): Pacer {
   }
 
   async function press(target: Target): Promise<Point> {
+    // A link that opens a new tab would leave the recorded page: follow it in the same tab.
+    await locate(page, target)
+      .first()
+      .evaluate((el) => {
+        if (el instanceof HTMLAnchorElement && el.target === "_blank") el.removeAttribute("target")
+      })
     const p = await centerOf(target)
     await glide(p)
     await zoomTo(p)

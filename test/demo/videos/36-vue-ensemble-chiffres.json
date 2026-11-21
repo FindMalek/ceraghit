@@ -1,0 +1,41 @@
+{
+  "id": "36",
+  "slug": "vue-ensemble-chiffres",
+  "title_fr": "Lire la vue d'ensemble",
+  "start": { "app": "dashboard", "path": "/", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Voici les ventes de la boutique.", "holdMs": 1500 },
+    {
+      "action": "hover",
+      "target": { "text": "Ventes en dinars" },
+      "caption_fr": "Les ventes en dinars, comptées à part."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Ventes en euros" },
+      "caption_fr": "Les ventes en euros, jamais mélangées."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Panier moyen (DT)" },
+      "caption_fr": "Le panier moyen, dans chaque devise."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Nouvelles demandes" },
+      "caption_fr": "Les demandes à traiter apparaissent ici."
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "En attente de paiement" },
+      "caption_fr": "Une tuile ouvre la liste filtrée."
+    },
+    { "action": "wait", "caption_fr": "Voici les commandes à encaisser.", "holdMs": 1800 },
+    { "action": "goto", "value": "/", "caption_fr": "Retour à la vue d'ensemble." },
+    {
+      "action": "hover",
+      "target": { "text": "Terminer la configuration" },
+      "caption_fr": "Cette carte guide votre configuration."
+    }
+  ]
+}

@@ -83,6 +83,21 @@ jobs:
         with:
           node-version: "24"
       - run: pnpm install --frozen-lockfile
+      - name: Read the Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('./test/demo/package.json').devDependencies['@playwright/test']")" >> "$GITHUB_OUTPUT"
+      - name: Playwright browsers cache
+        id: browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-demo-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install chromium (recorder tests drive a page)
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm --filter @workspace/demo exec playwright install --with-deps chromium
+      - name: Install chromium system dependencies
+        if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm --filter @workspace/demo exec playwright install-deps chromium
       - run: pnpm test
 
   build:
