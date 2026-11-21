@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import { join, relative } from "node:path"
 import { ORPCError } from "@orpc/client"
 import ts from "typescript"
+import * as shipments from "../../../packages/orpc/src/lib/shipping/shipments"
 import { errorMessage } from "../lib/errors"
 
 const SRC = join(import.meta.dir, "../../../packages/orpc/src")
@@ -88,4 +89,24 @@ test("shipping messages built from constants reach the owner in french", () => {
   for (const message of messages) {
     expect(errorMessage(new ORPCError("PRECONDITION_FAILED", { message }))).toBe(message)
   }
+})
+
+test("every shipment message reaches the owner as written, never as the generic retry", () => {
+  const messages = [
+    ...Object.values(shipments).filter((v): v is string => typeof v === "string"),
+    shipments.NO_ANSWER("CER-1"),
+    "Aramex a refusé la demande : Consignee city is not valid",
+    "Aramex a refusé la demande.",
+    "Aramex ne répond pas. Réessayez dans un instant.",
+    "Réponse inattendue d'Aramex. Réessayez dans un instant.",
+    "Identifiants Aramex refusés (nom d'utilisateur, mot de passe, numéro de compte ou PIN).",
+    "Le paiement à la livraison n'est possible qu'en Tunisie.",
+  ]
+  expect(messages.length).toBeGreaterThan(10)
+  for (const message of messages) {
+    for (const code of ["BAD_REQUEST", "CONFLICT", "NOT_FOUND", "PRECONDITION_FAILED"] as const) {
+      expect(errorMessage(new ORPCError(code, { message })), message).toBe(message)
+    }
+  }
+  expect(shipments.NO_ANSWER("CER-1")).toContain("Vérifiez sur votre espace Aramex")
 })

@@ -190,6 +190,50 @@ describe.skipIf(!url)("aramex shipments", () => {
     expect(await db.select().from(shipments).where(eq(shipments.orderId, id))).toHaveLength(1)
   })
 
+  test("a create that finds a shipment made while it waited for the claim stops before Aramex", async () => {
+    const id = await order()
+    const input = await draftFor(id)
+    let raced = false
+    // The other request finishes right when this one is about to claim the order.
+    const racing = new Proxy(db, {
+      get(target, prop, receiver) {
+        if (prop !== "delete") return Reflect.get(target, prop, receiver)
+        return (...args: Parameters<typeof db.delete>) => ({
+          where: (...cond: Parameters<ReturnType<typeof db.delete>["where"]>) => {
+            const query = target.delete(...args).where(...cond)
+            return (async () => {
+              if (!raced) {
+                raced = true
+                await db.insert(shipments).values({
+                  orderId: id,
+                  provider: "aramex",
+                  environment: "fake",
+                  waybill: `FAKE${crypto.randomUUID().slice(0, 8)}`,
+                  productGroup: "DOM",
+                  productType: "ONP",
+                  currency: "TND",
+                  weightGrams: 1000,
+                })
+              }
+              return query
+            })()
+          },
+        })
+      },
+    })
+    const client = createRouterClient(adminRouter, {
+      context: (): Context =>
+        createContext(
+          { ...base, db: racing as typeof db },
+          new Headers({ cookie: `ceraghit_admin=${token}`, "x-csrf-token": "orpc" }),
+        ),
+    })
+    sent.length = 0
+    await expect(client.shipping.createShipment(input)).rejects.toMatchObject({ code: "CONFLICT" })
+    expect(raced).toBe(true)
+    expect(sent.filter((c) => c.url.endsWith("/CreateShipments"))).toHaveLength(0)
+  })
+
   test("a consignee country that differs from the order is refused before Aramex", async () => {
     const id = await order()
     const input = await draftFor(id)
