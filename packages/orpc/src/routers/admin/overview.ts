@@ -14,7 +14,7 @@ export const overview = adminProcedure
     const { db } = context
     const now = context.now()
     await releaseExpiredHolds(context, now, { limit: LAZY_SWEEP_LIMIT })
-    const since = new Date(now.getTime() - input.days * 864e5)
+    const since = sql`(date_trunc('day', ${now.toISOString()}::timestamptz at time zone 'Africa/Tunis') - make_interval(days => ${input.days - 1})) at time zone 'Africa/Tunis'`
     const inRange = and(inArray(orders.status, PAID), gte(orders.paidAt, since))
 
     const totals = await db
