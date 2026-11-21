@@ -15,7 +15,14 @@ import {
   totalLines,
 } from "./layout"
 import { orderUrl } from "./order-url"
-import { confirmationHtml, orderExpiredHtml, paymentReceivedHtml, shippedHtml, studioOrderHtml } from "./templates"
+import {
+  confirmationHtml,
+  orderExpiredHtml,
+  paymentLinkHtml,
+  paymentReceivedHtml,
+  shippedHtml,
+  studioOrderHtml,
+} from "./templates"
 
 export interface ConfirmationOrder extends MailOrder {
   locale: string
@@ -121,6 +128,33 @@ export async function renderPaymentReceived(order: ConfirmationOrder, ctx: MailC
         "",
         ...totalLines(order, locale, c),
         ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order), invoiceUrl: invoiceUrl(ctx.webUrl, order) }, locale),
+      ],
+      locale,
+    ),
+  }
+}
+
+/** Sent when the owner sets the Payoneer link of a pending order. */
+export async function renderPaymentLink(order: ConfirmationOrder, ctx: MailContext, link: string): Promise<Mail> {
+  const locale = asLocale(order.locale)
+  const c = EMAIL_COPY[locale]
+  return {
+    to: order.email,
+    replyTo: ctx.contactEmail || undefined,
+    subject: c.paymentLink.subject(order.number),
+    html: await paymentLinkHtml(order, ctx, link),
+    text: join(
+      [
+        ...greeting(c, order.customerName),
+        c.paymentLink.intro,
+        "",
+        ltr(link, locale),
+        `${c.confirmation.reference}: ${ltr(order.number, locale)}`,
+        "",
+        ...itemLines(order, locale),
+        "",
+        ...totalLines(order, locale, c),
+        ...orderFooter(c, { orderUrl: orderUrl(ctx.webUrl, order) }, locale),
       ],
       locale,
     ),

@@ -4,6 +4,7 @@ import { invoiceLocaleSchema, invoiceViewSchema } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { invoiceView, issueInvoice } from "../../lib/invoices"
+import { paymentReferences } from "../../lib/orders"
 import { getShopProfile } from "../../lib/shop-profile"
 import { adminProcedure } from "../../procedures"
 
@@ -13,7 +14,8 @@ async function readView(db: Db, id: string, lang?: z.infer<typeof invoiceLocaleS
   const order = await db.query.orders.findFirst({ where: eq(orders.id, id), with: { items: true } })
   if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
   const invoice = (await db.query.invoices.findFirst({ where: eq(invoices.orderId, id) })) ?? null
-  return invoiceView(order, invoice, await getShopProfile(db), lang)
+  const reference = (await paymentReferences(db, [id])).get(id) ?? null
+  return invoiceView(order, invoice, await getShopProfile(db), lang, reference)
 }
 
 export const invoicesRouter = {

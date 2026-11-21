@@ -377,19 +377,25 @@ export function buildScenario(
     unitMinor: waiting.priceEur,
     quantity: 1,
   })
-  // One Payoneer order still waiting for its link and one the owner confirmed.
-  for (const [number, paid] of [
-    ["CER-10098", false],
-    ["CER-10097", true],
+  // Payoneer orders: waiting for the link, link sent, confirmed by the owner, released after the hold.
+  for (const [number, state] of [
+    ["CER-10098", "waiting"],
+    ["CER-10097", "paid"],
+    ["CER-10096", "linked"],
+    ["CER-10095", "expired"],
   ] as const) {
     const orderId = crypto.randomUUID()
+    const paid = state === "paid"
     const paidAt = paid ? new Date(now.getTime() - 2 * 864e5) : null
-    const createdAt = new Date(now.getTime() - (paid ? 3 : 1) * 864e5)
+    const createdAt = new Date(
+      now.getTime() - (paid ? 3 : state === "expired" ? 9 : state === "linked" ? 2 : 1) * 864e5,
+    )
+    const link = state === "linked" ? "https://link.payoneer.com/pay/demo-cer-10096" : null
     out.orders.push({
       id: orderId,
       number,
       publicToken: `demo-${number}`,
-      status: paid ? "paid" : "pending_payment",
+      status: paid ? "paid" : state === "expired" ? "cancelled" : "pending_payment",
       currency: "EUR",
       subtotalMinor: waiting.priceEur,
       shippingMinor: 0,
@@ -403,7 +409,7 @@ export function buildScenario(
       locale: "fr",
       paymentMethod: "payoneer",
       paymentProvider: "payoneer",
-      paymentRef: null,
+      paymentRef: link,
       paidAt,
       createdAt,
     })
@@ -423,8 +429,32 @@ export function buildScenario(
         fromStatus: "pending_payment",
         toStatus: "paid",
         method: "payoneer",
+        reference: "PAYONEER-DEMO-1",
         note: "démo",
         createdAt: paidAt,
+      })
+    }
+    if (link) {
+      out.audit.push({
+        orderId,
+        adminId: null,
+        action: "payment_link_set",
+        fromStatus: "pending_payment",
+        toStatus: "pending_payment",
+        method: "payoneer",
+        reference: "link.payoneer.com/pay/demo-cer-10096",
+        createdAt: new Date(now.getTime() - 864e5),
+      })
+    }
+    if (state === "expired") {
+      out.audit.push({
+        orderId,
+        adminId: null,
+        action: "hold_expired",
+        fromStatus: "pending_payment",
+        toStatus: "cancelled",
+        note: "délai de paiement dépassé (7 j)",
+        createdAt: new Date(now.getTime() - 2 * 864e5),
       })
     }
   }

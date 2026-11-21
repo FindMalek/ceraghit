@@ -5,6 +5,7 @@ import type { Services } from "../context"
 import {
   renderOrderConfirmation,
   renderOrderExpired,
+  renderPaymentLink,
   renderPaymentReceived,
   renderShipped,
   renderStudioNewOrder,
@@ -28,7 +29,12 @@ async function loadMail(services: Services, orderId: string) {
       bank: bankFromProfile(profile),
       contactEmail: profile.email ?? studio ?? "",
       studio,
-      payoneerLink: payoneer.mode === "static" ? payoneer.staticLink : null,
+      payoneerLink:
+        order.paymentMethod === "payoneer"
+          ? payoneer.mode === "static"
+            ? payoneer.staticLink
+            : order.paymentRef
+          : null,
     },
   }
 }
@@ -68,6 +74,23 @@ export async function sendPaymentReceivedEmail(services: Services, orderId: stri
     })
   } catch (error) {
     console.error("[payment received email]", error)
+  }
+}
+
+/** Sends the customer the Payoneer link the owner just set. Returns whether the mail went out; never throws. */
+export async function sendPaymentLinkEmail(services: Services, orderId: string): Promise<boolean> {
+  try {
+    const loaded = await loadMail(services, orderId)
+    if (!loaded?.ctx.payoneerLink) return false
+    return await deliverMail(
+      services,
+      "payment_link",
+      await renderPaymentLink(loaded.order, loaded.ctx, loaded.ctx.payoneerLink),
+      { orderId, inline: true, locale: loaded.order.locale },
+    )
+  } catch (error) {
+    console.error("[payment link email]", error)
+    return false
   }
 }
 

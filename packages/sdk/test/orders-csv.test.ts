@@ -23,7 +23,9 @@ const order = (over: Partial<CsvOrder> = {}): CsvOrder => ({
   subtotalMinor: 80_000,
   shippingMinor: 11_000,
   totalMinor: 91_000,
+  paymentMethod: "online",
   paymentProvider: "konnect",
+  paymentReference: null,
   paymentRef: "ref1",
   ...over,
 })
@@ -32,6 +34,13 @@ test("fields with a separator, quote or line break are quoted and quotes doubled
   expect(csvField("plain")).toBe("plain")
   expect(csvField('a;b "c"')).toBe('"a;b ""c"""')
   expect(csvField("two\nlines")).toBe('"two\nlines"')
+})
+
+test("a text that Excel would run as a formula is neutralised, amounts are not", () => {
+  expect(csvField("=HYPERLINK(1)")).toBe("'=HYPERLINK(1)")
+  expect(csvField("@sum")).toBe("'@sum")
+  expect(csvField("+33 6 00")).toBe("'+33 6 00")
+  expect(csvField("-5.00")).toBe("-5.00")
 })
 
 test("amounts are exact decimals with a dot, per currency", () => {
@@ -53,7 +62,7 @@ test("the orders file has a BOM on request, CRLF lines, studio-time dates and a 
   expect(lines[1]).toContain('"Amel ""Mimi"" Trabelsi; Tunis"')
   expect(lines[1]).toContain("2026-10-02T00:30:00+01:00")
   expect(lines[1]).toContain("0200 x2;80.000;11.000;91.000;TND")
-  expect(lines[3]).toBe("TOTAL;;;;;;;2 commandes;85.000;11.000;96.000;TND;;")
+  expect(lines[3]).toBe("TOTAL;;;;;;;2 commandes;85.000;11.000;96.000;TND;;;")
   expect(buildOrdersCsv([order()], "TND").startsWith("﻿")).toBe(false)
 })
 
@@ -63,6 +72,25 @@ test("customer text that starts like a formula is written as text", () => {
   expect(row).toContain("'=HYPERLINK(1)")
   expect(row).toContain("'+216")
   expect(row).toContain("'@a.b")
+})
+
+test("a Payoneer order shows its method and the reference the owner typed, in euros only", () => {
+  const csv = buildOrdersCsv(
+    [
+      order({
+        currency: "EUR",
+        paymentMethod: "payoneer",
+        paymentProvider: "payoneer",
+        paymentReference: "PAYONEER-REQ-1",
+        paymentRef: null,
+        totalMinor: 3_450,
+        subtotalMinor: 3_450,
+        shippingMinor: 0,
+      }),
+    ],
+    "EUR",
+  )
+  expect(csv.split("\r\n")[1]).toEndWith(";34.50;EUR;Payoneer;payoneer;PAYONEER-REQ-1")
 })
 
 test("an order in the other currency is refused instead of being summed", () => {

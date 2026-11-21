@@ -20,6 +20,7 @@ export const MAIL_KIND: Record<string, string> = {
   order_studio: "Nouvelle commande (atelier)",
   request_studio: "Demande de pièce unique",
   payment_received: "Paiement reçu",
+  payment_link: "Lien de paiement Payoneer",
   order_expired: "Commande annulée (délai dépassé)",
   shipped: "Commande expédiée",
   test: "Test",
@@ -52,7 +53,7 @@ export const PAYMENT_TEXT = {
   online: "Paiement en ligne. ",
   cod: "Paiement en espèces à la livraison. ",
   transfer: "Paiement par virement bancaire. ",
-  payoneer: "Paiement via Payoneer. ",
+  payoneer: "Réglé via Payoneer. ",
 } as const
 
 export const PAYMENT_PROVIDER: Record<string, string> = {

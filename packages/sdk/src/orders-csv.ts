@@ -1,5 +1,12 @@
 import { countryName, MINOR_UNITS } from "./format"
-import type { Currency } from "./schemas"
+import type { Currency, PaymentMethod } from "./schemas"
+
+const METHOD_LABEL: Record<PaymentMethod, string> = {
+  online: "En ligne",
+  cod: "Livraison",
+  transfer: "Virement",
+  payoneer: "Payoneer",
+}
 
 export interface CsvOrder {
   number: string
@@ -15,8 +22,12 @@ export interface CsvOrder {
   subtotalMinor: number
   shippingMinor: number
   totalMinor: number
+  paymentMethod: PaymentMethod
   paymentProvider: string | null
-  paymentRef: string | null
+  /** What the owner typed when he confirmed the payment. */
+  paymentReference: string | null
+  /** Gateway reference of a card order. */
+  paymentRef?: string | null
 }
 
 export interface CsvSalesDay {
@@ -29,13 +40,10 @@ const BOM = "﻿"
 
 /** RFC 4180: quote a field that holds a separator, a quote or a line break, double the quotes inside. */
 export function csvField(value: string | number): string {
-  const text = String(value)
+  // a text starting with = + - @ would run as a formula in Excel; plain negative amounts stay as they are
+  const raw = String(value)
+  const text = /^[=+\-@\t\r]/.test(raw) && !/^-\d+(\.\d+)?$/.test(raw) ? `'${raw}` : raw
   return /[";\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-}
-
-/** Excel and Sheets run a cell that starts with one of these as a formula, so customer text gets a leading apostrophe. */
-export function plainText(value: string): string {
-  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
 }
 
 /** `;` separated (what French Excel opens by default), CRLF lines, optional UTF-8 byte order mark. */
@@ -70,6 +78,7 @@ const ORDER_HEADER = [
   "livraison",
   "total",
   "devise",
+  "moyen_paiement",
   "paiement",
   "reference_paiement",
 ]
@@ -89,17 +98,18 @@ export function buildOrdersCsv(orders: CsvOrder[], currency: Currency, opts: { b
       o.number,
       tunisIso(o.paidAt ?? o.createdAt),
       o.status,
-      plainText(o.customerName),
-      plainText(o.email),
+      o.customerName,
+      o.email,
       countryName(o.country, "fr"),
-      plainText(o.city),
-      plainText(o.items.map((i) => `${i.ref} x${i.quantity}`).join(", ")),
+      o.city,
+      o.items.map((i) => `${i.ref} x${i.quantity}`).join(", "),
       decimalAmount(o.subtotalMinor, currency),
       decimalAmount(o.shippingMinor, currency),
       decimalAmount(o.totalMinor, currency),
       currency,
+      METHOD_LABEL[o.paymentMethod],
       o.paymentProvider ?? "",
-      o.paymentRef ?? "",
+      o.paymentReference ?? o.paymentRef ?? "",
     ])
   }
   rows.push([
@@ -115,6 +125,7 @@ export function buildOrdersCsv(orders: CsvOrder[], currency: Currency, opts: { b
     decimalAmount(shipping, currency),
     decimalAmount(total, currency),
     currency,
+    "",
     "",
     "",
   ])

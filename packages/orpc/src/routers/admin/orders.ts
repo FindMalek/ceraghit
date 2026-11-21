@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { admins, customRequests, orderAudit, orders } from "@workspace/db"
+import { admins, customRequests, type Db, orderAudit, orders } from "@workspace/db"
 import {
   adminOrderSchema,
   type CarrierId,
@@ -20,7 +20,16 @@ import {
 import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
 import { z } from "zod"
 import { tryIssueInvoice } from "../../lib/invoices"
-import { cancelOrder, LAZY_SWEEP_LIMIT, markPaidManually, recordAudit, releaseExpiredHolds } from "../../lib/orders"
+import {
+  cancelOrder,
+  LAZY_SWEEP_LIMIT,
+  markPaidManually,
+  paymentLinkDates,
+  paymentReferences,
+  recordAudit,
+  releaseExpiredHolds,
+  setPaymentLink,
+} from "../../lib/orders"
 import { getPaymentSettings } from "../../lib/settings"
 import { markOrderShipped, toShipping, updateOrderTracking } from "../../lib/shipping-events"
 import { adminProcedure } from "../../procedures"
@@ -31,7 +40,19 @@ type OrderRow = typeof orders.$inferSelect & {
   items: { ref: string; title: string; unitMinor: number; quantity: number }[]
 }
 
-function toAdminOrder(o: OrderRow, holds: HoldSettings, now: Date) {
+interface OrderExtras {
+  references: Map<string, string>
+  linkDates: Map<string, Date>
+}
+
+async function loadExtras(db: Db, rows: { id: string }[]): Promise<OrderExtras> {
+  const ids = rows.map((r) => r.id)
+  const [references, linkDates] = await Promise.all([paymentReferences(db, ids), paymentLinkDates(db, ids)])
+  return { references, linkDates }
+}
+
+function toAdminOrder(o: OrderRow, holds: HoldSettings, now: Date, extras: OrderExtras) {
+  const payoneer = o.paymentMethod === "payoneer"
   const expires = o.status === "pending_payment" ? holdExpiresAt(o, holds) : null
   return {
     holdExpiresAt: expires?.toISOString() ?? null,
@@ -57,7 +78,10 @@ function toAdminOrder(o: OrderRow, holds: HoldSettings, now: Date) {
     note: o.note,
     locale: o.locale,
     paymentProvider: o.paymentProvider,
-    paymentRef: o.paymentRef,
+    paymentRef: payoneer ? null : o.paymentRef,
+    paymentLink: payoneer ? o.paymentRef : null,
+    paymentLinkSetAt: payoneer ? (extras.linkDates.get(o.id)?.toISOString() ?? null) : null,
+    paymentReference: extras.references.get(o.id) ?? null,
     shipping: toShipping(o),
   }
 }
@@ -95,7 +119,8 @@ export const ordersRouter = {
         orderBy: [desc(orders.createdAt)],
         limit: input.limit,
       })
-      return rows.map((row) => toAdminOrder(row, holds, context.now()))
+      const extras = await loadExtras(context.db, rows)
+      return rows.map((row) => toAdminOrder(row, holds, context.now(), extras))
     }),
 
   get: adminProcedure
@@ -105,7 +130,8 @@ export const ordersRouter = {
     .handler(async ({ context, input }) => {
       const order = await context.db.query.orders.findFirst({ where: eq(orders.id, input.id), with: { items: true } })
       if (!order) throw new ORPCError("NOT_FOUND", { message: "Order not found." })
-      return toAdminOrder(order, (await getPaymentSettings(context.db, context.config)).holds, context.now())
+      const { holds } = await getPaymentSettings(context.db, context.config)
+      return toAdminOrder(order, holds, context.now(), await loadExtras(context.db, [order]))
     }),
 
   /** Every paid or shipped order paid in the range, in one currency, oldest first. Not capped: it feeds the accountant's CSV. */
@@ -130,7 +156,8 @@ export const ordersRouter = {
         with: { items: true },
         orderBy: [asc(orders.paidAt)],
       })
-      return rows.map((row) => toAdminOrder(row, holds, context.now()))
+      const extras = await loadExtras(context.db, rows)
+      return rows.map((row) => toAdminOrder(row, holds, context.now(), extras))
     }),
 
   markPaidManually: adminProcedure
@@ -161,6 +188,19 @@ export const ordersRouter = {
         expectedTotalMinor: input.totalMinor,
         expectedCurrency: input.currency,
       }),
+    ),
+
+  setPaymentLink: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/orders/{id}/payment-link",
+      summary: "Set the Payoneer link of a pending order and email it to the customer",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string(), link: z.url().max(500) }))
+    .output(z.object({ ok: z.literal(true), emailed: z.boolean() }))
+    .handler(({ context, input }) =>
+      setPaymentLink(context, { orderId: input.id, adminId: context.admin.id, link: input.link }),
     ),
 
   audit: adminProcedure

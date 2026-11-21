@@ -39,3 +39,9 @@ export function HoldBadge({ order }: { order: { holdExpiresAt: string | null; ho
   if (!order.holdExpiresAt || !order.holdWarning) return null
   return <Tone tone="warn">Expire le {formatDay(order.holdExpiresAt)}</Tone>
 }
+
+/** Payoneer order waiting for the owner to paste the payment link. */
+export function LinkBadge({ order }: { order: { status: string; paymentMethod: string; paymentLink: string | null } }) {
+  if (order.status !== "pending_payment" || order.paymentMethod !== "payoneer" || order.paymentLink) return null
+  return <Tone tone="info">Lien à envoyer</Tone>
+}

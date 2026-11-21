@@ -241,6 +241,20 @@ export function PaymentReceivedEmail({ order, ctx }: { order: ConfirmationOrder;
   )
 }
 
+export function PaymentLinkEmail({ order, ctx, link }: { order: ConfirmationOrder; ctx: MailContext; link: string }) {
+  const c1 = EMAIL_COPY[asLocale(order.locale)]
+  return (
+    <CustomerOrder
+      order={order}
+      ctx={ctx}
+      preview={c1.paymentLink.subject(order.number)}
+      intro={c1.paymentLink.intro}
+      withBank={false}
+      payoneerHref={link}
+    />
+  )
+}
+
 export function ShippedEmail({
   order,
   shipment,
@@ -371,6 +385,8 @@ export const confirmationHtml = (order: ConfirmationOrder, ctx: MailContext) =>
   render(<ConfirmationEmail order={order} ctx={ctx} />)
 export const paymentReceivedHtml = (order: ConfirmationOrder, ctx: MailContext) =>
   render(<PaymentReceivedEmail order={order} ctx={ctx} />)
+export const paymentLinkHtml = (order: ConfirmationOrder, ctx: MailContext, link: string) =>
+  render(<PaymentLinkEmail order={order} ctx={ctx} link={link} />)
 export const shippedHtml = (order: ConfirmationOrder, shipment: MailShipment, ctx: MailContext) =>
   render(<ShippedEmail order={order} shipment={shipment} ctx={ctx} />)
 export const studioOrderHtml = (order: ConfirmationOrder, ctx: MailContext, headline: string, status: string) =>

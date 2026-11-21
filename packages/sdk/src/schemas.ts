@@ -63,10 +63,11 @@ export const DEFAULT_PAYONEER: PayoneerSettings = {
 export const holdSettingsSchema = z.object({
   transferDays: z.number().int().min(1).max(60).nullable().default(7),
   codDays: z.number().int().min(1).max(60).nullable().default(null),
+  payoneerDays: z.number().int().min(1).max(60).nullable().default(7),
   warnDays: z.number().int().min(0).max(14).default(2),
 })
 export type HoldSettings = z.infer<typeof holdSettingsSchema>
-export const DEFAULT_HOLDS: HoldSettings = { transferDays: 7, codDays: null, warnDays: 2 }
+export const DEFAULT_HOLDS: HoldSettings = { transferDays: 7, codDays: null, payoneerDays: 7, warnDays: 2 }
 
 export const paymentSettingsSchema = z.object({
   methods: paymentMethodFlagsSchema.default({ online: false, cod: true, transfer: true, payoneer: false }),
@@ -79,6 +80,7 @@ export type PaymentSettings = z.infer<typeof paymentSettingsSchema>
 export function holdDays(paymentMethod: string, holds: HoldSettings): number | null {
   if (paymentMethod === "transfer") return holds.transferDays
   if (paymentMethod === "cod") return holds.codDays
+  if (paymentMethod === "payoneer") return holds.payoneerDays
   return null
 }
 
@@ -528,7 +530,13 @@ export const adminOrderSchema = orderSchema.extend({
   note: z.string().nullable(),
   locale: z.string(),
   paymentProvider: z.string().nullable(),
+  /** The gateway reference of a card order; null for the other methods. */
   paymentRef: z.string().nullable(),
+  /** Payoneer orders: the link the owner sent, and when. */
+  paymentLink: z.string().nullable(),
+  paymentLinkSetAt: z.string().nullable(),
+  /** Reference typed by the owner when he confirmed a manual payment (latest audit row). */
+  paymentReference: z.string().nullable(),
   shipping: orderShippingSchema.nullable(),
 })
 
@@ -697,6 +705,10 @@ export type EmailDomain = z.infer<typeof emailDomainSchema>
 
 /** What the studio's plan stores: dashboard images and customer photos together. */
 export const STORAGE_QUOTA_BYTES = 2_500_000_000
+/** The meter turns to a warning from this share of the quota. */
+export const STORAGE_WARN_RATIO = 0.8
+export const STORAGE_LEVELS = ["ok", "warn", "full"] as const
+export type StorageLevel = (typeof STORAGE_LEVELS)[number]
 
 /** Long side of a stored picture; the dashboard shrinks to it and the api refuses anything larger. */
 export const MEDIA_MAX_SIDE = 2400
@@ -717,6 +729,9 @@ export const storageUsageSchema = z.object({
   usedBytes: z.number().int(),
   quotaBytes: z.number().int(),
   files: z.number().int(),
+  /** Whole percent of the quota in use, 100 and more once full. */
+  percent: z.number().int(),
+  level: z.enum(STORAGE_LEVELS),
 })
 export const uploadTargetSchema = z.object({ uploadUrl: z.string(), image: z.string(), publicUrl: z.string() })
 
