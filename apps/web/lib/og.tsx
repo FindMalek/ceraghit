@@ -41,6 +41,9 @@ async function loadFonts() {
   ]
 }
 
+const OG_FETCH_TIMEOUT_MS = 4000
+const OG_MAX_BYTES = 8 * 1024 * 1024
+
 /**
  * What goes in the card's <img>. The renderer cannot draw WebP (the whole catalogue is WebP) and refuses localhost, so the
  * photo is fetched here (from disk in development, over https in production), cropped to the frame and re-encoded as JPEG.
@@ -52,9 +55,10 @@ export async function ogPhoto(image: string | undefined): Promise<string | undef
     if (process.env.NODE_ENV !== "production" && image.startsWith("/") && !image.startsWith("/api/")) {
       bytes = await readFile(join(process.cwd(), "public", image))
     } else {
-      const res = await fetch(absoluteImage(image))
-      if (!res.ok) return undefined
+      const res = await fetch(absoluteImage(image), { signal: AbortSignal.timeout(OG_FETCH_TIMEOUT_MS) })
+      if (!res.ok || Number(res.headers.get("content-length") ?? 0) > OG_MAX_BYTES) return undefined
       bytes = Buffer.from(await res.arrayBuffer())
+      if (bytes.length > OG_MAX_BYTES) return undefined
     }
     const jpeg = await sharp(bytes)
       .resize(PHOTO.width * 2, PHOTO.height * 2, { fit: "cover" })
