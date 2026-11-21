@@ -64,6 +64,11 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Some required steps are not complete/, () => "Terminez d'abord les étapes obligatoires."],
   [/^Commande introuvable\.?$/, () => "Commande introuvable."],
   [/^Expédition introuvable\.?$/, () => "Expédition introuvable."],
+  [/^Enlèvement introuvable\.?$/, () => "Enlèvement introuvable."],
+  [
+    /^(Seuls les colis dont|Un de ces colis|Choisissez des colis|La fenêtre d'enlèvement|Ce colis est dans un enlèvement|Le colis est déjà chez Aramex|Cette expédition a été créée|Une création d'expédition|L'enlèvement n|Trop d'actualisations)/,
+    (m) => m.input ?? "",
+  ],
   [
     /^(Une expédition existe déjà|Aramex n'a pas répondu|Ce colis dépasse|Le pays du destinataire|L'étiquette n'a pas pu|Aramex n'est pas configuré|Les envois internationaux|Le paiement à la livraison n'(?:existe|est possible)|Étiquette indisponible|Aramex a refusé|Aramex ne répond pas|Réponse inattendue d'Aramex|Identifiants Aramex refusés|Le transporteur est momentanément|Les informations d'expédition|Cette action n'est pas disponible)/,
     (m) => m.input ?? "",

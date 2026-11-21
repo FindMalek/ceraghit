@@ -28,7 +28,7 @@ import { quoteShipping } from "./shipping/quote"
 /** A pending order holds its stock this long, then the pieces go back on sale. */
 export const HOLD_MINUTES = 45
 
-type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0]
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0]
 type OrderStatus = typeof orders.$inferSelect.status
 
 export interface AuditRow {
