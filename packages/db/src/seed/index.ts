@@ -208,6 +208,10 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
       .insert(settings)
       .values({ key: "payments", value: { methods: { online: true, cod: true, transfer: true, payoneer: true } } })
       .onConflictDoNothing()
+    await tx
+      .insert(settings)
+      .values({ key: "shipping", value: { provider: "manual", quoteFromProvider: false } })
+      .onConflictDoNothing()
     done.demo = true
   })
   return done
