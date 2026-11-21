@@ -6,6 +6,8 @@ import {
   aramexConfigSchema,
   citiesRefreshSchema,
   connectionResultSchema,
+  openShipmentSchema,
+  pickupInputSchema,
   SHIPPING_COUNTRIES,
   saveShippingInputSchema,
   shipmentDraftInputSchema,
@@ -18,6 +20,7 @@ import { z } from "zod"
 import { assertVaultReadable, describeIntegration, getIntegration, saveIntegration } from "../../lib/integrations"
 import { enforceLimit } from "../../lib/rate-limit"
 import { checkAddress, getCities } from "../../lib/shipping/locations"
+import { cancelPickup, cancelShipment, createPickup, listOpenShipments } from "../../lib/shipping/pickups"
 import {
   ARAMEX_MISSING,
   aramexComplete,
@@ -200,6 +203,48 @@ export const shippingRouter = {
     .input(z.object({ id: z.string(), inline: z.boolean().optional() }))
     .output(z.object({ url: z.string() }))
     .handler(async ({ context, input }) => ({ url: await labelDownloadUrl(context, input.id, input.inline) })),
+
+  openShipments: adminProcedure
+    .route({
+      method: "GET",
+      path: "/admin/shipments/open",
+      summary: "Aramex shipments that can be booked in a pickup",
+      tags: TAG,
+    })
+    .input(z.object({}))
+    .output(z.array(openShipmentSchema))
+    .handler(({ context }) => listOpenShipments(context)),
+
+  createPickup: adminProcedure
+    .route({ method: "POST", path: "/admin/pickups", summary: "Book an Aramex pickup at the studio", tags: TAG })
+    .input(pickupInputSchema)
+    .output(z.object({ pickupId: z.string() }))
+    .handler(({ context, input }) => createPickup(context, input)),
+
+  cancelPickup: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/pickups/{pickupId}/cancel",
+      summary: "Cancel an Aramex pickup",
+      tags: TAG,
+    })
+    .input(z.object({ pickupId: z.string(), reason: z.string().trim().min(3).max(200) }))
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      await cancelPickup(context, input.pickupId, input.reason)
+      return { ok: true as const }
+    }),
+
+  cancelShipment: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/cancel",
+      summary: "Cancel a shipment whose label was just created (Aramex hold)",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string(), reason: z.string().trim().min(3).max(200) }))
+    .output(z.object({ held: z.boolean(), message: z.string() }))
+    .handler(({ context, input }) => cancelShipment(context, context.admin.id, input.id, input.reason)),
 
   retryLabel: adminProcedure
     .route({

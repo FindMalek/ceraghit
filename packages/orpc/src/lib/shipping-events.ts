@@ -4,7 +4,7 @@ import { type CarrierId, isHttpsUrl, trackingUrlFor } from "@workspace/sdk"
 import { and, eq, or, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { sendShippedEmail } from "./order-emails"
-import { recordAudit } from "./orders"
+import { recordAudit, type Tx } from "./orders"
 
 export interface ShipInput {
   carrier: CarrierId
@@ -74,6 +74,37 @@ export async function markOrderShipped(
     console.error("[shipped-hook] failed", number)
   }
   return { status: "fulfilled" }
+}
+
+/**
+ * Undoes `markOrderShipped` for a parcel that never left (its Aramex label was cancelled): back to paid, or for a cash
+ * order that only counted as sold when it shipped, back to awaiting payment. The shipped email cannot be recalled.
+ */
+export async function revertOrderShipped(tx: Tx, orderId: string, adminId: string | null): Promise<void> {
+  const [before] = await tx.select().from(orders).where(eq(orders.id, orderId)).for("update")
+  if (!before || before.status !== "fulfilled") return
+  const cash = before.paymentMethod === "cod" && before.paymentProvider === "cod"
+  const status = cash ? ("pending_payment" as const) : ("paid" as const)
+  await tx
+    .update(orders)
+    .set({
+      status,
+      ...(cash ? { paidAt: null } : {}),
+      carrier: null,
+      carrierName: null,
+      trackingNumber: null,
+      trackingUrl: null,
+      shippedAt: null,
+    })
+    .where(eq(orders.id, orderId))
+  await recordAudit(tx, {
+    orderId,
+    adminId,
+    action: "set_status",
+    fromStatus: "fulfilled",
+    toStatus: status,
+    note: "Expédition annulée",
+  })
 }
 
 /** The one place the shipped email plugs in; `hooks` is for tests to observe the call. */

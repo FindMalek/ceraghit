@@ -54,7 +54,7 @@ async function activeShipment(db: Db, orderId: string) {
 }
 
 /** Aramex as configured (complete credentials), with its own timeout. Anything else cannot create a shipment. */
-async function aramexFor(services: Services, timeoutMs: number) {
+export async function aramexFor(services: Services, timeoutMs: number) {
   const mode = await getShippingSettings(services.db)
   const found = mode.provider === "aramex" ? await getIntegration(services, "aramex") : null
   if (!found || !aramexComplete(found)) throw new ORPCError("PRECONDITION_FAILED", { message: NOT_CONFIGURED })
@@ -139,7 +139,7 @@ export async function prepareShipment(services: Services, orderId: string): Prom
   }
 }
 
-async function shipperAddress(services: Services, config: Record<string, unknown>): Promise<ShipAddress> {
+export async function shipperAddress(services: Services, config: Record<string, unknown>): Promise<ShipAddress> {
   const shipper = config.shipper as
     | {
         companyName: string
@@ -397,6 +397,7 @@ export async function getOrderShipment(db: Db, orderId: string): Promise<AdminSh
     insuranceMinor: row.insuranceMinor,
     currency: row.currency,
     hasLabel: row.labelKey !== null,
+    pickupId: row.pickupId,
     errors: row.errors,
     createdAt: row.createdAt.toISOString(),
   }
