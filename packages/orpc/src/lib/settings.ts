@@ -4,6 +4,7 @@ import {
   aiSettingsSchema,
   bankFromProfile,
   DEFAULT_HOLDS,
+  DEFAULT_PAYONEER,
   DEFAULT_SHIPPING_RATES,
   EMPTY_TUTORIAL_LINKS,
   type PaymentMethodFlags,
@@ -58,7 +59,11 @@ export async function getPaymentSettings(db: Db, config: { onlinePayments: boole
   const [row] = await db.select().from(settings).where(eq(settings.key, PAYMENTS_KEY)).limit(1)
   const parsed = paymentSettingsSchema.safeParse(row?.value)
   if (row && parsed.success) return parsed.data
-  return { methods: { online: config.onlinePayments, cod: true, transfer: true }, holds: DEFAULT_HOLDS }
+  return {
+    methods: { online: config.onlinePayments, cod: true, transfer: true, payoneer: false },
+    payoneer: DEFAULT_PAYONEER,
+    holds: DEFAULT_HOLDS,
+  }
 }
 
 export async function savePaymentSettings(db: Db, value: PaymentSettings): Promise<void> {
@@ -78,7 +83,12 @@ export async function effectivePaymentMethods(services: Services): Promise<Payme
   const online = methods.online && (await gatewayReady(services))
   const effective = online
     ? methods
-    : { online, cod: methods.cod || methods.online, transfer: methods.transfer || methods.online }
+    : {
+        online,
+        cod: methods.cod || methods.online,
+        transfer: methods.transfer || methods.online,
+        payoneer: methods.payoneer,
+      }
   if (!effective.transfer) return effective
   const hasBank = bankFromProfile(await getShopProfile(services.db)) !== null
   return { ...effective, transfer: hasBank }

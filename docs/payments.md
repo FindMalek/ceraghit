@@ -81,6 +81,14 @@ once the keys are back (the next webhook or order page visit then settles it), o
 - An env swap from account A to B (no vault row) makes Konnect resolvable again, but B cannot read A's references: those
   orders are cancelled after the hold, and a payment taken on A must be reconciled by hand in Konnect.
 
+### payoneer (manual)
+
+`payoneer` is offered abroad in EUR only, when switched on in `/payments`. No gateway is called and Payoneer never
+reports a status: the order stays `pending_payment` with the order number as the reference, and the owner confirms it with
+`markPaidManually` (method Payoneer, audited). `per_order` mode tells the customer a link arrives by email; `static` mode
+shows one shop link (https, `payoneer.com` hosts only, checked by `isPayoneerUrl`) on the order page and in the mail.
+Unpaid Payoneer orders have no automatic release yet: they hold their pieces until paid or cancelled.
+
 ## payoneer
 
 The client wants to be paid through Payoneer. Payoneer sells two different things, and only one of them fits a small

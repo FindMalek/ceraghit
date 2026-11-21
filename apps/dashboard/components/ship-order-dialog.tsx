@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { CARRIER_IDS, CARRIERS, type CarrierId, trackingUrlFor } from "@workspace/sdk"
+import { CARRIER_IDS, CARRIERS, type CarrierId, type PaymentMethod, trackingUrlFor } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import {
   Dialog,
@@ -40,7 +40,7 @@ export function ShipOrderDialog({
     id: string
     number: string
     customerName: string
-    paymentMethod: "online" | "cod" | "transfer"
+    paymentMethod: PaymentMethod
     status: string
   }
   /** Edit mode: the order already shipped, only the tracking changes. */

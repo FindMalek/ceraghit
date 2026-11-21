@@ -37,6 +37,17 @@ export function totalLines(order: MailOrder, locale: Locale, c: EmailCopy): stri
   ]
 }
 
+export function confirmationIntro(
+  paymentMethod: string | null,
+  ctx: { payoneerLink?: string | null },
+  k: EmailCopy["confirmation"],
+): string {
+  if (paymentMethod === "cod") return k.cod
+  if (paymentMethod === "transfer") return k.transfer
+  if (paymentMethod === "payoneer") return ctx.payoneerLink ? k.payoneerStatic : k.payoneer
+  return k.paid
+}
+
 /** The transfer block: the account from the shop profile, or a contact line while it is missing. */
 export function bankBlock(
   c: EmailCopy,
