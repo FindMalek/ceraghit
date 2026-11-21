@@ -1,6 +1,6 @@
-// `bun test` in apps/api alone needs an already migrated DB: turbo runs it after the orpc tests, which migrate.
-import { afterAll, describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createDb, jobRuns, orderAudit, orders } from "@workspace/db"
+import { runMigrations } from "@workspace/db/migrate"
 import { AdminAuth, ConsoleMailer, DemoProvider, type Services } from "@workspace/orpc"
 import { and, count, eq, lt, sql } from "drizzle-orm"
 import { CRON_JOBS } from "../src/cron"
@@ -12,6 +12,8 @@ const JOB = `test-holds-${Date.now()}`
 
 describe.skipIf(!url)("cron endpoints", () => {
   const db = createDb(url!)
+
+  beforeAll(() => runMigrations(db))
   const make = (cronSecret: string | undefined) =>
     createServer(
       {

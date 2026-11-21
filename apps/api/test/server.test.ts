@@ -97,3 +97,50 @@ test.skipIf(!process.env.DATABASE_URL)("/health shows only the saved provider an
   await db.delete(settings).where(eq(settings.key, "shipping"))
   expect(body.shipping).toBe("aramex:preview")
 })
+
+test("/files redirects a public key but never a private one such as a carrier label", async () => {
+  const services = {
+    db: {},
+    payments: { name: "demo", mode: "test" },
+    storage: {
+      bucket: "b",
+      prefix: "pr-1/",
+      readUrl: async (key: string) => `https://cdn.test/${key}`,
+    },
+    config: {
+      webUrl: "http://localhost:3000",
+      apiPublicUrl: "http://localhost:3001",
+      appEnv: "preview",
+      deployEnv: "local",
+      secureCookies: true,
+      onlinePayments: false,
+    },
+  } as unknown as Services
+  const fetch = createServer(services)
+  const open = await fetch(get("/files/pr-1/media/vase.webp"))
+  expect(open.status).toBe(302)
+  expect(open.headers.get("location")).toBe("https://cdn.test/pr-1/media/vase.webp")
+  for (const key of [
+    "pr-1/requests/0b1f6c7e-4a43-4c1e-9d1e-5d3b7a0a9f11.jpg",
+    "pr-1/products/0b1f6c7e.png",
+    "pr-1/media/vase-a1b2c3.webp",
+  ]) {
+    expect((await fetch(get(`/files/${key}`))).status, key).toBe(302)
+  }
+  for (const path of [
+    "/files/pr-1/private/labels/a.pdf",
+    "/files/pr-1/private/x",
+    `/files/${encodeURIComponent("pr-1/private/labels/a.pdf")}`,
+    `/files/${encodeURIComponent("pr-1/./private/labels/a.pdf")}`,
+    `/files/${encodeURIComponent("pr-1//private/labels/a.pdf")}`,
+    `/files/${encodeURIComponent("pr-1/media/../private/labels/a.pdf")}`,
+    "/files/pr-1/%252e/private/x",
+    "/files/pr-1/%252E%252E/private/x",
+    "/files/pr-1/private%5Clabels%5Cx",
+    "/files/pr-1/priv%09ate/x",
+    "/files/pr-1/priv%0Aate/x",
+    "/files/pr-1/%E0%A4%A",
+  ]) {
+    expect((await fetch(get(path))).status, path).toBe(404)
+  }
+})
