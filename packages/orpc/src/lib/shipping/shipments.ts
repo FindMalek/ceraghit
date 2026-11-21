@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { type Db, orderItems, orders, products, shipments } from "@workspace/db"
+import { type Db, orderItems, orders, products, settings, shipments, uploads } from "@workspace/db"
 import type { AdminShipment, ShipmentDraft, ShipmentDraftInput, ShippingItem } from "@workspace/sdk"
 import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm"
 import type { Services } from "../../context"
@@ -26,6 +26,8 @@ export const COD_TUNISIA_ONLY = "Le paiement à la livraison n'existe qu'en Tuni
 export const INTERNATIONAL_LATER = "Les envois internationaux arrivent avec la déclaration en douane."
 export const NO_ANSWER = (number: string) =>
   `Aramex n'a pas répondu. Vérifiez sur votre espace Aramex avant de réessayer (référence ${number}).`
+export const TOO_BIG = "Ce colis dépasse les limites Aramex (30 kg, 150 cm) : expédiez-le manuellement."
+export const COUNTRY_CHANGED = "Le pays du destinataire ne peut pas différer de celui de la commande."
 export const LABEL_UNAVAILABLE = "Étiquette indisponible."
 const LABEL_FOLDER = "labels"
 const CREATE_TIMEOUT_MS = 20_000
@@ -108,6 +110,8 @@ export async function prepareShipment(services: Services, orderId: string): Prom
   let blocked: string | null = null
   if (!(order.status === "paid" || isCod(order))) blocked = CANNOT_SHIP
   else if (await activeShipment(db, orderId)) blocked = ALREADY_SHIPPED
+  else if (parcel.weightGrams > 30_000 || [parcel.lengthCm, parcel.widthCm, parcel.heightCm].some((d) => d > 150))
+    blocked = TOO_BIG
   else if (order.country !== "TN") blocked = INTERNATIONAL_LATER
   else if (isCod(order) && !cod) blocked = COD_TUNISIA_ONLY
 
@@ -125,7 +129,7 @@ export async function prepareShipment(services: Services, orderId: string): Prom
       ...(order.postalCode ? { postalCode: order.postalCode } : {}),
       country: order.country,
     },
-    parcel: { ...parcel, weightGrams: Math.min(parcel.weightGrams, 30_000) },
+    parcel,
     description,
     fragile,
     codAmountMinor: cod ? order.totalMinor : null,
@@ -179,7 +183,12 @@ async function storeLabel(services: Services, bytes: Uint8Array): Promise<string
   if (!storage) throw new Error("storage is not configured")
   const key = `${storage.prefix}private/labels/${crypto.randomUUID()}.pdf`
   await reserveUpload(services.db, { key, folder: LABEL_FOLDER, contentType: "application/pdf", bytes: bytes.length })
-  await storage.put(key, bytes, "application/pdf")
+  try {
+    await storage.put(key, bytes, "application/pdf")
+  } catch (error) {
+    await services.db.delete(uploads).where(eq(uploads.key, key))
+    throw error
+  }
   return key
 }
 
@@ -199,9 +208,49 @@ export async function createShipment(
   if (cod && !(input.consignee.country === "TN" && order.currency === "TND")) {
     throw new ORPCError("BAD_REQUEST", { message: COD_TUNISIA_ONLY })
   }
+  if (input.consignee.country !== order.country) throw new ORPCError("BAD_REQUEST", { message: COUNTRY_CHANGED })
   if (input.consignee.country !== "TN") throw new ORPCError("BAD_REQUEST", { message: INTERNATIONAL_LATER })
 
   const { provider, environment, config } = await aramexFor(services, CREATE_TIMEOUT_MS)
+  const release = await claimOrder(services, order.id)
+  try {
+    return await createClaimed(services, adminId, input, order, cod, { provider, environment, config })
+  } finally {
+    await release()
+  }
+}
+
+/**
+ * One create at a time per order: the claim row is written before Aramex is called and removed after. A claim older than
+ * the Aramex timeout plus a margin is a crashed request and is taken over.
+ */
+async function claimOrder(services: Services, orderId: string): Promise<() => Promise<void>> {
+  const key = `shipment-claim:${orderId}`
+  const now = services.now()
+  const stale = new Date(now.getTime() - 2 * CREATE_TIMEOUT_MS).toISOString()
+  await services.db.delete(settings).where(and(eq(settings.key, key), sql`${settings.value}->>'at' < ${stale}`))
+  const claimed = await services.db
+    .insert(settings)
+    .values({ key, value: { at: now.toISOString() } })
+    .onConflictDoNothing()
+    .returning({ key: settings.key })
+  if (claimed.length === 0) throw new ORPCError("CONFLICT", { message: ALREADY_SHIPPED })
+  return async () => {
+    await services.db.delete(settings).where(eq(settings.key, key))
+  }
+}
+
+async function createClaimed(
+  services: Services,
+  adminId: string,
+  input: ShipmentDraftInput,
+  order: typeof orders.$inferSelect,
+  cod: boolean,
+  { provider, environment, config }: Awaited<ReturnType<typeof aramexFor>>,
+): Promise<{ shipmentId: string; waybill: string }> {
+  const { db } = services
+  // Re-checked under the claim: a create that finished while this one waited has already shipped the order.
+  if (await activeShipment(db, order.id)) throw new ORPCError("CONFLICT", { message: ALREADY_SHIPPED })
   const from = await shipperAddress(services, config)
   const to: ShipAddress = {
     name: input.consignee.name,

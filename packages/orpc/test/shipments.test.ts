@@ -85,7 +85,7 @@ describe.skipIf(!url)("aramex shipments", () => {
         createContext(base, new Headers({ cookie: `ceraghit_admin=${token}`, "x-csrf-token": "orpc" })),
     })
 
-  const order = async (over: Partial<typeof orders.$inferInsert> = {}) => {
+  const order = async (over: Partial<typeof orders.$inferInsert> = {}, quantity = 1) => {
     const [row] = await db
       .insert(orders)
       .values({
@@ -106,9 +106,7 @@ describe.skipIf(!url)("aramex shipments", () => {
         ...over,
       })
       .returning({ id: orders.id })
-    await db
-      .insert(orderItems)
-      .values({ orderId: row!.id, ref: "VASE-1", title: "Vase", unitMinor: 80_000, quantity: 1 })
+    await db.insert(orderItems).values({ orderId: row!.id, ref: "VASE-1", title: "Vase", unitMinor: 80_000, quantity })
     return row!.id
   }
   const draftFor = async (orderId: string) => {
@@ -179,6 +177,36 @@ describe.skipIf(!url)("aramex shipments", () => {
     expect(await db.select().from(shipments).where(eq(shipments.orderId, id))).toHaveLength(1)
   })
 
+  test("two creates at once for the same order make one shipment", async () => {
+    const id = await order()
+    const input = await draftFor(id)
+    sent.length = 0
+    const results = await Promise.allSettled([
+      owner().shipping.createShipment(input),
+      owner().shipping.createShipment(input),
+    ])
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1)
+    expect(sent.filter((c) => c.url.endsWith("/CreateShipments"))).toHaveLength(1)
+    expect(await db.select().from(shipments).where(eq(shipments.orderId, id))).toHaveLength(1)
+  })
+
+  test("a consignee country that differs from the order is refused before Aramex", async () => {
+    const id = await order()
+    const input = await draftFor(id)
+    sent.length = 0
+    await expect(
+      owner().shipping.createShipment({ ...input, consignee: { ...input.consignee, country: "FR" } }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+    expect(sent).toHaveLength(0)
+  })
+
+  test("a parcel over the carrier limits gives a blocked draft, not a capped one", async () => {
+    const id = await order({}, 40)
+    const draft = await owner().shipping.draft({ orderId: id })
+    expect(draft.parcel.weightGrams).toBeGreaterThan(30_000)
+    expect(draft.blocked).toContain("30 kg")
+  })
+
   test("cash on delivery in Tunisia asks Aramex to collect the total in dinars and counts the sale", async () => {
     const id = await order({ status: "pending_payment", paymentMethod: "cod" })
     sent.length = 0
@@ -217,9 +245,11 @@ describe.skipIf(!url)("aramex shipments", () => {
 
   test("a label that cannot be stored keeps the shipment and can be fetched again", async () => {
     const id = await order()
+    const reservedBefore = (await db.select().from(uploads).where(like(uploads.key, "pr-7/private/%"))).length
     failPut = true
     const { shipmentId } = await owner().shipping.createShipment(await draftFor(id))
     failPut = false
+    expect(await db.select().from(uploads).where(like(uploads.key, "pr-7/private/%"))).toHaveLength(reservedBefore)
     const view = await owner().shipping.shipmentOf({ orderId: id })
     expect(view).toMatchObject({ hasLabel: false, errors: [{ code: "LABEL" }] })
     await expect(owner().shipping.labelUrl({ id: shipmentId })).rejects.toMatchObject({ code: "NOT_FOUND" })

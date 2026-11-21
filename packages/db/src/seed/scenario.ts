@@ -486,7 +486,12 @@ function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
       const at = (o.shippedAt as Date | null | undefined) ?? now
       const events = DEMO_FLOW.slice(0, DEMO_FLOW.indexOf(status) + 1).map((code, step) => ({
         code: code.toUpperCase(),
-        description: { created: "Envoi créé", in_transit: "En transit", out_for_delivery: "En cours de livraison", delivered: "Livré" }[code],
+        description: {
+          created: "Envoi créé",
+          in_transit: "En transit",
+          out_for_delivery: "En cours de livraison",
+          delivered: "Livré",
+        }[code],
         at: new Date(at.getTime() + step * 18 * 3600e3).toISOString(),
         location: "Tunis",
         comment: "démo",

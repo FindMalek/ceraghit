@@ -52,7 +52,14 @@ export const shipmentDraftSchema = z.object({
   currency: currencySchema,
   environment: shipmentEnvironmentSchema,
   consignee: shipmentConsigneeSchema,
-  parcel: shipmentParcelSchema,
+  /** As computed from the cart: it may exceed the carrier limits, then `blocked` says so. */
+  parcel: z.object({
+    weightGrams: z.number().int().min(1),
+    lengthCm: z.number().int().min(1),
+    widthCm: z.number().int().min(1),
+    heightCm: z.number().int().min(1),
+    pieces: z.number().int().min(1),
+  }),
   description: z.string(),
   fragile: z.boolean(),
   /** What Aramex collects on delivery, in the order currency (TND only). Null when the order is not cash on delivery. */
