@@ -46,6 +46,12 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
     () => "Une commande non payée ne peut pas être remboursée, annulez-la plutôt.",
   ],
   [/^This order cannot be marked paid/, () => "Cette commande ne peut pas être marquée payée."],
+  [/^Use a link from payoneer\.com/, () => "Utilisez un lien de payoneer.com."],
+  [
+    /^A payment link can only be set on a pending Payoneer order/,
+    () => "Un lien de paiement ne peut être ajouté qu'à une commande Payoneer en attente de paiement.",
+  ],
+  [/^This link is already used on another order/, () => "Ce lien est déjà utilisé sur une autre commande."],
   [/^Card payments are confirmed by the gateway only/, () => "Un paiement par carte est confirmé automatiquement."],
   [/^The amount changed, reload the order/, () => "Le montant a changé, rechargez la commande."],
   [/^The storage space is full/, () => "L'espace de stockage (2,5 Go) est plein. Supprimez des photos inutilisées."],
