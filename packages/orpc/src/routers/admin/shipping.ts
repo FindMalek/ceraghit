@@ -101,18 +101,38 @@ export const shippingRouter = {
       summary: "Ask Aramex whether an order's address is recognised",
       tags: TAG,
     })
-    .input(z.object({ orderId: z.string() }))
+    .input(
+      z.object({
+        orderId: z.string(),
+        /** The address as edited in the shipment dialog, when it differs from the order's. */
+        address: z
+          .object({
+            line1: z.string().trim().min(3).max(100),
+            city: z.string().trim().min(2).max(60),
+            postalCode: z.string().trim().max(10).optional(),
+          })
+          .optional(),
+      }),
+    )
     .output(addressCheckSchema)
     .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "addressCheck",
+        "too_many_requests",
+        "Trop d'essais, réessayez dans quelques minutes.",
+      )
       const [order] = await context.db.select().from(orders).where(eq(orders.id, input.orderId)).limit(1)
       if (!order) throw new ORPCError("NOT_FOUND", { message: "Commande introuvable." })
       const result = await checkAddress(context, {
         name: order.customerName,
         phone: order.phone,
-        line1: order.address,
-        city: order.city,
+        line1: input.address?.line1 ?? order.address,
+        city: input.address?.city ?? order.city,
         country: order.country,
-        ...(order.postalCode ? { postalCode: order.postalCode } : {}),
+        ...((input.address ? input.address.postalCode : order.postalCode)
+          ? { postalCode: (input.address ? input.address.postalCode : order.postalCode) as string }
+          : {}),
       })
       return {
         ok: result.ok,

@@ -41,9 +41,11 @@ describe.skipIf(!url)("aramex city list and address checks", () => {
   const db = createDb(url!)
   const fake = createFakeAramexFetch()
   const calls: string[] = []
+  const validated: { Line1?: string; City?: string; PostCode?: string }[] = []
   let down = false
   const http = (async (input: RequestInfo | URL, init?: RequestInit) => {
     calls.push(String(input))
+    if (String(input).endsWith("/ValidateAddress")) validated.push(JSON.parse(String(init?.body ?? "{}")).Address)
     if (down) throw new Error("network down")
     return fake(input, init)
   }) as typeof fetch
@@ -264,6 +266,39 @@ describe.skipIf(!url)("aramex city list and address checks", () => {
       ok: false,
       suggestions: [{ line1: "Avenue Habib Bourguiba", city: "Tunis", postalCode: "1000" }],
     })
+  })
+
+  test("an edited address is what Aramex is asked about, and a cleared postcode does not fall back to the order's", async () => {
+    await clear()
+    const [row] = await db
+      .insert(orders)
+      .values({
+        number: `LOC3-${Date.now().toString(36)}`,
+        publicToken: "t",
+        status: "paid",
+        paymentMethod: "transfer",
+        currency: "TND",
+        subtotalMinor: 1000,
+        totalMinor: 1000,
+        customerName: "Locations Buyer",
+        email: "locations-edit@example.test",
+        phone: "+21620000000",
+        country: "TN",
+        city: "Sousse",
+        address: "1 rue de l'ordre",
+        postalCode: "4000",
+        locale: "fr",
+      })
+      .returning({ id: orders.id })
+    validated.length = 0
+    await owner().shipping.checkAddress({
+      orderId: row!.id,
+      address: { line1: "12 rue modifiée", city: "Tunis" },
+    })
+    expect(validated.at(-1)).toMatchObject({ Line1: "12 rue modifiée", City: "Tunis" })
+    expect(validated.at(-1)?.PostCode ?? "").toBe("")
+    await owner().shipping.checkAddress({ orderId: row!.id })
+    expect(validated.at(-1)).toMatchObject({ Line1: "1 rue de l'ordre", City: "Sousse", PostCode: "4000" })
   })
 
   test("the public city search is rate limited", async () => {
