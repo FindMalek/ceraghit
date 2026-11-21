@@ -1,4 +1,4 @@
-import { type Media, SITE_SLOTS, type SiteSlot } from "@workspace/sdk"
+import { imageSrc, type Media, SITE_SLOTS, type SiteSlot } from "@workspace/sdk"
 
 export interface SlotItem {
   mediaId: string
@@ -37,6 +37,12 @@ export function slotError(slot: SiteSlot, items: SlotItem[]): string | null {
       ? "Gardez au moins une photo visible dans le diaporama."
       : "Gardez au moins une photo visible."
   return null
+}
+
+/** The sidebar logo: the slot's picture (uploaded or bundled), nothing for the dashboard's own default `/logo.webp`. */
+export function sidebarLogoSrc(image: string | undefined, webUrl: string): string | undefined {
+  if (!image || image === "/logo.webp") return undefined
+  return imageSrc(image, webUrl)
 }
 
 /** True when the picture's shape differs from the slot's by more than a quarter, so the site crops it. */

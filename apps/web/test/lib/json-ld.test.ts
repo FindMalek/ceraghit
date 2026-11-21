@@ -106,6 +106,13 @@ test("the organization carries the owner's address, and no address key without o
   expect("address" in bare).toBe(false)
 })
 
+test("the organization logo follows the logo slot and defaults to the bundled one", () => {
+  expect(organizationJsonLd(settings, "/api/files/logo-new.webp")).toMatchObject({
+    logo: expect.stringMatching(/\/api\/files\/logo-new\.webp$/),
+  })
+  expect(organizationJsonLd(settings)).toMatchObject({ logo: expect.stringMatching(/\/logo\.webp$/) })
+})
+
 test("the legal notice lists only what the owner filled in", () => {
   expect(publisherLines(settings.profile).map((l) => l.key)).toEqual(["company", "form", "address", "taxId"])
   const sparse = publisherLines({
