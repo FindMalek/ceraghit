@@ -330,9 +330,9 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     }
     const before = sent.cancelled.length
     try {
-      await expect(createPickup(services, { ...window, shipmentIds: [ids.T!.shipment] }, carrier)).rejects.toMatchObject(
-        { message: "L'enlèvement n'a pas pu être enregistré, réessayez." },
-      )
+      await expect(
+        createPickup(services, { ...window, shipmentIds: [ids.T!.shipment] }, carrier),
+      ).rejects.toMatchObject({ message: "L'enlèvement n'a pas pu être enregistré, réessayez." })
     } finally {
       duringCreate = null
     }
@@ -344,7 +344,10 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     const stale = `reserve:${services.now().getTime() - 10 * 60_000}:${crypto.randomUUID()}`
     const fresh = `reserve:${services.now().getTime() - 1_000}:${crypto.randomUUID()}`
     await db.update(shipments).set({ pickupGuid: stale }).where(eq(shipments.id, ids.Q!.shipment))
-    await db.update(shipments).set({ pickupGuid: `reserve:${crypto.randomUUID()}` }).where(eq(shipments.id, ids.S!.shipment))
+    await db
+      .update(shipments)
+      .set({ pickupGuid: `reserve:${crypto.randomUUID()}` })
+      .where(eq(shipments.id, ids.S!.shipment))
     await db.update(shipments).set({ pickupGuid: fresh }).where(eq(shipments.id, ids.N!.shipment))
     await listOpenShipments(services)
     expect((await shipment("Q")).pickupGuid).toBeNull()
