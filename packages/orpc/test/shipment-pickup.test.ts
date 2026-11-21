@@ -6,7 +6,7 @@ import type { Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
-import { cancelPickup, cancelShipment, createPickup, PICKUP_LOST } from "../src/lib/shipping/pickups"
+import { cancelPickup, cancelShipment, createPickup, listOpenShipments, PICKUP_LOST } from "../src/lib/shipping/pickups"
 import { claimOrder } from "../src/lib/shipping/shipments"
 import type { PickupRequest, ShippingProvider } from "../src/lib/shipping/types"
 
@@ -41,11 +41,13 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
   let duringHold: (() => Promise<void>) | null = null
   let duringCancelPickup: (() => Promise<void>) | null = null
   let cancelPickupFails = false
+  let duringCreate: (() => Promise<void>) | null = null
   const carrier = {
     id: "aramex",
     validatePickup: async () => ({ valid: true, message: null }),
     createPickup: async (req: PickupRequest) => {
       sent.pickups.push(req)
+      await duringCreate?.()
       return { id: "5551", guid: "guid-5551" }
     },
     cancelPickup: async (guid: string) => {
@@ -129,7 +131,7 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     await mk("D", {}, "in_transit")
     await mk("E", {}, "created")
     await mk("G", {}, "created")
-    for (const key of ["H", "I", "J", "K", "L", "M", "N", "P"]) await mk(key, {}, "created")
+    for (const key of ["H", "I", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T"]) await mk(key, {}, "created")
   })
   afterAll(async () => {
     await db.delete(shipments).where(like(shipments.waybill, `${tag}-%`))
@@ -280,24 +282,27 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
   })
 
   describe("when the booking cannot be saved", () => {
-    let calls = 0
+    // Fails the update that records the pickup ids, whatever its position among the other updates
     const flaky = new Proxy(db, {
       get(target, prop, receiver) {
-        if (prop === "update") {
-          return (...args: Parameters<typeof db.update>) => {
-            calls++
-            // 1 clears stale reservations, 2 reserves, 3 saves the ids: this one fails
-            if (calls === 3) throw new Error("db down")
-            return target.update(...args)
-          }
+        if (prop !== "update") return Reflect.get(target, prop, receiver)
+        return (...args: Parameters<typeof db.update>) => {
+          const builder = target.update(...args)
+          return new Proxy(builder, {
+            get(b, key, r) {
+              if (key !== "set") return Reflect.get(b, key, r)
+              return (values: Record<string, unknown>) => {
+                if (values.pickupId) throw new Error("db down")
+                return b.set(values as never)
+              }
+            },
+          })
         }
-        return Reflect.get(target, prop, receiver)
       },
     })
     const flakyServices = { ...services, db: flaky } as Services
 
     test("the pickup is cancelled at Aramex and the parcel is free again", async () => {
-      calls = 0
       const before = sent.cancelled.length
       await expect(
         createPickup(flakyServices, { ...window, shipmentIds: [ids.K!.shipment] }, carrier),
@@ -307,7 +312,6 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     })
 
     test("when Aramex cannot cancel it either, the owner gets its reference", async () => {
-      calls = 0
       cancelPickupFails = true
       try {
         await expect(
@@ -318,6 +322,41 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
       }
       expect(await shipment("L")).toMatchObject({ pickupId: null, pickupGuid: null })
     })
+  })
+
+  test("a booking whose reservation vanished before it was saved is undone at Aramex", async () => {
+    duringCreate = async () => {
+      await db.update(shipments).set({ pickupGuid: null }).where(eq(shipments.id, ids.T!.shipment))
+    }
+    const before = sent.cancelled.length
+    try {
+      await expect(createPickup(services, { ...window, shipmentIds: [ids.T!.shipment] }, carrier)).rejects.toMatchObject(
+        { message: "L'enlèvement n'a pas pu être enregistré, réessayez." },
+      )
+    } finally {
+      duringCreate = null
+    }
+    expect(sent.cancelled.slice(before)).toEqual(["guid-5551"])
+    expect(await shipment("T")).toMatchObject({ pickupId: null, pickupGuid: null })
+  })
+
+  test("listing the open parcels frees stale and timestamp-less reservations, not a fresh one", async () => {
+    const stale = `reserve:${services.now().getTime() - 10 * 60_000}:${crypto.randomUUID()}`
+    const fresh = `reserve:${services.now().getTime() - 1_000}:${crypto.randomUUID()}`
+    await db.update(shipments).set({ pickupGuid: stale }).where(eq(shipments.id, ids.Q!.shipment))
+    await db.update(shipments).set({ pickupGuid: `reserve:${crypto.randomUUID()}` }).where(eq(shipments.id, ids.S!.shipment))
+    await db.update(shipments).set({ pickupGuid: fresh }).where(eq(shipments.id, ids.N!.shipment))
+    await listOpenShipments(services)
+    expect((await shipment("Q")).pickupGuid).toBeNull()
+    expect((await shipment("S")).pickupGuid).toBeNull()
+    expect((await shipment("N")).pickupGuid).toBe(fresh)
+  })
+
+  test("a stale reservation does not stop the parcel from being cancelled", async () => {
+    const stale = `reserve:${services.now().getTime() - 10 * 60_000}:${crypto.randomUUID()}`
+    await db.update(shipments).set({ pickupGuid: stale }).where(eq(shipments.id, ids.R!.shipment))
+    await cancelShipment(services, null, ids.R!.shipment, "doublon", carrier)
+    expect((await shipment("R")).status).toBe("cancelled")
   })
 
   test("a reservation left by a crash is cleared, a fresh one still blocks the parcel", async () => {

@@ -162,10 +162,13 @@ export async function createPickup(
     owner(error)
   }
   try {
-    await db
+    const saved = await db
       .update(shipments)
       .set({ pickupId: created.id, pickupGuid: created.guid })
       .where(and(inArray(shipments.id, ids), eq(shipments.pickupGuid, token)))
+      .returning({ id: shipments.id })
+    // A reservation cleared as stale in the meantime: the booking is not recorded, so undo it like a failed save.
+    if (saved.length !== ids.length) throw new Error("reservation lost")
   } catch {
     // The pickup exists at Aramex: undo it there, and if that fails too tell the owner how to find it.
     const undone = await provider.cancelPickup(created.guid, "Enregistrement impossible").then(
@@ -246,7 +249,9 @@ export async function cancelShipment(
       await provider.cancel(fresh.waybill, `Annulée par l'expéditeur: ${reason}`)
       held = true
       message = "Expédition annulée et mise en attente chez Aramex. Si le colis est déjà parti, appelez votre agence."
-    } catch {
+    } catch (error) {
+      // Another Aramex environment than the parcel's: nothing is held or cancelled, like booking or cancelling a pickup.
+      if (error instanceof ORPCError && error.message === ENV_MISMATCH) throw error
       failure = { at: now().toISOString(), code: "HOLD", message: HOLD_FAILED }
       message = HOLD_FAILED
     }

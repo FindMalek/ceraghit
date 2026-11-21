@@ -119,13 +119,10 @@ describe.skipIf(!url)("a shipment is only handled in the Aramex environment it w
     expect(await row(id)).toMatchObject({ pickupId: "8001", pickupGuid: "guid-8001" })
   })
 
-  test("a parcel of another environment is cancelled locally without any hold, and the owner is told to call", async () => {
+  test("a parcel of another environment is not cancelled and keeps its status", async () => {
     const id = await make("B")
-    const res = await cancelShipment(base, null, id, "test")
-    expect(res.held).toBe(false)
-    const after = await row(id)
-    expect(after.status).toBe("cancelled")
-    expect(after.errors.at(-1)?.code).toBe("HOLD")
+    await expect(cancelShipment(base, null, id, "test")).rejects.toThrow("autre environnement Aramex")
+    expect(await row(id)).toMatchObject({ status: "created", errors: [] })
   })
 
   test("booking a pickup for a parcel of another environment is refused and the parcel is released", async () => {
