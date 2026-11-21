@@ -25,22 +25,86 @@ const longest = (list: ApiProduct[], locale: AppLocale): ApiProduct =>
     (a, b) => (b.title[locale] ?? b.title.fr ?? "").length - (a.title[locale] ?? a.title.fr ?? "").length,
   )[0]!
 
-test("storefront pages fit the screen in this language and on this device", async ({
-  page,
-  request,
-  appLocale,
-  step,
-}) => {
-  const list = await products(request)
-  const withVariants = list.find((p) => p.variants.length > 0)
-  const open = async (path: string) => {
-    await page.goto(`${E2E.webUrl}${localePath(appLocale, path)}`)
-    await page.waitForLoadState("networkidle")
-  }
-  const check = async (name: string, path: string, prepare?: () => Promise<void>) => {
+type Ctx = { list: ApiProduct[]; locale: AppLocale }
+type Page = import("@playwright/test").Page
+type Api = import("@playwright/test").APIRequestContext
+type Prepare = (page: Page, ctx: Ctx, request: Api) => Promise<string>
+
+const plainPieces = (list: ApiProduct[], locale: AppLocale) =>
+  list
+    .filter((p) => !p.unique && !p.quoteOnly && p.variants.length === 0)
+    .sort((a, b) => (b.title[locale] ?? "").length - (a.title[locale] ?? "").length)
+
+/** One test per page: a slow page only spends its own budget. Each prepares the page and returns its path. */
+const CASES: { name: string; prepare: Prepare }[] = [
+  { name: "home", prepare: async () => "/" },
+  { name: "shop", prepare: async () => "/shop" },
+  { name: "a category", prepare: async () => "/shop/curda-seca" },
+  {
+    name: "the piece with the longest title",
+    prepare: async (_p, { list, locale }) => `/product/${longest(list, locale).slug}`,
+  },
+  {
+    name: "a piece with variants",
+    prepare: async (_p, { list }) => `/product/${list.find((p) => p.variants.length > 0)?.slug ?? list[0]!.slug}`,
+  },
+  { name: "custom request, empty", prepare: async () => "/custom" },
+  {
+    name: "custom request, with errors",
+    prepare: async (page, { locale }) => {
+      await page.goto(`${E2E.webUrl}${localePath(locale, "/custom")}`)
+      await page.getByRole("button", { name: t(locale, "custom.submit") }).click()
+      return "/custom"
+    },
+  },
+  { name: "atelier", prepare: async () => "/atelier" },
+  ...LEGAL_DOCS.map((doc) => ({ name: `legal ${doc}`, prepare: async () => `/legal/${doc}` })),
+  { name: "not found", prepare: async () => "/no-such-page" },
+  {
+    name: "the cart with three lines",
+    prepare: async (page, { list, locale }) => {
+      for (const piece of plainPieces(list, locale).slice(0, 3)) {
+        await page.goto(`${E2E.webUrl}${localePath(locale, `/product/${piece.slug}`)}`)
+        await page.getByRole("button", { name: t(locale, "product.add") }).click()
+      }
+      await page.goto(`${E2E.webUrl}${localePath(locale, "/cart")}`)
+      return "/cart"
+    },
+  },
+  {
+    name: "the checkout with errors shown",
+    prepare: async (page, { list, locale }) => {
+      await page.goto(`${E2E.webUrl}${localePath(locale, `/product/${plainPieces(list, locale)[0]!.slug}`)}`)
+      await page.getByRole("button", { name: t(locale, "product.add") }).click()
+      await page.goto(`${E2E.webUrl}${localePath(locale, "/checkout")}`)
+      await page
+        .getByRole("button", {
+          name: new RegExp(`^${t(locale, "checkout.placeOrder")}|^${t(locale, "checkout.pay").split("{")[0]}`),
+        })
+        .click()
+      return "/checkout"
+    },
+  },
+  {
+    name: "a transfer order page with the bank details",
+    prepare: async (page, { locale }, request) => {
+      const order = await createOrderViaApi(request, { method: "transfer", country: "FR", locale })
+      await page.goto(`${E2E.webUrl}${localePath(locale, `/order/${order.number}`)}?t=${order.token}`)
+      await expect(page.locator("dt", { hasText: t(locale, "order.iban") })).toBeVisible()
+      return `/order/${order.number}`
+    },
+  },
+]
+
+for (const { name, prepare } of CASES) {
+  test(`storefront fits the screen: ${name}`, async ({ page, request, appLocale, step }) => {
+    test.setTimeout(90_000)
     await step(name, async () => {
-      await open(path)
-      await prepare?.()
+      const list = await products(request)
+      const path = await prepare(page, { list, locale: appLocale }, request)
+      // Pages that were opened by prepare (forms, cart) are already on screen; plain ones are opened here.
+      if (page.url() === "about:blank") await page.goto(`${E2E.webUrl}${localePath(appLocale, path)}`)
+      await page.waitForLoadState("networkidle")
       expect(await layoutProblems(page), `${path} in ${appLocale}`).toEqual([])
       if (appLocale === "ar") {
         await expect(page.locator("html")).toHaveAttribute("dir", "rtl")
@@ -49,52 +113,8 @@ test("storefront pages fit the screen in this language and on this device", asyn
         expect(logo ? logo.x + logo.width / 2 : 0, "the logo sits on the right in RTL").toBeGreaterThan(width / 2)
       }
     })
-  }
-
-  await check("home", "/")
-  await check("shop", "/shop")
-  await check("a category", "/shop/curda-seca")
-  await check("the piece with the longest title", `/product/${longest(list, appLocale).slug}`)
-  if (withVariants) await check("a piece with variants", `/product/${withVariants.slug}`)
-  await check("custom request, empty", "/custom")
-  await check("custom request, with errors", "/custom", async () => {
-    await page.getByRole("button", { name: t(appLocale, "custom.submit") }).click()
   })
-  await check("atelier", "/atelier")
-  for (const doc of LEGAL_DOCS) await check(`legal ${doc}`, `/legal/${doc}`)
-  await check("not found", "/no-such-page")
-
-  await step("the cart with three lines", async () => {
-    const plain = list.filter((p) => !p.unique && !p.quoteOnly && p.variants.length === 0)
-    const three = [...plain]
-      .sort((a, b) => (b.title[appLocale] ?? "").length - (a.title[appLocale] ?? "").length)
-      .slice(0, 3)
-    for (const piece of three) {
-      await open(`/product/${piece.slug}`)
-      await page.getByRole("button", { name: t(appLocale, "product.add") }).click()
-    }
-    await open("/cart")
-    expect(await layoutProblems(page), `cart in ${appLocale}`).toEqual([])
-  })
-
-  await step("the checkout with errors shown", async () => {
-    await open("/checkout")
-    await page
-      .getByRole("button", {
-        name: new RegExp(`^${t(appLocale, "checkout.placeOrder")}|^${t(appLocale, "checkout.pay").split("{")[0]}`),
-      })
-      .click()
-    expect(await layoutProblems(page), `checkout in ${appLocale}`).toEqual([])
-  })
-
-  await step("a transfer order page with the bank details", async () => {
-    const order = await createOrderViaApi(request, { method: "transfer", country: "FR", locale: appLocale })
-    await page.goto(`${E2E.webUrl}${localePath(appLocale, `/order/${order.number}`)}?t=${order.token}`)
-    await page.waitForLoadState("networkidle")
-    await expect(page.locator("dt", { hasText: t(appLocale, "order.iban") })).toBeVisible()
-    expect(await layoutProblems(page), `order page in ${appLocale}`).toEqual([])
-  })
-})
+}
 
 test("the detector sees a box that sticks out and text cut by its box", { tag: ["@fr", "@desktop"] }, async ({
   page,
