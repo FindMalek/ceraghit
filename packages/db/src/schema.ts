@@ -271,6 +271,78 @@ export const integrationCredentials = pgTable("integration_credentials", {
   updatedBy: uuid("updated_by").references(() => admins.id, { onDelete: "set null" }),
 })
 
+export const shipmentStatus = pgEnum("shipment_status", [
+  "created",
+  "picked_up",
+  "in_transit",
+  "out_for_delivery",
+  "delivered",
+  "exception",
+  "returned",
+  "on_hold",
+  "cancelled",
+])
+
+/** One carrier tracking event, as the shipping provider reports it. */
+export interface ShipmentEvent {
+  code: string
+  description: string
+  /** ISO */
+  at: string
+  location: string
+  comment: string
+  problemCode: string | null
+}
+
+/**
+ * A parcel handed to a carrier (Aramex) for an order. The label is a private object in the bucket (`labelKey`), read
+ * only through a short-lived signed link. An order has at most one shipment that is not cancelled.
+ */
+export const shipments = pgTable(
+  "shipments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "restrict" }),
+    /** "aramex" */
+    provider: text("provider").notNull(),
+    /** "test" | "live" | "fake" */
+    environment: text("environment").notNull(),
+    waybill: text("waybill").notNull(),
+    /** "DOM" | "EXP" */
+    productGroup: text("product_group").notNull(),
+    productType: text("product_type").notNull(),
+    status: shipmentStatus("status").notNull().default("created"),
+    /** TND millimes collected on delivery, null when the order is not cash on delivery. */
+    codAmountMinor: integer("cod_amount_minor"),
+    insuranceMinor: integer("insurance_minor"),
+    /** The order's currency, a snapshot. */
+    currency: currency("currency").notNull(),
+    weightGrams: integer("weight_grams").notNull(),
+    pieces: integer("pieces").notNull().default(1),
+    /** Bucket key of the label PDF, under `private/labels/`: read only through a signed link, `/files` refuses it. */
+    labelKey: text("label_key"),
+    /** The carrier's own label link, it may expire. */
+    labelUrl: text("label_url"),
+    commercialInvoiceKey: text("commercial_invoice_key"),
+    pickupId: text("pickup_id"),
+    pickupGuid: text("pickup_guid"),
+    lastEvent: jsonb("last_event").$type<ShipmentEvent | null>(),
+    events: jsonb("events").$type<ShipmentEvent[]>().notNull().default([]),
+    errors: jsonb("errors").$type<{ at: string; code: string; message: string }[]>().notNull().default([]),
+    lastPolledAt: timestamp("last_polled_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("shipments_waybill_idx").on(t.provider, t.waybill),
+    index("shipments_order_idx").on(t.orderId),
+    index("shipments_status_idx").on(t.status),
+    uniqueIndex("shipments_active_order_idx").on(t.orderId).where(sql`${t.status} <> 'cancelled'`),
+  ],
+)
+
 /** Who moved an order to which status, and why. Written for every admin status change. */
 export const orderAudit = pgTable(
   "order_audit",
@@ -502,7 +574,14 @@ export const productImagesRelations = relations(productImages, ({ one }) => ({
   product: one(products, { fields: [productImages.productId], references: [products.id] }),
   media: one(media, { fields: [productImages.mediaId], references: [media.id] }),
 }))
-export const ordersRelations = relations(orders, ({ many }) => ({ items: many(orderItems), audit: many(orderAudit) }))
+export const ordersRelations = relations(orders, ({ many }) => ({
+  items: many(orderItems),
+  audit: many(orderAudit),
+  shipments: many(shipments),
+}))
+export const shipmentsRelations = relations(shipments, ({ one }) => ({
+  order: one(orders, { fields: [shipments.orderId], references: [orders.id] }),
+}))
 export const orderAuditRelations = relations(orderAudit, ({ one }) => ({
   order: one(orders, { fields: [orderAudit.orderId], references: [orders.id] }),
   admin: one(admins, { fields: [orderAudit.adminId], references: [admins.id] }),

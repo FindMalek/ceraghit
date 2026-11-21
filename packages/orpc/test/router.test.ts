@@ -161,6 +161,8 @@ describe.skipIf(!url)("router", () => {
         stored.add(key)
         return `https://s3.test/${key}?size=${size}`
       },
+      put: async () => {},
+      signedGet: async (key) => key,
       head: async (key) => stored.has(key),
       read: async () => null,
       readUrl: async (key) => key,
@@ -423,6 +425,8 @@ describe.skipIf(!url)("router", () => {
       bucket: "b",
       prefix: "pr-1/",
       presignPut: async (key, _type, size) => `https://s3.test/${key}?size=${size}`,
+      put: async () => {},
+      signedGet: async (key) => key,
       head: async () => true,
       read: async () => null,
       readUrl: async (key) => key,

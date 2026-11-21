@@ -34,6 +34,8 @@ describe.skipIf(!url)("media upload", () => {
     bucket: "b",
     prefix,
     presignPut: async (key) => `https://s3.test/${key}`,
+    put: async () => {},
+    signedGet: async (key) => key,
     head: async (key) => objects.has(key),
     read: async (key) => objects.get(key) ?? null,
     readUrl: async (key) => key,

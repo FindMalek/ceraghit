@@ -120,6 +120,13 @@
       "when": 1794849185156,
       "tag": "0016_sudden_clea",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1795190437264,
+      "tag": "0017_pale_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }
