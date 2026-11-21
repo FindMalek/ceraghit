@@ -4,6 +4,7 @@ import {
   purgeMailLog,
   releaseExpiredHolds,
   retryFailedMails,
+  rolloverAiUsage,
   type Services,
   sendExpiryMails,
   sweepRateLimits,
@@ -51,6 +52,9 @@ export const CRON_JOBS: Record<string, CronJob> = {
       const released = await releaseExpiredHolds(services, now)
       return { released, mailed: await sendExpiryMails(services) }
     },
+  },
+  "ai-usage-rollover": {
+    run: (services, now) => rolloverAiUsage(services, now),
   },
   "retry-mail": {
     async run(services) {

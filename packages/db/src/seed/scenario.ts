@@ -1,10 +1,21 @@
 import { demoRef } from "../demo-ref"
-import type { jobRuns, Localized, locations, mailLog, orderAudit, orderItems, orders, shopProfile } from "../schema"
+import type {
+  jobRuns,
+  Localized,
+  locations,
+  mailLog,
+  orderAudit,
+  orderItems,
+  orders,
+  shipments,
+  shopProfile,
+} from "../schema"
 
 type NewOrder = typeof orders.$inferInsert
 type NewItem = typeof orderItems.$inferInsert
 type NewAudit = typeof orderAudit.$inferInsert
 type NewMail = typeof mailLog.$inferInsert
+type NewShipment = typeof shipments.$inferInsert
 type NewJobRun = typeof jobRuns.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
@@ -225,14 +236,23 @@ export function buildScenario(
   audit: NewAudit[]
   mail: NewMail[]
   jobRuns: NewJobRun[]
+  shipments: NewShipment[]
 } {
   const rand = rng(2027)
   const pick = <T>(list: T[]): T => list[Math.floor(rand() * list.length)]!
-  const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[]; mail: NewMail[]; jobRuns: NewJobRun[] } = {
+  const out: {
+    orders: NewOrder[]
+    items: NewItem[]
+    audit: NewAudit[]
+    mail: NewMail[]
+    jobRuns: NewJobRun[]
+    shipments: NewShipment[]
+  } = {
     orders: [],
     items: [],
     audit: [],
     mail: [],
+    shipments: [],
     jobRuns: demoJobRuns(now),
   }
 
@@ -408,6 +428,7 @@ export function buildScenario(
       })
     }
   }
+  out.shipments = demoShipments(out.orders, now)
   const confirmed = out.orders.filter((o) => o.status === "paid" || o.status === "fulfilled")
   const [sent, failed] = [confirmed[0], confirmed[1]]
   for (const [order, ok] of [
@@ -449,4 +470,50 @@ function demoShipping(n: number, paidAt: Date) {
   }
   if (k < 17) return { carrier: "rapid-poste", trackingNumber: `RP${900_000 + n * 131}TN`, shippedAt }
   return { carrier: "other", carrierName: "Livraison en main propre", shippedAt }
+}
+
+const DEMO_FLOW = ["created", "in_transit", "out_for_delivery", "delivered"] as const
+
+/**
+ * One simulated Aramex shipment per fulfilled Aramex order, statuses spread over the flow. No label (the card says
+ * so): a demo never stores a PDF. Tunisia is domestic, cash on delivery only in dinars for a Tunisian order.
+ */
+function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
+  return orders
+    .filter((o) => o.status === "fulfilled" && o.carrier === "aramex" && o.trackingNumber && o.id)
+    .map((o, i) => {
+      const status = DEMO_FLOW[i % DEMO_FLOW.length]!
+      const at = (o.shippedAt as Date | null | undefined) ?? now
+      const events = DEMO_FLOW.slice(0, DEMO_FLOW.indexOf(status) + 1).map((code, step) => ({
+        code: code.toUpperCase(),
+        description: {
+          created: "Envoi créé",
+          in_transit: "En transit",
+          out_for_delivery: "En cours de livraison",
+          delivered: "Livré",
+        }[code],
+        at: new Date(at.getTime() + step * 18 * 3600e3).toISOString(),
+        location: "Tunis",
+        comment: "démo",
+        problemCode: null,
+      }))
+      const country = o.country ?? "TN"
+      return {
+        orderId: o.id as string,
+        provider: "aramex",
+        environment: "fake",
+        waybill: o.trackingNumber as string,
+        productGroup: country === "TN" ? "DOM" : "EXP",
+        productType: country === "TN" ? "ONP" : "PPX",
+        status,
+        codAmountMinor: o.paymentMethod === "cod" && country === "TN" && o.currency === "TND" ? o.totalMinor : null,
+        currency: o.currency ?? "TND",
+        weightGrams: 1500,
+        pieces: 1,
+        events,
+        lastEvent: events.at(-1) ?? null,
+        deliveredAt: status === "delivered" ? new Date(events.at(-1)!.at) : null,
+        createdAt: at,
+      }
+    })
 }
