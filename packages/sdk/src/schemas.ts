@@ -556,8 +556,10 @@ export const customRequestInputSchema = z.object({
   locale: localeSchema.default("fr"),
 })
 
-export const REQUEST_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const
-export const REQUEST_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+export const REQUEST_IMAGE_TYPES = ["image/webp"] as const
+/** Long side of a customer photo: the storefront shrinks to it and the api refuses anything larger. */
+export const REQUEST_IMAGE_MAX_SIDE = 1600
+export const REQUEST_IMAGE_MAX_BYTES = 2 * 1024 * 1024
 export const requestUploadInputSchema = z.object({
   contentType: z.enum(REQUEST_IMAGE_TYPES),
   size: z.number().int().min(1).max(REQUEST_IMAGE_MAX_BYTES),

@@ -34,13 +34,14 @@ test("the dashboard may play media from the bucket and the cdn, no other host", 
   expect(buildCsp({ ...base, app: "web" })).toContain("media-src 'self';")
 })
 
-test("only the dashboard may compile the wasm the invoice pdf renderer ships as a data url", () => {
+test("both apps may compile wasm, but only the dashboard may fetch it as a data url", () => {
   const dashboard = buildCsp({ ...base, app: "dashboard" })
   expect(dashboard).toContain("'wasm-unsafe-eval'")
   expect(dashboard).toContain("connect-src 'self' data: https://s3.example.net;")
   expect(dashboard).not.toContain("'unsafe-eval'")
   const web = buildCsp({ ...base, app: "web" })
-  expect(web).not.toContain("wasm-unsafe-eval")
+  expect(web).toContain("'wasm-unsafe-eval'")
+  expect(web).not.toContain("'unsafe-eval'")
   expect(web).not.toContain("data: https://s3.example.net;")
 })
 

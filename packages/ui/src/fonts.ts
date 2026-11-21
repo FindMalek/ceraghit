@@ -38,6 +38,7 @@ const arabic = localFont({
   ],
   variable: "--font-arabic-face",
   adjustFontFallback: false,
+  preload: false,
 })
 const arabicLatin = localFont({
   src: [
@@ -52,6 +53,7 @@ const arabicLatin = localFont({
     },
   ],
   variable: "--font-arabic-latin-face",
+  preload: false,
 })
 
 export const FONT_VARIABLES = [

@@ -251,7 +251,7 @@
       "failed": "The upload failed, try again.",
       "tooMany": "Too many uploads, try again soon.",
       "type": "Unsupported format (JPEG, PNG or WebP).",
-      "tooLarge": "Photo too large (5 MB maximum)."
+      "tooLarge": "Photo too large (2 MB maximum)."
     }
   },
   "atelier": {
@@ -574,6 +574,7 @@
       "too_many_lookups": "Too many attempts, try again in a few minutes.",
       "too_many_requests": "Too many requests, try again later.",
       "photo_missing": "A photo was not uploaded, please add it again.",
+      "photo_unreadable": "A photo could not be read, please send it again.",
       "storage_full": "The storage space is full."
     }
   }
