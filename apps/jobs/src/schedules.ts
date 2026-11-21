@@ -32,6 +32,14 @@ export const releaseHoldsTask = schedules.task({
   run: () => callCron(releaseHolds.name),
 })
 
+const aiUsageRollover = spec("ai-usage-rollover")
+
+export const aiUsageRolloverTask = schedules.task({
+  id: aiUsageRollover.name,
+  cron: { pattern: aiUsageRollover.cron, timezone: aiUsageRollover.timezone },
+  run: () => callCron(aiUsageRollover.name),
+})
+
 const retryMail = spec("retry-mail")
 
 export const retryMailTask = schedules.task({
