@@ -11,13 +11,12 @@ export interface TrackingReport {
   polled: number
   updated: number
   delivered: number
-  errors: number
 }
 
 /**
  * Asks the carrier about every shipment that is not finished and stores the events. Idempotent: the same answer twice
  * writes the same events. Does nothing while shipping is manual or the Aramex credentials are missing. Never sets an
- * order status: it only records what the carrier says about the parcel.
+ * order status: it only records what the carrier says about the parcel. Throws when the carrier call fails.
  */
 export async function trackShipments(
   services: Services,
@@ -38,16 +37,11 @@ export async function trackShipments(
     .where(and(eq(shipments.provider, carrier.id), notInArray(shipments.status, [...FINISHED])))
     .orderBy(sql`${shipments.lastPolledAt} asc nulls first`, asc(shipments.createdAt))
     .limit(BATCH)
-  const report: TrackingReport = { polled: open.length, updated: 0, delivered: 0, errors: 0 }
+  const report: TrackingReport = { polled: open.length, updated: 0, delivered: 0 }
   if (open.length === 0) return report
 
-  let results: Awaited<ReturnType<ShippingProvider["track"]>>
-  try {
-    results = await carrier.track(open.map((s) => s.waybill))
-  } catch (error) {
-    console.error("[tracking]", error instanceof Error ? error.message.split("\n")[0]!.slice(0, 200) : "failed")
-    return { ...report, errors: 1 }
-  }
+  // A failed poll throws: the run is recorded as failed, so the owner sees it in Réglages.
+  const results = await carrier.track(open.map((s) => s.waybill))
   const byWaybill = new Map(results.map((r) => [r.waybill, r]))
   for (const row of open) {
     const found = byWaybill.get(row.waybill)

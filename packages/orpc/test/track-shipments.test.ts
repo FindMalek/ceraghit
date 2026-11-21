@@ -7,6 +7,7 @@ import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
 import { ManualShippingProvider } from "../src/lib/shipping"
+import { saveShippingSettings } from "../src/lib/shipping/settings"
 import { trackShipments } from "../src/lib/shipping/tracking"
 import type { ShippingProvider, TrackResult } from "../src/lib/shipping/types"
 
@@ -96,7 +97,7 @@ describe.skipIf(!url)("track-shipments", () => {
       { waybill: waybills[1]!, notFound: true, delivered: null, events: [] },
     ])
     const first = await trackShipments(services, answer)
-    expect(first).toMatchObject({ updated: 1, delivered: 1, errors: 0 })
+    expect(first).toMatchObject({ updated: 1, delivered: 1 })
     const done = await row(waybills[0]!)
     expect(done.status).toBe("delivered")
     expect(done.lastEvent?.code).toBe("SH005")
@@ -110,5 +111,22 @@ describe.skipIf(!url)("track-shipments", () => {
 
   test("does nothing while shipping is manual", async () => {
     expect(await trackShipments(services, new ManualShippingProvider())).toEqual({ skipped: "manual shipping" })
+  })
+
+  test("a failing carrier call fails the run instead of reporting success", async () => {
+    const broken = {
+      id: "aramex",
+      track: async () => Promise.reject(new Error("aramex 503")),
+    } as unknown as ShippingProvider
+    await expect(trackShipments(services, broken)).rejects.toThrow("aramex 503")
+  })
+
+  test("skips when Aramex is selected but its credentials are missing", async () => {
+    await saveShippingSettings(db, { provider: "aramex", quoteFromProvider: true })
+    try {
+      expect(await trackShipments(services)).toEqual({ skipped: "missing-credentials" })
+    } finally {
+      await saveShippingSettings(db, { provider: "manual", quoteFromProvider: false })
+    }
   })
 })
