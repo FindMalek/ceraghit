@@ -31,3 +31,11 @@ export const releaseHoldsTask = schedules.task({
   cron: { pattern: releaseHolds.cron, timezone: releaseHolds.timezone },
   run: () => callCron(releaseHolds.name),
 })
+
+const aiUsageRollover = spec("ai-usage-rollover")
+
+export const aiUsageRolloverTask = schedules.task({
+  id: aiUsageRollover.name,
+  cron: { pattern: aiUsageRollover.cron, timezone: aiUsageRollover.timezone },
+  run: () => callCron(aiUsageRollover.name),
+})
