@@ -1,6 +1,6 @@
-import { spawnSync } from "node:child_process"
+import { type SpawnSyncReturns, spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 
 export type TtsProvider = "elevenlabs" | "say"
@@ -38,10 +38,18 @@ export interface TtsOptions {
 }
 
 const DEFAULT_MODEL = "eleven_multilingual_v2"
+const VOICE_SETTINGS = { stability: 0.5, similarity_boost: 0.75 }
 
 export function pickProvider(env: TtsEnv): { provider: TtsProvider; fellBack: boolean } {
-  const wanted = env.TTS_PROVIDER === "say" ? "say" : "elevenlabs"
+  const explicit = env.TTS_PROVIDER
+  if (explicit && explicit !== "say" && explicit !== "elevenlabs") {
+    throw new Error(`TTS_PROVIDER must be "say" or "elevenlabs", got "${explicit}"`)
+  }
+  const wanted: TtsProvider = explicit === "say" ? "say" : "elevenlabs"
   if (wanted === "elevenlabs" && (!env.ELEVENLABS_API_KEY || !env.ELEVENLABS_VOICE_ID)) {
+    if (explicit === "elevenlabs") {
+      throw new Error("TTS_PROVIDER=elevenlabs needs ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID")
+    }
     return { provider: "say", fellBack: true }
   }
   return { provider: wanted, fellBack: false }
@@ -52,15 +60,19 @@ function macSay(text: string, file: string): void {
   if (res.status !== 0) throw new Error("macOS `say -v Thomas` failed, is the French voice installed?")
 }
 
-function probeDuration(file: string): number {
-  const res = spawnSync(
-    process.env.FFPROBE || "ffprobe",
-    ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file],
-    {
-      encoding: "utf8",
-    },
-  )
-  return Math.round(Number.parseFloat(res.stdout) * 1000)
+type Spawn = (command: string, args: string[], options: { encoding: "utf8" }) => SpawnSyncReturns<string>
+
+/** Duration of an audio file in ms; throws when ffprobe is missing, fails or prints nothing usable. */
+export function probeDuration(file: string, spawn: Spawn = spawnSync): number {
+  const command = process.env.FFPROBE || "ffprobe"
+  const res = spawn(command, ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], {
+    encoding: "utf8",
+  })
+  const ms = Math.round(Number.parseFloat(res.stdout ?? "") * 1000)
+  if (res.error || res.status !== 0 || !Number.isFinite(ms) || ms <= 0) {
+    throw new Error(`could not read the narration duration with ${command}, is ffprobe installed?`)
+  }
+  return ms
 }
 
 export function createTts(options: TtsOptions): Tts {
@@ -81,7 +93,9 @@ export function createTts(options: TtsOptions): Tts {
 
   async function render(text: string, file: string): Promise<void> {
     if (provider === "say") {
-      say(text, file)
+      const part = `${file}.part`
+      say(text, part)
+      renameSync(part, file)
       return
     }
     const request = () =>
@@ -91,7 +105,7 @@ export function createTts(options: TtsOptions): Tts {
         body: JSON.stringify({
           text,
           model_id: model,
-          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+          voice_settings: VOICE_SETTINGS,
         }),
       })
     let res = await request()
@@ -100,7 +114,9 @@ export function createTts(options: TtsOptions): Tts {
       res = await request()
     }
     if (!res.ok) throw new Error(`ElevenLabs answered ${res.status}`)
-    writeFileSync(file, Buffer.from(await res.arrayBuffer()))
+    const part = `${file}.part`
+    writeFileSync(part, Buffer.from(await res.arrayBuffer()))
+    renameSync(part, file)
     billed += text.length
   }
 
@@ -109,13 +125,21 @@ export function createTts(options: TtsOptions): Tts {
     billedChars: () => billed,
     async narrate(text) {
       const hash = createHash("sha256")
-        .update([provider, provider === "elevenlabs" ? `${voice}|${model}` : "thomas", text].join("\n"))
+        .update(
+          [
+            provider,
+            provider === "elevenlabs" ? `${voice}|${model}|${JSON.stringify(VOICE_SETTINGS)}` : "thomas",
+            text,
+          ].join("\n"),
+        )
         .digest("hex")
         .slice(0, 24)
       const file = join(cacheDir, `${hash}.${ext}`)
       const cached = existsSync(file) && readFileSync(file).length > 0
       if (!cached) await render(text, file)
-      return { file, durationMs: duration(file), cached }
+      const durationMs = duration(file)
+      if (!Number.isFinite(durationMs) || durationMs <= 0) throw new Error(`narration ${file} has no usable duration`)
+      return { file, durationMs, cached }
     },
   }
 }

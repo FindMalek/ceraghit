@@ -3,12 +3,13 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, w
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { chromium, devices } from "@playwright/test"
+import { parseArgs } from "./lib/args"
 import { type Caption, toSrt, toVtt } from "./lib/captions"
-import { assertSafe } from "./lib/guard"
+import { assertAdminCredentials, assertSafe } from "./lib/guard"
 import { installOverlay } from "./lib/overlay"
 import { createPacer, DEFAULT_HOLD_MS, STILL_MS, sleep } from "./lib/pacing"
 import { type AudioClip, frameSize, mux, startRecording } from "./lib/recorder"
-import { type Device, fileBase, parseVideo, stepsFor, type Video } from "./lib/steps"
+import { fileBase, parseVideo, stepsFor, type Video } from "./lib/steps"
 import { createTts, type Narration } from "./lib/tts"
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -19,14 +20,12 @@ const videosDir = join(here, "videos")
 if (existsSync(join(root, ".env"))) process.loadEnvFile(join(root, ".env"))
 
 const env: Record<string, string | undefined> = process.env
-const args = process.argv.slice(2).filter((a) => a !== "--")
-const flag = (name: string) => args.includes(`--${name}`)
-const only = args.find((a) => a.startsWith("--device="))?.split("=")[1] as Device | undefined
-const ids = args.filter((a) => /^\d{2}$/.test(a))
+const { flags, device: only, ids } = parseArgs(process.argv.slice(2))
+const flag = (name: string) => flags.has(name)
 
 const urls = {
-  web: process.env.WEB_URL ?? "http://localhost:3000",
-  dashboard: process.env.DASHBOARD_URL ?? "http://localhost:3100",
+  web: env.WEB_URL || "http://localhost:3000",
+  dashboard: env.DASHBOARD_URL || "http://localhost:3100",
 }
 
 const substitute = (text: string | undefined) =>
@@ -41,9 +40,10 @@ function loadVideos(): Video[] {
 }
 
 async function main() {
-  await assertSafe(env)
+  await assertSafe({ ...env, WEB_URL: urls.web, DASHBOARD_URL: urls.dashboard })
   const videos = loadVideos()
   if (videos.length === 0) throw new Error(`no video matches ${ids.join(", ") || "(none found)"}`)
+  if (videos.some((v) => v.start.loggedIn)) assertAdminCredentials(env)
   mkdirSync(join(out, "videos"), { recursive: true })
 
   const tts = flag("voice")
@@ -67,58 +67,69 @@ async function main() {
           : { ...iphone, deviceScaleFactor: 2, locale: "fr-FR" },
       )
       await installOverlay(context)
-      const page = await context.newPage()
-      if (video.start.loggedIn) {
-        await page.goto(`${urls.dashboard}/login`)
-        await page.getByLabel("Email").fill(process.env.ADMIN_EMAIL ?? "")
-        await page.getByLabel("Mot de passe").fill(process.env.ADMIN_PASSWORD ?? "")
-        await page.getByRole("button", { name: "Se connecter" }).click()
-        await page.waitForURL((u) => !u.pathname.startsWith("/login"))
-      }
-      await page.goto(`${urls[video.start.app]}${video.start.path}`)
-      await page.waitForLoadState("networkidle")
-
       const base = fileBase(video, device)
       const raw = join(out, `${base}.raw.mp4`)
-      const recording = await startRecording(page, raw, frameSize(viewport ?? { width: 1440, height: 900 }, 2))
-      const pacer = createPacer({
-        page,
-        device,
-        app: video.start.app,
-        baseUrl: (app) => urls[app],
-        assetsDir: join(here, "assets"),
-        zoom: flag("zoom"),
-      })
-      const captions: Caption[] = []
-      const clips: AudioClip[] = []
-      await sleep(STILL_MS)
-      for (const [i, step] of steps.entries()) {
-        const startMs = recording.now()
-        console.info(`${base} ${i + 1}/${steps.length} ${step.action}`)
-        const narration = narrations[i]
-        if (narration) clips.push({ file: narration.file, atMs: startMs })
-        await pacer.run(step, substitute(step.value))
-        const spoken = narration ? narration.durationMs + 250 : 0
-        await sleep(Math.max(step.holdMs ?? DEFAULT_HOLD_MS, spoken - (recording.now() - startMs)))
-        await pacer.zoomOut()
-        captions.push({ startMs, endMs: recording.now(), text: step.caption_fr })
-      }
-      await sleep(STILL_MS)
-      await recording.stop()
-      await context.close()
-
       const finalFile = join(out, "videos", `${base}.mp4`)
-      const srt = join(out, "videos", `${base}.fr.srt`)
-      writeFileSync(srt, toSrt(captions))
-      writeFileSync(join(out, "videos", `${base}.fr.vtt`), toVtt(captions))
-      if (steps.every((s) => s.caption_ar)) {
-        const ar = steps.map((s, i) => ({ ...(captions[i] as Caption), text: s.caption_ar ?? "" }))
-        writeFileSync(join(out, "videos", `${base}.ar.srt`), toSrt(ar))
-        writeFileSync(join(out, "videos", `${base}.ar.vtt`), toVtt(ar))
+      const written: string[] = []
+      try {
+        const page = await context.newPage()
+        if (video.start.loggedIn) {
+          await page.goto(`${urls.dashboard}/login`)
+          await page.getByLabel("Email").fill(env.ADMIN_EMAIL ?? "")
+          await page.getByLabel("Mot de passe").fill(env.ADMIN_PASSWORD ?? "")
+          await page.getByRole("button", { name: "Se connecter" }).click()
+          await page.waitForURL((u) => !u.pathname.startsWith("/login"))
+        }
+        await page.goto(`${urls[video.start.app]}${video.start.path}`)
+        await page.waitForLoadState("networkidle")
+
+        const recording = await startRecording(page, raw, frameSize(viewport ?? { width: 1440, height: 900 }, 2))
+        const pacer = createPacer({
+          page,
+          device,
+          app: video.start.app,
+          baseUrl: (app) => urls[app],
+          assetsDir: join(here, "assets"),
+          zoom: flag("zoom"),
+        })
+        const captions: Caption[] = []
+        const clips: AudioClip[] = []
+        await sleep(STILL_MS)
+        for (const [i, step] of steps.entries()) {
+          const startMs = recording.now()
+          console.info(`${base} ${i + 1}/${steps.length} ${step.action}`)
+          const narration = narrations[i]
+          if (narration) clips.push({ file: narration.file, atMs: startMs })
+          await pacer.run(step, substitute(step.value))
+          const spoken = narration ? narration.durationMs + 250 : 0
+          await sleep(Math.max(step.holdMs ?? DEFAULT_HOLD_MS, spoken - (recording.now() - startMs)))
+          await pacer.zoomOut()
+          captions.push({ startMs, endMs: recording.now(), text: step.caption_fr })
+        }
+        await sleep(STILL_MS)
+        await recording.stop()
+        await context.close()
+
+        const srt = join(out, "videos", `${base}.fr.srt`)
+        written.push(srt)
+        writeFileSync(srt, toSrt(captions))
+        written.push(join(out, "videos", `${base}.fr.vtt`))
+        writeFileSync(join(out, "videos", `${base}.fr.vtt`), toVtt(captions))
+        if (steps.every((s) => s.caption_ar)) {
+          const ar = steps.map((s, i) => ({ ...(captions[i] as Caption), text: s.caption_ar ?? "" }))
+          written.push(join(out, "videos", `${base}.ar.srt`), join(out, "videos", `${base}.ar.vtt`))
+          writeFileSync(join(out, "videos", `${base}.ar.srt`), toSrt(ar))
+          writeFileSync(join(out, "videos", `${base}.ar.vtt`), toVtt(ar))
+        }
+        if (clips.length > 0 || flag("burn")) mux(raw, finalFile, clips, flag("burn") ? srt : undefined)
+        else renameSync(raw, finalFile)
+      } catch (error) {
+        for (const f of [...written, finalFile]) rmSync(f, { force: true })
+        throw error
+      } finally {
+        rmSync(raw, { force: true })
+        await context.close().catch(() => {})
       }
-      if (clips.length > 0 || flag("burn")) mux(raw, finalFile, clips, flag("burn") ? srt : undefined)
-      else renameSync(raw, finalFile)
-      rmSync(raw, { force: true })
       produced.push(finalFile)
       console.info(`wrote ${finalFile}`)
     }

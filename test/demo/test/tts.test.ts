@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { mkdtempSync } from "node:fs"
+import { mkdtempSync, readdirSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { createTts } from "../lib/tts"
+import { createTts, pickProvider, probeDuration } from "../lib/tts"
 
 const env = { ELEVENLABS_API_KEY: "test-key-not-real", ELEVENLABS_VOICE_ID: "voice-1" }
 
@@ -55,7 +55,7 @@ test("without a key it falls back to the macOS voice and never calls the network
   expect(said).toEqual(["Bonjour"])
   expect(calls).toHaveLength(0)
   expect(tts.billedChars()).toBe(0)
-  expect(warnings.join()).not.toContain("test-key")
+  expect(warnings).toHaveLength(1)
 })
 
 test("an api error names the status and never the key", async () => {
@@ -74,4 +74,55 @@ test("a rate limited answer is retried, an error after the retries names only th
   const { tts } = setup({ fetchFn, sleep: async () => {} })
   await tts.narrate("Bonjour")
   expect(calls).toBe(3)
+})
+
+test("an explicit elevenlabs choice without a key or voice fails instead of falling back", () => {
+  expect(() => pickProvider({ TTS_PROVIDER: "elevenlabs" })).toThrow("ELEVENLABS_API_KEY")
+  expect(() => pickProvider({ TTS_PROVIDER: "elevenlabs", ELEVENLABS_API_KEY: "k" })).toThrow("ELEVENLABS_VOICE_ID")
+  expect(() => pickProvider({ TTS_PROVIDER: "eleven" })).toThrow("TTS_PROVIDER")
+  expect(pickProvider({})).toEqual({ provider: "say", fellBack: true })
+})
+
+test("the key never shows up in an error or a warning", async () => {
+  const secret = "sk-secret-value-123"
+  const messages: string[] = []
+  const fetchFn = (async () => new Response("bad", { status: 500 })) as unknown as typeof fetch
+  const { tts } = setup({
+    env: { ELEVENLABS_API_KEY: secret, ELEVENLABS_VOICE_ID: "v" },
+    fetchFn,
+    warn: (m) => messages.push(m),
+  })
+  const error = await tts.narrate("Bonjour").catch((e: Error) => e)
+  messages.push((error as Error).message)
+  expect(messages.join("\n")).not.toContain(secret)
+})
+
+test("a failed download leaves no file in the cache", async () => {
+  const fetchFn = (async () => new Response("bad", { status: 500 })) as unknown as typeof fetch
+  const cacheDir = mkdtempSync(join(tmpdir(), "tts-"))
+  const { tts } = setup({ fetchFn, cacheDir })
+  await tts.narrate("Bonjour").catch(() => {})
+  expect(readdirSync(cacheDir)).toEqual([])
+})
+
+test("a finished download is renamed into place, leaving no partial file", async () => {
+  const a = setup()
+  const first = await a.tts.narrate("Bonjour")
+  expect(first.file).not.toContain("part")
+  expect(readdirSync(join(first.file, ".."))).toEqual([first.file.split("/").pop() as string])
+})
+
+test("a missing or failing ffprobe throws instead of returning NaN", () => {
+  const spawn = (result: object) => () => result as never
+  expect(() => probeDuration("a.mp3", spawn({ error: new Error("ENOENT"), status: null, stdout: null }))).toThrow(
+    "ffprobe",
+  )
+  expect(() => probeDuration("a.mp3", spawn({ status: 1, stdout: "" }))).toThrow("ffprobe")
+  expect(() => probeDuration("a.mp3", spawn({ status: 0, stdout: "N/A\n" }))).toThrow("ffprobe")
+  expect(probeDuration("a.mp3", spawn({ status: 0, stdout: "1.5\n" }))).toBe(1500)
+})
+
+test("a narration without a usable duration stops before the video is mixed", async () => {
+  const { tts } = setup({ duration: () => Number.NaN })
+  await expect(tts.narrate("Bonjour")).rejects.toThrow("duration")
 })
