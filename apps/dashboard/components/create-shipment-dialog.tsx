@@ -17,6 +17,7 @@ import { showError } from "@workspace/ui/components/error-banner"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { useEffect, useState } from "react"
+import { AddressCheck } from "@/components/address-check"
 import { Tone } from "@/components/status-badge"
 import { errorMessage } from "@/lib/errors"
 
@@ -184,6 +185,19 @@ export function CreateShipmentDialog({
                   onChange={(v) => setConsignee("postalCode", v)}
                 />
               </div>
+              <AddressCheck
+                orderId={orderId}
+                address={{
+                  line1: form.consignee.line1,
+                  city: form.consignee.city,
+                  ...(form.consignee.postalCode ? { postalCode: form.consignee.postalCode } : {}),
+                }}
+                onUse={(s) => {
+                  setConsignee("line1", s.line1)
+                  setConsignee("city", s.city)
+                  setConsignee("postalCode", s.postalCode)
+                }}
+              />
             </fieldset>
             <fieldset className="flex flex-col gap-3">
               <legend className="mb-1 font-heading text-lg">Colis</legend>

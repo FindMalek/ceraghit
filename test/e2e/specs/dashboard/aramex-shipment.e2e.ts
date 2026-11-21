@@ -60,6 +60,15 @@ test("the owner creates an Aramex shipment on a cash on delivery order and downl
     await expect(page.getByLabel("Poids (g)")).not.toHaveValue("")
   })
 
+  await step("a mistyped street is checked with Aramex and the suggestion fills the form", async () => {
+    await page.getByLabel("Adresse", { exact: true }).fill("12 rue Habib Bourgiba")
+    await page.getByRole("button", { name: "Vérifier l'adresse avec Aramex" }).click()
+    await expect(page.getByTestId("address-check")).toContainText("Aramex propose une autre adresse")
+    await page.getByRole("button", { name: "Utiliser cette suggestion" }).click()
+    await expect(page.getByLabel("Adresse", { exact: true })).toHaveValue("Avenue Habib Bourguiba")
+    await expect(page.getByLabel("Code postal")).toHaveValue("1000")
+  })
+
   await step("confirming creates the shipment, ships the order and counts the cash sale", async () => {
     await page.getByRole("button", { name: "Créer l'expédition et l'étiquette" }).click()
     await expect(page.getByTestId("shipment-waybill")).toContainText("FAKE")
