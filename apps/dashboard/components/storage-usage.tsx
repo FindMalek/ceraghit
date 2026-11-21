@@ -5,11 +5,10 @@ import { orpc } from "@workspace/orpc/react"
 import { Progress } from "@workspace/ui/components/progress"
 import { cn } from "@workspace/ui/lib/utils"
 import Link from "next/link"
+import { STORAGE_FULL_TEXT } from "@/lib/upload-media"
 
 const format = (bytes: number): string =>
   bytes >= 1e9 ? `${(bytes / 1e9).toFixed(2).replace(".", ",")} Go` : `${Math.round(bytes / 1e6)} Mo`
-
-export const STORAGE_FULL_MESSAGE = "Le stockage est plein. Supprimez des photos inutilisées pour pouvoir en ajouter."
 
 /** The usage query, shared by the meter and by every upload zone that has to stop when the plan is full. */
 export function useStorageUsage() {
@@ -29,7 +28,7 @@ export function StorageUsage({ variant = "card" }: { variant?: "card" | "compact
   const percent = Math.min(100, data.percent)
   const message =
     data.level === "full"
-      ? STORAGE_FULL_MESSAGE
+      ? STORAGE_FULL_TEXT
       : data.level === "warn"
         ? `Le stockage est presque plein (${data.percent} %). Supprimez les photos inutilisées dans la Médiathèque.`
         : null

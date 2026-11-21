@@ -8,9 +8,9 @@ import type { Media } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { Progress } from "@workspace/ui/components/progress"
 import { useRef, useState } from "react"
-import { STORAGE_FULL_MESSAGE, useStorageUsage } from "@/components/storage-usage"
+import { useStorageUsage } from "@/components/storage-usage"
 import { errorMessage } from "@/lib/errors"
-import { type UploadPhase, uploadMedia } from "@/lib/upload-media"
+import { STORAGE_FULL_TEXT, type UploadPhase, uploadMedia } from "@/lib/upload-media"
 
 const PHASE_TEXT: Record<UploadPhase, string> = {
   compress: "Compression…",
@@ -103,7 +103,7 @@ export function MediaUploadZone({ onUploaded }: { onUploaded?: (media: Media[]) 
         className={`frame flex flex-col items-center gap-3 border-dashed p-6 text-center ${dragging ? "bg-accent" : "bg-card/60"}`}
       >
         <p className="text-muted-foreground text-sm">
-          {full ? STORAGE_FULL_MESSAGE : "Glissez vos photos ici, ou choisissez-les sur cet appareil."}
+          {full ? STORAGE_FULL_TEXT : "Glissez vos photos ici, ou choisissez-les sur cet appareil."}
         </p>
         <Button type="button" className="h-11" disabled={full} onClick={() => input.current?.click()}>
           <UploadSimpleIcon />
