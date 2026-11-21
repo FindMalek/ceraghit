@@ -29,7 +29,6 @@ test("storefront pages fit the screen in this language and on this device", asyn
   page,
   request,
   appLocale,
-  isMobile,
   step,
 }) => {
   const list = await products(request)
@@ -90,12 +89,11 @@ test("storefront pages fit the screen in this language and on this device", asyn
 
   await step("a transfer order page with the bank details", async () => {
     const order = await createOrderViaApi(request, { method: "transfer", country: "FR", locale: appLocale })
-    await page.goto(`${E2E.webUrl}${localePath(appLocale, `/order/${order.number}`)}?token=${order.token}`)
+    await page.goto(`${E2E.webUrl}${localePath(appLocale, `/order/${order.number}`)}?t=${order.token}`)
     await page.waitForLoadState("networkidle")
+    await expect(page.locator("dt", { hasText: t(appLocale, "order.iban") })).toBeVisible()
     expect(await layoutProblems(page), `order page in ${appLocale}`).toEqual([])
   })
-
-  expect(isMobile ? "mobile" : "desktop").toBeTruthy()
 })
 
 test("the detector sees a box that sticks out and text cut by its box", { tag: ["@fr", "@desktop"] }, async ({
