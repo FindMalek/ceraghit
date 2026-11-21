@@ -93,7 +93,7 @@ test("shipping messages built from constants reach the owner in french", () => {
 
 test("every shipment message reaches the owner as written, never as the generic retry", () => {
   const messages = [
-    ...Object.values(shipments).filter((v): v is string => typeof v === "string"),
+    ...Object.values(shipments as Record<string, unknown>).filter((v): v is string => typeof v === "string"),
     shipments.NO_ANSWER("CER-1"),
     "Aramex a refusé la demande : Consignee city is not valid",
     "Aramex a refusé la demande.",
