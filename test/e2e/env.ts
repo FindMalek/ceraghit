@@ -81,6 +81,7 @@ export function apiEnv(): Record<string, string> {
     S3_ACCESS_KEY_ID: E2E.s3.accessKeyId,
     S3_SECRET_ACCESS_KEY: E2E.s3.secretAccessKey,
     S3_PUBLIC_URL: "",
+    ARAMEX_FAKE: "true",
   }
 }
 

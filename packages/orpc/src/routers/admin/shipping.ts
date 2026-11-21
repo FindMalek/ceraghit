@@ -1,8 +1,11 @@
 import { ORPCError } from "@orpc/server"
 import {
+  adminShipmentSchema,
   aramexConfigSchema,
   connectionResultSchema,
   saveShippingInputSchema,
+  shipmentDraftInputSchema,
+  shipmentDraftSchema,
   shippingSettingsViewSchema,
   testShippingInputSchema,
 } from "@workspace/sdk"
@@ -18,6 +21,13 @@ import {
   runConnectionTest,
 } from "../../lib/shipping/resolve"
 import { getShippingSettings, saveShippingSettings } from "../../lib/shipping/settings"
+import {
+  createShipment,
+  getOrderShipment,
+  labelDownloadUrl,
+  prepareShipment,
+  retryLabel,
+} from "../../lib/shipping/shipments"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -88,5 +98,62 @@ export const shippingRouter = {
       for (const [k, v] of Object.entries(input.secrets ?? {})) if (v) secrets[k] = v
       const config = (input.config ?? saved?.config ?? {}) as Record<string, unknown>
       return runConnectionTest(context, { config, secrets })
+    }),
+  draft: adminProcedure
+    .route({
+      method: "GET",
+      path: "/admin/orders/{orderId}/shipment/draft",
+      summary: "The prefilled Aramex shipment of an order",
+      tags: TAG,
+    })
+    .input(z.object({ orderId: z.string() }))
+    .output(shipmentDraftSchema)
+    .handler(({ context, input }) => prepareShipment(context, input.orderId)),
+
+  createShipment: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/orders/{orderId}/shipment",
+      summary: "Create the Aramex shipment and its label",
+      tags: TAG,
+    })
+    .input(shipmentDraftInputSchema)
+    .output(z.object({ shipmentId: z.string(), waybill: z.string() }))
+    .handler(({ context, input }) => createShipment(context, context.admin.id, input)),
+
+  shipmentOf: adminProcedure
+    .route({
+      method: "GET",
+      path: "/admin/orders/{orderId}/shipment",
+      summary: "The shipment of an order, without any bucket key",
+      tags: TAG,
+    })
+    .input(z.object({ orderId: z.string() }))
+    .output(adminShipmentSchema.nullable())
+    .handler(({ context, input }) => getOrderShipment(context.db, input.orderId)),
+
+  labelUrl: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/label-url",
+      summary: "A 5 minute signed link to the label PDF",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string(), inline: z.boolean().optional() }))
+    .output(z.object({ url: z.string() }))
+    .handler(async ({ context, input }) => ({ url: await labelDownloadUrl(context, input.id, input.inline) })),
+
+  retryLabel: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/label",
+      summary: "Fetch and store the label again",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      await retryLabel(context, input.id)
+      return { ok: true as const }
     }),
 }

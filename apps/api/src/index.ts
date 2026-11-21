@@ -66,6 +66,7 @@ const fetch = flushAfter(
         deployEnv: env.DEPLOY_ENV,
         secureCookies: env.APP_ENV !== "local",
         onlinePayments: env.ONLINE_PAYMENTS,
+        aramexFake: env.ARAMEX_FAKE,
         cronSecret: env.CRON_SECRET,
         cronJobs: Object.keys(CRON_JOBS),
         proxySecret: env.PROXY_SECRET,
