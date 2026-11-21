@@ -102,6 +102,9 @@ export function ShipmentActions({ shipment: s }: { shipment: AdminShipment }) {
             Fermeture de l'atelier
             <Input type="time" value={closing} onChange={(e) => setClosing(e.target.value)} />
           </Label>
+          <Button variant="ghost" className="h-11" onClick={() => setBooking(false)}>
+            Retour
+          </Button>
           <Button
             className="h-11"
             disabled={book.isPending}

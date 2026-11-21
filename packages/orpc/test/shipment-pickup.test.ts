@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createDb, orderAudit, orders, shipments } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
-import { eq, like } from "drizzle-orm"
+import { and, eq, like } from "drizzle-orm"
 import type { Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
@@ -119,6 +119,7 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     await mk("F", { paymentMethod: "cod", paymentProvider: "cod", paidAt: new Date("2096-05-08T10:00:00Z") }, "created")
     await mk("D", {}, "in_transit")
     await mk("E", {}, "created")
+    await mk("G", {}, "created")
   })
   afterAll(async () => {
     await db.delete(shipments).where(like(shipments.waybill, `${tag}-%`))
@@ -137,12 +138,12 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     )
     expect(pickupId).toBe("5551")
     expect(sent.pickups[0]).toMatchObject({
-      waybills: [`${tag}-A-W`, `${tag}-B-W`],
       pieces: 2,
       weightGrams: 3000,
       pickupDate: new Date(`${monday}T09:00:00+01:00`),
       closingTime: new Date(`${monday}T17:00:00+01:00`),
     })
+    expect([...(sent.pickups[0]?.waybills ?? [])].sort()).toEqual([`${tag}-A-W`, `${tag}-B-W`])
     expect(await shipment("A")).toMatchObject({ pickupId: "5551", pickupGuid: "guid-5551" })
     await expect(createPickup(services, { ...window, shipmentIds: [ids.A!.shipment] }, carrier)).rejects.toMatchObject({
       message: expect.stringContaining("déjà dans un enlèvement"),
@@ -151,6 +152,15 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     await cancelPickup(services, "5551", "changement de plan", carrier)
     expect(sent.cancelled).toEqual(["guid-5551"])
     expect(await shipment("B")).toMatchObject({ pickupId: null, pickupGuid: null })
+  })
+
+  test("two simultaneous bookings of one parcel reach Aramex once", async () => {
+    const before = sent.pickups.length
+    const book = () => createPickup(services, { ...window, shipmentIds: [ids.G!.shipment] }, carrier)
+    const results = await Promise.allSettled([book(), book()])
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1)
+    expect(sent.pickups.length - before).toBe(1)
+    expect((await shipment("G")).pickupId).toBe("5551")
   })
 
   test("a window that is too short or on a Sunday, and a parcel already at Aramex, are refused", async () => {
@@ -182,8 +192,12 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
   test("a cash order the owner marked paid before shipping keeps its payment when the shipment is cancelled", async () => {
     await cancelShipment(services, null, ids.F!.shipment, "erreur d'adresse", carrier)
     expect(await order("F")).toMatchObject({ status: "paid", paidAt: new Date("2096-05-08T10:00:00Z") })
-    const audit = await db.select().from(orderAudit).where(eq(orderAudit.orderId, ids.F!.order))
-    expect(audit.at(-1)?.note).toContain("erreur d'adresse")
+    const audit = await db
+      .select()
+      .from(orderAudit)
+      .where(and(eq(orderAudit.orderId, ids.F!.order), eq(orderAudit.toStatus, "paid")))
+    expect(audit).toHaveLength(1)
+    expect(audit[0]?.note).toContain("erreur d'adresse")
   })
 
   test("a parcel already moving cannot be cancelled and nothing changes", async () => {

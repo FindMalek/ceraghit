@@ -224,7 +224,7 @@ export async function createShipment(
  * One create at a time per order: the claim row is written before Aramex is called and removed after. A claim older than
  * the Aramex timeout plus a margin is a crashed request and is taken over.
  */
-async function claimOrder(services: Services, orderId: string): Promise<() => Promise<void>> {
+export async function claimOrder(services: Services, orderId: string): Promise<() => Promise<void>> {
   const key = `shipment-claim:${orderId}`
   const now = services.now()
   const stale = new Date(now.getTime() - 2 * CREATE_TIMEOUT_MS).toISOString()

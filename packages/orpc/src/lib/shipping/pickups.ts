@@ -5,7 +5,7 @@ import { and, asc, eq, inArray, isNotNull, isNull } from "drizzle-orm"
 import type { Services } from "../../context"
 import { revertOrderShipped } from "../shipping-events"
 import { AramexError } from "./aramex/errors"
-import { aramexFor, shipperAddress } from "./shipments"
+import { aramexFor, claimOrder, shipperAddress } from "./shipments"
 import type { ShippingProvider } from "./types"
 
 export const NOT_PICKABLE = "Seuls les colis dont l'étiquette vient d'être créée peuvent être ajoutés à un enlèvement."
@@ -59,6 +59,22 @@ export async function listOpenShipments(services: Services): Promise<OpenShipmen
   return rows
 }
 
+export const ENV_MISMATCH =
+  "Cette expédition a été créée dans un autre environnement Aramex (test ou réel) : appelez votre agence."
+export const CREATING = "Une création d'expédition est en cours pour cette commande : réessayez dans un instant."
+export const PICKUP_LOST = (id: string, guid: string) =>
+  `L'enlèvement n° ${id} existe chez Aramex mais n'a pas pu être enregistré ici (référence ${guid}) : appelez votre agence.`
+
+type Environment = "test" | "live" | "fake"
+
+/** The carrier as configured now, but only for a shipment created in the same environment (never hold a test parcel live). */
+async function providerFor(services: Services, environment: string, use?: ShippingProvider) {
+  if (use) return { provider: use, config: {} as Record<string, unknown> }
+  const found = await aramexFor(services, 20_000)
+  if (found.environment !== (environment as Environment)) throw new ORPCError("BAD_REQUEST", { message: ENV_MISMATCH })
+  return found
+}
+
 export async function createPickup(
   services: Services,
   input: PickupInput,
@@ -74,22 +90,44 @@ export async function createPickup(
   if (rows.some((s) => s.pickupGuid)) throw new ORPCError("BAD_REQUEST", { message: ALREADY_IN_PICKUP })
   const groups = new Set(rows.map((s) => s.productGroup))
   if (groups.size !== 1) throw new ORPCError("BAD_REQUEST", { message: MIXED_GROUPS })
+  const environments = new Set(rows.map((s) => s.environment))
+  if (environments.size !== 1) throw new ORPCError("BAD_REQUEST", { message: ENV_MISMATCH })
   const window = windowOf(input, now())
 
-  const { provider, config } = use ? { provider: use, config: {} } : await aramexFor(services, 20_000)
-  const times = {
-    pickupDate: window.ready,
-    readyTime: window.ready,
-    lastPickupTime: window.last,
-    closingTime: window.closing,
+  // Reserved before Aramex is called: two requests cannot both book the same parcel.
+  const token = `reserve:${crypto.randomUUID()}`
+  const ids = rows.map((s) => s.id)
+  const reserved = await db
+    .update(shipments)
+    .set({ pickupGuid: token })
+    .where(and(inArray(shipments.id, ids), isNull(shipments.pickupGuid), eq(shipments.status, "created")))
+    .returning({ id: shipments.id })
+  const release = () =>
+    db
+      .update(shipments)
+      .set({ pickupGuid: null })
+      .where(and(inArray(shipments.id, ids), eq(shipments.pickupGuid, token)))
+  if (reserved.length !== ids.length) {
+    await release()
+    throw new ORPCError("BAD_REQUEST", { message: ALREADY_IN_PICKUP })
   }
+
   let created: { id: string; guid: string }
+  let provider: ShippingProvider
   try {
+    const found = await providerFor(services, [...environments][0] as string, use)
+    provider = found.provider
+    const times = {
+      pickupDate: window.ready,
+      readyTime: window.ready,
+      lastPickupTime: window.last,
+      closingTime: window.closing,
+    }
     await provider.validatePickup(times)
     created = await provider.createPickup({
       ...times,
       reference: rows[0]?.waybill ?? "",
-      address: await shipperAddress(services, config),
+      address: await shipperAddress(services, found.config),
       productGroup: [...groups][0] as "DOM" | "EXP",
       waybills: rows.map((s) => s.waybill),
       pieces: rows.reduce((n, s) => n + s.pieces, 0),
@@ -97,12 +135,25 @@ export async function createPickup(
       ...(input.comments ? { comments: input.comments } : {}),
     })
   } catch (error) {
+    await release()
     owner(error)
   }
-  await db
-    .update(shipments)
-    .set({ pickupId: created.id, pickupGuid: created.guid })
-    .where(and(inArray(shipments.id, input.shipmentIds), isNull(shipments.pickupGuid), eq(shipments.status, "created")))
+  try {
+    await db
+      .update(shipments)
+      .set({ pickupId: created.id, pickupGuid: created.guid })
+      .where(and(inArray(shipments.id, ids), eq(shipments.pickupGuid, token)))
+  } catch {
+    // The pickup exists at Aramex: undo it there, and if that fails too tell the owner how to find it.
+    const undone = await provider.cancelPickup(created.guid, "Enregistrement impossible").then(
+      () => true,
+      () => false,
+    )
+    await release().catch(() => null)
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      message: undone ? "L'enlèvement n'a pas pu être enregistré, réessayez." : PICKUP_LOST(created.id, created.guid),
+    })
+  }
   return { pickupId: created.id }
 }
 
@@ -114,12 +165,12 @@ export async function cancelPickup(
 ): Promise<void> {
   const { db } = services
   const rows = await db
-    .select({ id: shipments.id, guid: shipments.pickupGuid })
+    .select({ id: shipments.id, guid: shipments.pickupGuid, environment: shipments.environment })
     .from(shipments)
     .where(and(eq(shipments.pickupId, pickupId), isNotNull(shipments.pickupGuid)))
   const guid = rows[0]?.guid
-  if (!guid) throw new ORPCError("NOT_FOUND", { message: "Enlèvement introuvable." })
-  const provider = use ?? (await aramexFor(services, 20_000)).provider
+  if (!guid || !rows[0]) throw new ORPCError("NOT_FOUND", { message: "Enlèvement introuvable." })
+  const { provider } = await providerFor(services, rows[0].environment, use)
   try {
     await provider.cancelPickup(guid, reason)
   } catch (error) {
@@ -129,9 +180,12 @@ export async function cancelPickup(
     .update(shipments)
     .set({ pickupId: null, pickupGuid: null })
     .where(
-      inArray(
-        shipments.id,
-        rows.map((r) => r.id),
+      and(
+        eq(shipments.pickupGuid, guid),
+        inArray(
+          shipments.id,
+          rows.map((r) => r.id),
+        ),
       ),
     )
 }
@@ -139,6 +193,7 @@ export async function cancelPickup(
 /**
  * Aramex has no cancellation: only a parcel whose label was just created is cancelled, here at once and at Aramex by a
  * hold. A failed hold still cancels locally (the owner will not hand the parcel over) and says to call the agency.
+ * It takes the same per-order claim as the creation, so it never cancels a parcel whose order is still being shipped.
  */
 export async function cancelShipment(
   services: Services,
@@ -150,29 +205,38 @@ export async function cancelShipment(
   const { db, now } = services
   const [row] = await db.select().from(shipments).where(eq(shipments.id, id)).limit(1)
   if (!row) throw new ORPCError("NOT_FOUND", { message: "Expédition introuvable." })
-  if (row.status !== "created") throw new ORPCError("BAD_REQUEST", { message: WITH_ARAMEX })
-  if (row.pickupGuid) throw new ORPCError("BAD_REQUEST", { message: IN_PICKUP })
-
-  let held = false
-  let message = "Expédition annulée."
-  let failure: { at: string; code: string; message: string } | null = null
-  try {
-    const provider = use ?? (await aramexFor(services, 20_000)).provider
-    await provider.cancel(row.waybill, `Annulée par l'expéditeur: ${reason}`)
-    held = true
-    message = "Expédition annulée et mise en attente chez Aramex. Si le colis est déjà parti, appelez votre agence."
-  } catch {
-    failure = { at: now().toISOString(), code: "HOLD", message: HOLD_FAILED }
-    message = HOLD_FAILED
-  }
-  await db.transaction(async (tx) => {
-    const [done] = await tx
-      .update(shipments)
-      .set({ status: "cancelled", errors: failure ? [...row.errors, failure].slice(-20) : row.errors })
-      .where(and(eq(shipments.id, id), eq(shipments.status, "created"), isNull(shipments.pickupGuid)))
-      .returning({ orderId: shipments.orderId })
-    if (!done) throw new ORPCError("BAD_REQUEST", { message: WITH_ARAMEX })
-    await revertOrderShipped(tx, done.orderId, adminId, reason)
+  const release = await claimOrder(services, row.orderId).catch((error: unknown) => {
+    if (error instanceof ORPCError) throw new ORPCError("CONFLICT", { message: CREATING })
+    throw error
   })
-  return { held, message }
+  try {
+    const [fresh] = await db.select().from(shipments).where(eq(shipments.id, id)).limit(1)
+    if (!fresh || fresh.status !== "created") throw new ORPCError("BAD_REQUEST", { message: WITH_ARAMEX })
+    if (fresh.pickupGuid) throw new ORPCError("BAD_REQUEST", { message: IN_PICKUP })
+
+    let held = false
+    let message = "Expédition annulée."
+    let failure: { at: string; code: string; message: string } | null = null
+    try {
+      const { provider } = await providerFor(services, fresh.environment, use)
+      await provider.cancel(fresh.waybill, `Annulée par l'expéditeur: ${reason}`)
+      held = true
+      message = "Expédition annulée et mise en attente chez Aramex. Si le colis est déjà parti, appelez votre agence."
+    } catch {
+      failure = { at: now().toISOString(), code: "HOLD", message: HOLD_FAILED }
+      message = HOLD_FAILED
+    }
+    await db.transaction(async (tx) => {
+      const [done] = await tx
+        .update(shipments)
+        .set({ status: "cancelled", errors: failure ? [...fresh.errors, failure].slice(-20) : fresh.errors })
+        .where(and(eq(shipments.id, id), eq(shipments.status, "created"), isNull(shipments.pickupGuid)))
+        .returning({ orderId: shipments.orderId })
+      if (!done) throw new ORPCError("BAD_REQUEST", { message: WITH_ARAMEX })
+      await revertOrderShipped(tx, done.orderId, adminId, reason)
+    })
+    return { held, message }
+  } finally {
+    await release()
+  }
 }
