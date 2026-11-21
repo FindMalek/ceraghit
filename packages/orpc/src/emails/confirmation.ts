@@ -83,7 +83,7 @@ export async function renderStudioNewOrder(order: ConfirmationOrder, ctx: MailCo
     : transfer
       ? "Virement bancaire à recevoir, contactez le client pour le suivi."
       : payoneer
-        ? "Paiement Payoneer : envoyez le lien depuis le dashboard."
+        ? "Paiement Payoneer : envoyez le lien par email au client."
         : "Payée en ligne."
   return {
     to: studio,

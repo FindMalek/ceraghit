@@ -148,7 +148,7 @@
     "methodTransfer": "Bank transfer",
     "methodTransferHint": "Outside Tunisia. You get our bank details on the order page and by email, and the order ships once the transfer is received.",
     "methodPayoneer": "Payoneer (card or Payoneer account)",
-    "methodPayoneerHint": "We email you a secure payment link.",
+    "methodPayoneerHint": "We will email you a secure payment link.",
     "noMethod": "No payment method for this country in this currency. Switch currency or write to us.",
     "unavailableAbroad": "Orders from abroad reopen very soon. Write to us to reserve a piece."
   },
@@ -191,7 +191,7 @@
     "payBefore": "Please pay before {date}",
     "payoneerTitle": "Order reserved",
     "payoneerText": "Pay with the Payoneer link and add the reference below.",
-    "payoneerWaiting": "Your payment link arrives by email within 24 h.",
+    "payoneerWaiting": "We will send your payment link by email.",
     "payoneerPay": "Pay with Payoneer",
     "payoneerHeading": "Payoneer payment",
     "payoneerReceiver": "Payoneer receiving email",

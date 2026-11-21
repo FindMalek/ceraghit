@@ -148,7 +148,7 @@
     "methodTransfer": "Virement bancaire",
     "methodTransferHint": "Hors Tunisie. Vous recevez nos coordonnées bancaires sur la page de commande et par email, la commande est expédiée à réception du virement.",
     "methodPayoneer": "Payoneer (carte ou compte Payoneer)",
-    "methodPayoneerHint": "Nous vous envoyons un lien de paiement sécurisé par email.",
+    "methodPayoneerHint": "Nous vous enverrons un lien de paiement sécurisé par email.",
     "noMethod": "Aucun moyen de paiement pour ce pays dans cette devise. Changez de devise ou écrivez-nous.",
     "unavailableAbroad": "Les commandes depuis l'étranger rouvrent très bientôt. Écrivez-nous pour réserver une pièce."
   },
@@ -191,7 +191,7 @@
     "payBefore": "À régler avant le {date}",
     "payoneerTitle": "Commande réservée",
     "payoneerText": "Payez avec le lien Payoneer en indiquant la référence ci-dessous.",
-    "payoneerWaiting": "Votre lien de paiement arrive par email sous 24 h.",
+    "payoneerWaiting": "Nous vous enverrons votre lien de paiement par email.",
     "payoneerPay": "Payer avec Payoneer",
     "payoneerHeading": "Paiement Payoneer",
     "payoneerReceiver": "Email Payoneer de réception",
