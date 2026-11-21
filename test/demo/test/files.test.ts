@@ -59,6 +59,31 @@ test("a PDF is counted by its pages and a hostile file name is escaped", () => {
   expect(renderFileCard({ name: "<img src=x>.pdf", bytes: 10, pages: 2 })).not.toContain("<img src=x>")
 })
 
+test("an upload step fills a file input that is hidden behind its button", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "demo-up-"))
+  const browser = await chromium.launch()
+  try {
+    generateAssets(dir, "ffmpeg-that-does-not-exist")
+    const page = await browser.newPage()
+    await page.setContent(
+      '<label>Choisir<input type="file" aria-label="Choisir des photos" style="display:none" onchange="document.title=this.files[0].name"></label>',
+    )
+    const pacer = createPacer({
+      page,
+      device: "desktop",
+      app: "dashboard",
+      baseUrl: () => "",
+      assetsDir: dir,
+      zoom: false,
+    })
+    await pacer.run({ action: "upload", target: { label: "Choisir des photos" }, caption_fr: "Photo." }, "photo-1.png")
+    expect(await page.title()).toBe("photo-1.png")
+  } finally {
+    await browser.close()
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 test("a download step keeps the file and shows it over the page, the next step clears it", async () => {
   const dir = mkdtempSync(join(tmpdir(), "demo-dl-"))
   const browser = await chromium.launch()

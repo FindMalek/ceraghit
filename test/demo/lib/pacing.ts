@@ -34,7 +34,8 @@ export function locate(page: Page, target: Target): Locator {
   return target.nth === undefined ? visible : visible.nth(target.nth)
 }
 
-function anyMatch(page: Page, target: Target): Locator {
+/** Visible or not: a file input is hidden behind its button. */
+export function anyMatch(page: Page, target: Target): Locator {
   if (target.testId) return page.getByTestId(target.testId)
   if (target.role) {
     return page.getByRole(target.role as Parameters<Page["getByRole"]>[0], target.name ? { name: target.name } : {})
@@ -186,7 +187,7 @@ export function createPacer(options: PacerOptions): Pacer {
           break
         case "upload":
           if (!target) throw new Error("upload needs a target")
-          await locate(page, target)
+          await (target.nth === undefined ? anyMatch(page, target) : anyMatch(page, target).nth(target.nth))
             .first()
             .setInputFiles(`${options.assetsDir}/${value ?? ""}`)
           break
