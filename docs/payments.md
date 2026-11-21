@@ -71,6 +71,16 @@ order is always checked by the demo gateway, never by Konnect. Nothing marks suc
 refuses online orders. A payment taken while the keys were unusable must be reconciled by hand in the Konnect dashboard
 once the keys are back (the next webhook or order page visit then settles it), otherwise the order stays pending.
 
+#### known limits
+
+- `assertKonnectUnlocked` and the key save are not in one transaction. A checkout that resolved the old gateway and is
+  mid-`init` while the keys change gets a reference from the old account, stays pending and is cancelled by the sweep.
+  The window is a few seconds, it fails closed, and nothing is marked paid.
+- After a `SECRETS_KEY` loss followed by saving different keys, the held Konnect orders are cancelled by the sweep with
+  no further warning (Konnect is resolvable again, so the holds are no longer skipped).
+- An env swap from account A to B (no vault row) makes Konnect resolvable again, but B cannot read A's references: those
+  orders are cancelled after the hold, and a payment taken on A must be reconciled by hand in Konnect.
+
 ## payoneer
 
 The client wants to be paid through Payoneer. Payoneer sells two different things, and only one of them fits a small

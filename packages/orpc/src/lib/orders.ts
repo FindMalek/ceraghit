@@ -463,8 +463,7 @@ export async function markPaidManually(
   return { status: "paid", alreadyPaid: false }
 }
 
-export const KONNECT_KEYS_LOCKED =
-  "Des commandes en ligne attendent encore un paiement (moins de 45 minutes) : changez ou supprimez les clés quand elles sont payées ou expirées."
+export const KONNECT_KEYS_LOCKED = `Des commandes en ligne attendent encore un paiement (moins de ${HOLD_MINUTES} minutes) : changez ou supprimez les clés quand ces commandes sont payées ou ont expiré.`
 
 /**
  * Changing or clearing the Konnect keys while a card payment may still be in flight would leave a real payment that
