@@ -2,7 +2,7 @@ export { type AppEnv, type Context, createContext, type Services } from "./conte
 export { AdminAuth } from "./lib/auth"
 export { type CleanupReport, cleanupUploads, STORAGE_REFERENCES } from "./lib/cleanup"
 export { type JobCounts, type JobOutcome, runJob } from "./lib/jobs"
-export { purgeMailLog } from "./lib/mail-log"
+export { purgeMailLog, retryFailedMails } from "./lib/mail-log"
 export {
   ConsoleMailer,
   type Mail,
@@ -22,6 +22,7 @@ export {
 export { sweepRateLimits } from "./lib/rate-limit"
 export { effectivePaymentMethods } from "./lib/settings"
 export { resolveShippingProvider, shippingHealth } from "./lib/shipping/resolve"
+export { trackShipments } from "./lib/shipping/tracking"
 export { createStorage, type Storage } from "./lib/storage"
 export { adminProcedure, o, publicProcedure } from "./procedures"
 export { type AppRouter, type AppRouterClient, appRouter } from "./routers"

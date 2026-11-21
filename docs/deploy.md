@@ -130,9 +130,9 @@ scheduler can change without touching the api.
 The schedule still calls `cleanup-uploads` and not `media-cleanup`, because the alias is what also sweeps `rate_limits`
 and the mail log; moving the daily call to `media-cleanup` is a separate change.
 
-Scheduled today: `cleanup-uploads` and `release-holds`. `media-cleanup` has a handler but no task yet; `track-shipments`,
-`retry-mail` and `ai-usage-rollover` are catalogued so Réglages lists them, and get their task when their lane registers a
-handler in `apps/api/src/cron.ts`.
+Every job whose handler is registered in `apps/api/src/cron.ts` has a task in `apps/jobs/src/schedules.ts`;
+`media-cleanup` has a handler but no task yet (see above). `track-shipments` does nothing until shipping is switched to
+Aramex with complete credentials.
 
 `apps/jobs` is the scheduler: a Trigger.dev project on the self-hosted instance https://trigger.findmalek.engineer,
 part of the Lyterion stack on the-keep (its `infra/` owns the compose file, its CI upgrades it). One `schedules.task`
