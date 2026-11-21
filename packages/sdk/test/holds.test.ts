@@ -14,6 +14,13 @@ test("transfer expires after transferDays, cod and card never by default", () =>
   )
 })
 
+test("a Payoneer order expires after payoneerDays, never when the owner clears it", () => {
+  expect(holdExpiresAt({ paymentMethod: "payoneer", createdAt }, DEFAULT_HOLDS)?.toISOString()).toBe(
+    "2026-11-17T09:00:00.000Z",
+  )
+  expect(holdExpiresAt({ paymentMethod: "payoneer", createdAt }, { ...DEFAULT_HOLDS, payoneerDays: null })).toBeNull()
+})
+
 test("the warning starts warnDays before the release", () => {
   const expires = new Date("2026-11-17T09:00:00Z")
   expect(holdExpiresSoon(expires, new Date("2026-11-14T09:00:00Z"), DEFAULT_HOLDS)).toBe(false)

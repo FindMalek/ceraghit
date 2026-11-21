@@ -87,7 +87,11 @@ once the keys are back (the next webhook or order page visit then settles it), o
 reports a status: the order stays `pending_payment` with the order number as the reference, and the owner confirms it with
 `markPaidManually` (method Payoneer, audited). `per_order` mode tells the customer a link arrives by email; `static` mode
 shows one shop link (https, `payoneer.com` hosts only, checked by `isPayoneerUrl`) on the order page and in the mail.
-Unpaid Payoneer orders have no automatic release yet: they hold their pieces until paid or cancelled.
+In `per_order` mode the owner pastes the link he made in Payoneer on the pending order (`admin.orders.setPaymentLink`):
+it is kept in `orders.payment_ref` (a Payoneer order has no gateway reference, and `settleOrder` ignores every
+non-card order), emailed once, audited as `payment_link_set` (host and path only), and replacing it mails again.
+Unpaid Payoneer orders are released after `holds.payoneerDays` (default 7, empty = never) by the same `release-holds`
+sweep as transfers, with the same expiry mail.
 
 ## payoneer
 

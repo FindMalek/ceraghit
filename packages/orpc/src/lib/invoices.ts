@@ -112,6 +112,7 @@ export function invoiceView(
   invoice: InvoiceRow | null,
   profile: ShopProfileRow,
   lang?: InvoiceLocale,
+  paymentReference: string | null = null,
 ): InvoiceView {
   const orderLocale = toLocale(order.locale)
   return {
@@ -127,6 +128,7 @@ export function invoiceView(
     paidAt: order.paidAt?.toISOString() ?? null,
     currency: order.currency,
     paymentMethod: order.paymentMethod as PaymentMethod,
+    paymentReference,
     items: order.items.map(({ ref, title, unitMinor, quantity }) => ({ ref, title, unitMinor, quantity })),
     subtotalMinor: order.subtotalMinor,
     shippingMinor: order.shippingMinor,

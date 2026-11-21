@@ -8,7 +8,7 @@ import {
   PhoneIcon,
   WhatsappLogoIcon,
 } from "@phosphor-icons/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { carrierDisplayName, countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
@@ -31,11 +31,12 @@ import { DownloadInvoiceButton } from "@/components/download-invoice-button"
 import { ExportOrdersDialog } from "@/components/export-orders-dialog"
 import { MANUAL_METHOD_LABEL, MarkPaidDialog } from "@/components/mark-paid-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
+import { PayoneerLinkBlock } from "@/components/payoneer-link-block"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { ShipOrderDialog } from "@/components/ship-order-dialog"
 import { ShipmentCard } from "@/components/shipment-card"
 import { SimpleSelect } from "@/components/simple-select"
-import { HoldBadge, OrderStatusBadge } from "@/components/status-badge"
+import { HoldBadge, LinkBadge, OrderStatusBadge } from "@/components/status-badge"
 import { formatDate, formatDayYear, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
@@ -121,7 +122,8 @@ function actionsFor(status: Status, method: PaymentMethod): Action[] {
 }
 
 function useOrders(input: { status?: Status; q?: string; limit: number }) {
-  return useQuery(orpc.admin.orders.list.queryOptions({ input }))
+  // keep the rows while a new search loads: an open order sheet must not unmount and lose what was typed in it
+  return useQuery(orpc.admin.orders.list.queryOptions({ input, placeholderData: keepPreviousData }))
 }
 
 function Line({ label, value }: { label: string; value: React.ReactNode }) {
@@ -136,6 +138,7 @@ function Line({ label, value }: { label: string; value: React.ReactNode }) {
 const GATEWAY_AUDIT_LABEL: Record<string, string> = {
   gateway_mismatch: "Paiement Konnect incohérent : à vérifier dans votre espace Konnect",
   hold_expired: "Annulée automatiquement : délai de paiement dépassé",
+  payment_link_set: "Lien de paiement Payoneer envoyé au client",
   late_payment: "Paiement Konnect reçu après l'annulation : à rembourser ou restaurer à la main",
 }
 
@@ -298,9 +301,15 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                         />
                       </>
                     )}
+                    {order.paymentReference && (
+                      <Line label="Référence" value={<span className="break-all">{order.paymentReference}</span>} />
+                    )}
                     <Line label="Payée le" value={order.paidAt ? formatDate(order.paidAt) : "—"} />
                   </dl>
                 </section>
+                {order.status === "pending_payment" && order.paymentMethod === "payoneer" && (
+                  <PayoneerLinkBlock key={order.id} order={order} />
+                )}
                 {order.status === "fulfilled" && (
                   <section>
                     <h2 className="mb-1 font-heading text-2xl">Livraison</h2>
@@ -489,6 +498,7 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                     <span className="flex items-center justify-between gap-2">
                       <span className="whitespace-nowrap text-lg tabular-nums">{order.number}</span>
                       <span className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+                        <LinkBadge order={order} />
                         <HoldBadge order={order} />
                         <OrderStatusBadge status={order.status} />
                       </span>
@@ -537,6 +547,7 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                       <TableCell>
                         <span className="flex items-center gap-1.5">
                           <OrderStatusBadge status={order.status} />
+                          <LinkBadge order={order} />
                           <HoldBadge order={order} />
                         </span>
                       </TableCell>

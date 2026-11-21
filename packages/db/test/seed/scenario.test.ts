@@ -69,14 +69,19 @@ test("every paid transfer order has exactly one manual payment audit row", () =>
   )
 })
 
-test("the demo shop has a payoneer order waiting for its link and one the owner confirmed", () => {
+test("the demo shop has payoneer orders waiting for a link, linked, confirmed and released after the hold", () => {
   const { orders, audit } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
   const payoneer = orders.filter((o) => o.paymentMethod === "payoneer")
   expect(payoneer.every((o) => o.currency === "EUR" && o.country !== "TN")).toBe(true)
-  expect(payoneer.filter((o) => o.status === "pending_payment")).toHaveLength(1)
+  const pending = payoneer.filter((o) => o.status === "pending_payment")
+  expect(pending.map((o) => Boolean(o.paymentRef)).sort()).toEqual([false, true])
+  const linked = pending.find((o) => o.paymentRef)
+  expect(audit.filter((a) => a.orderId === linked?.id)).toMatchObject([{ action: "payment_link_set" }])
   const paid = payoneer.filter((o) => o.paidAt)
   expect(paid).toHaveLength(1)
   expect(audit.filter((a) => a.orderId === paid[0]?.id)).toMatchObject([{ method: "payoneer" }])
+  const released = payoneer.filter((o) => o.status === "cancelled")
+  expect(audit.filter((a) => a.orderId === released[0]?.id)).toMatchObject([{ action: "hold_expired" }])
 })
 
 test("the demo shows one late payment on a cancelled online order", () => {

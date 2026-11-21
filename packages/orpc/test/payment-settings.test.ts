@@ -114,6 +114,7 @@ describe.skipIf(!url)("payment settings", () => {
     expect((await client.admin.settings.getPayments()).settings.holds).toEqual({
       transferDays: 12,
       codDays: 5,
+      payoneerDays: 7,
       warnDays: 3,
     })
   })

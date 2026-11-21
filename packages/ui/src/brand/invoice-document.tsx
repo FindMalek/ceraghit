@@ -134,6 +134,15 @@ export function InvoiceDocument({ view }: { view: PublicInvoiceView }) {
             : `${t.notPaid}.`}
       </p>
 
+      {view.paymentReference && (view.paymentMethod === "transfer" || view.paymentMethod === "payoneer") && (
+        <p className="invoice-block text-sm">
+          {t.paymentReference} :{" "}
+          <span dir="ltr" className="text-start">
+            {view.paymentReference}
+          </span>
+        </p>
+      )}
+
       {view.paymentMethod === "transfer" && seller.bank && (
         <section className="invoice-block text-sm">
           <p className="invoice-label">{t.bank}</p>
