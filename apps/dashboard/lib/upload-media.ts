@@ -14,14 +14,10 @@ async function sha256(file: File): Promise<string> {
 export const STORAGE_FULL_TEXT = "Le stockage est plein. Supprimez des photos inutilisées pour pouvoir en ajouter."
 
 /**
- * Compress to WebP, reserve with a hash (duplicates come back as "existing"), PUT, confirm. When the cached usage says
- * the file would not fit it stops before signing; the server check stays the source of truth.
+ * Compress to WebP, reserve with a hash (duplicates come back as "existing" and cost no bytes), PUT, confirm. The
+ * storage limit is only checked by the server when it signs a new file: a client estimate would refuse a duplicate.
  */
-export async function uploadMedia(
-  original: File,
-  onPhase: (phase: UploadPhase) => void,
-  usage?: { usedBytes: number; quotaBytes: number },
-) {
+export async function uploadMedia(original: File, onPhase: (phase: UploadPhase) => void) {
   onPhase("compress")
   const file = await compressImage(original)
   if (file.type !== "image/webp") throw new Error(NO_WEBP_MESSAGE)
@@ -29,7 +25,6 @@ export async function uploadMedia(
   const { width, height } = bitmap
   bitmap.close()
   assertMediaSize(width, height)
-  if (usage && usage.usedBytes + file.size > usage.quotaBytes) throw new Error(STORAGE_FULL_TEXT)
   const signed = await browserClient.admin.media.sign({
     originalName: original.name,
     contentType: "image/webp",

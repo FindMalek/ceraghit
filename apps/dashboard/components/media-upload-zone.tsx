@@ -59,7 +59,7 @@ export function MediaUploadZone({ onUploaded }: { onUploaded?: (media: Media[]) 
     const worker = async () => {
       for (let job = queue.shift(); job; job = queue.shift()) {
         try {
-          done.push(await uploadMedia(job.file, (phase) => patch(job.id, { phase }), usage.data))
+          done.push(await uploadMedia(job.file, (phase) => patch(job.id, { phase })))
         } catch (error) {
           const message =
             error instanceof ORPCError
