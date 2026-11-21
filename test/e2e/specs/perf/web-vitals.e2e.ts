@@ -11,6 +11,7 @@ interface Vitals {
   lcp: number
   lcpUrl: string | null
   cls: number
+  sum: number
 }
 
 interface Img {
@@ -21,8 +22,12 @@ interface Img {
 
 /** Collects LCP and layout shifts in the page, the way the web-vitals library does. */
 const OBSERVE = () => {
-  const w = window as unknown as { __vitals: { lcp: number; lcpUrl: string | null; cls: number } }
-  w.__vitals = { lcp: 0, lcpUrl: null, cls: 0 }
+  const w = window as unknown as { __vitals: { lcp: number; lcpUrl: string | null; cls: number; sum: number } }
+  w.__vitals = { lcp: 0, lcpUrl: null, cls: 0, sum: 0 }
+  // CLS is the worst session window: shifts less than 1 s apart, a window at most 5 s long.
+  let windowValue = 0
+  let windowStart = 0
+  let lastShift = 0
   new PerformanceObserver((list) => {
     const last = list.getEntries().at(-1) as (PerformanceEntry & { url?: string; startTime: number }) | undefined
     if (last) {
@@ -31,8 +36,18 @@ const OBSERVE = () => {
     }
   }).observe({ type: "largest-contentful-paint", buffered: true })
   new PerformanceObserver((list) => {
-    for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[])
-      if (!entry.hadRecentInput) w.__vitals.cls += entry.value
+    for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
+      if (entry.hadRecentInput) continue
+      const time = entry.startTime
+      if (windowValue > 0 && time - lastShift < 1000 && time - windowStart < 5000) windowValue += entry.value
+      else {
+        windowValue = entry.value
+        windowStart = time
+      }
+      lastShift = time
+      w.__vitals.cls = Math.max(w.__vitals.cls, windowValue)
+      w.__vitals.sum += entry.value
+    }
   }).observe({ type: "layout-shift", buffered: true })
 }
 
@@ -183,7 +198,7 @@ test("product: the gallery does not shift the layout and photos stay light", ONC
   })
 
   await step("switching photos three times moves nothing", async () => {
-    const before = await page.evaluate(() => (window as unknown as { __vitals: Vitals }).__vitals.cls)
+    const before = await page.evaluate(() => (window as unknown as { __vitals: Vitals }).__vitals.sum)
     const label = t("fr", "product.photo").replace("{n}", "\\d+").replace("{total}", "\\d+")
     const thumbs = page.getByRole("button", { name: new RegExp(`^${label}$`) })
     const count = Math.min(await thumbs.count(), 3)
@@ -192,7 +207,7 @@ test("product: the gallery does not shift the layout and photos stay light", ONC
       await thumbs.nth(i).click()
       await page.waitForLoadState("networkidle")
     }
-    const after = await page.evaluate(() => (window as unknown as { __vitals: Vitals }).__vitals.cls)
+    const after = await page.evaluate(() => (window as unknown as { __vitals: Vitals }).__vitals.sum)
     expect(after - before, "CLS added by the gallery").toBeLessThanOrEqual(BUDGETS.cls)
   })
 })
