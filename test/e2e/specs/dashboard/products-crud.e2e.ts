@@ -4,6 +4,7 @@ import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { dbQuery, price } from "../../helpers/catalogue"
 import { completeSetup, openDb } from "../../helpers/db"
 import { type AppLocale, localePath } from "../../helpers/locale"
+import { t } from "../../helpers/messages"
 import {
   deleteProductsByPrefix,
   fillLocalized,
@@ -84,9 +85,12 @@ async function openEdit(page: Page, ref: string): Promise<void> {
 
 async function quickToggle(page: Page, ref: string, label: "Publier" | "Dépublier"): Promise<void> {
   await searchList(page, ref)
-  const saved = page.waitForResponse((r) => r.url().includes("/products") && r.request().method() !== "GET")
+  const saved = page.waitForResponse(
+    (r) => r.request().method() === "POST" && r.url().includes("/rpc/admin/products/update"),
+  )
   await page.getByRole("button", { name: label, exact: true }).click()
-  await saved
+  expect((await saved).ok()).toBe(true)
+  await expect.poll(async () => (await productRow(ref)).status).toBe(label === "Publier" ? "published" : "draft")
 }
 
 test("a new piece saves both prices in their own unit and shows on the storefront in fr, en and ar", async ({
@@ -276,7 +280,7 @@ test("variants keep their prices, stock and order, survive the publish toggle an
     await expect(options).toHaveCount(2)
     await expect(options.nth(0)).toContainText("Petit")
     await expect(options.nth(1)).toContainText("Grand")
-    await expect(options.nth(1)).toContainText("Épuisé")
+    await expect(options.nth(1)).toContainText(t("fr", "product.variantSoldOut"))
     await page.goto(storefront("en", slug))
     await expect(page.locator("label:has(input[name=variant])").nth(0)).toContainText("Small")
   })
@@ -351,6 +355,7 @@ test("a description of 3000 characters saves and 3001 is refused", async ({ page
   await step("3001 characters are refused", async () => {
     await page.getByRole("button", { name: "Créer le produit" }).click()
     await expect(page.getByText("Certains champs sont à corriger.")).toBeVisible()
+    await expect(page.locator("#description")).toHaveAttribute("aria-invalid", "true")
     expect(await productExists(ref)).toBe(false)
   })
   await step("3000 characters save in full", async () => {
