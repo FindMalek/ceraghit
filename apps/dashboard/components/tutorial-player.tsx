@@ -3,8 +3,10 @@
 import { HourglassMediumIcon, XIcon } from "@phosphor-icons/react"
 import {
   formatTutorialLength,
+  playableSources,
   relatedTutorials,
   TUTORIAL_AREA_LABELS,
+  TUTORIAL_DEVICES,
   TUTORIALS,
   type Tutorial,
   type TutorialDevice,
@@ -20,15 +22,6 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useState } from "react"
 
 export const DEVICE_LABELS: Record<TutorialDevice, string> = { desktop: "Ordinateur", mobile: "Téléphone" }
-
-export type VideoSource = { kind: "youtube"; id: string } | { kind: "file" }
-
-/** Where a video plays from on one device: the owner's YouTube link first, then the hosted file. */
-export function sourceFor(device: TutorialDevice, files: TutorialFiles | undefined, link: TutorialLink | undefined) {
-  const youtube = link?.[device]
-  if (youtube) return { kind: "youtube", id: youtube } satisfies VideoSource
-  return files?.[device] ? ({ kind: "file" } satisfies VideoSource) : null
-}
 
 /** Same-origin url of a file in the bucket: the dashboard proxy forwards /api/files/* and the api redirects to storage. */
 export const fileUrl = (prefix: string, key: string) => `/api/files/${prefix}${key}`
@@ -48,10 +41,11 @@ function Player({
 }) {
   const isMobile = useIsMobile()
   const [chosen, setChosen] = useState<TutorialDevice | null>(null)
-  const available = tutorial.devices.filter((d) => sourceFor(d, files, link))
+  const sources = playableSources(tutorial, files, link)
+  const available = TUTORIAL_DEVICES.filter((d) => sources[d])
   const preferred: TutorialDevice = chosen ?? (isMobile ? "mobile" : "desktop")
   const device = available.includes(preferred) ? preferred : (available[0] ?? null)
-  const source = device ? sourceFor(device, files, link) : null
+  const source = device ? (sources[device] ?? null) : null
   const keys = device ? tutorialKeys(tutorial.id, device) : null
   const related = relatedTutorials(tutorial, TUTORIALS)
 

@@ -20,11 +20,23 @@ Upload under the key prefix `tutorials/` (the api adds the environment prefix on
 `/api/files/<prefix>tutorials/...` (the api redirects to the CDN or a signed url).
 
 Production files are H.264 `mp4` served as `video/mp4` with Range requests (R2 and Garage both support them), captions
-are `text/vtt`, the poster a `jpg`. The video element is `crossorigin="anonymous"`, so the bucket or CDN must send
-`Access-Control-Allow-Origin` for the dashboard origin on GET (captions are fetched in CORS mode). Garage returns an
-invalid header when one CORS rule lists several origins: use one rule per origin. The dashboard CSP must allow the CDN
-or bucket origin in `media-src` (`buildCsp` takes it from `S3_ENDPOINT` and `S3_PUBLIC_URL`, so the dashboard needs
-those variables).
+are `text/vtt`, the poster a `jpg`. The dashboard CSP must allow the CDN or bucket origin in `media-src` (`buildCsp`
+takes it from `S3_ENDPOINT` and `S3_PUBLIC_URL`, so the dashboard needs both variables).
+
+### CORS on the bucket or CDN
+
+The player sets `crossorigin="anonymous"` because Chromium only loads the French captions with it (measured: without the
+attribute the caption track errors even when the bucket sends CORS headers). The consequence is that the video file is
+fetched in CORS mode too. If the bucket or CDN has no CORS rule for the dashboard origin, **nothing plays at all**
+(`The element has no supported sources`), not only the captions. Add this rule to the production R2 bucket and to the
+preview Garage bucket before uploading videos: allowed origin = the dashboard origin only, methods `GET` and `HEAD`:
+
+```json
+{ "AllowedOrigins": ["https://dashboard.ceraghit.com"], "AllowedMethods": ["GET", "HEAD"], "MaxAgeSeconds": 3600 }
+```
+
+Garage answers a rule that lists several origins with the whole list in `Access-Control-Allow-Origin`, which browsers
+refuse: use one rule per origin.
 
 ## Manifest
 

@@ -3,6 +3,7 @@ import {
   foldText,
   formatTutorialLength,
   parseTutorialManifest,
+  playableSources,
   readTutorialLinks,
   relatedTutorials,
   searchTutorials,
@@ -123,4 +124,27 @@ test("the formatted length reads in minutes and seconds", () => {
   expect(formatTutorialLength(45)).toBe("45 s")
   expect(formatTutorialLength(90)).toBe("1 min 30")
   expect(formatTutorialLength(120)).toBe("2 min")
+})
+
+test("a video plays from the owner's link first, then the hosted file, on its declared devices only", () => {
+  const byId = (id: string) => TUTORIALS.find((t) => t.id === id)!
+  const both = byId("07-rechercher-produit")
+  const desktopOnly = byId("97-demo-test-production")
+  const files = { desktop: true, mobile: true, captions: true, poster: true }
+  expect(playableSources(both, files, undefined)).toEqual({ desktop: { kind: "file" }, mobile: { kind: "file" } })
+  expect(playableSources(both, files, { desktop: "dQw4w9WgXcQ", mobile: null })).toEqual({
+    desktop: { kind: "youtube", id: "dQw4w9WgXcQ" },
+    mobile: { kind: "file" },
+  })
+  expect(playableSources(desktopOnly, files, { desktop: null, mobile: "dQw4w9WgXcQ" })).toEqual({
+    desktop: { kind: "file" },
+  })
+  expect(playableSources(desktopOnly, undefined, { desktop: null, mobile: "dQw4w9WgXcQ" })).toEqual({})
+  expect(playableSources(both, undefined, undefined)).toEqual({})
+})
+
+test("a video marked soon never plays, even with files or links", () => {
+  const soon = TUTORIALS.find((t) => t.status === "soon")!
+  const files = { desktop: true, mobile: true, captions: true, poster: true }
+  expect(playableSources(soon, files, { desktop: "dQw4w9WgXcQ", mobile: null })).toEqual({})
 })

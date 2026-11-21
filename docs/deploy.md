@@ -205,7 +205,7 @@ production).
 **Cloudflare R2**: bucket `ceraghit-prod`, a public custom domain (`cdn.<domain>`) for `S3_PUBLIC_URL`, an API token scoped
 to that bucket, and a CORS rule allowing `PUT` from the dashboard **and the web** origins (product photos are uploaded by
 the dashboard, customer photos on `/custom` by the storefront, both straight to the bucket; the web ones are limited to
-5 MB and signed with their exact size and type). Exact rules, nothing else (no `*`, `GET` only from the dashboard, for the tutorial video captions, the api never sends CORS headers either):
+5 MB and signed with their exact size and type). Exact rules, nothing else (no `*`, `GET`/`HEAD` only from the dashboard, for the tutorial videos: without that rule the hosted videos do not play at all, the api never sends CORS headers either):
 
 ```json
 [{ "AllowedOrigins": ["https://ceraghit.com", "https://dashboard.ceraghit.com"], "AllowedMethods": ["PUT"], "AllowedHeaders": ["content-type"], "MaxAgeSeconds": 3600 },

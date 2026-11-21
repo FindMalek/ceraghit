@@ -1319,6 +1319,28 @@ export function parseTutorialManifest(text: string | null | undefined): Tutorial
   return { videos }
 }
 
+export type TutorialSource = { kind: "youtube"; id: string } | { kind: "file" }
+
+/**
+ * Where each device version of a video plays from: the owner's YouTube link first, then the hosted file.
+ * Only the devices the video declares count, and a `soon` video never plays. The card, the count and the player all
+ * read this, so they cannot disagree.
+ */
+export function playableSources(
+  tutorial: Tutorial,
+  files: TutorialFiles | undefined,
+  link: TutorialLink | undefined,
+): Partial<Record<TutorialDevice, TutorialSource>> {
+  const sources: Partial<Record<TutorialDevice, TutorialSource>> = {}
+  if (tutorial.status === "soon") return sources
+  for (const device of tutorial.devices) {
+    const youtube = link?.[device]
+    if (youtube) sources[device] = { kind: "youtube", id: youtube }
+    else if (files?.[device]) sources[device] = { kind: "file" }
+  }
+  return sources
+}
+
 /** Storage keys of a video's files, relative to the bucket (the api adds the environment prefix). */
 export function tutorialKeys(id: string, device: TutorialDevice) {
   return {

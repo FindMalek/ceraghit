@@ -155,6 +155,10 @@ test("the YouTube links sheet lists the hosted videos and filters them by title"
     await expect(first).toBeVisible()
     await expect(sheet.locator("fieldset")).toHaveCount(91)
   })
+  await step("a video made for one device only asks for that device's link", async () => {
+    await expect(sheet.locator("fieldset", { hasText: "97 · Démo" }).getByRole("textbox")).toHaveCount(1)
+    await expect(sheet.locator("fieldset", { hasText: "01 · Découvrir" }).getByRole("textbox")).toHaveCount(2)
+  })
   await step("searching keeps only the matching videos", async () => {
     await sheet.getByRole("searchbox", { name: "Chercher une vidéo à modifier" }).fill("FACTURE")
     await expect(sheet.getByText("46 · Émettre et imprimer une facture")).toBeVisible()

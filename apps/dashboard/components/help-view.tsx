@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import {
   formatTutorialLength,
+  playableSources,
   searchTutorials,
   TUTORIAL_AREA_LABELS,
   TUTORIAL_AREAS,
@@ -158,7 +159,7 @@ export function HelpView({
   const isPlayable = (t: Tutorial) => {
     const files: TutorialFiles | undefined = manifest.videos[t.id]
     const link: TutorialLink | undefined = data[t.id]
-    return Boolean(files?.desktop || files?.mobile || link?.desktop || link?.mobile)
+    return Object.keys(playableSources(t, files, link)).length > 0
   }
   const ready = TUTORIALS.filter(isPlayable).length
   const open = TUTORIALS.find((t) => t.id === query.video) ?? null

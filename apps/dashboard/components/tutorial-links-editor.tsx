@@ -73,7 +73,7 @@ export function TutorialLinksEditor({
     const value: TutorialLinks = {}
     for (const t of EDITABLE) {
       const entry = { desktop: null as string | null, mobile: null as string | null }
-      for (const { key } of DEVICES) {
+      for (const { key } of DEVICES.filter(({ key }) => t.devices.includes(key))) {
         const text = drafts[t.id]![key].trim()
         const id = text ? youtubeId(text) : null
         if (text && !id) found[`video-${t.id}-${key}`] = true
@@ -120,7 +120,7 @@ export function TutorialLinksEditor({
                 <FieldLegend className="font-medium">
                   <span className="text-primary tabular-nums">{t.id.slice(0, 2)}</span> · {t.title}
                 </FieldLegend>
-                {DEVICES.map(({ key, label }) => {
+                {DEVICES.filter(({ key }) => t.devices.includes(key)).map(({ key, label }) => {
                   const name = `video-${t.id}-${key}`
                   return (
                     <Field key={key} data-invalid={errors[name] || undefined}>
