@@ -33,6 +33,11 @@ export function csvField(value: string | number): string {
   return /[";\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
+/** Excel and Sheets run a cell that starts with one of these as a formula, so customer text gets a leading apostrophe. */
+export function plainText(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
+}
+
 /** `;` separated (what French Excel opens by default), CRLF lines, optional UTF-8 byte order mark. */
 export function toCsv(rows: (string | number)[][], opts: { bom?: boolean } = {}): string {
   return `${opts.bom ? BOM : ""}${rows.map((row) => row.map(csvField).join(";")).join("\r\n")}\r\n`
@@ -84,11 +89,11 @@ export function buildOrdersCsv(orders: CsvOrder[], currency: Currency, opts: { b
       o.number,
       tunisIso(o.paidAt ?? o.createdAt),
       o.status,
-      o.customerName,
-      o.email,
+      plainText(o.customerName),
+      plainText(o.email),
       countryName(o.country, "fr"),
-      o.city,
-      o.items.map((i) => `${i.ref} x${i.quantity}`).join(", "),
+      plainText(o.city),
+      plainText(o.items.map((i) => `${i.ref} x${i.quantity}`).join(", ")),
       decimalAmount(o.subtotalMinor, currency),
       decimalAmount(o.shippingMinor, currency),
       decimalAmount(o.totalMinor, currency),
