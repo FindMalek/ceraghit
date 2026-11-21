@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server"
+import { getSiteImages } from "@/lib/api"
 import { OG_CONTENT_TYPE, OG_SIZE, ogImage, ogPhoto } from "@/lib/og"
+import { siteImages } from "@/lib/site-images"
 
 export const alt = "Ceraghit"
 export const size = OG_SIZE
@@ -12,6 +14,6 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
     locale,
     title: t("title"),
     subtitle: t("intro"),
-    image: await ogPhoto("/catalogue/lampes-collage.webp"),
+    image: await ogPhoto(siteImages("og-shop", await getSiteImages(), locale)[0]?.src),
   })
 }
