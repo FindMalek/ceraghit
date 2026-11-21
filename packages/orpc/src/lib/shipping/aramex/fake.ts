@@ -131,6 +131,30 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
         NonExistingWaybills: [],
       })
     }
+    if (url.endsWith("/ValidatePickup")) return reply({ Transaction: null, Notifications: [], HasErrors: false })
+    if (url.endsWith("/CreatePickup")) {
+      return reply({
+        Transaction: null,
+        Notifications: [],
+        HasErrors: false,
+        ProcessedPickup: { ID: String(10_000_000 + Math.floor(Math.random() * 89_999_999)), GUID: crypto.randomUUID() },
+      })
+    }
+    if (url.endsWith("/CancelPickup")) {
+      return reply({ Transaction: null, Notifications: [], HasErrors: false, Message: "Pickup cancelled" })
+    }
+    if (url.endsWith("/HoldShipments")) {
+      // A waybill containing HOLDFAIL is one the simulated Aramex refuses to hold, to show the failed hold path.
+      const sent = JSON.parse(String(init?.body ?? "{}")) as { ShipmentHolds?: { ShipmentNumber: string }[] }
+      const number = sent.ShipmentHolds?.[0]?.ShipmentNumber ?? ""
+      const refused = number.includes("HOLDFAIL")
+      return reply({
+        Transaction: null,
+        Notifications: refused ? [{ Code: "ERR90", Message: "Shipment cannot be held" }] : [],
+        HasErrors: refused,
+        ProcessedShipmentHolds: [{ ID: number, HasErrors: false, Notifications: [] }],
+      })
+    }
     if (url.endsWith("/FetchCountries")) return reply(COUNTRIES)
     if (url.endsWith("/CreateShipments")) {
       const sent = JSON.parse(String(init?.body ?? "{}")) as { Shipments?: { Reference1?: string }[] }

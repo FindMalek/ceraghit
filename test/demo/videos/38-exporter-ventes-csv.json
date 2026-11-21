@@ -1,0 +1,26 @@
+{
+  "id": "38",
+  "slug": "exporter-ventes-csv",
+  "title_fr": "Exporter les ventes par jour",
+  "devices": ["desktop"],
+  "start": { "app": "dashboard", "path": "/", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Exportez vos ventes jour par jour.", "holdMs": 1500 },
+    {
+      "action": "click",
+      "target": { "role": "combobox", "name": "Devise de l'export" },
+      "caption_fr": "Choisissez la devise du fichier."
+    },
+    {
+      "action": "click",
+      "target": { "role": "option", "name": "Euros" },
+      "caption_fr": "Un fichier par devise, sans mélange."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Exporter les ventes" },
+      "caption_fr": "Cliquez sur Exporter les ventes."
+    },
+    { "action": "wait", "caption_fr": "Le fichier s'ouvre dans votre tableur.", "holdMs": 2000 }
+  ]
+}

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
-import { buildScenario, DEMO_DESCRIPTIONS, DEMO_TN_CITIES } from "../../src/seed/scenario"
+import { buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS, DEMO_TN_CITIES } from "../../src/seed/scenario"
 
 const products = [
   { id: "a", ref: "0010", title: "Curda Seca", priceTnd: 40_000, priceEur: 1_200 },
@@ -155,12 +155,12 @@ test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cas
   expect(shipments.length).toBeGreaterThan(0)
   expect(new Set(shipments.map((s) => s.status))).toContain("exception")
   expect(new Set(shipments.map((s) => s.status))).toContain("delivered")
-  for (const s of shipments) {
+  for (const s of shipments.filter((x) => x.status !== "cancelled")) {
     expect(s.lastEvent).toEqual(s.events?.at(-1) ?? null)
     expect(s.status === "delivered").toBe(s.deliveredAt != null)
     expect(s.status === "exception").toBe(!!s.lastEvent?.problemCode)
   }
-  for (const s of shipments) {
+  for (const s of shipments.filter((x) => x.status !== "cancelled")) {
     const o = orders.find((x) => x.id === s.orderId)
     expect(o).toMatchObject({ status: "fulfilled", carrier: "aramex", trackingNumber: s.waybill })
     expect(s).toMatchObject({ environment: "fake", currency: o?.currency })
@@ -168,6 +168,19 @@ test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cas
     if (o?.country === "TN") expect(s.productGroup).toBe("DOM")
     if (s.codAmountMinor != null) expect([o?.country, o?.currency, o?.paymentMethod]).toEqual(["TN", "TND", "cod"])
   }
+})
+
+test("demo shipments include a booked pickup and a cancelled parcel whose order is back to paid", () => {
+  const { orders, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const booked = shipments.filter((s) => s.pickupId)
+  expect(booked.length).toBeGreaterThan(0)
+  for (const s of booked) expect([s.status, !!s.pickupGuid]).toEqual(["created", true])
+  const cancelled = shipments.find((s) => s.status === "cancelled")
+  expect(cancelled?.errors?.[0]?.code).toBe("HOLD")
+  const order = orders.find((o) => o.id === cancelled?.orderId)
+  expect(order).toMatchObject({ status: "paid", country: "TN" })
+  expect(order?.carrier ?? null).toBeNull()
+  expect(shipments.filter((s) => s.orderId === cancelled?.orderId && s.status !== "cancelled")).toHaveLength(0)
 })
 
 test("the demo has a piece whose main photo is not the first one", () => {
@@ -180,4 +193,10 @@ test("every Tunisian demo order city is in the demo city list", () => {
   const tunisian = orders.filter((o) => o.country === "TN")
   expect(tunisian.length).toBeGreaterThan(0)
   for (const o of tunisian) expect(DEMO_TN_CITIES).toContain(o.city)
+})
+
+test("one demo location has a bundled photo so the atelier card shows an image", () => {
+  const withPhoto = DEMO_LOCATIONS.filter((l) => l.image)
+  expect(withPhoto).toHaveLength(1)
+  expect(withPhoto[0]?.image).toStartWith("/catalogue/")
 })

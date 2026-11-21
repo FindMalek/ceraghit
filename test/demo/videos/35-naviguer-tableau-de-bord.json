@@ -1,0 +1,57 @@
+{
+  "id": "35",
+  "slug": "naviguer-tableau-de-bord",
+  "title_fr": "Se repérer dans le tableau de bord",
+  "start": { "app": "dashboard", "path": "/", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Voici le tableau de bord de l'atelier.", "holdMs": 1500 },
+    { "action": "wait", "caption_fr": "La barre donne accès à toutes les pages.", "holdMs": 600 },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Produits" },
+      "caption_fr": "Chaque entrée ouvre une page.",
+      "only": "desktop"
+    },
+    {
+      "action": "tap",
+      "target": { "role": "button", "name": "Menu" },
+      "caption_fr": "L'onglet Menu ouvre toutes les pages.",
+      "only": "mobile"
+    },
+    { "action": "wait", "caption_fr": "Une pastille signale ce qui reste à faire.", "holdMs": 600 },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Profil" },
+      "caption_fr": "Ici, des étapes de configuration restent à faire.",
+      "only": "desktop",
+      "holdMs": 1800
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Ici, des étapes de configuration restent à faire.",
+      "only": "mobile",
+      "holdMs": 1800
+    },
+    { "action": "press", "value": "Escape", "caption_fr": "Fermez le menu.", "only": "mobile" },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Voir" },
+      "caption_fr": "Le bandeau signale un email non envoyé."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Toggle Sidebar" },
+      "caption_fr": "Replier la barre ne laisse que les icônes.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Toggle Sidebar" },
+      "caption_fr": "Un second clic la déplie.",
+      "only": "desktop"
+    },
+    { "action": "goto", "value": "/page-inconnue", "caption_fr": "Une adresse inconnue affiche une page claire." },
+    { "action": "wait", "caption_fr": "Un lien vous ramène au tableau de bord.", "holdMs": 1500 }
+  ]
+}

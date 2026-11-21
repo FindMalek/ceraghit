@@ -148,12 +148,12 @@ function Tile({
   )
 }
 
-function AltDialog({
+export function AltDialog({
   item,
   onClose,
   onSave,
 }: {
-  item: GalleryItem | null
+  item: Pick<GalleryItem, "alt" | "libraryAlt"> | null
   onClose: () => void
   onSave: (alt: GalleryItem["alt"]) => void
 }) {

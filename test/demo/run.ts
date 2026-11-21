@@ -1,4 +1,4 @@
-// Usage: pnpm demo:videos [-- 03 [05 ...]] [--plan] [--voice[=draft|final]] [--zoom] [--burn] [--device=desktop|mobile]
+// Usage: pnpm demo:videos [-- 34 [35 ...]] [--plan] [--voice[=draft|final]] [--zoom] [--burn] [--device=desktop|mobile]
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -79,6 +79,7 @@ async function main() {
   for (const video of videos) {
     for (const device of ["desktop", "mobile"] as const) {
       if (only && only !== device) continue
+      if (video.devices && !video.devices.includes(device)) continue
       const steps = stepsFor(video, device)
       const lines = narrationFor(video, device)
 

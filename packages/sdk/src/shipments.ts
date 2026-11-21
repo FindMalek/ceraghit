@@ -93,6 +93,8 @@ export const adminShipmentSchema = z.object({
   insuranceMinor: z.number().int().nullable(),
   currency: currencySchema,
   hasLabel: z.boolean(),
+  /** The Aramex pickup this parcel is booked in, null when none. */
+  pickupId: z.string().nullable(),
   errors: z.array(z.object({ at: z.string(), code: z.string(), message: z.string() })),
   /** Newest first. */
   events: z.array(z.object({ code: z.string(), description: z.string(), at: z.string(), location: z.string() })),
@@ -101,3 +103,24 @@ export const adminShipmentSchema = z.object({
   createdAt: z.string(),
 })
 export type AdminShipment = z.infer<typeof adminShipmentSchema>
+
+export const pickupInputSchema = z.object({
+  shipmentIds: z.array(z.string()).min(1).max(20),
+  /** YYYY-MM-DD, Africa/Tunis. */
+  date: z.iso.date(),
+  readyTime: z.string().regex(/^\d{2}:\d{2}$/),
+  closingTime: z.string().regex(/^\d{2}:\d{2}$/),
+  comments: z.string().trim().max(200).optional(),
+})
+export type PickupInput = z.infer<typeof pickupInputSchema>
+
+export const openShipmentSchema = z.object({
+  id: z.string(),
+  waybill: z.string(),
+  orderNumber: z.string(),
+  customerName: z.string(),
+  weightGrams: z.number().int(),
+  productGroup: z.string(),
+  pickupId: z.string().nullable(),
+})
+export type OpenShipment = z.infer<typeof openShipmentSchema>

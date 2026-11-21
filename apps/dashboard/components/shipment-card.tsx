@@ -8,6 +8,7 @@ import { Button } from "@workspace/ui/components/button"
 import { showError } from "@workspace/ui/components/error-banner"
 import { useState } from "react"
 import { EnvironmentChip } from "@/components/create-shipment-dialog"
+import { ShipmentActions } from "@/components/shipment-actions"
 import { Tone } from "@/components/status-badge"
 import { formatDate } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
@@ -130,6 +131,7 @@ export function ShipmentCard({ orderId }: { orderId: string }) {
           </details>
         )}
       </div>
+      <ShipmentActions shipment={s} />
       {s.hasLabel ? (
         <div className="flex flex-wrap gap-2">
           <Button

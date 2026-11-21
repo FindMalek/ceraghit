@@ -13,8 +13,8 @@ import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useEffect, useState } from "react"
 import { useAppConfig } from "@/components/app-config"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { ImageField } from "@/components/image-field"
 import { LocalizedField } from "@/components/localized-field"
+import { MediaImageField } from "@/components/media-image-field"
 import { PageBody, PageHeader } from "@/components/page-header"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { errorMessage } from "@/lib/errors"
@@ -24,10 +24,17 @@ interface Draft {
   name: LocalizedDraft
   description: LocalizedDraft
   image: string | null
+  imageMediaId: string | null | undefined
   visible: boolean
 }
 
-const EMPTY: Draft = { name: emptyLocalized(), description: emptyLocalized(), image: null, visible: true }
+const EMPTY: Draft = {
+  name: emptyLocalized(),
+  description: emptyLocalized(),
+  image: null,
+  imageMediaId: null,
+  visible: true,
+}
 
 function CategoryDialog({
   category,
@@ -51,6 +58,7 @@ function CategoryDialog({
             name: toLocalizedDraft(category.name),
             description: toLocalizedDraft(category.description),
             image: category.image,
+            imageMediaId: category.imageMediaId ?? undefined,
             visible: category.visible,
           }
         : EMPTY,
@@ -71,7 +79,7 @@ function CategoryDialog({
     const parsed = categoryInputSchema.safeParse({
       name: fromLocalizedDraft(draft.name),
       description: fromLocalizedDraft(draft.description, true),
-      image: draft.image,
+      imageMediaId: draft.imageMediaId,
       visible: draft.visible,
     })
     if (!parsed.success) {
@@ -109,10 +117,10 @@ function CategoryDialog({
             />
             <Field>
               <FieldLabel>Image</FieldLabel>
-              <ImageField
-                folder="categories"
-                value={draft.image}
-                onChange={(image) => setDraft((d) => ({ ...d, image }))}
+              <MediaImageField
+                aspect="4/5"
+                value={draft}
+                onChange={(picked) => setDraft((d) => ({ ...d, ...picked }))}
               />
             </Field>
             <Field orientation="horizontal">

@@ -137,7 +137,11 @@ export const categorySchema = z.object({
   slug: z.string(),
   name: localizedSchema,
   description: localizedSchema.nullable(),
+  /** The picture's src: the linked library photo, else the legacy string. */
   image: z.string().nullable(),
+  imageMediaId: z.string().nullable(),
+  /** The library photo's own alt text. */
+  imageAlt: localizedSchema.nullable(),
   visible: z.boolean(),
   position: z.number().int(),
   productCount: z.number().int(),
@@ -215,9 +219,13 @@ export const locationSchema = z.object({
   hours: localizedSchema.nullable(),
   mapUrl: z.string().nullable(),
   image: z.string().nullable(),
+  imageMediaId: z.string().nullable(),
+  imageAlt: localizedSchema.nullable(),
   visible: z.boolean(),
   position: z.number().int(),
 })
+
+export type Location = z.infer<typeof locationSchema>
 
 export const shippingZoneSchema = z.object({
   id: z.string().min(1).max(30),
@@ -635,7 +643,8 @@ export type ProductInput = z.infer<typeof productInputSchema>
 export const categoryInputSchema = z.object({
   name: localizedInput(80),
   description: localizedInput(500).nullable().optional(),
-  image: z.string().nullable().optional(),
+  /** A confirmed library photo, null to clear it. */
+  imageMediaId: z.string().uuid().nullable().optional(),
   visible: z.boolean().default(true),
 })
 
@@ -648,7 +657,7 @@ export const locationInputSchema = z.object({
   phone: z.string().trim().max(30).nullable().optional(),
   hours: localizedInput(300).nullable().optional(),
   mapUrl: z.url().nullable().optional(),
-  image: z.string().nullable().optional(),
+  imageMediaId: z.string().uuid().nullable().optional(),
   visible: z.boolean().default(true),
 })
 

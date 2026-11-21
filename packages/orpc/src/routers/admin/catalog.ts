@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { categories, orderItems, products } from "@workspace/db"
+import { categories, media, orderItems, products } from "@workspace/db"
 import {
   categoryInputSchema,
   categorySchema,
@@ -10,10 +10,11 @@ import {
 } from "@workspace/sdk"
 import { and, asc, count, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm"
 import { z } from "zod"
-import { findProducts, toCategory, toProduct } from "../../lib/catalog"
+import { findProducts, imageMediaColumns, toCategory, toProduct } from "../../lib/catalog"
+import { resolveImageMedia } from "../../lib/media"
 import { saveProductImages } from "../../lib/product-images"
 import { syncVariants } from "../../lib/variants"
-import { adminProcedure } from "../../procedures"
+import { adminProcedure, mediaFkGuard } from "../../procedures"
 
 const TAG = ["admin"]
 const idInput = z.object({ id: z.string() })
@@ -179,13 +180,16 @@ export const categoriesRouter = {
           name: categories.name,
           description: categories.description,
           image: categories.image,
+          imageMediaId: categories.imageMediaId,
+          ...imageMediaColumns,
           visible: categories.visible,
           position: categories.position,
           productCount: count(products.id),
         })
         .from(categories)
         .leftJoin(products, eq(products.categoryId, categories.id))
-        .groupBy(categories.id)
+        .leftJoin(media, eq(media.id, categories.imageMediaId))
+        .groupBy(categories.id, media.id)
         .orderBy(asc(categories.position), asc(categories.slug))
       return rows.map(toCategory)
     }),
@@ -193,8 +197,10 @@ export const categoriesRouter = {
   create: adminProcedure
     .route({ method: "POST", path: "/admin/categories", summary: "Create a category", tags: TAG })
     .input(categoryInputSchema)
+    .use(mediaFkGuard)
     .output(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
+      const picture = await resolveImageMedia(context.db, input.imageMediaId)
       const base = slugify(input.name.fr)
       const [last] = await context.db
         .select({ p: categories.position })
@@ -209,7 +215,7 @@ export const categoriesRouter = {
         .values({
           ...input,
           description: input.description ?? null,
-          image: input.image ?? null,
+          ...picture,
           slug,
           position: (last?.p ?? -1) + 1,
         })
@@ -220,12 +226,14 @@ export const categoriesRouter = {
   update: adminProcedure
     .route({ method: "PUT", path: "/admin/categories/{id}", summary: "Update a category", tags: TAG })
     .input(categoryInputSchema.extend({ id: z.string() }))
+    .use(mediaFkGuard)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       const { id, ...values } = input
+      const picture = await resolveImageMedia(context.db, values.imageMediaId)
       const updated = await context.db
         .update(categories)
-        .set({ ...values, description: values.description ?? null, image: values.image ?? null })
+        .set({ ...values, description: values.description ?? null, ...picture })
         .where(eq(categories.id, id))
         .returning({ id: categories.id })
       if (!updated.length) throw new ORPCError("NOT_FOUND", { message: "Category not found." })

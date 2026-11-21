@@ -3,6 +3,7 @@ import { ORPCError, os } from "@orpc/server"
 import type { Context } from "./context"
 import { ADMIN_COOKIE } from "./lib/auth"
 import { readCookie } from "./lib/cookies"
+import { fkViolation } from "./lib/media"
 
 export const o = os.$context<Context>()
 
@@ -52,6 +53,16 @@ const requireAdmin = o.middleware(async ({ context, next }) => {
   const admin = await context.auth.admin(readCookie(context.headers, ADMIN_COOKIE))
   if (!admin) throw new ORPCError("UNAUTHORIZED", { message: "Please sign in." })
   return next({ context: { admin } })
+})
+
+/** For writes that link a library photo: one deleted between the check and the write answers like a missing one. */
+export const mediaFkGuard = o.middleware(async ({ next }) => {
+  try {
+    return await next()
+  } catch (error) {
+    if (fkViolation(error)) throw new ORPCError("BAD_REQUEST", { message: "A photo is no longer available." })
+    throw error
+  }
 })
 
 export const adminProcedure = publicProcedure.use(requireAdmin)

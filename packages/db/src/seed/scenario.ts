@@ -129,6 +129,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     address: "Avenue Habib Bourguiba",
     city: "Nabeul",
     country: "Tunisie",
+    image: "/catalogue/studio-interior.webp",
     phone: "+216 20 000 000",
     hours: {
       fr: "Du mardi au samedi, 10h à 18h",
@@ -541,7 +542,7 @@ const DEMO_STATUSES = [...DEMO_FLOW, "exception"] as const
  * so): a demo never stores a PDF. Tunisia is domestic, cash on delivery only in dinars for a Tunisian order.
  */
 function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
-  return orders
+  const live: NewShipment[] = orders
     .filter((o) => o.status === "fulfilled" && o.carrier === "aramex" && o.trackingNumber && o.id)
     .map((o, i) => {
       const status = DEMO_STATUSES[i % DEMO_STATUSES.length]!
@@ -583,4 +584,31 @@ function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
         createdAt: at,
       }
     })
+  // A parcel waiting for its pickup, and one cancelled before it left (its order went back to paid, the hold failed).
+  const booked = live.find((s) => s.status === "created")
+  if (booked) Object.assign(booked, { pickupId: "10000001", pickupGuid: "00000000-0000-4000-8000-000000000001" })
+  const unshipped = orders.find((o) => o.status === "paid" && o.country === "TN" && !o.carrier && o.id)
+  if (unshipped) {
+    live.push({
+      orderId: unshipped.id as string,
+      provider: "aramex",
+      environment: "fake",
+      waybill: "FAKE-DEMO-CANCELLED",
+      productGroup: "DOM",
+      productType: "ONP",
+      status: "cancelled",
+      currency: unshipped.currency ?? "TND",
+      weightGrams: 1500,
+      pieces: 1,
+      errors: [
+        {
+          at: now.toISOString(),
+          code: "HOLD",
+          message: "Aramex n'a pas confirmé la mise en attente : appelez votre agence pour annuler ce colis.",
+        },
+      ],
+      createdAt: now,
+    })
+  }
+  return live
 }

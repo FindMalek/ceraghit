@@ -6,6 +6,8 @@ const target = z.object({
   label: z.string().optional(),
   text: z.string().optional(),
   testId: z.string().optional(),
+  /** Which visible match to use, from 0; -1 is the last. For twins like the two Annuler buttons of a confirmation. */
+  nth: z.number().int().optional(),
 })
 
 export const ACTIONS = [
@@ -41,6 +43,11 @@ export const videoSchema = z.object({
   id: z.string().regex(/^\d{2}$/),
   slug: z.string().regex(/^[a-z0-9-]+$/),
   title_fr: z.string().min(1),
+  /** Devices the video is recorded on; both when absent. */
+  devices: z
+    .array(z.enum(["desktop", "mobile"]))
+    .min(1)
+    .optional(),
   start: z.object({
     app: z.enum(["web", "dashboard"]),
     path: z.string().startsWith("/"),
