@@ -36,9 +36,12 @@ export async function ensureDatabase(url: string): Promise<void> {
  * Bun test preload. Turbo runs every package's `test` at once against one `DATABASE_URL`, and tests write global
  * tables (`integration_credentials`, `settings`, `categories`), so each package gets its own database instead.
  */
-export async function isolateDatabasePerPackage(): Promise<void> {
-  const base = process.env.DATABASE_URL
+export async function isolateDatabasePerPackage(env: NodeJS.ProcessEnv = process.env): Promise<void> {
+  const base = env.DATABASE_URL
   if (!base) return
+  if (env.APP_ENV === "production" || env.APP_ENV === "preview") {
+    throw new Error(`refusing to create test databases with APP_ENV=${env.APP_ENV}: tests run against local or CI only`)
+  }
   const url = databaseUrlFor(base, basename(process.cwd()))
   await ensureDatabase(url)
   process.env.DATABASE_URL = url

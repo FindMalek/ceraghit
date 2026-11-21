@@ -7,7 +7,7 @@
 Turbo runs every package's tests at once against one `DATABASE_URL`. `packages/db`, `packages/orpc` and `apps/api` each
 preload `packages/db/src/test-setup.ts` (`bunfig.toml`), which points the package at its own database
 (`<name>_<package>`, e.g. `ceraghit_test_orpc`), created on demand under an advisory lock; the role needs `CREATEDB`
-(local dev and the CI service container are superusers). A test that asserts on a global table (`integration_credentials`,
+(local dev and the CI service container are superusers). The preload throws when `APP_ENV` is `production` or `preview`. A test that asserts on a global table (`integration_credentials`,
 `settings`) filters to its own rows, and a file removes what it saved: bun walks test files in filesystem order, which
 differs between machines, so a leftover row from one file fails another only on some runners.
 
