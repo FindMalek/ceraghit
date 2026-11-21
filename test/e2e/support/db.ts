@@ -132,3 +132,8 @@ export async function mailKinds(number: string, status?: string): Promise<Record
     group by m.kind`
   return Object.fromEntries(rows.map((r) => [r.kind, r.n]))
 }
+
+/** Shipped orders own an invoice, so they cannot be deleted: swap awkward customer text for plain text instead. */
+export async function neutraliseOrder(number: string): Promise<void> {
+  await sql`update orders set customer_name = 'Client export', city = 'Tunis' where number = ${number}`
+}

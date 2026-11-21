@@ -66,6 +66,14 @@ test("the orders file has a BOM on request, CRLF lines, studio-time dates and a 
   expect(buildOrdersCsv([order()], "TND").startsWith("﻿")).toBe(false)
 })
 
+test("customer text that starts like a formula is written as text", () => {
+  const csv = buildOrdersCsv([order({ customerName: "=HYPERLINK(1)", city: "+216", email: "@a.b" })], "TND")
+  const row = csv.trimEnd().split("\r\n")[1] ?? ""
+  expect(row).toContain("'=HYPERLINK(1)")
+  expect(row).toContain("'+216")
+  expect(row).toContain("'@a.b")
+})
+
 test("a Payoneer order shows its method and the reference the owner typed, in euros only", () => {
   const csv = buildOrdersCsv(
     [
