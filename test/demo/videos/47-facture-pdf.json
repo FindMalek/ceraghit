@@ -1,0 +1,31 @@
+{
+  "id": "47",
+  "slug": "facture-pdf",
+  "title_fr": "Télécharger la facture en PDF",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10020",
+      "caption_fr": "Ouvrez une commande payée.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10008",
+      "caption_fr": "Ouvrez une commande payée.",
+      "only": "mobile",
+      "voice": true
+    },
+    { "action": "click", "target": { "text": "CER-100" }, "caption_fr": "Voici la commande." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Facture PDF" },
+      "caption_fr": "Cliquez sur Facture PDF."
+    },
+    { "action": "wait", "caption_fr": "Le fichier PDF se télécharge, avec la devise de la commande.", "holdMs": 2500 }
+  ]
+}

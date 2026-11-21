@@ -1,0 +1,36 @@
+{
+  "id": "45",
+  "slug": "exporter-commandes-csv",
+  "title_fr": "Exporter les commandes pour le comptable",
+  "devices": ["desktop"],
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Exporter en CSV" },
+      "caption_fr": "Cliquez sur Exporter en CSV."
+    },
+    { "action": "wait", "caption_fr": "Ce sont les commandes payées de la période.", "holdMs": 2000 },
+    {
+      "action": "fill",
+      "target": { "label": "Au (inclus)" },
+      "value": "2020-01-01",
+      "caption_fr": "Une date de fin trop tôt est refusée."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Télécharger le CSV" },
+      "caption_fr": "Cliquez sur Télécharger.",
+      "holdMs": 1800
+    },
+    { "action": "fill", "target": { "label": "Du" }, "value": "2019-01-01", "caption_fr": "Corrigez les dates." },
+    { "action": "click", "target": { "role": "combobox", "name": "Devise" }, "caption_fr": "Choisissez la devise." },
+    { "action": "click", "target": { "role": "option", "name": "Euros" }, "caption_fr": "Un fichier par devise." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Télécharger le CSV" },
+      "caption_fr": "Téléchargez le fichier CSV."
+    },
+    { "action": "wait", "caption_fr": "Une ligne par commande, avec un total.", "holdMs": 2000 }
+  ]
+}

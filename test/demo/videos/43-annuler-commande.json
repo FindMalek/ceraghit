@@ -1,0 +1,33 @@
+{
+  "id": "43",
+  "slug": "annuler-commande",
+  "title_fr": "Annuler une commande",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10009",
+      "caption_fr": "Ouvrez la commande à annuler.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10017",
+      "caption_fr": "Ouvrez la commande à annuler.",
+      "only": "mobile",
+      "voice": true
+    },
+    { "action": "click", "target": { "text": "CER-100" }, "caption_fr": "Voici la commande." },
+    { "action": "click", "target": { "role": "button", "name": "Annuler" }, "caption_fr": "Cliquez sur Annuler." },
+    { "action": "wait", "caption_fr": "Les pièces retournent en stock. Pensez à rembourser.", "holdMs": 2500 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Annuler", "nth": -1 },
+      "caption_fr": "Confirmez l'annulation."
+    },
+    { "action": "wait", "caption_fr": "La commande passe en Annulée.", "holdMs": 1800 }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "44",
+  "slug": "rembourser-commande",
+  "title_fr": "Rembourser une commande",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10031",
+      "caption_fr": "Ouvrez une commande payée.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10038",
+      "caption_fr": "Ouvrez une commande payée.",
+      "only": "mobile",
+      "voice": true
+    },
+    { "action": "click", "target": { "text": "CER-100" }, "caption_fr": "Voici la commande." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Rembourser" },
+      "caption_fr": "Cliquez sur Rembourser."
+    },
+    { "action": "wait", "caption_fr": "Le remboursement se fait chez Konnect.", "holdMs": 2500 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Rembourser", "nth": -1 },
+      "caption_fr": "Confirmez : la commande est marquée remboursée."
+    },
+    { "action": "wait", "caption_fr": "Le statut devient Remboursée.", "holdMs": 1500 },
+    { "action": "press", "value": "Escape", "caption_fr": "Fermez la commande." },
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10039",
+      "caption_fr": "Pour une commande déjà expédiée..."
+    },
+    { "action": "click", "target": { "text": "CER-10039" }, "caption_fr": "Ouvrez-la." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Rembourser" },
+      "caption_fr": "Cliquez sur Rembourser."
+    },
+    { "action": "wait", "caption_fr": "Les pièces ne retournent pas en stock.", "holdMs": 2500 },
+    { "action": "press", "value": "Escape", "caption_fr": "Refermez sans confirmer." }
+  ]
+}
