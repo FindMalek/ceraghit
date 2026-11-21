@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { locations, orders } from "@workspace/db"
+import { locations, media, orders } from "@workspace/db"
 import {
   holdSettingsSchema,
   locationInputSchema,
@@ -12,8 +12,9 @@ import {
   uploadTargetSchema,
   validatePaymentSettings,
 } from "@workspace/sdk"
-import { and, asc, count, desc, eq } from "drizzle-orm"
+import { and, asc, count, desc, eq, getTableColumns } from "drizzle-orm"
 import { z } from "zod"
+import { imageMediaColumns, toLocation } from "../../lib/catalog"
 import {
   assertVaultReadable,
   clearIntegration,
@@ -21,6 +22,7 @@ import {
   getIntegration,
   saveIntegration,
 } from "../../lib/integrations"
+import { resolveImageMedia } from "../../lib/media"
 import { assertKonnectUnlocked } from "../../lib/orders"
 import { assertKonnectMode, gatewayReady, resolvePayments, testKonnectKey } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
@@ -36,13 +38,21 @@ export const locationsRouter = {
   list: adminProcedure
     .route({ method: "GET", path: "/admin/locations", summary: "All locations, hidden included", tags: TAG })
     .output(z.array(locationSchema))
-    .handler(({ context }) => context.db.select().from(locations).orderBy(asc(locations.position))),
+    .handler(async ({ context }) => {
+      const rows = await context.db
+        .select({ ...getTableColumns(locations), ...imageMediaColumns })
+        .from(locations)
+        .leftJoin(media, eq(media.id, locations.imageMediaId))
+        .orderBy(asc(locations.position))
+      return rows.map(toLocation)
+    }),
 
   create: adminProcedure
     .route({ method: "POST", path: "/admin/locations", summary: "Add a location", tags: TAG })
     .input(locationInputSchema)
     .output(z.object({ id: z.string() }))
     .handler(async ({ context, input }) => {
+      const picture = await resolveImageMedia(context.db, input.imageMediaId)
       const [last] = await context.db
         .select({ p: locations.position })
         .from(locations)
@@ -50,7 +60,7 @@ export const locationsRouter = {
         .limit(1)
       const [row] = await context.db
         .insert(locations)
-        .values({ ...input, position: (last?.p ?? -1) + 1 })
+        .values({ ...input, ...picture, position: (last?.p ?? -1) + 1 })
         .returning({ id: locations.id })
       return { id: row!.id }
     }),
@@ -61,9 +71,10 @@ export const locationsRouter = {
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       const { id, ...values } = input
+      const picture = await resolveImageMedia(context.db, values.imageMediaId)
       const updated = await context.db
         .update(locations)
-        .set(values)
+        .set({ ...values, ...picture })
         .where(eq(locations.id, id))
         .returning({ id: locations.id })
       if (!updated.length) throw new ORPCError("NOT_FOUND", { message: "Location not found." })
