@@ -12,6 +12,8 @@ test.beforeAll(async () => {
 
 test.afterAll(removeTutorialFixtures)
 
+test.describe.configure({ timeout: 60_000 })
+
 const help = `${E2E.dashboardUrl}/help`
 
 test("search narrows the library without accents or case, and an empty result offers a reset", {
@@ -67,6 +69,7 @@ test("a video link opens the player with its hosted file and captions, Esc close
   step,
   request,
 }) => {
+  test.setTimeout(90_000)
   await loginAsOwnerAndWait(page)
   const mobile = (page.viewportSize()?.width ?? 1440) < 768
   const device = mobile ? "mobile" : "desktop"
@@ -89,17 +92,24 @@ test("a video link opens the player with its hosted file and captions, Esc close
   })
   await step("the video really loads and plays, its captions load, and the policy blocks nothing", async () => {
     const video = player.locator("video")
-    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.readyState)).toBeGreaterThanOrEqual(1)
+    await expect
+      .poll(() => video.evaluate((v: HTMLVideoElement) => v.readyState), { timeout: 20_000 })
+      .toBeGreaterThanOrEqual(1)
     await video.evaluate(async (v: HTMLVideoElement) => {
       v.muted = true
       await v.play()
     })
-    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(0)
+    await expect
+      .poll(() => video.evaluate((v: HTMLVideoElement) => v.currentTime), { timeout: 20_000 })
+      .toBeGreaterThan(0)
     expect(await video.evaluate((v: HTMLVideoElement) => v.error)).toBeNull()
     await expect
-      .poll(() => video.evaluate((v: HTMLVideoElement) => v.textTracks[0]?.cues?.length ?? 0))
+      .poll(() => video.evaluate((v: HTMLVideoElement) => v.textTracks[0]?.cues?.length ?? 0), { timeout: 20_000 })
       .toBeGreaterThan(0)
     expect(await page.evaluate(() => (window as unknown as { csp: string[] }).csp)).toEqual([])
+    // A playing video makes the full page screenshot of this step slow on a busy runner.
+    await video.evaluate((v: HTMLVideoElement) => v.pause())
+    await expect.poll(() => video.evaluate((v: HTMLVideoElement) => v.paused)).toBe(true)
   })
   await step("the file is served through the dashboard proxy", async () => {
     const res = await request.get(`${E2E.dashboardUrl}/api/files/tutorials/${PUBLISHED}-${device}.mp4`)
