@@ -6,7 +6,7 @@ import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { completeSetup, openDb } from "../../helpers/db"
 
 const SLOTS = ["studio", "logo", "texture", "og-home"] as const
-let before: (typeof siteImages.$inferInsert)[] = []
+let before: (typeof siteImages.$inferInsert)[] | undefined
 
 test.beforeAll(async () => {
   const db = openDb()
@@ -20,6 +20,7 @@ test.beforeAll(async () => {
 
 // These slots feed every storefront page: put them back whatever happened.
 test.afterAll(async () => {
+  if (!before) return
   const db = openDb()
   await db.delete(siteImages).where(inArray(siteImages.slot, [...SLOTS]))
   if (before.length) await db.insert(siteImages).values(before)
