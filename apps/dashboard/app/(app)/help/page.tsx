@@ -5,6 +5,6 @@ import { admin } from "@/lib/api"
 export const metadata: Metadata = { title: "Aide" }
 
 export default async function HelpPage() {
-  const links = await admin((api) => api.help.get())
-  return <HelpView initial={links} />
+  const [links, library] = await Promise.all([admin((api) => api.help.get()), admin((api) => api.help.library())])
+  return <HelpView initial={links} library={library} />
 }

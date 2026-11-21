@@ -27,6 +27,13 @@ test("dashboard policy allows the youtube embed and its thumbnails, nothing else
   expect(csp).toContain("form-action 'self';")
 })
 
+test("the dashboard may play media from the bucket and the cdn, no other host", () => {
+  const dashboard = buildCsp({ ...base, app: "dashboard" })
+  expect(dashboard).toContain("media-src 'self' https://s3.example.net https://cdn.example.com;")
+  expect(dashboard).not.toContain("media-src 'self' https://s3.example.net https://cdn.example.com https://")
+  expect(buildCsp({ ...base, app: "web" })).toContain("media-src 'self';")
+})
+
 test("only the dashboard may compile the wasm the invoice pdf renderer ships as a data url", () => {
   const dashboard = buildCsp({ ...base, app: "dashboard" })
   expect(dashboard).toContain("'wasm-unsafe-eval'")

@@ -90,6 +90,7 @@ export function nextEnv(): Record<string, string> {
     APP_ENV: "local",
     API_URL: E2E.apiUrl,
     WEB_URL: E2E.webUrl,
+    S3_ENDPOINT: E2E.s3.endpoint,
     NEXT_TELEMETRY_DISABLED: "1",
   }
 }

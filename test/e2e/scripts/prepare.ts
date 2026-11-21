@@ -78,8 +78,15 @@ async function setupStorage(): Promise<void> {
   garage("bucket", "allow", "--read", "--write", "--owner", bucket, "--key", "e2e")
 
   const aws = new AwsClient({ accessKeyId, secretAccessKey, region, service: "s3" })
-  const origins = [E2E.webUrl, E2E.dashboardUrl].map((o) => `<AllowedOrigin>${o}</AllowedOrigin>`).join("")
-  const cors = `<CORSConfiguration><CORSRule>${origins}<AllowedMethod>GET</AllowedMethod><AllowedMethod>PUT</AllowedMethod><AllowedHeader>*</AllowedHeader></CORSRule></CORSConfiguration>`
+  // One rule per origin: Garage answers a rule with several origins with the whole list in
+  // Access-Control-Allow-Origin, which is not a valid value, so a browser refuses the response (video captions).
+  const rules = [E2E.webUrl, E2E.dashboardUrl]
+    .map(
+      (o) =>
+        `<CORSRule><AllowedOrigin>${o}</AllowedOrigin><AllowedMethod>GET</AllowedMethod><AllowedMethod>PUT</AllowedMethod><AllowedHeader>*</AllowedHeader></CORSRule>`,
+    )
+    .join("")
+  const cors = `<CORSConfiguration>${rules}</CORSConfiguration>`
   await waitFor(
     "bucket cors",
     async () => (await aws.fetch(`${endpoint}/${bucket}?cors`, { method: "PUT", body: cors })).ok,
