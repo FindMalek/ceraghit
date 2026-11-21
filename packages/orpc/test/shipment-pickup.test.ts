@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createDb, orderAudit, orders, shipments } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
-import { and, eq, like } from "drizzle-orm"
+import { and, eq, inArray, like } from "drizzle-orm"
 import type { Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
-import { cancelPickup, cancelShipment, createPickup } from "../src/lib/shipping/pickups"
+import { cancelPickup, cancelShipment, createPickup, PICKUP_LOST } from "../src/lib/shipping/pickups"
+import { claimOrder } from "../src/lib/shipping/shipments"
 import type { PickupRequest, ShippingProvider } from "../src/lib/shipping/types"
 
 const url = process.env.DATABASE_URL
@@ -37,6 +38,9 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     held: [],
   }
   let holdFails = false
+  let duringHold: (() => Promise<void>) | null = null
+  let duringCancelPickup: (() => Promise<void>) | null = null
+  let cancelPickupFails = false
   const carrier = {
     id: "aramex",
     validatePickup: async () => ({ valid: true, message: null }),
@@ -44,8 +48,13 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
       sent.pickups.push(req)
       return { id: "5551", guid: "guid-5551" }
     },
-    cancelPickup: async (guid: string) => void sent.cancelled.push(guid),
+    cancelPickup: async (guid: string) => {
+      if (cancelPickupFails) throw new Error("aramex down")
+      sent.cancelled.push(guid)
+      await duringCancelPickup?.()
+    },
     cancel: async (waybill: string) => {
+      await duringHold?.()
       if (holdFails) throw new Error("hold refused")
       sent.held.push(waybill)
       return { held: true, message: "" }
@@ -120,6 +129,7 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     await mk("D", {}, "in_transit")
     await mk("E", {}, "created")
     await mk("G", {}, "created")
+    for (const key of ["H", "I", "J", "K", "L", "M", "N", "P"]) await mk(key, {}, "created")
   })
   afterAll(async () => {
     await db.delete(shipments).where(like(shipments.waybill, `${tag}-%`))
@@ -219,5 +229,111 @@ describe.skipIf(!url)("aramex pickups and cancellation", () => {
     } finally {
       holdFails = false
     }
+  })
+
+  test("a cancel waits for the order claim: nothing is held or cancelled while a creation is in progress", async () => {
+    const release = await claimOrder(services, ids.P!.order)
+    try {
+      await expect(cancelShipment(services, null, ids.P!.shipment, "doublon", carrier)).rejects.toMatchObject({
+        code: "CONFLICT",
+      })
+      expect(sent.held).not.toContain(`${tag}-P-W`)
+      expect((await shipment("P")).status).toBe("created")
+    } finally {
+      await release()
+    }
+  })
+
+  test("a parcel booked in a pickup while the hold was running is not cancelled", async () => {
+    duringHold = async () => {
+      await db.update(shipments).set({ pickupGuid: "guid-late" }).where(eq(shipments.id, ids.J!.shipment))
+    }
+    try {
+      await expect(cancelShipment(services, null, ids.J!.shipment, "doublon", carrier)).rejects.toThrow(
+        "déjà chez Aramex",
+      )
+    } finally {
+      duringHold = null
+    }
+    expect(await shipment("J")).toMatchObject({ status: "created", pickupGuid: "guid-late" })
+    expect((await order("J")).status).toBe("fulfilled")
+  })
+
+  test("cancelling a pickup leaves a parcel that was booked again in the meantime alone", async () => {
+    await db
+      .update(shipments)
+      .set({ pickupId: "7001", pickupGuid: "guid-7001" })
+      .where(inArray(shipments.id, [ids.H!.shipment, ids.I!.shipment]))
+    duringCancelPickup = async () => {
+      await db
+        .update(shipments)
+        .set({ pickupId: "7002", pickupGuid: "guid-7002" })
+        .where(eq(shipments.id, ids.H!.shipment))
+    }
+    try {
+      await cancelPickup(services, "7001", "changement de plan", carrier)
+    } finally {
+      duringCancelPickup = null
+    }
+    expect(await shipment("H")).toMatchObject({ pickupId: "7002", pickupGuid: "guid-7002" })
+    expect(await shipment("I")).toMatchObject({ pickupId: null, pickupGuid: null })
+  })
+
+  describe("when the booking cannot be saved", () => {
+    let calls = 0
+    const flaky = new Proxy(db, {
+      get(target, prop, receiver) {
+        if (prop === "update") {
+          return (...args: Parameters<typeof db.update>) => {
+            calls++
+            // 1 clears stale reservations, 2 reserves, 3 saves the ids: this one fails
+            if (calls === 3) throw new Error("db down")
+            return target.update(...args)
+          }
+        }
+        return Reflect.get(target, prop, receiver)
+      },
+    })
+    const flakyServices = { ...services, db: flaky } as Services
+
+    test("the pickup is cancelled at Aramex and the parcel is free again", async () => {
+      calls = 0
+      const before = sent.cancelled.length
+      await expect(
+        createPickup(flakyServices, { ...window, shipmentIds: [ids.K!.shipment] }, carrier),
+      ).rejects.toMatchObject({ message: "L'enlèvement n'a pas pu être enregistré, réessayez." })
+      expect(sent.cancelled.slice(before)).toEqual(["guid-5551"])
+      expect(await shipment("K")).toMatchObject({ pickupId: null, pickupGuid: null })
+    })
+
+    test("when Aramex cannot cancel it either, the owner gets its reference", async () => {
+      calls = 0
+      cancelPickupFails = true
+      try {
+        await expect(
+          createPickup(flakyServices, { ...window, shipmentIds: [ids.L!.shipment] }, carrier),
+        ).rejects.toMatchObject({ message: PICKUP_LOST("5551", "guid-5551") })
+      } finally {
+        cancelPickupFails = false
+      }
+      expect(await shipment("L")).toMatchObject({ pickupId: null, pickupGuid: null })
+    })
+  })
+
+  test("a reservation left by a crash is cleared, a fresh one still blocks the parcel", async () => {
+    const at = (msAgo: number) => `reserve:${services.now().getTime() - msAgo}:${crypto.randomUUID()}`
+    await db
+      .update(shipments)
+      .set({ pickupGuid: at(10 * 60_000) })
+      .where(eq(shipments.id, ids.M!.shipment))
+    await db
+      .update(shipments)
+      .set({ pickupGuid: at(1_000) })
+      .where(eq(shipments.id, ids.N!.shipment))
+    await expect(createPickup(services, { ...window, shipmentIds: [ids.N!.shipment] }, carrier)).rejects.toThrow(
+      "déjà dans un enlèvement",
+    )
+    await createPickup(services, { ...window, shipmentIds: [ids.M!.shipment] }, carrier)
+    expect((await shipment("M")).pickupId).toBe("5551")
   })
 })
