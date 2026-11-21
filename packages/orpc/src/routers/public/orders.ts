@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { customRequests, orders } from "@workspace/db"
+import { customRequests, orders, uploads } from "@workspace/db"
 import {
   bankFromProfile,
   checkoutSchema,
@@ -11,6 +11,9 @@ import {
   pick,
   publicInvoiceViewSchema,
   publicOrderSchema,
+  REQUEST_IMAGE_MAX_BYTES,
+  REQUEST_IMAGE_MAX_SIDE,
+  readWebpSize,
   requestUploadInputSchema,
 } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
@@ -26,6 +29,7 @@ import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings } from "../../lib/settings"
 import { toShipping } from "../../lib/shipping-events"
 import { getShopProfile, studioInbox } from "../../lib/shop-profile"
+import { TOO_LARGE } from "../../lib/storage"
 import { reserveUpload } from "../../lib/uploads"
 import { publicProcedure } from "../../procedures"
 
@@ -140,7 +144,7 @@ export const ordersRouter = {
     }),
 }
 
-const IMAGE_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const
+const IMAGE_EXTENSIONS = { "image/webp": "webp" } as const
 
 /** The studio answers requests by email, so it gets one the moment a request comes in. Never fails the request. */
 async function notifyStudio(services: Context, request: z.infer<typeof customRequestInputSchema>) {
@@ -196,8 +200,22 @@ export const requestsRouter = {
       const required = `s3:${storage?.prefix ?? ""}requests/`
       for (const image of input.images) {
         const key = image.slice(3)
-        const valid = storage && image.startsWith(required) && !key.includes("..") && (await storage.head(key))
-        if (!valid) throw publicError("BAD_REQUEST", "photo_missing", "A photo was not uploaded, please add it again.")
+        if (!storage || !image.startsWith(required) || key.includes("..")) {
+          throw publicError("BAD_REQUEST", "photo_missing", "A photo was not uploaded, please add it again.")
+        }
+        const bytes = await storage.read(key, REQUEST_IMAGE_MAX_BYTES).catch((error) => {
+          if (error instanceof Error && error.message === TOO_LARGE) return "too big" as const
+          throw error
+        })
+        if (bytes === null) {
+          throw publicError("BAD_REQUEST", "photo_missing", "A photo was not uploaded, please add it again.")
+        }
+        const size = bytes === "too big" ? null : readWebpSize(bytes)
+        if (!size || Math.max(size.width, size.height) > REQUEST_IMAGE_MAX_SIDE) {
+          await storage.remove(key).catch(() => {})
+          await context.db.delete(uploads).where(eq(uploads.key, key))
+          throw publicError("BAD_REQUEST", "photo_unreadable", "A photo could not be read, please send it again.")
+        }
       }
       await context.db.insert(customRequests).values({ ...input, email: input.email.toLowerCase() })
       await notifyStudio(context, input)
