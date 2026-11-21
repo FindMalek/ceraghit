@@ -1,5 +1,12 @@
 import { countryName, MINOR_UNITS } from "./format"
-import type { Currency } from "./schemas"
+import type { Currency, PaymentMethod } from "./schemas"
+
+const METHOD_LABEL: Record<PaymentMethod, string> = {
+  online: "En ligne",
+  cod: "Livraison",
+  transfer: "Virement",
+  payoneer: "Payoneer",
+}
 
 export interface CsvOrder {
   number: string
@@ -15,8 +22,12 @@ export interface CsvOrder {
   subtotalMinor: number
   shippingMinor: number
   totalMinor: number
+  paymentMethod: PaymentMethod
   paymentProvider: string | null
-  paymentRef: string | null
+  /** What the owner typed when he confirmed the payment. */
+  paymentReference: string | null
+  /** Gateway reference of a card order. */
+  paymentRef?: string | null
 }
 
 export interface CsvSalesDay {
@@ -29,7 +40,9 @@ const BOM = "﻿"
 
 /** RFC 4180: quote a field that holds a separator, a quote or a line break, double the quotes inside. */
 export function csvField(value: string | number): string {
-  const text = String(value)
+  // a text starting with = + - @ would run as a formula in Excel; plain negative amounts stay as they are
+  const raw = String(value)
+  const text = /^[=+\-@\t\r]/.test(raw) && !/^-\d+(\.\d+)?$/.test(raw) ? `'${raw}` : raw
   return /[";\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
@@ -65,6 +78,7 @@ const ORDER_HEADER = [
   "livraison",
   "total",
   "devise",
+  "moyen_paiement",
   "paiement",
   "reference_paiement",
 ]
@@ -93,8 +107,9 @@ export function buildOrdersCsv(orders: CsvOrder[], currency: Currency, opts: { b
       decimalAmount(o.shippingMinor, currency),
       decimalAmount(o.totalMinor, currency),
       currency,
+      METHOD_LABEL[o.paymentMethod],
       o.paymentProvider ?? "",
-      o.paymentRef ?? "",
+      o.paymentReference ?? o.paymentRef ?? "",
     ])
   }
   rows.push([
@@ -110,6 +125,7 @@ export function buildOrdersCsv(orders: CsvOrder[], currency: Currency, opts: { b
     decimalAmount(shipping, currency),
     decimalAmount(total, currency),
     currency,
+    "",
     "",
     "",
   ])

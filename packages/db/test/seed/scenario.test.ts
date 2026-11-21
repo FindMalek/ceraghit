@@ -69,14 +69,19 @@ test("every paid transfer order has exactly one manual payment audit row", () =>
   )
 })
 
-test("the demo shop has a payoneer order waiting for its link and one the owner confirmed", () => {
+test("the demo shop has payoneer orders waiting for a link, linked, confirmed and released after the hold", () => {
   const { orders, audit } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
   const payoneer = orders.filter((o) => o.paymentMethod === "payoneer")
   expect(payoneer.every((o) => o.currency === "EUR" && o.country !== "TN")).toBe(true)
-  expect(payoneer.filter((o) => o.status === "pending_payment")).toHaveLength(1)
+  const pending = payoneer.filter((o) => o.status === "pending_payment")
+  expect(pending.map((o) => Boolean(o.paymentRef)).sort()).toEqual([false, true])
+  const linked = pending.find((o) => o.paymentRef)
+  expect(audit.filter((a) => a.orderId === linked?.id)).toMatchObject([{ action: "payment_link_set" }])
   const paid = payoneer.filter((o) => o.paidAt)
   expect(paid).toHaveLength(1)
   expect(audit.filter((a) => a.orderId === paid[0]?.id)).toMatchObject([{ method: "payoneer" }])
+  const released = payoneer.filter((o) => o.status === "cancelled")
+  expect(audit.filter((a) => a.orderId === released[0]?.id)).toMatchObject([{ action: "hold_expired" }])
 })
 
 test("the demo shows one late payment on a cancelled online order", () => {
@@ -143,6 +148,20 @@ test("demo media describe their own product and include a tagged and an unused p
   }
   expect(Object.values(DEMO_MEDIA_BY_REF).some((m) => m.tags.length > 0)).toBe(true)
   expect(CATALOGUE.flatMap((p) => p.images)).not.toContain(DEMO_UNUSED_MEDIA.key)
+})
+
+test("demo shipments belong to fulfilled Aramex orders, domestic in Tunisia, cash on delivery in dinars only", () => {
+  const { orders, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  expect(shipments.length).toBeGreaterThan(0)
+  expect(new Set(shipments.map((s) => s.status)).size).toBeGreaterThan(2)
+  for (const s of shipments) {
+    const o = orders.find((x) => x.id === s.orderId)
+    expect(o).toMatchObject({ status: "fulfilled", carrier: "aramex", trackingNumber: s.waybill })
+    expect(s).toMatchObject({ environment: "fake", currency: o?.currency })
+    expect(s.labelKey).toBeUndefined()
+    if (o?.country === "TN") expect(s.productGroup).toBe("DOM")
+    if (s.codAmountMinor != null) expect([o?.country, o?.currency, o?.paymentMethod]).toEqual(["TN", "TND", "cod"])
+  }
 })
 
 test("the demo has a piece whose main photo is not the first one", () => {

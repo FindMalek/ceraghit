@@ -267,3 +267,135 @@ export async function cleanupUploads(db: Db, storage: Storage, opts: CleanupOpti
   if (!dryRun) recordUploadsDeleted(report.abandonedDeleted + report.unusedDeleted)
   return report
 }
+
+/** Platform-owned files in the same bucket (tutorial videos): not part of what the owner's plan stores. */
+const UNCOUNTED_FOLDERS = ["tutorials"]
+const ORPHAN_HOURS = 48
+const MISSING_OBJECT_HOURS = 1
+
+export interface ReconcileReport {
+  dryRun: boolean
+  listed: number
+  missingRows: number
+  orphansDeleted: number
+  rowsDropped: number
+  sizesFixed: number
+  driftBytesBefore: number
+  driftBytesAfter: number
+  errors: number
+}
+
+const CONTENT_TYPES: Record<string, string> = {
+  webp: "image/webp",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  avif: "image/avif",
+  pdf: "application/pdf",
+}
+
+/**
+ * Brings the `uploads` counter back to what the bucket holds. The listing is taken once, under the storage prefix so a
+ * preview never touches another environment. A file with no row is a zombie when it sits in an image folder, is older
+ * than 48 h and nothing references it (deleted), otherwise it gets a row so it counts (labels, invoices, a library file
+ * that lost its row: never deleted). A row whose file is gone for over an hour is dropped together with its unconfirmed
+ * media row, and a row with the wrong size takes the real one. A listing that comes back empty while rows exist is
+ * treated as a failed listing and changes nothing. Idempotent: a second run finds nothing to fix.
+ */
+export async function reconcileStorage(
+  db: Db,
+  storage: Storage,
+  opts: { now: Date; dryRun?: boolean },
+): Promise<ReconcileReport> {
+  const { now, dryRun = false } = opts
+  const prefix = storage.prefix
+  const objects = (await storage.list(prefix)).filter((o) => {
+    const folder = o.key.slice(prefix.length).split("/")[0] ?? ""
+    return o.key.startsWith(prefix) && !UNCOUNTED_FOLDERS.includes(folder)
+  })
+  const rows = await db.select().from(uploads).where(sql`starts_with(${uploads.key}, ${prefix})`)
+  const report: ReconcileReport = {
+    dryRun,
+    listed: objects.length,
+    missingRows: 0,
+    orphansDeleted: 0,
+    rowsDropped: 0,
+    sizesFixed: 0,
+    driftBytesBefore: 0,
+    driftBytesAfter: 0,
+    errors: 0,
+  }
+  const sum = (list: { bytes: number }[]) => list.reduce((total, r) => total + r.bytes, 0)
+  const bucketBytes = objects.reduce((total, o) => total + o.size, 0)
+  report.driftBytesBefore = Math.abs(sum(rows) - bucketBytes)
+  if (objects.length === 0 && rows.length > 0) {
+    report.driftBytesAfter = report.driftBytesBefore
+    return report
+  }
+
+  const byKey = new Map(rows.map((r) => [r.key, r]))
+  const present = new Set(objects.map((o) => o.key))
+  const guarded = await protectedKeys(db)
+  const referenced = new Set((await db.select({ key: media.key }).from(media)).map((m) => m.key))
+  const folderOf = (key: string) => key.slice(prefix.length).split("/")[0] ?? ""
+  const zombieBefore = now.getTime() - ORPHAN_HOURS * HOUR
+  const missingBefore = now.getTime() - MISSING_OBJECT_HOURS * HOUR
+
+  const toInsert: (typeof uploads.$inferInsert)[] = []
+  const toDelete: string[] = []
+  for (const object of objects) {
+    const row = byKey.get(object.key)
+    if (row) {
+      if (row.bytes !== object.size) {
+        report.sizesFixed++
+        if (!dryRun) await db.update(uploads).set({ bytes: object.size }).where(eq(uploads.key, object.key))
+      }
+      continue
+    }
+    const folder = folderOf(object.key)
+    const isImageFolder = (CLEANUP_FOLDERS as readonly string[]).includes(folder)
+    const zombie = isImageFolder && !guarded.has(object.key) && !referenced.has(object.key)
+    if (zombie && object.modifiedAt.getTime() > zombieBefore) continue
+    if (zombie) {
+      toDelete.push(object.key)
+      continue
+    }
+    const extension = object.key.split(".").at(-1)?.toLowerCase() ?? ""
+    report.missingRows++
+    toInsert.push({
+      key: object.key,
+      folder: folder || "root",
+      contentType: CONTENT_TYPES[extension] ?? "application/octet-stream",
+      bytes: object.size,
+    })
+  }
+  const gone = rows.filter((r) => !present.has(r.key) && r.createdAt.getTime() < missingBefore)
+  report.rowsDropped = gone.length
+
+  if (!dryRun) {
+    if (toInsert.length) await db.insert(uploads).values(toInsert).onConflictDoNothing()
+    if (gone.length) {
+      const keys = gone.map((r) => r.key)
+      await db.delete(media).where(and(inArray(media.key, keys), sql`${media.confirmedAt} is null`))
+      await db.delete(uploads).where(inArray(uploads.key, keys))
+    }
+    for (const key of toDelete) {
+      try {
+        await storage.remove(key)
+        report.orphansDeleted++
+      } catch (error) {
+        report.errors++
+        console.error("[reconcile] remove failed", error instanceof Error ? error.message.split("\n")[0] : "failed")
+      }
+    }
+  } else report.orphansDeleted = toDelete.length
+
+  const sizes = new Map(objects.map((o) => [o.key, o.size]))
+  const droppedKeys = new Set(gone.map((r) => r.key))
+  const counted =
+    rows.filter((r) => !droppedKeys.has(r.key)).reduce((total, r) => total + (sizes.get(r.key) ?? r.bytes), 0) +
+    sum(toInsert)
+  const kept = objects.filter((o) => !toDelete.includes(o.key)).reduce((total, o) => total + o.size, 0)
+  report.driftBytesAfter = Math.abs(counted - kept)
+  return report
+}

@@ -1,6 +1,12 @@
 export { type AppEnv, type Context, createContext, type Services } from "./context"
 export { AdminAuth } from "./lib/auth"
-export { type CleanupReport, cleanupUploads, STORAGE_REFERENCES } from "./lib/cleanup"
+export {
+  type CleanupReport,
+  cleanupUploads,
+  type ReconcileReport,
+  reconcileStorage,
+  STORAGE_REFERENCES,
+} from "./lib/cleanup"
 export { type JobCounts, type JobOutcome, runJob } from "./lib/jobs"
 export { purgeMailLog, retryFailedMails } from "./lib/mail-log"
 export {
@@ -25,5 +31,6 @@ export { resolveShippingProvider, shippingHealth } from "./lib/shipping/resolve"
 export { trackShipments } from "./lib/shipping/tracking"
 export { createStorage, type Storage } from "./lib/storage"
 export { rolloverAiUsage } from "./lib/translate/translate"
+export { storageUsage } from "./lib/uploads"
 export { adminProcedure, o, publicProcedure } from "./procedures"
 export { type AppRouter, type AppRouterClient, appRouter } from "./routers"

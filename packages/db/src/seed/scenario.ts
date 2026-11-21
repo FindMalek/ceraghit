@@ -1,10 +1,21 @@
 import { demoRef } from "../demo-ref"
-import type { jobRuns, Localized, locations, mailLog, orderAudit, orderItems, orders, shopProfile } from "../schema"
+import type {
+  jobRuns,
+  Localized,
+  locations,
+  mailLog,
+  orderAudit,
+  orderItems,
+  orders,
+  shipments,
+  shopProfile,
+} from "../schema"
 
 type NewOrder = typeof orders.$inferInsert
 type NewItem = typeof orderItems.$inferInsert
 type NewAudit = typeof orderAudit.$inferInsert
 type NewMail = typeof mailLog.$inferInsert
+type NewShipment = typeof shipments.$inferInsert
 type NewJobRun = typeof jobRuns.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
@@ -225,14 +236,23 @@ export function buildScenario(
   audit: NewAudit[]
   mail: NewMail[]
   jobRuns: NewJobRun[]
+  shipments: NewShipment[]
 } {
   const rand = rng(2027)
   const pick = <T>(list: T[]): T => list[Math.floor(rand() * list.length)]!
-  const out: { orders: NewOrder[]; items: NewItem[]; audit: NewAudit[]; mail: NewMail[]; jobRuns: NewJobRun[] } = {
+  const out: {
+    orders: NewOrder[]
+    items: NewItem[]
+    audit: NewAudit[]
+    mail: NewMail[]
+    jobRuns: NewJobRun[]
+    shipments: NewShipment[]
+  } = {
     orders: [],
     items: [],
     audit: [],
     mail: [],
+    shipments: [],
     jobRuns: demoJobRuns(now),
   }
 
@@ -357,19 +377,25 @@ export function buildScenario(
     unitMinor: waiting.priceEur,
     quantity: 1,
   })
-  // One Payoneer order still waiting for its link and one the owner confirmed.
-  for (const [number, paid] of [
-    ["CER-10098", false],
-    ["CER-10097", true],
+  // Payoneer orders: waiting for the link, link sent, confirmed by the owner, released after the hold.
+  for (const [number, state] of [
+    ["CER-10098", "waiting"],
+    ["CER-10097", "paid"],
+    ["CER-10096", "linked"],
+    ["CER-10095", "expired"],
   ] as const) {
     const orderId = crypto.randomUUID()
+    const paid = state === "paid"
     const paidAt = paid ? new Date(now.getTime() - 2 * 864e5) : null
-    const createdAt = new Date(now.getTime() - (paid ? 3 : 1) * 864e5)
+    const createdAt = new Date(
+      now.getTime() - (paid ? 3 : state === "expired" ? 9 : state === "linked" ? 2 : 1) * 864e5,
+    )
+    const link = state === "linked" ? "https://link.payoneer.com/pay/demo-cer-10096" : null
     out.orders.push({
       id: orderId,
       number,
       publicToken: `demo-${number}`,
-      status: paid ? "paid" : "pending_payment",
+      status: paid ? "paid" : state === "expired" ? "cancelled" : "pending_payment",
       currency: "EUR",
       subtotalMinor: waiting.priceEur,
       shippingMinor: 0,
@@ -383,7 +409,7 @@ export function buildScenario(
       locale: "fr",
       paymentMethod: "payoneer",
       paymentProvider: "payoneer",
-      paymentRef: null,
+      paymentRef: link,
       paidAt,
       createdAt,
     })
@@ -403,11 +429,36 @@ export function buildScenario(
         fromStatus: "pending_payment",
         toStatus: "paid",
         method: "payoneer",
+        reference: "PAYONEER-DEMO-1",
         note: "démo",
         createdAt: paidAt,
       })
     }
+    if (link) {
+      out.audit.push({
+        orderId,
+        adminId: null,
+        action: "payment_link_set",
+        fromStatus: "pending_payment",
+        toStatus: "pending_payment",
+        method: "payoneer",
+        reference: "link.payoneer.com/pay/demo-cer-10096",
+        createdAt: new Date(now.getTime() - 864e5),
+      })
+    }
+    if (state === "expired") {
+      out.audit.push({
+        orderId,
+        adminId: null,
+        action: "hold_expired",
+        fromStatus: "pending_payment",
+        toStatus: "cancelled",
+        note: "délai de paiement dépassé (7 j)",
+        createdAt: new Date(now.getTime() - 2 * 864e5),
+      })
+    }
   }
+  out.shipments = demoShipments(out.orders, now)
   const confirmed = out.orders.filter((o) => o.status === "paid" || o.status === "fulfilled")
   const [sent, failed] = [confirmed[0], confirmed[1]]
   for (const [order, ok] of [
@@ -449,4 +500,50 @@ function demoShipping(n: number, paidAt: Date) {
   }
   if (k < 17) return { carrier: "rapid-poste", trackingNumber: `RP${900_000 + n * 131}TN`, shippedAt }
   return { carrier: "other", carrierName: "Livraison en main propre", shippedAt }
+}
+
+const DEMO_FLOW = ["created", "in_transit", "out_for_delivery", "delivered"] as const
+
+/**
+ * One simulated Aramex shipment per fulfilled Aramex order, statuses spread over the flow. No label (the card says
+ * so): a demo never stores a PDF. Tunisia is domestic, cash on delivery only in dinars for a Tunisian order.
+ */
+function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
+  return orders
+    .filter((o) => o.status === "fulfilled" && o.carrier === "aramex" && o.trackingNumber && o.id)
+    .map((o, i) => {
+      const status = DEMO_FLOW[i % DEMO_FLOW.length]!
+      const at = (o.shippedAt as Date | null | undefined) ?? now
+      const events = DEMO_FLOW.slice(0, DEMO_FLOW.indexOf(status) + 1).map((code, step) => ({
+        code: code.toUpperCase(),
+        description: {
+          created: "Envoi créé",
+          in_transit: "En transit",
+          out_for_delivery: "En cours de livraison",
+          delivered: "Livré",
+        }[code],
+        at: new Date(at.getTime() + step * 18 * 3600e3).toISOString(),
+        location: "Tunis",
+        comment: "démo",
+        problemCode: null,
+      }))
+      const country = o.country ?? "TN"
+      return {
+        orderId: o.id as string,
+        provider: "aramex",
+        environment: "fake",
+        waybill: o.trackingNumber as string,
+        productGroup: country === "TN" ? "DOM" : "EXP",
+        productType: country === "TN" ? "ONP" : "PPX",
+        status,
+        codAmountMinor: o.paymentMethod === "cod" && country === "TN" && o.currency === "TND" ? o.totalMinor : null,
+        currency: o.currency ?? "TND",
+        weightGrams: 1500,
+        pieces: 1,
+        events,
+        lastEvent: events.at(-1) ?? null,
+        deliveredAt: status === "delivered" ? new Date(events.at(-1)!.at) : null,
+        createdAt: at,
+      }
+    })
 }

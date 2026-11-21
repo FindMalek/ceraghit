@@ -27,6 +27,10 @@ export interface EmailCopy {
   paymentReceived: {
     subject: (orderNumber: string) => string
   }
+  paymentLink: {
+    subject: (orderNumber: string) => string
+    intro: string
+  }
   shipped: {
     subject: (orderNumber: string) => string
     intro: string
@@ -71,6 +75,10 @@ export const EMAIL_COPY = {
     paymentReceived: {
       subject: (n) => `Paiement reçu pour votre commande ${n}`,
     },
+    paymentLink: {
+      subject: (n) => `Votre lien de paiement pour la commande ${n}`,
+      intro: "Voici votre lien de paiement Payoneer. Le montant et la référence sont ci-dessous.",
+    },
     shipped: {
       subject: (n) => `Votre commande ${n} est en route`,
       intro: "Bonne nouvelle, votre commande a été expédiée.",
@@ -114,6 +122,10 @@ export const EMAIL_COPY = {
     paymentReceived: {
       subject: (n) => `Payment received for your order ${n}`,
     },
+    paymentLink: {
+      subject: (n) => `Your payment link for order ${n}`,
+      intro: "Here is your Payoneer payment link. The amount and the reference are below.",
+    },
     shipped: {
       subject: (n) => `Your order ${n} is on its way`,
       intro: "Good news, your order has shipped.",
@@ -156,6 +168,10 @@ export const EMAIL_COPY = {
     },
     paymentReceived: {
       subject: (n) => `تم استلام الدفع لطلبك ${n}`,
+    },
+    paymentLink: {
+      subject: (n) => `رابط الدفع لطلبك ${n}`,
+      intro: "هذا رابط الدفع عبر بايونير. المبلغ والمرجع أدناه.",
     },
     shipped: {
       subject: (n) => `طلبك ${n} في الطريق إليك`,

@@ -40,15 +40,22 @@ describe.skipIf(!url)("overview stats", () => {
   let owner: ReturnType<typeof clientFor>
   let seq = 0
 
-  const sale = (paidAt: string, currency: "TND" | "EUR", totalMinor: number, status: "paid" | "cancelled" = "paid") =>
+  const sale = (
+    paidAt: string | null,
+    currency: "TND" | "EUR",
+    totalMinor: number,
+    status: "paid" | "cancelled" | "pending_payment" = "paid",
+    paymentMethod = "online",
+  ) =>
     db.insert(orders).values({
+      paymentMethod,
       number: `TST-OV-${seq++}`,
       publicToken: "t",
       status,
       currency,
       subtotalMinor: totalMinor,
       totalMinor,
-      paidAt: new Date(paidAt),
+      paidAt: paidAt ? new Date(paidAt) : null,
       customerName: "Test",
       email: "ov@example.test",
       phone: "20000000",
@@ -99,5 +106,20 @@ describe.skipIf(!url)("overview stats", () => {
     const week = await owner.overview({ days: 7 })
     expect(week.revenue.TND - before.revenue.TND).toBe(30_000)
     expect(week.paidOrders - before.paidOrders).toBe(1)
+  })
+
+  test("a Payoneer order counts in euros only once the owner confirmed it, never while pending", async () => {
+    clock = new Date(`${TODAY}T10:00:00+01:00`)
+    const before = await owner.overview({ days: 7 })
+    await sale(null, "EUR", 12_000, "pending_payment", "payoneer")
+    const pending = await owner.overview({ days: 7 })
+    expect(pending.revenue).toEqual(before.revenue)
+    expect(pending.paidOrders).toBe(before.paidOrders)
+    expect(pending.pendingOrders - before.pendingOrders).toBe(1)
+
+    await sale(studio(1, "12:00"), "EUR", 12_000, "paid", "payoneer")
+    const paid = await owner.overview({ days: 7 })
+    expect(paid.revenue.EUR - before.revenue.EUR).toBe(12_000)
+    expect(paid.revenue.TND).toBe(before.revenue.TND)
   })
 })

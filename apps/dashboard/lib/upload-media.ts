@@ -11,7 +11,12 @@ async function sha256(file: File): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("")
 }
 
-/** Compress to WebP, reserve with a hash (duplicates come back as "existing"), PUT, confirm. */
+export const STORAGE_FULL_TEXT = "Le stockage est plein. Supprimez des photos inutilisées pour pouvoir en ajouter."
+
+/**
+ * Compress to WebP, reserve with a hash (duplicates come back as "existing" and cost no bytes), PUT, confirm. The
+ * storage limit is only checked by the server when it signs a new file: a client estimate would refuse a duplicate.
+ */
 export async function uploadMedia(original: File, onPhase: (phase: UploadPhase) => void) {
   onPhase("compress")
   const file = await compressImage(original)

@@ -140,5 +140,5 @@ export { MISSING as ARAMEX_MISSING }
 /** Public: only the saved provider and the app environment, nothing read from the vault and nothing derived from secrets. */
 export async function shippingHealth(services: Services): Promise<string> {
   const { provider } = await getShippingSettings(services.db)
-  return `${provider}:${services.config.appEnv}`
+  return `${provider}:${provider === "aramex" && services.config.aramexFake ? "fake" : services.config.appEnv}`
 }

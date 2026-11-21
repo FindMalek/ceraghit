@@ -46,6 +46,16 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
     () => "Une commande non payée ne peut pas être remboursée, annulez-la plutôt.",
   ],
   [/^This order cannot be marked paid/, () => "Cette commande ne peut pas être marquée payée."],
+  [/^Use a link from payoneer\.com/, () => "Utilisez un lien de payoneer.com."],
+  [
+    /^A payment link can only be set on a pending Payoneer order/,
+    () => "Un lien de paiement ne peut être ajouté qu'à une commande Payoneer en attente de paiement.",
+  ],
+  [
+    /^Payoneer uses one shop-wide link/,
+    () => "Payoneer utilise un seul lien pour toute la boutique : les liens par commande sont désactivés.",
+  ],
+  [/^This link is already used on another order/, () => "Ce lien est déjà utilisé sur une autre commande."],
   [/^Card payments are confirmed by the gateway only/, () => "Un paiement par carte est confirmé automatiquement."],
   [/^The amount changed, reload the order/, () => "Le montant a changé, rechargez la commande."],
   [/^The storage space is full/, () => "L'espace de stockage (2,5 Go) est plein. Supprimez des photos inutilisées."],
@@ -53,6 +63,11 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Only paid orders get an invoice/, () => "Seules les commandes payées reçoivent une facture."],
   [/^Some required steps are not complete/, () => "Terminez d'abord les étapes obligatoires."],
   [/^Commande introuvable\.?$/, () => "Commande introuvable."],
+  [/^Expédition introuvable\.?$/, () => "Expédition introuvable."],
+  [
+    /^(Une expédition existe déjà|Aramex n'a pas répondu|Ce colis dépasse|Le pays du destinataire|L'étiquette n'a pas pu|Aramex n'est pas configuré|Les envois internationaux|Le paiement à la livraison n'(?:existe|est possible)|Étiquette indisponible|Aramex a refusé|Aramex ne répond pas|Réponse inattendue d'Aramex|Identifiants Aramex refusés|Le transporteur est momentanément|Les informations d'expédition|Cette action n'est pas disponible)/,
+    (m) => m.input ?? "",
+  ],
   [/^Cette commande ne peut pas être expédiée/, (m) => m.input ?? ""],
   [/^Seule une commande expédiée/, (m) => m.input ?? ""],
   [/^Le lien de suivi doit commencer/, (m) => m.input ?? ""],

@@ -8,7 +8,7 @@ import {
   PhoneIcon,
   WhatsappLogoIcon,
 } from "@phosphor-icons/react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { carrierDisplayName, countryName, formatMoney, type PaymentMethod } from "@workspace/sdk"
 import { Button, buttonVariants } from "@workspace/ui/components/button"
@@ -26,14 +26,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { ConfirmDialog } from "@/components/confirm-dialog"
+import { CreateShipmentDialog } from "@/components/create-shipment-dialog"
 import { DownloadInvoiceButton } from "@/components/download-invoice-button"
 import { ExportOrdersDialog } from "@/components/export-orders-dialog"
 import { MANUAL_METHOD_LABEL, MarkPaidDialog } from "@/components/mark-paid-dialog"
 import { PageBody, PageHeader } from "@/components/page-header"
+import { PayoneerLinkBlock } from "@/components/payoneer-link-block"
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { ShipOrderDialog } from "@/components/ship-order-dialog"
+import { ShipmentCard } from "@/components/shipment-card"
 import { SimpleSelect } from "@/components/simple-select"
-import { HoldBadge, OrderStatusBadge } from "@/components/status-badge"
+import { HoldBadge, LinkBadge, OrderStatusBadge } from "@/components/status-badge"
 import { formatDate, formatDayYear, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
@@ -119,7 +122,8 @@ function actionsFor(status: Status, method: PaymentMethod): Action[] {
 }
 
 function useOrders(input: { status?: Status; q?: string; limit: number }) {
-  return useQuery(orpc.admin.orders.list.queryOptions({ input }))
+  // keep the rows while a new search loads: an open order sheet must not unmount and lose what was typed in it
+  return useQuery(orpc.admin.orders.list.queryOptions({ input, placeholderData: keepPreviousData }))
 }
 
 function Line({ label, value }: { label: string; value: React.ReactNode }) {
@@ -134,6 +138,7 @@ function Line({ label, value }: { label: string; value: React.ReactNode }) {
 const GATEWAY_AUDIT_LABEL: Record<string, string> = {
   gateway_mismatch: "Paiement Konnect incohérent : à vérifier dans votre espace Konnect",
   hold_expired: "Annulée automatiquement : délai de paiement dépassé",
+  payment_link_set: "Lien de paiement Payoneer envoyé au client",
   late_payment: "Paiement Konnect reçu après l'annulation : à rembourser ou restaurer à la main",
 }
 
@@ -174,11 +179,18 @@ function History({ orderId }: { orderId: string }) {
   )
 }
 
+const INTERNATIONAL_LATER = "Les envois internationaux arrivent avec la déclaration en douane."
+const canCreateShipment = (o: { status: string; paymentMethod: string }) =>
+  o.status === "paid" || (o.status === "pending_payment" && o.paymentMethod === "cod")
+
 function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [pending, setPending] = useState<Action | null>(null)
   const [editTracking, setEditTracking] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [createShipment, setCreateShipment] = useState(false)
+  const shippingSettings = useQuery(orpc.admin.shipping.getSettings.queryOptions({ input: {} }))
+  const aramexOn = shippingSettings.data?.mode.provider === "aramex" && shippingSettings.data.degraded === null
   const setStatus = useMutation(
     orpc.admin.orders.setStatus.mutationOptions({
       onSuccess: () => {
@@ -289,9 +301,15 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                         />
                       </>
                     )}
+                    {order.paymentReference && (
+                      <Line label="Référence" value={<span className="break-all">{order.paymentReference}</span>} />
+                    )}
                     <Line label="Payée le" value={order.paidAt ? formatDate(order.paidAt) : "—"} />
                   </dl>
                 </section>
+                {order.status === "pending_payment" && order.paymentMethod === "payoneer" && (
+                  <PayoneerLinkBlock key={order.id} order={order} />
+                )}
                 {order.status === "fulfilled" && (
                   <section>
                     <h2 className="mb-1 font-heading text-2xl">Livraison</h2>
@@ -344,6 +362,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                     </div>
                   </section>
                 )}
+                <ShipmentCard orderId={order.id} />
                 <History orderId={order.id} />
               </div>
               <SheetFooter className="sticky bottom-0 flex-row flex-wrap justify-end border-t bg-background/95 backdrop-blur">
@@ -358,10 +377,20 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                 {(order.status === "paid" || order.status === "fulfilled") && (
                   <DownloadInvoiceButton orderId={order.id} />
                 )}
+                {aramexOn && canCreateShipment(order) && (
+                  <Button
+                    className="h-11"
+                    disabled={order.country !== "TN"}
+                    title={order.country !== "TN" ? INTERNATIONAL_LATER : undefined}
+                    onClick={() => setCreateShipment(true)}
+                  >
+                    Créer l'expédition Aramex
+                  </Button>
+                )}
                 {actionsFor(order.status, order.paymentMethod).map((action) => (
                   <Button
                     key={action.to}
-                    variant={action.destructive ? "outline" : "default"}
+                    variant={action.destructive || (aramexOn && action.to === "fulfilled") ? "outline" : "default"}
                     className="h-11"
                     onClick={() => setPending(action)}
                   >
@@ -388,6 +417,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
           onDone={onClose}
         />
       )}
+      {order && <CreateShipmentDialog orderId={order.id} open={createShipment} onOpenChange={setCreateShipment} />}
       {order && (
         <MarkPaidDialog
           order={order}
@@ -468,6 +498,7 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                     <span className="flex items-center justify-between gap-2">
                       <span className="whitespace-nowrap text-lg tabular-nums">{order.number}</span>
                       <span className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+                        <LinkBadge order={order} />
                         <HoldBadge order={order} />
                         <OrderStatusBadge status={order.status} />
                       </span>
@@ -516,6 +547,7 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                       <TableCell>
                         <span className="flex items-center gap-1.5">
                           <OrderStatusBadge status={order.status} />
+                          <LinkBadge order={order} />
                           <HoldBadge order={order} />
                         </span>
                       </TableCell>

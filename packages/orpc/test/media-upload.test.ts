@@ -4,8 +4,8 @@ import { createRouterClient } from "@orpc/server"
 import { createDb, media, uploads } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { MEDIA_MAX_BYTES } from "@workspace/sdk"
-import { eq, like } from "drizzle-orm"
+import { MEDIA_MAX_BYTES, STORAGE_QUOTA_BYTES } from "@workspace/sdk"
+import { eq, like, sql } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
@@ -118,6 +118,27 @@ describe.skipIf(!url)("media upload", () => {
     const again = await owner.media.sign(input(bytes, { originalName: "autre.webp" }))
     expect(again).toMatchObject({ status: "existing", media: { id: first.id } })
     expect((await rows()).filter((r) => r.hash === sha(bytes))).toHaveLength(1)
+  })
+
+  test("when the plan is full a file already in the library is still answered, a new one is refused", async () => {
+    const known = webp(800, 600)
+    await owner.media.confirm({ id: await upload(known) })
+    const used = (await db.select({ n: sql<number>`coalesce(sum(${uploads.bytes}), 0)::bigint` }).from(uploads))[0]!.n
+    const missing = STORAGE_QUOTA_BYTES - Number(used)
+    const fillers = Array.from({ length: Math.ceil(missing / 1_000_000_000) }, (_, i) => ({
+      key: `${prefix}filler-${i}.bin`,
+      folder: "root",
+      contentType: "application/octet-stream",
+      bytes: Math.ceil(missing / Math.ceil(missing / 1_000_000_000)),
+    }))
+    await db.insert(uploads).values(fillers)
+    try {
+      expect(await owner.media.sign(input(known))).toMatchObject({ status: "existing" })
+      const fresh = webp(900, 600)
+      await expect(owner.media.sign(input(fresh))).rejects.toMatchObject({ code: "PAYLOAD_TOO_LARGE" })
+    } finally {
+      await db.delete(uploads).where(like(uploads.key, `${prefix}filler-%`))
+    }
   })
 
   test("a PNG sent as a WebP is refused, its object and rows removed", async () => {
