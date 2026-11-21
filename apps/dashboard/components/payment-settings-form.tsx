@@ -23,6 +23,7 @@ import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useState } from "react"
+import { KonnectKeysCard } from "@/components/konnect-keys-card"
 import { LocalizedField } from "@/components/localized-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { errorMessage } from "@/lib/errors"
@@ -283,12 +284,16 @@ export function PaymentSettingsForm() {
   }
   const { settings, gatewayReady, appEnv } = payments.data
   return (
-    <PaymentSettingsBody
-      initial={settings.methods}
-      initialPayoneer={settings.payoneer}
-      initialHolds={settings.holds}
-      gatewayReady={gatewayReady}
-      production={appEnv === "production"}
-    />
+    <>
+      <KonnectKeysCard production={appEnv === "production"} />
+      <PaymentSettingsBody
+        key={String(gatewayReady)}
+        initial={settings.methods}
+        initialPayoneer={settings.payoneer}
+        initialHolds={settings.holds}
+        gatewayReady={gatewayReady}
+        production={appEnv === "production"}
+      />
+    </>
   )
 }

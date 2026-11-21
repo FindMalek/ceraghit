@@ -9,15 +9,16 @@ import {
   paymentMethodsFor,
   pick,
 } from "@workspace/sdk"
-import { and, eq, inArray, lt, sql } from "drizzle-orm"
+import { and, count, eq, gt, inArray, isNull, lt, ne, or, sql } from "drizzle-orm"
 import type { Services } from "../context"
 import { orderUrl } from "../emails/order-url"
 import { publicError } from "../errors"
 import { findProducts } from "./catalog"
+import { getIntegration } from "./integrations"
 import { tryIssueInvoice } from "./invoices"
 import { recordAmountPaid, recordOrderCreated, recordOrderPaid, recordPaymentSettle } from "./metrics"
 import { sendOrderEmails, sendOrderExpiredEmail, sendPaymentReceivedEmail } from "./order-emails"
-import type { PaymentCheck } from "./payments"
+import { DemoProvider, type PaymentCheck, resolvePayments } from "./payments"
 import { unitMinor } from "./pricing"
 import { effectivePaymentMethods, getPaymentSettings } from "./settings"
 import { quoteShipping } from "./shipping/quote"
@@ -101,6 +102,23 @@ export async function releaseExpiredHolds(
   const { db } = services
   const { only } = opts
   const cutoff = new Date(now.getTime() - HOLD_MINUTES * 60_000)
+  const konnectUsable = (await resolvePayments(services).catch(() => null))?.name === "konnect"
+  const konnectOrder = eq(orders.paymentProvider, "konnect")
+  if (!konnectUsable) {
+    const [held] = await db
+      .select({ n: count() })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.status, "pending_payment"),
+          eq(orders.paymentMethod, "online"),
+          konnectOrder,
+          lt(orders.createdAt, cutoff),
+        ),
+      )
+    if (held?.n)
+      console.error(`[holds] ${held.n} konnect order(s) kept pending: no usable konnect keys, check Konnect by hand`)
+  }
   const online = await db.transaction(async (tx) => {
     const stale = await tx
       .update(orders)
@@ -110,6 +128,7 @@ export async function releaseExpiredHolds(
           eq(orders.status, "pending_payment"),
           eq(orders.paymentMethod, "online"),
           lt(orders.createdAt, cutoff),
+          konnectUsable ? undefined : or(isNull(orders.paymentProvider), ne(orders.paymentProvider, "konnect")),
           only ? inArray(orders.id, only) : undefined,
         ),
       )
@@ -188,7 +207,7 @@ function newNumber(): string {
 }
 
 export async function createOrder(services: Services, input: OrderInput) {
-  const { db, payments, config, now } = services
+  const { db, config, now } = services
   const allowed = paymentMethodsFor(input, await effectivePaymentMethods(services), true)
   if (allowed.length === 0) {
     throw publicError(
@@ -327,6 +346,7 @@ export async function createOrder(services: Services, input: OrderInput) {
   }
 
   try {
+    const payments = await resolvePayments(services)
     const checkout = await payments.init({
       orderNumber: created.number,
       amountMinor: created.totalMinor,
@@ -444,14 +464,54 @@ export async function markPaidManually(
   return { status: "paid", alreadyPaid: false }
 }
 
+export const KONNECT_KEYS_LOCKED = `Des commandes en ligne attendent encore un paiement (moins de ${HOLD_MINUTES} minutes) : changez ou supprimez les clés quand ces commandes sont payées ou ont expiré.`
+
+/**
+ * Changing or clearing the Konnect keys while a card payment may still be in flight would leave a real payment that
+ * `settleOrder` can no longer check. Re-saving identical values is always allowed.
+ */
+export async function assertKonnectUnlocked(
+  services: Services,
+  change: "clear" | { apiKey?: string | null; walletId?: string; mode?: "test" | "live" },
+): Promise<void> {
+  const since = new Date(services.now().getTime() - HOLD_MINUTES * 60_000)
+  const [pending] = await services.db
+    .select({ n: count() })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.status, "pending_payment"),
+        eq(orders.paymentMethod, "online"),
+        or(isNull(orders.paymentProvider), eq(orders.paymentProvider, "konnect")),
+        gt(orders.createdAt, since),
+      ),
+    )
+  if (!pending?.n) return
+  const current = await getIntegration(services, "konnect")
+  const unchanged =
+    change === "clear"
+      ? current?.source !== "db"
+      : (change.apiKey === undefined || change.apiKey === (current?.secrets.apiKey ?? null)) &&
+        (change.walletId === undefined || change.walletId === current?.config.walletId) &&
+        (change.mode === undefined || change.mode === current?.config.mode)
+  if (!unchanged) throw new ORPCError("PRECONDITION_FAILED", { message: KONNECT_KEYS_LOCKED })
+}
+
 /**
  * Asks the gateway what happened to a payment and updates the order to match. Webhooks are unsigned, so this is
  * the only place an order becomes paid: the amount, currency and order number must all match what we created.
  */
 export async function settleOrder(services: Services, ref: string): Promise<{ number: string; status: string } | null> {
-  const { db, payments, now } = services
+  const { db, now } = services
   const [order] = await db.select().from(orders).where(eq(orders.paymentRef, ref)).limit(1)
   if (!order) return null
+  const resolved = await resolvePayments(services)
+  const payments =
+    order.paymentProvider === "demo" && resolved.name !== "demo" ? new DemoProvider(services.config.webUrl) : resolved
+  if (order.paymentProvider === "konnect" && payments.name !== "konnect") {
+    console.error(`[settle ${order.number}] konnect order but no konnect keys: left unchanged`)
+    return { number: order.number, status: order.status }
+  }
   if (order.status === "cancelled" && order.paymentMethod === "online") {
     const [seen] = await db
       .select({ id: orderAudit.id })

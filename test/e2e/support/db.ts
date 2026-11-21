@@ -79,15 +79,38 @@ export async function shippingRow(number: string): Promise<ShippingRow> {
   return row
 }
 
-/** What the CSV export of the last 30 studio days (Africa/Tunis) must add up to, straight from the db. */
-export async function salesWindow(currency: "TND" | "EUR"): Promise<{ total: number; orders: number }> {
+/** What the sales tiles and the CSV export of the last `days` studio days (Africa/Tunis) must add up to, straight from the db. */
+export async function salesWindow(currency: "TND" | "EUR", days = 30): Promise<{ total: number; orders: number }> {
   const [row] = await sql<{ total: number; orders: number }[]>`
     select coalesce(sum(total_minor), 0)::int as total, count(*)::int as orders
     from orders
     where currency = ${currency} and status in ('paid', 'fulfilled')
-      and paid_at >= (date_trunc('day', now() at time zone 'Africa/Tunis') - interval '29 days') at time zone 'Africa/Tunis'
+      and paid_at >= (date_trunc('day', now() at time zone 'Africa/Tunis') - make_interval(days => ${days - 1})) at time zone 'Africa/Tunis'
       and paid_at < (date_trunc('day', now() at time zone 'Africa/Tunis') + interval '1 day') at time zone 'Africa/Tunis'`
   return row ?? { total: 0, orders: 0 }
+}
+
+export interface SaleSeed {
+  number: string
+  status: "pending_payment" | "paid" | "fulfilled" | "cancelled" | "refunded"
+  currency: "TND" | "EUR"
+  totalMinor: number
+  paidAt: Date | null
+}
+
+/** A bare order with fixed dates, for the statistics: createdAt follows paidAt so the orders list shows the same day. */
+export async function insertSale(sale: SaleSeed): Promise<void> {
+  const created = sale.paidAt ?? new Date()
+  await sql`
+    insert into orders (number, public_token, status, currency, subtotal_minor, total_minor, customer_name, email, phone,
+      country, city, address, payment_method, paid_at, created_at)
+    values (${sale.number}, ${`tok-${sale.number}`}, ${sale.status}, ${sale.currency}, ${sale.totalMinor}, ${sale.totalMinor},
+      'Client Stats', 'stats@example.test', '+21620000000', ${sale.currency === "TND" ? "TN" : "FR"}, 'Tunis',
+      '1 rue du Test', ${sale.currency === "TND" ? "cod" : "transfer"}, ${sale.paidAt}, ${created})`
+}
+
+export async function deleteOrdersLike(prefix: string): Promise<void> {
+  await sql`delete from orders where number like ${`${prefix}%`}`
 }
 
 export async function orderId(number: string): Promise<string> {

@@ -21,7 +21,7 @@ import { publicError } from "../../errors"
 import { invoiceView, issueInvoice } from "../../lib/invoices"
 import { deliverMail } from "../../lib/mail-log"
 import { createOrder, settleOrder } from "../../lib/orders"
-import { DemoProvider } from "../../lib/payments"
+import { DemoProvider, resolvePayments } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings } from "../../lib/settings"
 import { toShipping } from "../../lib/shipping-events"
@@ -129,10 +129,11 @@ export const ordersRouter = {
     .input(z.object({ ref: z.string(), outcome: z.enum(["paid", "failed", "mismatch"]) }))
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      if (!(context.payments instanceof DemoProvider) || context.config.appEnv === "production") {
+      const payments = await resolvePayments(context)
+      if (!(payments instanceof DemoProvider) || context.config.appEnv === "production") {
         throw publicError("NOT_FOUND", "payment_not_found", "Not found.")
       }
-      const ref = await context.payments.resolve(context.db, input.ref, input.outcome)
+      const ref = await payments.resolve(context.db, input.ref, input.outcome)
       if (!ref) throw publicError("NOT_FOUND", "payment_not_found", "Unknown payment.")
       await settleOrder(context, ref)
       return { ok: true as const }

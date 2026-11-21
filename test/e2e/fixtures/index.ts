@@ -1,5 +1,6 @@
 import { test as base, expect, type Page } from "@playwright/test"
 import { E2E } from "../env"
+import { attachTimings, createJourney, type Journey } from "../helpers/journey"
 import { type AppLocale, localePath } from "../helpers/locale"
 import { shot, step } from "../helpers/screenshot"
 
@@ -19,6 +20,8 @@ interface E2EFixtures {
   /** Runs a user-visible step and screenshots it. Pass another page (e.g. `ownerPage`) to shoot that one. */
   step: (title: string, fn: () => Promise<void>, target?: Page) => Promise<void>
   shot: (name: string, target?: Page) => Promise<void>
+  /** Tutorial video steps: French captions, pacing only when `JOURNEY_RECORD=1`. */
+  journey: Journey
 }
 
 export const test = base.extend<E2EOptions & E2EFixtures>({
@@ -40,6 +43,12 @@ export const test = base.extend<E2EOptions & E2EFixtures>({
 
   step: async ({ page }, use, testInfo) => {
     await use((title, fn, target) => step(target ?? page, testInfo, title, fn))
+  },
+
+  journey: async ({ page }, use, testInfo) => {
+    const journey = createJourney(page, testInfo)
+    await use(journey)
+    await attachTimings(journey, testInfo)
   },
 
   shot: async ({ page }, use, testInfo) => {
@@ -65,6 +74,6 @@ export const test = base.extend<E2EOptions & E2EFixtures>({
 
 export { payDemo } from "../helpers/demo-gateway"
 export { loginAsOwner, loginAsOwnerAndWait } from "../helpers/login"
-export { createOrderViaApi, placeOrder } from "../helpers/order"
+export { completeCheckout, createOrderViaApi, placeOrder } from "../helpers/order"
 export { clearMails, latestMailTo, mailWithSubject, orderMails } from "../support/mailpit"
 export { expect }

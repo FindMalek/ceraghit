@@ -60,7 +60,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Les clés enregistrées sont illisibles/, (m) => m.input ?? ""],
   [/^Réglage invalide\.?$/, (m) => m.input ?? ""],
   [
-    /^(Renseignez |Le mode réel Aramex|Confirmez les types|Les identifiants enregistrés ne peuvent|Trop d'essais)/,
+    /^(Renseignez |Le mode réel Aramex|Confirmez les types|Les identifiants enregistrés ne peuvent|Trop d'essais|Les clés Konnect réelles|La production exige les clés|Saisissez la clé API|Des commandes en ligne attendent)/,
     (m) => m.input ?? "",
   ],
   [/^Le coffre des clés n'est pas configuré/, (m) => m.input ?? ""],

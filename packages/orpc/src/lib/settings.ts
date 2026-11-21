@@ -78,11 +78,9 @@ export async function savePaymentSettings(db: Db, value: PaymentSettings): Promi
  * only method saved for Tunisia or abroad, cod or transfer comes back so the shop never silently stops taking orders.
  * Last, transfer goes off while the shop profile has no complete bank account, in every environment.
  */
-export async function effectivePaymentMethods(
-  services: Pick<Services, "db" | "payments" | "config">,
-): Promise<PaymentMethodFlags> {
+export async function effectivePaymentMethods(services: Services): Promise<PaymentMethodFlags> {
   const { methods } = await getPaymentSettings(services.db, services.config)
-  const online = methods.online && gatewayReady(services)
+  const online = methods.online && (await gatewayReady(services))
   const effective = online
     ? methods
     : {

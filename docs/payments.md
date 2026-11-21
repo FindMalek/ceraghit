@@ -51,6 +51,36 @@ never qualifies (`gatewayReady`). Until the page is saved once, card follows `ON
 existing deployments keep their behaviour. Transfer orders carry the account from the dashboard settings and the order
 number as the reference; the owner marks the order paid when the money arrives, then shipped.
 
+### konnect keys
+
+The owner enters the API key and wallet id in the "Clés Konnect" block of the same page (`admin.settings.konnect.*`,
+vault provider `konnect`, see `secrets.md`). `resolvePayments` picks the gateway on every checkout and settle: saved keys
+win, then the env-built default (`KONNECT_*` env, else the demo gateway). Saved `live` keys are never used outside
+production, and the dashboard refuses to save `test` keys in production. "Tester la connexion" asks Konnect for a payment
+that cannot exist (401/403 means the key is refused, 404 means accepted) and never calls `init-payment`; it does not
+verify the wallet id. A saved key only counts when its mode matches the
+environment (live in production, test elsewhere); otherwise the env default is used. There is no per-process cache: the
+vault row is read per call.
+
+Keys and pending card payments. Saving different keys or clearing them is refused (`assertKonnectUnlocked`) while an
+online order created through Konnect has been `pending_payment` for less than the 45 minute hold; re-saving identical
+values is allowed. If the keys become unusable anyway (`SECRETS_KEY` lost or rotated, row removed by hand), the code
+fails closed: `settleOrder` never asks another gateway about a Konnect order, and `releaseExpiredHolds` keeps Konnect
+orders past the hold pending (and logs them) instead of cancelling them while no Konnect gateway can be asked. A demo
+order is always checked by the demo gateway, never by Konnect. Nothing marks such an order paid: `markPaidManually`
+refuses online orders. A payment taken while the keys were unusable must be reconciled by hand in the Konnect dashboard
+once the keys are back (the next webhook or order page visit then settles it), otherwise the order stays pending.
+
+#### known limits
+
+- `assertKonnectUnlocked` and the key save are not in one transaction. A checkout that resolved the old gateway and is
+  mid-`init` while the keys change gets a reference from the old account, stays pending and is cancelled by the sweep.
+  The window is a few seconds, it fails closed, and nothing is marked paid.
+- After a `SECRETS_KEY` loss followed by saving different keys, the held Konnect orders are cancelled by the sweep with
+  no further warning (Konnect is resolvable again, so the holds are no longer skipped).
+- An env swap from account A to B (no vault row) makes Konnect resolvable again, but B cannot read A's references: those
+  orders are cancelled after the hold, and a payment taken on A must be reconciled by hand in Konnect.
+
 ### payoneer (manual)
 
 `payoneer` is offered abroad in EUR only, when switched on in `/payments`. No gateway is called and Payoneer never

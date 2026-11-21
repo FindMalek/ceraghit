@@ -11,6 +11,7 @@ import {
 import { eq } from "drizzle-orm"
 import type { Services } from "../context"
 import { loadEmailDomain } from "./email-domain"
+import { resolvePayments } from "./payments"
 import { emailDomainVerified } from "./resend-domains"
 import { getShopProfile, type ShopProfileRow } from "./shop-profile"
 
@@ -90,7 +91,7 @@ async function cachedEmailDomain(ctx: Services): Promise<EmailDomain> {
 
 /** Each lane that builds an integration replaces its check here. Must not throw; false on any error. */
 export const INTEGRATION_CHECKS: Record<OptionalSetupStepId, (ctx: Services) => Promise<boolean>> = {
-  konnect: async (ctx) => ctx.payments.name === "konnect", // replaced by the vault check
+  konnect: async (ctx) => (await resolvePayments(ctx)).name === "konnect",
   aramex: async () => false,
   payoneer: async () => false,
   groq: async () => false,
