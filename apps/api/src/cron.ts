@@ -7,6 +7,7 @@ import {
   type Services,
   sendExpiryMails,
   sweepRateLimits,
+  trackShipments,
 } from "@workspace/orpc"
 
 export interface CronJob {
@@ -53,5 +54,12 @@ export const CRON_JOBS: Record<string, CronJob> = {
   },
   "ai-usage-rollover": {
     run: (services, now) => rolloverAiUsage(services, now),
+  },
+  /** A no-op while shipping is manual or the Aramex credentials are missing. */
+  "track-shipments": {
+    async run(services) {
+      const report = await trackShipments(services)
+      return { ...report }
+    },
   },
 }

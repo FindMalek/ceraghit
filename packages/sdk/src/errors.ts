@@ -20,6 +20,7 @@ export const PUBLIC_ERROR_REASONS = [
   "too_many_lookups",
   "too_many_requests",
   "photo_missing",
+  "photo_unreadable",
   "storage_full",
 ] as const
 

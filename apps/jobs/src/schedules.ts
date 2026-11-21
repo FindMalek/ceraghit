@@ -39,3 +39,11 @@ export const aiUsageRolloverTask = schedules.task({
   cron: { pattern: aiUsageRollover.cron, timezone: aiUsageRollover.timezone },
   run: () => callCron(aiUsageRollover.name),
 })
+
+const trackShipments = spec("track-shipments")
+
+export const trackShipmentsTask = schedules.task({
+  id: trackShipments.name,
+  cron: { pattern: trackShipments.cron, timezone: trackShipments.timezone },
+  run: () => callCron(trackShipments.name),
+})
