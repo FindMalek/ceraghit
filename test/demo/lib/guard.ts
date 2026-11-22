@@ -69,3 +69,21 @@ export async function assertSafe(env: GuardEnv, fetchFn: typeof fetch = fetch): 
     throw new Error(`demo videos refuse to run, they only record demo data:\n- ${problems.join("\n- ")}`)
   }
 }
+
+/** Only the documentation ranges (RFC 5737), so a spoofed address can never be a real visitor's. */
+const DOC_IP = /^(192\.0\.2|198\.51\.100|203\.0\.113)\.(\d{1,3})$/
+
+/** The address a recorded login attempt claims to come from, to film the lockouts without locking the recorder out. */
+export function spoofedIp(value: string | undefined): string {
+  const match = DOC_IP.exec((value ?? "").trim())
+  if (!match || Number(match[2]) > 255) {
+    throw new Error(`ip takes an address from 192.0.2.x, 198.51.100.x or 203.0.113.x, got "${value ?? ""}"`)
+  }
+  return value!.trim()
+}
+
+/** The extra header and the urls it may be sent to: a step that changes the address refuses any non loopback site. */
+export function assertLoopbackUrls(urls: string[]): void {
+  const problems = urls.map((url) => urlProblem("url", url)).filter((p): p is string => p !== null)
+  if (problems.length > 0) throw new Error(`refusing to spoof an address: ${problems.join("; ")}`)
+}
