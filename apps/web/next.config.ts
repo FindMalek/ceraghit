@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   // Static catalogue photos are resized per device, see components/photo.tsx.
   images: {
     formats: ["image/webp"],
+    // 60 is the first product photo, the LCP element: it shares the 3G pipe with the scripts.
+    qualities: [60, 75],
+    // 1000 sits between 828 and 1080: a 412px phone at 2.6x draws 380 css px of gallery photo, i.e. 990 device px.
+    deviceSizes: [640, 750, 828, 1000, 1200, 1920, 2048, 3840],
     localPatterns: [{ pathname: "/catalogue/**" }, { pathname: "/api/files/**" }, { pathname: "/logo.webp" }],
   },
   poweredByHeader: false,

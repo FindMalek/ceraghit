@@ -8,15 +8,23 @@ import { useLocale, useTranslations } from "next-intl"
 import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react"
 import Image from "@/components/photo"
 
+/** Page gutters and the two-column grid of the product page, so a phone asks for the width it really draws. */
+const MAIN_SIZES = "(min-width: 1280px) 37rem, (min-width: 768px) calc(50vw - 3rem), calc(100vw - 2rem)"
+
 export function ProductGallery({ images, title }: { images: ProductImage[]; title: string }) {
   const t = useTranslations("product")
   /** In right-to-left languages "next" is on the left: arrows and swipes flip. */
   const locale = useLocale()
   const step = locale === "ar" ? -1 : 1
   const [index, setIndex] = useState(0)
+  /** Only the first photo loads with the page; the rest follow once it is on screen (or the visitor moves), so they never compete with the LCP photo. */
+  const [warm, setWarm] = useState(false)
   const touchStart = useRef<number | null>(null)
   const count = images.length
-  const go = (to: number) => setIndex((to + count) % count)
+  const go = (to: number) => {
+    setWarm(true)
+    setIndex((to + count) % count)
+  }
 
   if (count === 0) return <div className="frame aspect-square bg-card" />
 
@@ -47,18 +55,23 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
         }}
         onTouchEnd={onTouchEnd}
       >
-        {images.map((img, i) => (
-          <Image
-            key={img.id}
-            src={imageSrc(img.image)}
-            alt={pick(img.alt, locale) || `${title} ${i + 1}`}
-            fill
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            priority={i === 0}
-            aria-hidden={i !== index}
-            className={cn("object-cover transition-opacity duration-300", i === index ? "opacity-100" : "opacity-0")}
-          />
-        ))}
+        {images.map((img, i) =>
+          i === 0 || warm ? (
+            <Image
+              key={img.id}
+              src={imageSrc(img.image)}
+              alt={pick(img.alt, locale) || `${title} ${i + 1}`}
+              fill
+              sizes={MAIN_SIZES}
+              priority={i === 0}
+              fetchPriority={i === 0 ? "high" : "low"}
+            quality={i === 0 ? 60 : 75}
+              onLoad={i === 0 ? () => setWarm(true) : undefined}
+              aria-hidden={i !== index}
+              className={cn("object-cover transition-opacity duration-300", i === index ? "opacity-100" : "opacity-0")}
+            />
+          ) : null,
+        )}
         {count > 1 && (
           <>
             <Button
@@ -99,7 +112,7 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
                   i === index ? "opacity-100 ring-1 ring-primary" : "opacity-60 hover:opacity-100",
                 )}
               >
-                <Image src={imageSrc(img.image)} alt="" fill sizes="120px" className="object-cover" />
+                {warm && <Image src={imageSrc(img.image)} alt="" fill sizes="120px" className="object-cover" />}
               </button>
             </li>
           ))}

@@ -181,7 +181,6 @@ test("shop: the grid only loads the first viewport and a few more", ONCE, async 
 })
 
 test("product: the gallery does not shift the layout and photos stay light", ONCE, async ({ page, isMobile, step }) => {
-  test.fixme(isMobile, "#351 the product page LCP is 6.2 s on throttled mobile")
   await page.addInitScript(OBSERVE)
   await throttle(page, isMobile)
   const images = recordImages(page)
