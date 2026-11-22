@@ -1,0 +1,55 @@
+{
+  "id": "14",
+  "slug": "panier-page-barre-mobile",
+  "title_fr": "La page panier et la barre panier mobile",
+  "start": { "app": "web", "path": "/fr/product/lampe-votive-0202", "loggedIn": false },
+  "steps": [
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter au panier" },
+      "caption_fr": "Ajoutez une pièce au panier."
+    },
+    { "action": "press", "value": "Escape", "caption_fr": "Fermez le panneau.", "holdMs": 800 },
+    {
+      "action": "wait",
+      "caption_fr": "Sur téléphone, une barre reste en bas.",
+      "only": "mobile",
+      "voice": true,
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "1 article" },
+      "caption_fr": "Elle rouvre le panier d'un geste.",
+      "only": "mobile",
+      "holdMs": 1800
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Elle rouvre le panier d'un geste.",
+      "only": "mobile",
+      "holdMs": 800
+    },
+    { "action": "goto", "value": "/fr/cart", "caption_fr": "Voici la page panier complète.", "holdMs": 2000 },
+    {
+      "action": "wait",
+      "caption_fr": "La barre disparaît sur cette page.",
+      "only": "mobile",
+      "voice": true,
+      "holdMs": 1800
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Passer commande" },
+      "caption_fr": "Passer commande mène au paiement.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Retirer" },
+      "caption_fr": "Un panier vide n'affiche plus la barre.",
+      "holdMs": 2000
+    }
+  ]
+}

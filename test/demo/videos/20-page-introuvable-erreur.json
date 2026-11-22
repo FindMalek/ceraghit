@@ -1,0 +1,68 @@
+{
+  "id": "20",
+  "slug": "page-introuvable-erreur",
+  "title_fr": "Pages 404 et erreur",
+  "start": { "app": "web", "path": "/fr/page-inconnue", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "Une adresse inconnue affiche Page introuvable.", "holdMs": 2200 },
+    { "action": "goto", "value": "/en/unknown-page", "caption_fr": "La page existe aussi en anglais.", "holdMs": 1800 },
+    { "action": "goto", "value": "/ar/unknown-page", "caption_fr": "Et en arabe.", "holdMs": 1800 },
+    {
+      "action": "goto",
+      "value": "/fr/product/pièce-inexistante",
+      "caption_fr": "Une pièce qui n'existe pas donne le même écran.",
+      "holdMs": 2000
+    },
+    {
+      "action": "goto",
+      "value": "/fr/order/CER-00000?t=faux",
+      "caption_fr": "Un lien de commande faux aussi.",
+      "holdMs": 2200
+    },
+    {
+      "action": "network",
+      "value": "status 500 **/api/rpc/public/**",
+      "caption_fr": "Simulation : le serveur répond une erreur.",
+      "holdMs": 300
+    },
+    {
+      "action": "goto",
+      "value": "/fr/custom",
+      "caption_fr": "Quand le serveur échoue, un message s'affiche.",
+      "holdMs": 800
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Nom complet" },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Le formulaire reste rempli pour réessayer."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse e-mail" },
+      "value": "amel@example.test",
+      "caption_fr": "Le formulaire reste rempli pour réessayer."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Votre projet" },
+      "value": "Une lampe votive bleue.",
+      "caption_fr": "Le formulaire reste rempli pour réessayer."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer ma demande" },
+      "caption_fr": "Le message d'erreur apparaît en haut.",
+      "holdMs": 500
+    },
+    { "action": "scroll", "value": "-2500", "caption_fr": "Le message d'erreur apparaît en haut.", "holdMs": 2500 },
+    { "action": "network", "value": "reset", "caption_fr": "Le serveur revient.", "holdMs": 300 },
+    { "action": "goto", "value": "/fr/page-inconnue", "caption_fr": "Retour à une page introuvable.", "holdMs": 1000 },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Retour à l'accueil" },
+      "caption_fr": "Retour à l'accueil ramène à la boutique.",
+      "holdMs": 3500
+    }
+  ]
+}
