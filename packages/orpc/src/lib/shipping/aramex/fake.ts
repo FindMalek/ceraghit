@@ -127,6 +127,12 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
           : [{ Line1: sent.Address?.Line1 ?? "", City: "Sousse", PostCode: "4000", CountryCode: "TN" }],
       })
     }
+    if (url.endsWith("/IsAddressServiced")) {
+      const sent = JSON.parse(String(init?.body ?? "{}")) as { Address?: { City?: string } }
+      const typed = (sent.Address?.City ?? "").toLowerCase()
+      const serviced = FAKE_CITIES.some((c) => c.toLowerCase() === typed)
+      return reply({ Transaction: null, Notifications: [], HasErrors: false, IsServiced: serviced })
+    }
     if (url.endsWith("/TrackShipments")) {
       const sent = JSON.parse(String(init?.body ?? "{}")) as { Shipments?: string[] }
       const waybills = sent.Shipments ?? []

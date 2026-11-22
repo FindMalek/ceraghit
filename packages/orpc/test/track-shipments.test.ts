@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
+import { createRouterClient } from "@orpc/server"
 import { createDb, orders, shipments } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { eq, like } from "drizzle-orm"
-import type { Services } from "../src/context"
+import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { ConsoleMailer } from "../src/lib/mailer"
 import { DemoProvider } from "../src/lib/payments"
@@ -10,6 +11,7 @@ import { ManualShippingProvider } from "../src/lib/shipping"
 import { saveShippingSettings } from "../src/lib/shipping/settings"
 import { trackShipments } from "../src/lib/shipping/tracking"
 import type { ShippingProvider, TrackResult } from "../src/lib/shipping/types"
+import { appRouter } from "../src/routers"
 
 const url = process.env.DATABASE_URL
 
@@ -43,7 +45,7 @@ describe.skipIf(!url)("track-shipments", () => {
   })
   const carrier = (results: TrackResult[]) =>
     ({ id: "aramex", track: async () => results }) as unknown as ShippingProvider
-  const waybills = [`${tag}-A`, `${tag}-B`, `${tag}-C`, `${tag}-D`, `${tag}-E`]
+  const waybills = [`${tag}-A`, `${tag}-B`, `${tag}-C`, `${tag}-D`, `${tag}-E`, `${tag}-F`]
 
   beforeAll(async () => {
     await runMigrations(db)
@@ -141,6 +143,34 @@ describe.skipIf(!url)("track-shipments", () => {
     expect(closed.deliveredAt?.toISOString()).toBe("2096-05-10T09:30:00.000Z")
     await trackShipments(hooked, done)
     expect(delivered).toEqual([id])
+  })
+
+  test("the customer's order page gets our own status, never the raw carrier text or the internal comment", async () => {
+    const raw = "Held at hub: consignee refused, call 98 765 432"
+    const internal = "AGENT-NOTE-7731"
+    const incident = {
+      ...event("SH047", "2096-05-10T08:00:00Z"),
+      description: raw,
+      comment: internal,
+      problemCode: "P10",
+      location: "Hub Radès",
+    }
+    await trackShipments(
+      services,
+      carrier([{ waybill: waybills[5]!, notFound: false, delivered: false, events: [incident] }]),
+    )
+    expect((await row(waybills[5]!)).status).toBe("exception")
+    await db
+      .update(orders)
+      .set({ status: "fulfilled", carrier: "aramex", trackingNumber: waybills[5]!, shippedAt: services.now() })
+      .where(eq(orders.number, `${tag}-5`))
+    const visitor = createRouterClient(appRouter, {
+      context: (): Context => createContext(services, new Headers({ "x-forwarded-for": "203.0.113.9" })),
+    })
+    const page = await visitor.public.orders.get({ number: `${tag}-5`, token: "t" })
+    expect(page.shipping?.parcelStatus).toBe("exception")
+    const text = JSON.stringify(page)
+    for (const leaked of [raw, internal, "Hub Radès", "98 765 432", "SH047"]) expect(text).not.toContain(leaked)
   })
 
   test("a refresh polls only the shipment it was asked for", async () => {

@@ -27,9 +27,9 @@ export const ACTIONS = [
   "drag",
   /** Changes the address the visit claims (`203.0.113.7`), to film the lockouts without locking the recorder out. */
   "ip",
-  /** Drops the session cookies: the next request is a signed out visitor (session expired, back after logout). */
   /** Claims the visitor's country (`BE`) the way the host does, so a first visit is priced in euros. Use after `clear-cookies`, the currency is remembered. */
   "country",
+  /** Drops the session cookies: the next request is a signed out visitor (session expired, back after logout). */
   "clear-cookies",
   "back",
   /** Slows, drops or fails requests (see lib/net.ts): loading skeletons, error banners and error pages. */

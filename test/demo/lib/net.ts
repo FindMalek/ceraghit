@@ -19,7 +19,7 @@ export function parseNetwork(value: string | undefined): NetworkRule {
   const [kind, ...rest] = parts
   if (kind === "reset" && rest.length === 0) return { kind: "reset" }
   const pattern = (glob: string | undefined): string => {
-    if (!glob || !glob.startsWith("**/") || glob.length < 5) {
+    if (!glob?.startsWith("**/") || glob.length < 5) {
       throw new Error(`a network pattern must start with "**/" and name a path, got "${glob ?? ""}"`)
     }
     return glob

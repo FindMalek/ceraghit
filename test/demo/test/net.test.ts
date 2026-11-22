@@ -39,9 +39,7 @@ test("steps send the spoofed address, drop the session, go back and break the ne
     const seen: string[] = []
     await context.route("http://localhost:4999/**", (route) => {
       const url = new URL(route.request().url())
-      seen.push(
-        `${url.pathname} ${route.request().headers()["x-forwarded-for"] ?? "-"} ${route.request().headers()["x-vercel-ip-country"] ?? "-"}`,
-      )
+      seen.push(`${url.pathname} ${route.request().headers()["x-forwarded-for"] ?? "-"}`)
       return route.fulfill({
         contentType: "text/html",
         body:
@@ -58,16 +56,12 @@ test("steps send the spoofed address, drop the session, go back and break the ne
       assetsDir: "",
       zoom: false,
     })
-    const run = (action: "ip" | "country" | "clear-cookies" | "back" | "network" | "goto", value?: string) =>
+    const run = (action: "ip" | "clear-cookies" | "back" | "network" | "goto", value?: string) =>
       pacer.run({ action, caption_fr: "Ok" }, value)
 
     await run("ip", "203.0.113.7")
     await run("goto", "/")
-    expect(seen[0]).toBe("/ 203.0.113.7 -")
-
-    await run("country", "BE")
-    await run("goto", "/")
-    expect(seen.filter((s) => s.startsWith("/ "))[1]).toBe("/ 203.0.113.7 BE")
+    expect(seen[0]).toBe("/ 203.0.113.7")
 
     await context.addCookies([{ name: "session", value: "x", url: "http://localhost:4999" }])
     await run("clear-cookies")

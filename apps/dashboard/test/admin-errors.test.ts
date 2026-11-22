@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { readdirSync, readFileSync } from "node:fs"
 import { join, relative } from "node:path"
 import { ORPCError } from "@orpc/client"
+import { postcodeProblem } from "@workspace/sdk"
 import ts from "typescript"
 import * as shipments from "../../../packages/orpc/src/lib/shipping/shipments"
 import { errorMessage } from "../lib/errors"
@@ -109,4 +110,12 @@ test("every shipment message reaches the owner as written, never as the generic 
     }
   }
   expect(shipments.NO_ANSWER("CER-1")).toContain("Vérifiez sur votre espace Aramex")
+})
+
+test("the postcode refusals of the shipment dialog reach the owner as written", () => {
+  const messages = [postcodeProblem("FR", "7500"), postcodeProblem("FR", ""), postcodeProblem("TN", "20")]
+  for (const message of messages) {
+    expect(message).toBeTruthy()
+    expect(errorMessage(new ORPCError("BAD_REQUEST", { message: message! }))).toBe(message!)
+  }
 })

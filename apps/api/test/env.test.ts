@@ -96,6 +96,16 @@ test("ARAMEX_FAKE is refused in production and allowed elsewhere", () => {
   expect(loadEnv({ ...base, ARAMEX_FAKE: "true" }).ARAMEX_FAKE).toBe(true)
 })
 
+test("KONNECT_BASE_URL and GROQ_BASE_URL stubs are refused in production and allowed elsewhere", () => {
+  expect(() => loadEnv({ ...production, KONNECT_BASE_URL: "http://localhost:9300/konnect" })).toThrow(
+    /KONNECT_BASE_URL/,
+  )
+  expect(() => loadEnv({ ...production, GROQ_BASE_URL: "http://localhost:9300/groq" })).toThrow(/GROQ_BASE_URL/)
+  expect(loadEnv({ ...base, GROQ_BASE_URL: "http://localhost:9300/groq" }).GROQ_BASE_URL).toBe(
+    "http://localhost:9300/groq",
+  )
+})
+
 test("TRUSTED_PROXY_HOPS defaults to trusting no forwarded header and is bounded", () => {
   expect(loadEnv(production).TRUSTED_PROXY_HOPS).toBe(0)
   expect(loadEnv({ ...production, TRUSTED_PROXY_HOPS: "1" }).TRUSTED_PROXY_HOPS).toBe(1)
