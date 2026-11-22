@@ -66,7 +66,7 @@ export default async function CategoryPage({
       {products.length === 0 ? (
         <EmptyState message={t("empty")} cta={t("emptyCta")} />
       ) : (
-        <ProductGrid products={products} currency={currency} priorityCount={4} />
+        <ProductGrid products={products} currency={currency} priorityCount={2} />
       )}
     </div>
   )

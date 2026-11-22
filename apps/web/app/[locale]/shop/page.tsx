@@ -43,7 +43,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
       ) : filtered ? (
         <>
           <p className="font-heading text-muted-foreground text-sm">{t("results", { count: products.length })}</p>
-          <ProductGrid products={products} currency={currency} priorityCount={4} />
+          <ProductGrid products={products} currency={currency} priorityCount={2} />
         </>
       ) : (
         <div className="space-y-16">
@@ -53,7 +53,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
             return (
               <section key={category.id} className="space-y-6">
                 <CategoryHeading category={category} index={index} asLink />
-                <ProductGrid products={items.slice(0, 8)} currency={currency} priorityCount={index === 0 ? 4 : 0} />
+                <ProductGrid products={items.slice(0, 8)} currency={currency} priorityCount={0} />
                 {items.length > 8 && (
                   <Link
                     href={`/shop/${category.slug}`}
