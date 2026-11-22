@@ -18,7 +18,7 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 - [ ] une fiche produit : photos, prix, dimensions, matière ; une pièce unique ne se commande qu'une fois
 - [ ] un produit « sur devis » mène au formulaire de demande
 - [ ] le changement de monnaie DT / EUR : un seul prix affiché à la fois, les prix sont les vôtres
-- [ ] « L'atelier », « Demande » (envoi d'une photo de 5 Mo maximum), pages légales : aucun texte entre crochets restant
+- [ ] « L'atelier », « Pièce unique » (envoi d'une photo de 5 Mo maximum), pages légales : aucun texte entre crochets restant
 - [ ] la page d'erreur et la page 404 s'affichent dans les trois langues
 - [ ] sur téléphone : panier, commande et menu utilisables avec le pouce
 
@@ -33,7 +33,7 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 
 ## 3. Tableau de bord
 
-- [ ] connexion sur ordinateur et sur téléphone (l'opérateur change ensuite le mot de passe)
+- [ ] connexion sur ordinateur et sur téléphone (il n'existe pas encore d'écran pour changer le mot de passe : c'est celui que l'opérateur a enregistré dans le secret `ADMIN_PASSWORD`, qu'il peut changer sur demande)
 - [ ] première ouverture : les étapes se suivent, les étapes facultatives se passent
 - [ ] profil de la boutique : nom légal, adresse, téléphone, e-mail, matricule fiscal enregistrés et visibles sur la facture
 - [ ] banque : titulaire, RIB, IBAN, BIC remplis, plus aucun « À compléter » dans l'e-mail de virement, la page de commande et la facture
@@ -51,7 +51,7 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 ## 5. Commandes, paiements, factures
 
 - [ ] marquer une commande payée (virement ou paiement à la livraison) : l'action est enregistrée et l'e-mail « paiement reçu » part
-- [ ] marquer une commande expédiée avec un numéro de suivi : l'e-mail d'expédition le contient
+- [ ] « Marquer expédiée » une commande avec un numéro de suivi : l'e-mail d'expédition le contient
 - [ ] ouvrir la facture PDF : bonne langue, une seule monnaie, coordonnées et banque, impression A4 propre
 - [ ] le client ouvre sa facture depuis le lien de sa commande
 - [ ] paiement par carte (client) : un vrai petit paiement depuis une carte tunisienne et une carte étrangère, la commande passe payée toute seule
@@ -60,8 +60,8 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 ## 6. Livraison
 
 - [ ] mode manuel : transporteur et suivi enregistrés, visibles du client
-- [ ] Aramex (client) : « Tester la connexion » réussit, un tarif s'affiche à la commande, une étiquette est créée, imprimée, collée
-- [ ] Aramex (client) : demande d'enlèvement puis annulation, suivi mis à jour avec « Actualiser »
+- [ ] Aramex (client) : « Tester la connexion » réussit, un tarif s'affiche à la commande, une étiquette est créée (« Créer l'expédition Aramex »), imprimée, collée
+- [ ] Aramex (client) : « Demander l'enlèvement » puis « Annuler l'enlèvement », suivi mis à jour avec « Actualiser »
 - [ ] les frais de livraison saisis dans « Réglages » apparaissent au paiement
 
 ## 7. Statistiques et exports
@@ -73,7 +73,7 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 
 - [ ] les e-mails arrivent dans la boîte de réception, pas dans les indésirables, avec l'adresse d'envoi de la boutique
 - [ ] la demande de pièce unique arrive à l'atelier, la réponse se fait depuis votre boîte
-- [ ] la page « Emails » liste un échec s'il y en a, et permet de renvoyer
+- [ ] la page « Emails » liste un échec s'il y en a, et permet de « Renvoyer »
 
 ## 9. Aide et vidéos
 
@@ -83,7 +83,7 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 ## 10. Sécurité et reprise
 
 - [ ] un visiteur qui ouvre l'adresse du tableau de bord voit la page de connexion, rien d'autre
-- [ ] après plusieurs mots de passe faux, la connexion se bloque quelques minutes
+- [ ] après plusieurs mots de passe faux, la connexion se bloque pendant 15 minutes (5 essais ratés par adresse et par 15 minutes)
 - [ ] l'opérateur a remis les coordonnées à appeler en cas de problème
 - [ ] l'opérateur a confirmé la date de la dernière sauvegarde et du dernier test de restauration
 
