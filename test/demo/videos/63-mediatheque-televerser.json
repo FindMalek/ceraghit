@@ -1,0 +1,96 @@
+{
+  "id": "63",
+  "slug": "mediatheque-televerser",
+  "title_fr": "Ajouter des photos à la médiathèque",
+  "start": {
+    "app": "dashboard",
+    "path": "/media",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "hover",
+      "target": {
+        "role": "heading",
+        "name": "Médiathèque"
+      },
+      "caption_fr": "Toutes vos photos sont ici."
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-1.webp",
+      "caption_fr": "Glissez ou choisissez vos photos.",
+      "holdMs": 2500,
+      "only": "desktop"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-1.png",
+      "caption_fr": "Glissez ou choisissez vos photos.",
+      "holdMs": 2500,
+      "only": "mobile"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-2.webp",
+      "caption_fr": "Plusieurs photos à la fois.",
+      "holdMs": 2500,
+      "only": "desktop"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-2.png",
+      "caption_fr": "Plusieurs photos à la fois.",
+      "holdMs": 2500,
+      "only": "mobile"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-1.webp",
+      "caption_fr": "Déjà présente : pas de doublon.",
+      "holdMs": 2500,
+      "only": "desktop"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-1.png",
+      "caption_fr": "Déjà présente : pas de doublon.",
+      "holdMs": 2500,
+      "only": "mobile"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "not-an-image.txt",
+      "caption_fr": "Seules les images sont acceptées.",
+      "holdMs": 2000
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Stockage"
+      },
+      "caption_fr": "Le stockage utilisé est suivi ici."
+    }
+  ]
+}

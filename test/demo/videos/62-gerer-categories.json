@@ -1,0 +1,146 @@
+{
+  "id": "62",
+  "slug": "gerer-categories",
+  "title_fr": "Gérer les catégories",
+  "start": {
+    "app": "dashboard",
+    "path": "/categories",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Nouvelle catégorie"
+      },
+      "caption_fr": "Créez une catégorie pour le menu."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Le nom français est obligatoire.",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom"
+      },
+      "value": "Vases",
+      "caption_fr": "Nom, description et image.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom"
+      },
+      "value": "Plats",
+      "caption_fr": "Nom, description et image.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Description"
+      },
+      "value": "Vases tournés à la main.",
+      "caption_fr": "Nom, description et image."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir une photo"
+      },
+      "caption_fr": "L'image se choisit dans la médiathèque."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "bas-relief-en-ceramique-0601-1.webp"
+      },
+      "caption_fr": "L'image se choisit dans la médiathèque."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir",
+        "nth": -1
+      },
+      "caption_fr": "L'image se choisit dans la médiathèque.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Visible dans le menu"
+      },
+      "caption_fr": "Masquez-la du menu si besoin."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "La mention Masquée apparaît.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Monter",
+        "nth": -1
+      },
+      "caption_fr": "Monter ou descendre change le menu."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Modifier",
+        "nth": -2
+      },
+      "caption_fr": "Modifier rouvre la catégorie.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Annuler"
+      },
+      "caption_fr": "Modifier rouvre la catégorie.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": 0
+      },
+      "caption_fr": "Une catégorie avec des produits reste."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": -1
+      },
+      "caption_fr": "Déplacez ou supprimez d'abord ses produits.",
+      "holdMs": 2500
+    }
+  ]
+}

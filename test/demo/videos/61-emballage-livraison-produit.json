@@ -1,0 +1,77 @@
+{
+  "id": "61",
+  "slug": "emballage-livraison-produit",
+  "title_fr": "Poids et dimensions pour la livraison",
+  "start": {
+    "app": "dashboard",
+    "path": "/products/new",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "label": "Poids emballé (kg)"
+      },
+      "value": "1,5",
+      "caption_fr": "Le poids emballé se saisit en kilos, avec virgule."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Longueur (cm)"
+      },
+      "value": "12,5",
+      "caption_fr": "Les dimensions se saisissent en centimètres entiers."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Largeur (cm)"
+      },
+      "value": "20",
+      "caption_fr": "Les dimensions se saisissent en centimètres entiers."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Hauteur (cm)"
+      },
+      "value": "10",
+      "caption_fr": "Les dimensions se saisissent en centimètres entiers."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Créer le produit"
+      },
+      "caption_fr": "Une valeur invalide est signalée.",
+      "holdMs": 2500
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Poids emballé (kg)"
+      },
+      "value": "abc",
+      "caption_fr": "Le poids doit être un nombre.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Créer le produit"
+      },
+      "caption_fr": "Le poids doit être un nombre.",
+      "holdMs": 2200,
+      "only": "desktop"
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/product/fontaine-andalouse-0002",
+      "caption_fr": "Trop lourde ou trop longue : pièce sur devis."
+    }
+  ]
+}

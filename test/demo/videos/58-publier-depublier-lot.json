@@ -1,0 +1,135 @@
+{
+  "id": "58",
+  "slug": "publier-depublier-lot",
+  "title_fr": "Publier et dépublier en lot",
+  "start": {
+    "app": "dashboard",
+    "path": "/products",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0800",
+      "caption_fr": "Un brouillon sans photo ne se publie pas."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Publier",
+        "nth": 0
+      },
+      "caption_fr": "Un brouillon sans photo ne se publie pas.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0010",
+      "caption_fr": "Dépubliez une pièce : elle quitte la boutique."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Dépublier",
+        "nth": 0
+      },
+      "caption_fr": "Dépubliez une pièce : elle quitte la boutique.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Publier",
+        "nth": 0
+      },
+      "caption_fr": "Publiez-la de nouveau en un clic."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "001",
+      "caption_fr": "Cochez plusieurs pièces pour agir en lot."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "Sélectionner 0010"
+      },
+      "caption_fr": "Cochez plusieurs pièces pour agir en lot."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Désélectionner"
+      },
+      "caption_fr": "Désélectionnez pour annuler.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "Tout sélectionner"
+      },
+      "caption_fr": "Ou sélectionnez-les toutes."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Dépublier la sélection"
+      },
+      "caption_fr": "Dépubliez la sélection d'un coup.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "Tout sélectionner"
+      },
+      "caption_fr": "Publiez la sélection d'un coup."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Publier la sélection"
+      },
+      "caption_fr": "Publiez la sélection d'un coup.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Filtrer par statut"
+      },
+      "caption_fr": "Filtrez par statut : brouillon, publié, archivé."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Brouillon"
+      },
+      "caption_fr": "Filtrez par statut : brouillon, publié, archivé."
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "id": "64",
+  "slug": "mediatheque-chercher-trier",
+  "title_fr": "Chercher et trier les photos",
+  "start": {
+    "app": "dashboard",
+    "path": "/media",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Charger plus"
+      },
+      "caption_fr": "La liste se charge par pages : Charger plus.",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "searchbox",
+        "name": "Rechercher une photo"
+      },
+      "value": "lampe",
+      "caption_fr": "Cherchez par nom, mot-clé ou description."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "lampe-votive (34)"
+      },
+      "caption_fr": "Un mot-clé filtre d'un clic.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Toutes"
+      },
+      "caption_fr": "Un mot-clé filtre d'un clic.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "searchbox",
+        "name": "Rechercher une photo"
+      },
+      "value": "zzzz",
+      "caption_fr": "Rien ne correspond : effacez la recherche."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Effacer la recherche"
+      },
+      "caption_fr": "Rien ne correspond : effacez la recherche."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Trier par"
+      },
+      "caption_fr": "Triez par date, nom, taille ou usage."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Nom (A à Z)"
+      },
+      "caption_fr": "Triez par date, nom, taille ou usage."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Non utilisées"
+      },
+      "caption_fr": "Voyez les photos qui ne servent plus."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Toutes"
+      },
+      "caption_fr": "Voyez les photos qui ne servent plus.",
+      "only": "desktop"
+    }
+  ]
+}
