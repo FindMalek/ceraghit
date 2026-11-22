@@ -58,33 +58,6 @@
       "action": "wait",
       "caption_fr": "Les clés sont chiffrées dans le coffre.",
       "holdMs": 2500
-    },
-    {
-      "action": "click",
-      "target": {
-        "role": "button",
-        "name": "Supprimer les clés"
-      },
-      "caption_fr": "Supprimez les clés si besoin."
-    },
-    {
-      "action": "wait",
-      "caption_fr": "Une confirmation est demandée.",
-      "holdMs": 2200
-    },
-    {
-      "action": "click",
-      "target": {
-        "role": "button",
-        "name": "Supprimer",
-        "nth": -1
-      },
-      "caption_fr": "Confirmez."
-    },
-    {
-      "action": "wait",
-      "caption_fr": "Les clés sont effacées.",
-      "holdMs": 2000
     }
   ]
 }
