@@ -13,6 +13,9 @@ export class ManualShippingProvider implements ShippingProvider {
   async getLabel(): Promise<never> {
     throw new ShippingError("unsupported")
   }
+  async getCommercialInvoice(): Promise<never> {
+    throw new ShippingError("unsupported")
+  }
   async track() {
     return []
   }

@@ -1,25 +1,28 @@
 import { Logo } from "@workspace/ui/brand/logo"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
-import { getSettings } from "@/lib/api"
+import { getSettings, getSiteImages } from "@/lib/api"
 import { LEGAL_DOCS } from "@/lib/legal"
 import { formatAddress, shopName } from "@/lib/profile"
+import { siteImages } from "@/lib/site-images"
 import { LanguageSwitcher } from "./language-switcher"
 import { NAV_LINKS } from "./nav-links"
 
 export async function SiteFooter() {
-  const [t, nav, legal, settings] = await Promise.all([
+  const [t, nav, legal, settings, locale, images] = await Promise.all([
     getTranslations("footer"),
     getTranslations("nav"),
     getTranslations("legal"),
     getSettings(),
+    getLocale(),
+    getSiteImages(),
   ])
   const address = formatAddress(settings.profile)
   return (
     <footer className="print:hidden mt-24 border-border border-t bg-background/80 pb-24 md:pb-0">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-3">
         <div className="space-y-3">
-          <Logo name="Ceraghit" />
+          <Logo name="Ceraghit" src={siteImages("logo", images, locale)[0]?.src} />
           <p className="text-muted-foreground">{t("tagline")}</p>
         </div>
         <nav aria-label={t("explore")} className="space-y-1">

@@ -53,6 +53,13 @@ function decodeKey(path: string): string | null {
   }
 }
 
+const peers = new WeakMap<Request, string>()
+
+/** The host hands the socket address next to the request; the handlers only get the request, so remember it here. */
+export function rememberPeer(request: Request, address: string | undefined): void {
+  if (address) peers.set(request, address)
+}
+
 export function createServer(services: Services, jobs: Record<string, CronJob> = CRON_JOBS) {
   const rpc = new RPCHandler(appRouter, {
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
@@ -165,7 +172,7 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
       })
     }
 
-    const context = createContext(services, request.headers)
+    const context = createContext(services, request.headers, peers.get(request))
     const viaRpc = await rpc.handle(request, { prefix: "/rpc", context })
     if (viaRpc.matched) return viaRpc.response
     const viaRest = await rest.handle(request, { prefix: "/v1", context })

@@ -19,7 +19,11 @@ export interface Services {
   secrets?: Keyring | null
   now: () => Date
   /** Server hooks; tests pass spies. */
-  hooks?: { orderShipped?: (orderId: string) => Promise<void> }
+  hooks?: {
+    orderShipped?: (orderId: string) => Promise<void>
+    shipmentDelivered?: (shipmentId: string) => Promise<void>
+    shipmentException?: (shipmentId: string) => Promise<void>
+  }
   /** Tests pass a fake for the Resend domains api. */
   http?: typeof fetch
   /** Waits between mail retries; tests pass an instant one. */
@@ -41,6 +45,8 @@ export interface Services {
     cronJobs?: string[]
     /** Shared with the web and dashboard proxies: makes the client address they forward trustworthy. */
     proxySecret?: string
+    /** TRUSTED_PROXY_HOPS: proxies in front of the api that append to x-forwarded-for (counted from the right). */
+    trustedProxyHops?: number
     /** The From header of outgoing mail, read by the setup check for a verified sending domain. */
     emailFrom?: string
     /** Server only, never sent to a client: reads the sending domain's DNS state. */
@@ -52,10 +58,12 @@ export interface Services {
 
 export type Context = Services & {
   headers: Headers
+  /** Socket address of the caller, when the host exposes it (Bun does, Vercel functions do not). */
+  peer?: string
   /** Set by ResponseHeadersPlugin, used for the admin session cookie. */
   resHeaders?: Headers
 }
 
-export function createContext(services: Services, headers: Headers): Context {
-  return { ...services, headers }
+export function createContext(services: Services, headers: Headers, peer?: string): Context {
+  return { ...services, headers, peer }
 }

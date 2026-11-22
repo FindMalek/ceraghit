@@ -474,6 +474,10 @@ export const orderShippingSchema = z.object({
   trackingUrl: z.string().nullable(),
   /** Null on orders shipped before tracking existed: show no date. */
   shippedAt: z.string().nullable(),
+  /** The parcel's own status (a `ShipmentStatus`), only for Aramex parcels: the page picks its own words for it. */
+  parcelStatus: z.string().nullable(),
+  /** When that status was last reported by the carrier. Never the carrier's own text. */
+  parcelStatusAt: z.string().nullable(),
 })
 
 export const orderSchema = z.object({

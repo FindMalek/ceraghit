@@ -802,6 +802,8 @@ function demoShipping(n: number, paidAt: Date) {
 }
 
 const DEMO_FLOW = ["created", "in_transit", "out_for_delivery", "delivered"] as const
+/** One in five demo parcels has a delivery incident: its events follow the flow up to in transit, then the problem. */
+const DEMO_STATUSES = [...DEMO_FLOW, "exception"] as const
 
 /**
  * One simulated Aramex shipment per fulfilled Aramex order, statuses spread over the flow. No label (the card says
@@ -811,20 +813,25 @@ function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
   const live: NewShipment[] = orders
     .filter((o) => o.status === "fulfilled" && o.carrier === "aramex" && o.trackingNumber && o.id)
     .map((o, i) => {
-      const status = DEMO_FLOW[i % DEMO_FLOW.length]!
+      const status = DEMO_STATUSES[i % DEMO_STATUSES.length]!
       const at = (o.shippedAt as Date | null | undefined) ?? now
-      const events = DEMO_FLOW.slice(0, DEMO_FLOW.indexOf(status) + 1).map((code, step) => ({
+      const steps =
+        status === "exception"
+          ? [...DEMO_FLOW.slice(0, 2), "exception" as const]
+          : DEMO_FLOW.slice(0, DEMO_FLOW.indexOf(status) + 1)
+      const events = steps.map((code, step) => ({
         code: code.toUpperCase(),
         description: {
           created: "Envoi créé",
           in_transit: "En transit",
           out_for_delivery: "En cours de livraison",
           delivered: "Livré",
+          exception: "Adresse incorrecte, le livreur rappelle le client",
         }[code],
         at: new Date(at.getTime() + step * 18 * 3600e3).toISOString(),
         location: "Tunis",
         comment: "démo",
-        problemCode: null,
+        problemCode: code === "exception" ? "P10" : null,
       }))
       const country = o.country ?? "TN"
       return {
@@ -848,6 +855,17 @@ function demoShipments(orders: NewOrder[], now: Date): NewShipment[] {
   // A parcel waiting for its pickup, and one cancelled before it left (its order went back to paid, the hold failed).
   const booked = live.find((s) => s.status === "created")
   if (booked) Object.assign(booked, { pickupId: "10000001", pickupGuid: "00000000-0000-4000-8000-000000000001" })
+  // An international parcel whose commercial invoice could not be stored, to show the retry action.
+  const abroad = live.find((s) => s.productGroup === "EXP" && s.status !== "created")
+  if (abroad) {
+    abroad.errors = [
+      {
+        at: now.toISOString(),
+        code: "INVOICE",
+        message: "La facture commerciale n'a pas pu être enregistrée. Utilisez « Réessayer la facture commerciale ».",
+      },
+    ]
+  }
   const unshipped = orders.find((o) => o.status === "paid" && o.country === "TN" && !o.carrier && o.id)
   if (unshipped) {
     live.push({

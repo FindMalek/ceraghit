@@ -116,6 +116,8 @@ export interface ShippingProvider {
   quote(req: QuoteRequest): Promise<Quote | null>
   createShipment(req: CreateShipmentRequest): Promise<CreatedShipment>
   getLabel(waybill: string, productGroup: ProductGroup): Promise<ShipmentLabel>
+  /** The commercial invoice PDF of an international parcel: from the link Aramex returned, else asked from Aramex. Null when it cannot be had. */
+  getCommercialInvoice(waybill: string, knownUrl: string | null): Promise<Uint8Array | null>
   track(waybills: string[]): Promise<TrackResult[]>
   cancel(waybill: string, reason: string): Promise<{ held: boolean; message: string }>
   /** Asks whether a pickup window is acceptable before booking it. */

@@ -39,6 +39,42 @@ const RATE_ERROR = {
   HasErrors: true,
 }
 
+const HOUR = 3600e3
+
+/**
+ * Tracking answered from the waybill alone, so a demo or an e2e picks its story: a waybill containing `DELIVERED`
+ * ends delivered, `PROBLEM` ends on a delivery incident, anything else was picked up and is in transit.
+ */
+function fakeTracking(waybill: string) {
+  // Fixed, never the clock: polling twice must give the same events, or the timeline fills with copies.
+  // The same base for every waybill, so a story that moves on (in transit, then delivered) always moves forward in time.
+  const now = Date.UTC(2026, 0, 1)
+  const update = (code: string, description: string, hoursAgo: number, location: string, problem = "") => ({
+    WaybillNumber: waybill,
+    UpdateCode: code,
+    UpdateDescription: description,
+    UpdateDateTime: `/Date(${Math.floor((now - hoursAgo * HOUR) / 1000) * 1000}+0000)/`,
+    UpdateLocation: location,
+    Comments: "",
+    ProblemCode: problem,
+  })
+  const started = [
+    update("SH012", "Shipment picked up", 72, "Tunis, Tunisia"),
+    update("SH002", "Departed from origin", 48, "Tunis, Tunisia"),
+  ]
+  if (waybill.includes("DELIVERED")) {
+    return [
+      update("SH005", "Delivered", 2, "Sousse, Tunisia"),
+      update("SH003", "Out for delivery", 6, "Sousse, Tunisia"),
+      ...started,
+    ]
+  }
+  if (waybill.includes("PROBLEM")) {
+    return [update("SH047", "Consignee address incorrect", 3, "Sousse, Tunisia", "P10"), ...started]
+  }
+  return [update("SH004", "In transit", 20, "Sousse, Tunisia"), ...started]
+}
+
 /** A one page PDF, enough for a browser to open and print a demo label. */
 const LABEL_PDF = Buffer.from(
   "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
@@ -46,6 +82,12 @@ const LABEL_PDF = Buffer.from(
     "4 0 obj<</Length 63>>stream\nBT /F1 18 Tf 24 380 Td (DEMO LABEL - not a real parcel) Tj ET\nendstream endobj\n" +
     "5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\ntrailer<</Root 1 0 R/Size 6>>\n%%EOF\n",
 ).toString("base64")
+
+const INVOICE_URL = "https://ws.dev.aramex.net/fake/commercial-invoice.pdf"
+const INVOICE_PDF = Buffer.from(LABEL_PDF, "base64")
+  .toString()
+  .replace("DEMO LABEL - not a real parcel", "DEMO COMMERCIAL INVOICE - not real")
+const INVOICE_ATTACHMENT = { Name: "CommercialInvoice", Type: "CommercialInvoice", Url: INVOICE_URL }
 
 /**
  * Sandbox-only stand-in for Aramex (screenshots, demos): nothing leaves the process. The api only wires it when
@@ -60,6 +102,7 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
     const info = (JSON.parse(String(init?.body ?? "{}")) as { ClientInfo?: { Password?: string; AccountPin?: string } })
       .ClientInfo
     const reply = (body: unknown) => new Response(JSON.stringify(body))
+    if (url === INVOICE_URL) return new Response(INVOICE_PDF)
     if (info?.Password === "fake-bad-login") return reply(LOGIN_ERROR)
     if (url.endsWith("/FetchCities"))
       return reply({ Transaction: null, Notifications: [], HasErrors: false, Cities: FAKE_CITIES })
@@ -82,6 +125,17 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
         SuggestedAddresses: known
           ? []
           : [{ Line1: sent.Address?.Line1 ?? "", City: "Sousse", PostCode: "4000", CountryCode: "TN" }],
+      })
+    }
+    if (url.endsWith("/TrackShipments")) {
+      const sent = JSON.parse(String(init?.body ?? "{}")) as { Shipments?: string[] }
+      const waybills = sent.Shipments ?? []
+      return reply({
+        Transaction: null,
+        Notifications: [],
+        HasErrors: false,
+        TrackingResults: waybills.map((w) => ({ Key: w, Value: fakeTracking(w) })),
+        NonExistingWaybills: [],
       })
     }
     if (url.endsWith("/ValidatePickup")) return reply({ Transaction: null, Notifications: [], HasErrors: false })
@@ -110,8 +164,15 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
     }
     if (url.endsWith("/FetchCountries")) return reply(COUNTRIES)
     if (url.endsWith("/CreateShipments")) {
-      const sent = JSON.parse(String(init?.body ?? "{}")) as { Shipments?: { Reference1?: string }[] }
+      const sent = JSON.parse(String(init?.body ?? "{}")) as {
+        Shipments?: { Reference1?: string; Details?: { ProductGroup?: string } }[]
+      }
       const reference = sent.Shipments?.[0]?.Reference1 ?? ""
+      // A reference ending -FAKE-NOINVOICE gets no attachment, to show the PrintCommercialInvoice fallback.
+      const attachments =
+        sent.Shipments?.[0]?.Details?.ProductGroup === "EXP" && !reference.endsWith("-FAKE-NOINVOICE")
+          ? [INVOICE_ATTACHMENT]
+          : []
       if (reference.endsWith("-FAKE-REFUSED")) {
         return reply({
           HasErrors: false,
@@ -137,7 +198,7 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
             HasErrors: false,
             Notifications: [],
             ShipmentLabel: { LabelURL: null, LabelFileContents: LABEL_PDF },
-            ShipmentAttachments: [],
+            ShipmentAttachments: attachments,
           },
         ],
       })
@@ -148,6 +209,14 @@ export function createFakeAramexFetch(passthrough: typeof fetch = fetch): typeof
         Notifications: [],
         ShipmentNumber: "",
         ShipmentLabel: { LabelURL: null, LabelFileContents: LABEL_PDF },
+      })
+    }
+    if (url.endsWith("/PrintCommercialInvoice")) {
+      return reply({
+        Transaction: null,
+        Notifications: [],
+        HasErrors: false,
+        CommercialInvoiceInfo: INVOICE_ATTACHMENT,
       })
     }
     if (url.endsWith("/CalculateRate")) return reply(info?.AccountPin === "fake-bad-rate" ? RATE_ERROR : RATE)
