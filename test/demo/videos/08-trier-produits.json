@@ -2,51 +2,86 @@
   "id": "08",
   "slug": "trier-produits",
   "title_fr": "Trier les pièces",
-  "start": { "app": "web", "path": "/shop", "loggedIn": false },
+  "start": {
+    "app": "web",
+    "path": "/shop",
+    "loggedIn": false
+  },
   "steps": [
     {
       "action": "select",
-      "target": { "role": "combobox", "name": "Trier par" },
+      "target": {
+        "role": "combobox",
+        "name": "Trier par"
+      },
       "value": "Prix croissant",
       "caption_fr": "Prix croissant : les moins chères d'abord.",
       "holdMs": 1800
     },
     {
       "action": "select",
-      "target": { "role": "combobox", "name": "Trier par" },
+      "target": {
+        "role": "combobox",
+        "name": "Trier par"
+      },
       "value": "Prix décroissant",
       "caption_fr": "Prix décroissant : l'inverse.",
       "holdMs": 1800
     },
     {
       "action": "select",
-      "target": { "role": "combobox", "name": "Trier par" },
+      "target": {
+        "role": "combobox",
+        "name": "Trier par"
+      },
       "value": "Nouveautés",
       "caption_fr": "Nouveautés : les dernières arrivées.",
       "holdMs": 1800
     },
     {
       "action": "select",
-      "target": { "role": "combobox", "name": "Trier par" },
+      "target": {
+        "role": "combobox",
+        "name": "Trier par"
+      },
       "value": "Sélection",
       "caption_fr": "Sélection : l'ordre choisi par l'atelier.",
       "holdMs": 1500
     },
     {
       "action": "fill",
-      "target": { "role": "searchbox", "name": "Rechercher une pièce" },
+      "target": {
+        "role": "searchbox",
+        "name": "Rechercher une pièce"
+      },
       "value": "lampe",
       "caption_fr": "Le tri se combine avec la recherche."
     },
-    { "action": "press", "value": "Enter", "caption_fr": "Le tri se combine avec la recherche." },
+    {
+      "action": "press",
+      "value": "Enter",
+      "caption_fr": "Le tri se combine avec la recherche."
+    },
     {
       "action": "select",
-      "target": { "role": "combobox", "name": "Trier par" },
+      "target": {
+        "role": "combobox",
+        "name": "Trier par"
+      },
       "value": "Prix croissant",
-      "caption_fr": "L'adresse garde le tri : vous pouvez la partager.",
+      "caption_fr": "Le tri se combine avec la recherche.",
       "holdMs": 1800
     },
-    { "action": "cookie", "value": "ceraghit_currency=EUR", "caption_fr": "Le tri suit la devise du visiteur." },
-    { "action": "goto", "value": "/shop?sort=price-asc", "caption_fr": "Le tri suit la devise du visiteur.", "holdMs": 2000 }
+    {
+      "action": "cookie",
+      "value": "ceraghit_currency=EUR",
+      "caption_fr": "Le tri suit la devise du visiteur."
+    },
+    {
+      "action": "goto",
+      "value": "/shop?sort=price-asc",
+      "caption_fr": "Le tri suit la devise du visiteur.",
+      "holdMs": 2000
+    }
   ]
 }

@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { parseDemoRef } from "../../src/demo-ref"
+import { UNGLAZED_VARIANT_REFS } from "../../src/seed"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
 import {
@@ -252,13 +253,15 @@ test("demo requests cover every status and the extra products are drafts or arch
   expect(new Set(extra.map((p) => p.categoryId)).size).toBe(3)
 })
 
-test("the stock states the storefront videos film exist in the catalogue", () => {
+test("the stock states the storefront videos film are a last piece, a sold out piece without options and a sold out option", () => {
   const byRef = new Map(CATALOGUE.map((p) => [p.ref, p]))
-  const { lastRef, soldOutRef, soldOutOptionRef } = DEMO_STOCK_STATES
-  for (const ref of [lastRef, soldOutRef, soldOutOptionRef]) {
-    const piece = byRef.get(ref)
-    expect(piece?.unique).toBe(false)
-    expect(piece?.quoteOnly).toBe(false)
+  const { last, soldOut, soldOutOption } = DEMO_STOCK_STATES
+  for (const { ref } of [last, soldOut, soldOutOption]) {
+    expect(byRef.get(ref)?.unique).toBe(false)
+    expect(byRef.get(ref)?.quoteOnly).toBe(false)
   }
-  expect(new Set([lastRef, soldOutRef, soldOutOptionRef]).size).toBe(3)
+  expect([last.stock, soldOut.stock, soldOutOption.stock]).toEqual([1, 0, 0])
+  expect(UNGLAZED_VARIANT_REFS.has(soldOutOption.ref)).toBe(true)
+  expect(UNGLAZED_VARIANT_REFS.has(soldOut.ref)).toBe(false)
+  expect(UNGLAZED_VARIANT_REFS.has(last.ref)).toBe(false)
 })

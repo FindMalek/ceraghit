@@ -8,6 +8,8 @@ const target = z.object({
   testId: z.string().optional(),
   /** Which visible match to use, from 0; -1 is the last. For twins like the two Annuler buttons of a confirmation. */
   nth: z.number().int().optional(),
+  /** Whole text or name must match, not a part of it (an option labelled "Émaillée" next to "non émaillée"). */
+  exact: z.boolean().optional(),
 })
 
 export const ACTIONS = [

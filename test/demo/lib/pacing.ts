@@ -38,10 +38,10 @@ export function locate(page: Page, target: Target): Locator {
 export function anyMatch(page: Page, target: Target): Locator {
   if (target.testId) return page.getByTestId(target.testId)
   if (target.role) {
-    return page.getByRole(target.role as Parameters<Page["getByRole"]>[0], target.name ? { name: target.name } : {})
+    return page.getByRole(target.role as Parameters<Page["getByRole"]>[0], target.name ? { name: target.name, exact: target.exact } : {})
   }
-  if (target.label) return page.getByLabel(target.label)
-  if (target.text) return page.getByText(target.text)
+  if (target.label) return page.getByLabel(target.label, { exact: target.exact })
+  if (target.text) return page.getByText(target.text, { exact: target.exact })
   throw new Error("a step target needs role, label, text or testId")
 }
 
@@ -151,6 +151,7 @@ export function createPacer(options: PacerOptions): Pacer {
           break
         case "cookie": {
           const [name = "", ...rest] = (value ?? "").split("=")
+          if (name !== "ceraghit_currency") throw new Error(`cookie steps only set ceraghit_currency, got "${name}"`)
           await page.context().addCookies([{ name, value: rest.join("="), url: options.baseUrl(options.app) }])
           break
         }
