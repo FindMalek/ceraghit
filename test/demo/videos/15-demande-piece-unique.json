@@ -9,18 +9,18 @@
       "action": "click",
       "target": { "role": "button", "name": "Envoyer ma demande" },
       "caption_fr": "Un formulaire vide signale les erreurs.",
-      "holdMs": 2200
+      "holdMs": 1800
     },
     {
       "action": "fill",
       "target": { "label": "Nom complet" },
-      "value": "Amel Ben Salah",
+      "value": "Amel Ben",
       "caption_fr": "Indiquez vos coordonnées."
     },
     {
       "action": "fill",
       "target": { "label": "Adresse e-mail" },
-      "value": "amel@example.test",
+      "value": "a@example.test",
       "caption_fr": "Indiquez vos coordonnées."
     },
     {
@@ -33,13 +33,13 @@
     {
       "action": "fill",
       "target": { "label": "Votre projet" },
-      "value": "Une lampe votive bleue pour mon salon.",
+      "value": "Une lampe bleue.",
       "caption_fr": "Décrivez la pièce rêvée."
     },
     {
       "action": "fill",
       "target": { "label": "Dimensions souhaitées" },
-      "value": "30 cm de haut",
+      "value": "30 cm",
       "caption_fr": "Dimensions, budget et inspirations aident."
     },
     {
@@ -51,7 +51,7 @@
     {
       "action": "fill",
       "target": { "label": "Liens d'inspiration" },
-      "value": "https://exemple.test/idee",
+      "value": "exemple.test/idee",
       "caption_fr": "Dimensions, budget et inspirations aident."
     },
     {
@@ -66,13 +66,13 @@
       "caption_fr": "Sans réseau, un message vous prévient.",
       "holdMs": 500
     },
-    { "action": "scroll", "value": "-2500", "caption_fr": "Sans réseau, un message vous prévient.", "holdMs": 2500 },
+    { "action": "scroll", "value": "-2500", "caption_fr": "Sans réseau, un message vous prévient.", "holdMs": 1800 },
     { "action": "network", "value": "reset", "caption_fr": "Le réseau revient.", "holdMs": 300 },
     {
       "action": "click",
       "target": { "role": "button", "name": "Envoyer ma demande" },
       "caption_fr": "Envoyez votre demande.",
-      "holdMs": 2500
+      "holdMs": 1800
     },
     {
       "action": "click",
@@ -88,19 +88,19 @@
     {
       "action": "fill",
       "target": { "label": "Nom complet" },
-      "value": "Amel Ben Salah",
+      "value": "Amel Ben",
       "caption_fr": "Trop de demandes en une heure."
     },
     {
       "action": "fill",
       "target": { "label": "Adresse e-mail" },
-      "value": "amel@example.test",
+      "value": "a@example.test",
       "caption_fr": "Trop de demandes en une heure."
     },
     {
       "action": "fill",
       "target": { "label": "Votre projet" },
-      "value": "Une seconde lampe, verte cette fois.",
+      "value": "Une lampe verte.",
       "caption_fr": "Trop de demandes en une heure."
     },
     {
@@ -109,7 +109,7 @@
       "caption_fr": "Trop de demandes en une heure.",
       "holdMs": 500
     },
-    { "action": "scroll", "value": "-2500", "caption_fr": "Trop de demandes en une heure.", "holdMs": 2500 },
+    { "action": "scroll", "value": "-2500", "caption_fr": "Trop de demandes en une heure.", "holdMs": 1800 },
     {
       "action": "click",
       "target": { "role": "link", "name": "Confidentialité" },

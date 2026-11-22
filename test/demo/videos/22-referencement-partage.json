@@ -22,13 +22,7 @@
       "action": "goto",
       "value": "/sitemap.xml",
       "caption_fr": "Le plan du site liste les pièces et les langues.",
-      "holdMs": 3500
-    },
-    {
-      "action": "scroll",
-      "value": "500",
-      "caption_fr": "Le plan du site liste les pièces et les langues.",
-      "holdMs": 3000
+      "holdMs": 5500
     },
     {
       "action": "goto",

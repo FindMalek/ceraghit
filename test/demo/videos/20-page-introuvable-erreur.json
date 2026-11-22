@@ -28,34 +28,35 @@
     {
       "action": "goto",
       "value": "/fr/custom",
-      "caption_fr": "Quand le serveur échoue, un message s'affiche.",
+      "caption_fr": "Voici le formulaire de demande.",
       "holdMs": 800
     },
     {
       "action": "fill",
       "target": { "label": "Nom complet" },
       "value": "Amel Ben Salah",
-      "caption_fr": "Le formulaire reste rempli pour réessayer."
+      "caption_fr": "Remplissez-le."
     },
     {
       "action": "fill",
       "target": { "label": "Adresse e-mail" },
       "value": "amel@example.test",
-      "caption_fr": "Le formulaire reste rempli pour réessayer."
+      "caption_fr": "Remplissez-le."
     },
     {
       "action": "fill",
       "target": { "label": "Votre projet" },
       "value": "Une lampe votive bleue.",
-      "caption_fr": "Le formulaire reste rempli pour réessayer."
+      "caption_fr": "Remplissez-le."
     },
     {
       "action": "click",
       "target": { "role": "button", "name": "Envoyer ma demande" },
-      "caption_fr": "Le message d'erreur apparaît en haut.",
-      "holdMs": 500
+      "caption_fr": "Envoyez-le.",
+      "holdMs": 400
     },
     { "action": "scroll", "value": "-2500", "caption_fr": "Le message d'erreur apparaît en haut.", "holdMs": 2500 },
+    { "action": "wait", "caption_fr": "Le formulaire reste rempli pour réessayer.", "holdMs": 2200 },
     { "action": "network", "value": "reset", "caption_fr": "Le serveur revient.", "holdMs": 300 },
     { "action": "goto", "value": "/fr/page-inconnue", "caption_fr": "Retour à une page introuvable.", "holdMs": 1000 },
     {
