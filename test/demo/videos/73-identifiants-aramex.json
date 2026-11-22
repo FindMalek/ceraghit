@@ -1,0 +1,137 @@
+{
+  "id": "73",
+  "slug": "identifiants-aramex",
+  "title_fr": "Configurer Aramex",
+  "devices": [
+    "desktop"
+  ],
+  "start": {
+    "app": "dashboard",
+    "path": "/shipping",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Le mode Manuel est choisi par défaut.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Aramex"
+      },
+      "caption_fr": "Choisissez Aramex."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "radio",
+        "name": "Réel"
+      },
+      "caption_fr": "Le mode réel reste bloqué hors production."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom d'utilisateur"
+      },
+      "value": "demo@example.test",
+      "caption_fr": "Saisissez les identifiants de test."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Mot de passe"
+      },
+      "value": "demo-password-0000",
+      "caption_fr": "Saisissez les identifiants de test."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Numéro de compte"
+      },
+      "value": "0000000",
+      "caption_fr": "Saisissez les identifiants de test."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "PIN du compte"
+      },
+      "value": "000000",
+      "caption_fr": "Saisissez les identifiants de test."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Société"
+      },
+      "value": "Atelier Démo",
+      "caption_fr": "Renseignez l'adresse d'envoi."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse"
+      },
+      "value": "1 rue de l'Essai",
+      "caption_fr": "Renseignez l'adresse d'envoi."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom du contact"
+      },
+      "value": "Sabri Démo",
+      "caption_fr": "Renseignez l'adresse d'envoi."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+21620000000",
+      "caption_fr": "Renseignez l'adresse d'envoi."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "E-mail"
+      },
+      "value": "demo@example.test",
+      "caption_fr": "Renseignez l'adresse d'envoi."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville"
+      },
+      "value": "Nabeul",
+      "caption_fr": "Renseignez l'adresse d'envoi."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Code postal"
+      },
+      "value": "8000",
+      "caption_fr": "Renseignez l'adresse d'envoi."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Tester la connexion"
+      },
+      "caption_fr": "Testez la connexion."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le résultat s'affiche ici.",
+      "holdMs": 2500
+    }
+  ]
+}

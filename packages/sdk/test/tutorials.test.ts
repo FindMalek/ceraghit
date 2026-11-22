@@ -36,9 +36,6 @@ test("the catalogue is valid: unique ids, slugs matching ids, lengths within 30 
     "27",
     "48",
     "49",
-    "68",
-    "76",
-    "77",
     "91",
     "92",
   ])

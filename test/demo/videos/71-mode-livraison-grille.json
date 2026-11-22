@@ -1,0 +1,124 @@
+{
+  "id": "71",
+  "slug": "mode-livraison-grille",
+  "title_fr": "Régler les prix de livraison",
+  "devices": [
+    "desktop"
+  ],
+  "start": {
+    "app": "dashboard",
+    "path": "/settings",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "scroll",
+      "value": "1000",
+      "caption_fr": "La grille se règle dans Réglages."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Chaque zone a ses prix, par devise.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter une zone"
+      },
+      "caption_fr": "Ajoutez une zone."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom de la zone",
+        "nth": -1
+      },
+      "value": "Maroc",
+      "caption_fr": "Nommez-la."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir les pays",
+        "nth": -1
+      },
+      "caption_fr": "Choisissez ses pays."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Un pays n'est que dans une zone.",
+      "holdMs": 2200
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Fermez la liste."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix de base en dinars",
+        "nth": -1
+      },
+      "value": "20",
+      "caption_fr": "Réglez le prix de base."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer la zone",
+        "nth": -1
+      },
+      "caption_fr": "Supprimez la zone d'essai."
+    },
+    {
+      "action": "scroll",
+      "value": "700",
+      "caption_fr": "Voyez les réglages communs."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Poids maximum, emballage, longueur.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Remettre les valeurs par défaut"
+      },
+      "caption_fr": "Remettre les valeurs par défaut."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Rien n'est enregistré avant Enregistrer.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Annuler"
+      },
+      "caption_fr": "On annule."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": 0
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les réglages sont enregistrés.",
+      "holdMs": 2200
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "id": "79",
+  "slug": "reglages-reseaux",
+  "title_fr": "Réglages : réseaux et note de livraison",
+  "start": {
+    "app": "dashboard",
+    "path": "/settings",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "scroll",
+      "value": "700",
+      "caption_fr": "Voici les réseaux sociaux."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "WhatsApp"
+      },
+      "value": "abc",
+      "caption_fr": "Un numéro WhatsApp invalide est refusé."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Instagram"
+      },
+      "value": "demo studio!",
+      "caption_fr": "Un pseudo Instagram sans symboles."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": 0
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Certains champs sont à corriger.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "WhatsApp"
+      },
+      "value": "+21620000000",
+      "caption_fr": "Saisissez un numéro valide."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Instagram"
+      },
+      "value": "ceraghit_demo",
+      "caption_fr": "Saisissez un pseudo valide."
+    },
+    {
+      "action": "scroll",
+      "value": "1800",
+      "caption_fr": "La note de livraison."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Note de livraison"
+      },
+      "value": "Expédition sous 5 jours ouvrés.",
+      "caption_fr": "Elle s'affiche au moment de payer."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": 0
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les réglages sont enregistrés.",
+      "holdMs": 2200
+    }
+  ]
+}

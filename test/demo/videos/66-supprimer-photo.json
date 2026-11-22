@@ -1,0 +1,89 @@
+{
+  "id": "66",
+  "slug": "supprimer-photo",
+  "title_fr": "Supprimer une photo",
+  "start": {
+    "app": "dashboard",
+    "path": "/media",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "studio-masks.webp, ouvrir"
+      },
+      "caption_fr": "Une photo du site ne se supprime pas."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Elle est fournie avec le site.",
+      "holdMs": 1800
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Fermons-la."
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-1.png",
+      "caption_fr": "Envoyons une photo d'essai.",
+      "only": "desktop"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "photo-2.png",
+      "caption_fr": "Envoyons une photo d'essai.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Elle arrive en tête de la liste.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "ouvrir",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez-la."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer"
+      },
+      "caption_fr": "Cliquez sur Supprimer."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La suppression est définitive.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le stockage utilisé baisse.",
+      "holdMs": 2200
+    }
+  ]
+}

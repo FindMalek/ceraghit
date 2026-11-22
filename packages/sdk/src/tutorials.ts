@@ -807,7 +807,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 90,
     tags: ["photos du site", "hero", "accueil", "logo", "image de partage"],
     description: "Changer les photos de l'accueil, de l'atelier, le logo et l'image de partage.",
-    status: "soon",
   },
   {
     id: "69-demandes-clients",
@@ -899,7 +898,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 90,
     tags: ["konnect", "clés", "carte bancaire", "test", "mode live", "coffre"],
     description: "Enregistrer ses clés Konnect pour accepter la carte bancaire, en test puis en production.",
-    status: "soon",
   },
   {
     id: "77-reglages-payoneer",
@@ -911,7 +909,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 75,
     tags: ["payoneer", "lien statique", "par commande", "note", "activer"],
     description: "Activer Payoneer et choisir entre un lien unique ou un lien par commande.",
-    status: "soon",
   },
   {
     id: "78-gerer-ateliers",

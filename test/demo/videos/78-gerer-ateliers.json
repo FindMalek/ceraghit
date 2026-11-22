@@ -1,0 +1,126 @@
+{
+  "id": "78",
+  "slug": "gerer-ateliers",
+  "title_fr": "Gérer les ateliers",
+  "start": {
+    "app": "dashboard",
+    "path": "/locations",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Les ateliers s'affichent sur le site.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Nouvel atelier"
+      },
+      "caption_fr": "Ajoutez un atelier."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Les champs obligatoires sont vérifiés."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Ce champ est obligatoire.",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom *"
+      },
+      "value": "Atelier d'essai",
+      "caption_fr": "Nommez l'atelier."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse *"
+      },
+      "value": "1 rue de l'Essai",
+      "caption_fr": "Saisissez l'adresse."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville *"
+      },
+      "value": "Tunis",
+      "caption_fr": "Saisissez la ville."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien de la carte"
+      },
+      "value": "carte",
+      "caption_fr": "Le lien de la carte vient de Google Maps."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Collez un lien complet.",
+      "holdMs": 2000
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien de la carte"
+      },
+      "value": "https://maps.app.goo.gl/demo",
+      "caption_fr": "Collez le lien Partager."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Visible sur le site"
+      },
+      "caption_fr": "Masquez-le du site si besoin."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le badge Masqué sur le site apparaît.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": -1
+      },
+      "caption_fr": "Supprimez l'atelier d'essai."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Il disparaît du site.",
+      "holdMs": 2000
+    }
+  ]
+}

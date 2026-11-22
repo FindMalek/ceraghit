@@ -1,0 +1,84 @@
+{
+  "id": "74",
+  "slug": "moyens-de-paiement",
+  "title_fr": "Choisir les moyens de paiement",
+  "start": {
+    "app": "dashboard",
+    "path": "/payments",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Voici les moyens de paiement.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Paiement à la livraison"
+      },
+      "caption_fr": "Carte, espèces ou virement."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Carte bancaire (Konnect)"
+      },
+      "caption_fr": "Carte, espèces ou virement."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Il faut au moins un moyen."
+    },
+    {
+      "action": "scroll",
+      "value": "3000",
+      "caption_fr": "Sans moyen, l'enregistrement est refusé."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Sans moyen, l'enregistrement est refusé.",
+      "holdMs": 2500
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Réactivez un moyen."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Paiement à la livraison"
+      },
+      "caption_fr": "Réactivez un moyen."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "scroll",
+      "value": "3000",
+      "caption_fr": "Le paiement à la livraison : Tunisie seulement."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le paiement à la livraison : Tunisie seulement.",
+      "holdMs": 2500
+    }
+  ]
+}
