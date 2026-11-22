@@ -120,7 +120,7 @@ the socket address (one shared bucket when the host gives none). The web and das
 
 | environment | edge | api | web and dashboard |
 | :-- | :-- | :-- | :-- |
-| production (Vercel) | overwrites `x-forwarded-for` with the real address | `PROXY_SECRET`, `TRUSTED_PROXY_HOPS=1` (direct calls to the api origin) | `PROXY_SECRET`, default hops 1 |
+| production (Vercel) | overwrites `x-forwarded-for` with the real address | `PROXY_SECRET`, `TRUSTED_PROXY_HOPS=1` (direct calls to the api origin); `deploy.yml` sets `TRUSTED_PROXY_HOPS=1` on every production deploy | `PROXY_SECRET`, default hops 1 |
 | preview (homelab Traefik via Dokploy) | appends the peer it saw to `x-forwarded-for`, so the left entries are the client's | `PROXY_SECRET`, `TRUSTED_PROXY_HOPS=1` (the deploy script sets both) | `PROXY_SECRET`, default hops 1; set 2 if another proxy such as Cloudflare sits in front of Traefik |
 | local, e2e, demo recorder | none | `APP_ENV=local` honours the rightmost `x-forwarded-for` entry, so fixtures and the recorder `ip` step pick their own address | no secret needed |
 

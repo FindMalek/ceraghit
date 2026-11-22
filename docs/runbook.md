@@ -89,7 +89,7 @@ Check locally with `node scripts/check-migrations.mjs --base origin/main`.
 
 ## rate limits and unlocking the owner
 
-See "rate limits" in `docs/deploy.md` for the numbers. Production runs `TRUSTED_PROXY_HOPS=1` on the api (Vercel overwrites
+See "rate limits" in `docs/deploy.md` for the numbers. Production runs `TRUSTED_PROXY_HOPS=1` on the api; `deploy.yml` sets it on every deploy (`vercel env add --force`, nothing to run by hand), confirm with `vercel env ls production` on the api project and the live probe (Vercel overwrites
 `x-forwarded-for`, so the rightmost entry is the real client; with 0 every visitor shares one socket address and one bucket,
 see #380 and #381). The api ignores a client sent `x-forwarded-for` and a forged `x-ceraghit-client-ip` without `PROXY_SECRET`.
 To unlock the owner after failed logins, in a SQL console on Neon (`scripts/db-shell.sh` for local):
