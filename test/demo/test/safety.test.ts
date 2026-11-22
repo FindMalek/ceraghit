@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test"
+import { spawnSync } from "node:child_process"
 import { existsSync, mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { chromium } from "@playwright/test"
-import { startRecording } from "../lib/recorder"
+import { FFMPEG, startRecording } from "../lib/recorder"
 import {
   applyTimeouts,
   closingWaitMs,
@@ -14,6 +15,8 @@ import {
   TAIL_MS,
   withDeadline,
 } from "../lib/safety"
+
+const haveFfmpeg = spawnSync(FFMPEG, ["-version"]).status === 0
 
 test("a hung step fails within the deadline and names the step", async () => {
   const started = Date.now()
@@ -56,36 +59,40 @@ test("a last step without narration keeps its hold, and a video without audio ke
   expect(closingWaitMs(30_000, null, 1500)).toBe(1500)
 })
 
-test("a hung run is cleaned up: ffmpeg is killed, the browser closed and the partial file removed", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "demo-guard-"))
-  const browser = await chromium.launch()
-  const file = join(dir, "partial.mp4")
-  try {
-    const page = await browser.newPage({ viewport: { width: 200, height: 120 } })
-    await page.setContent("<body>video</body>")
-    const recording = await startRecording(page, file, { width: 200, height: 120 })
-    const pid = recording.pid as number
-    expect(alive(pid)).toBe(true)
-    await expect(
-      runGuarded(() => new Promise<void>(() => {}), {
-        ms: 300,
-        label: () => "demo-desktop stuck at step 2/5",
-        cleanup: async () => {
-          recording.kill()
-          rmSync(file, { force: true })
-          await browser.close()
-        },
-      }),
-    ).rejects.toThrow("stuck at step 2/5 did not finish within 300 ms")
-    await new Promise((r) => setTimeout(r, 300))
-    expect(alive(pid)).toBe(false)
-    expect(browser.isConnected()).toBe(false)
-    expect(existsSync(file)).toBe(false)
-  } finally {
-    await browser.close().catch(() => {})
-    rmSync(dir, { recursive: true, force: true })
-  }
-}, 30_000)
+test.skipIf(!haveFfmpeg)(
+  "a hung run is cleaned up: ffmpeg is killed, the browser closed and the partial file removed",
+  async () => {
+    const dir = mkdtempSync(join(tmpdir(), "demo-guard-"))
+    const browser = await chromium.launch()
+    const file = join(dir, "partial.mp4")
+    try {
+      const page = await browser.newPage({ viewport: { width: 200, height: 120 } })
+      await page.setContent("<body>video</body>")
+      const recording = await startRecording(page, file, { width: 200, height: 120 })
+      const pid = recording.pid as number
+      expect(alive(pid)).toBe(true)
+      await expect(
+        runGuarded(() => new Promise<void>(() => {}), {
+          ms: 300,
+          label: () => "demo-desktop stuck at step 2/5",
+          cleanup: async () => {
+            recording.kill()
+            rmSync(file, { force: true })
+            await browser.close()
+          },
+        }),
+      ).rejects.toThrow("stuck at step 2/5 did not finish within 300 ms")
+      await new Promise((r) => setTimeout(r, 300))
+      expect(alive(pid)).toBe(false)
+      expect(browser.isConnected()).toBe(false)
+      expect(existsSync(file)).toBe(false)
+    } finally {
+      await browser.close().catch(() => {})
+      rmSync(dir, { recursive: true, force: true })
+    }
+  },
+  30_000,
+)
 
 function alive(pid: number): boolean {
   try {
