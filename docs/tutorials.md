@@ -28,17 +28,33 @@ takes it from `S3_ENDPOINT` and `S3_PUBLIC_URL`, so the dashboard needs both var
 The player sets `crossorigin="anonymous"` because Chromium only loads the French captions with it (measured: without the
 attribute the caption track errors even when the bucket sends CORS headers). The consequence is that the video file is
 fetched in CORS mode too. If the bucket or CDN has no CORS rule for the dashboard origin, **nothing plays at all**
-(`The element has no supported sources`), not only the captions. Add this rule to the production R2 bucket and to the
-preview Garage bucket before uploading videos: allowed origin = the dashboard origin only, methods `GET` and `HEAD`:
+(`The element has no supported sources`), not only the captions.
 
-```json
-{ "AllowedOrigins": ["https://dashboard.ceraghit.com"], "AllowedMethods": ["GET", "HEAD"], "MaxAgeSeconds": 3600 }
-```
-
-The command prints it, with the rest, for the production bucket:
+**Production already has it.** Checked on 2026-11-22: `https://cdn.ceraghit.com` answers
+`access-control-allow-origin: https://dashboard.ceraghit.com` for the dashboard origin, its preflight allows `PUT`, `GET`,
+`HEAD` and the `range` header (the web origin is allowed too). Nothing to apply for the videos to play. Re-run the check
+any time, it only sends read-only requests and prints PASS/FAIL:
 
 ```sh
-pnpm tutorials:cors                                  # rules, apply and verify commands (reads no credentials)
+pnpm tutorials:cors --check
+```
+
+`pnpm tutorials:cors` (no flag) prints the rules below, for rebuilding the configuration (a new bucket, a lost rule) or
+for the preview Garage bucket. The GET/HEAD rule allows the `range` request header and exposes `Content-Range`,
+`Accept-Ranges`, `Content-Length` and `Content-Type`:
+
+```json
+{ "AllowedOrigins": ["https://dashboard.ceraghit.com"], "AllowedMethods": ["GET", "HEAD"], "AllowedHeaders": ["range"],
+  "ExposeHeaders": ["Content-Range", "Accept-Ranges", "Content-Length", "Content-Type"], "MaxAgeSeconds": 3600 }
+```
+
+**Setting CORS replaces the whole configuration of the bucket.** Before any `put`, run
+`wrangler r2 bucket cors list ceraghit-prod` and keep the output (it is your way back to the hand-made rules). The
+generated set carries both rules, `PUT` from the web and dashboard origins (photo uploads, `docs/deploy.md`) and
+`GET`/`HEAD` from the dashboard origin only:
+
+```sh
+wrangler r2 bucket cors list ceraghit-prod                      # FIRST, save the output
 pnpm -s tutorials:cors --format wrangler > /tmp/cors.wrangler.json \
   && wrangler r2 bucket cors set ceraghit-prod --file /tmp/cors.wrangler.json   # apply with wrangler
 pnpm -s tutorials:cors --format s3 > /tmp/cors.s3.json \
@@ -46,18 +62,13 @@ pnpm -s tutorials:cors --format s3 > /tmp/cors.s3.json \
      --endpoint-url https://<ACCOUNT_ID>.r2.cloudflarestorage.com --cors-configuration file:///tmp/cors.s3.json
 ```
 
-Setting CORS replaces the whole configuration of the bucket, so the generated set carries both rules: `PUT` from the web
-and dashboard origins (photo uploads, `docs/deploy.md`) and `GET`/`HEAD` from the dashboard origin only. Options:
-`--bucket`, `--dashboard-origin`, `--web-origin`, `--cdn` (default `S3_PUBLIC_URL`, else `https://cdn.ceraghit.com`).
-Origins must be exact `https` origins, no wildcard. Verify after applying (upload a video or the manifest first):
+Options: `--bucket`, `--dashboard-origin`, `--web-origin`, `--cdn` (default `S3_PUBLIC_URL`, else
+`https://cdn.ceraghit.com`). Origins must be exact `https` origins, no wildcard. The wrangler json shape follows the
+Cloudflare docs and was not run against the real bucket.
 
-```sh
-curl -sI -H "Origin: https://dashboard.ceraghit.com" -H "Range: bytes=0-1" https://cdn.ceraghit.com/tutorials/manifest.json | grep -i '^access-control-allow-origin'   # prints the dashboard origin
-curl -sI -H "Origin: https://evil.example" https://cdn.ceraghit.com/tutorials/manifest.json | grep -ci '^access-control-allow-origin'   # 0
-```
-
-If the first command prints nothing the videos will not play in the dashboard. The wrangler json shape follows the
-Cloudflare docs and was not run against the real bucket; `wrangler r2 bucket cors list ceraghit-prod` shows what is set.
+The storefront (`apps/web`) has no `crossOrigin` fetch from the CDN: its only cross-origin call is the presigned `PUT`
+of customer photos (`apps/web/lib/photo-upload.ts`), and plain `<img>` loads need no CORS. So the web origin only needs
+`PUT`, and narrowing it to that breaks nothing.
 
 Garage answers a rule that lists several origins with the whole list in `Access-Control-Allow-Origin`, which browsers
 refuse: on the preview Garage bucket use one rule per origin.
@@ -93,7 +104,7 @@ saved under the old 11 slots (`01` to `11`) are moved to the video that replaced
 
 ## Tests
 
-`packages/orpc/test/tutorial-cors.test.ts` (the printed CORS rules and verify commands),
+`packages/orpc/test/tutorial-cors.test.ts` (the printed CORS rules, the `--check` probes),
 `packages/sdk/test/tutorials.test.ts` (catalogue, search, manifest), `apps/dashboard/test/tutorial-query.test.ts`
 (url state) and `test/e2e/specs/dashboard/tutorials.e2e.ts`, which uploads a 2 second webm sample (Playwright's Chromium has no H.264) under the `.mp4` keys, from
 `test/e2e/fixtures/tutorials` to the e2e bucket.

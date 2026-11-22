@@ -19,6 +19,8 @@ export interface CorsPlan {
   verify: string[]
 }
 
+const EXPOSED = ["Content-Range", "Accept-Ranges", "Content-Length", "Content-Type"]
+
 function origin(value: string, label: string): string {
   let url: URL
   try {
@@ -45,13 +47,23 @@ export function buildCorsPlan(input: CorsInput): CorsPlan {
   const s3 = {
     CORSRules: [
       { AllowedOrigins: put, AllowedMethods: ["PUT"], AllowedHeaders: ["content-type"], MaxAgeSeconds: 3600 },
-      { AllowedOrigins: [dashboard], AllowedMethods: ["GET", "HEAD"], MaxAgeSeconds: 3600 },
+      {
+        AllowedOrigins: [dashboard],
+        AllowedMethods: ["GET", "HEAD"],
+        AllowedHeaders: ["range"],
+        ExposeHeaders: EXPOSED,
+        MaxAgeSeconds: 3600,
+      },
     ],
   }
   const wrangler = {
     rules: [
       { allowed: { origins: put, methods: ["PUT"], headers: ["content-type"] }, maxAgeSeconds: 3600 },
-      { allowed: { origins: [dashboard], methods: ["GET", "HEAD"] }, maxAgeSeconds: 3600 },
+      {
+        allowed: { origins: [dashboard], methods: ["GET", "HEAD"], headers: ["range"] },
+        exposeHeaders: EXPOSED,
+        maxAgeSeconds: 3600,
+      },
     ],
   }
   const probe = `${cdn}/tutorials/manifest.json`
@@ -59,6 +71,7 @@ export function buildCorsPlan(input: CorsInput): CorsPlan {
     s3,
     wrangler,
     apply: [
+      `wrangler r2 bucket cors list ${input.bucket}   # FIRST: run it and keep the output, set replaces everything`,
       `pnpm -s tutorials:cors --format wrangler > /tmp/cors.wrangler.json && wrangler r2 bucket cors set ${input.bucket} --file /tmp/cors.wrangler.json`,
       `pnpm -s tutorials:cors --format s3 > /tmp/cors.s3.json && aws s3api put-bucket-cors --bucket ${input.bucket} --endpoint-url ${endpoint} --cors-configuration file:///tmp/cors.s3.json`,
     ],
@@ -68,4 +81,61 @@ export function buildCorsPlan(input: CorsInput): CorsPlan {
       `curl -sI -H "Origin: ${web}" ${probe} | grep -ci '^access-control-allow-origin'   # must print 0 (the storefront only uploads)`,
     ],
   }
+}
+
+export interface CorsCheck {
+  name: string
+  ok: boolean
+  detail: string
+}
+
+/** Runs `curl` with these args and returns the response headers (read-only requests only). */
+export type CurlRunner = (args: string[]) => string
+
+function headerValue(headers: string, name: string): string | null {
+  const line = headers.split(/\r?\n/).find((l) => l.toLowerCase().startsWith(`${name}:`))
+  return line ? line.slice(name.length + 1).trim() : null
+}
+
+/** Read-only probes of what the CDN answers a browser: the dashboard can read, the foreign origin cannot. */
+export function runCorsChecks(input: CorsInput, curl: CurlRunner): CorsCheck[] {
+  const dashboard = origin(input.dashboardOrigin, "dashboard origin")
+  const web = origin(input.webOrigin, "web origin")
+  const url = `${input.cdnUrl.replace(/\/$/, "")}/`
+  const allow = (headers: string) => headerValue(headers, "access-control-allow-origin")
+  const checks: CorsCheck[] = []
+  const add = (name: string, ok: boolean, detail: string) => checks.push({ name, ok, detail })
+
+  const get = curl(["-s", "-D", "-", "-o", "/dev/null", "-H", `Origin: ${dashboard}`, "-H", "Range: bytes=0-1", url])
+  add("dashboard GET with Range", allow(get) === dashboard, `access-control-allow-origin: ${allow(get) ?? "(none)"}`)
+  const head = curl(["-sI", "-H", `Origin: ${dashboard}`, url])
+  add("dashboard HEAD", allow(head) === dashboard, `access-control-allow-origin: ${allow(head) ?? "(none)"}`)
+  const pre = curl([
+    "-s",
+    "-D",
+    "-",
+    "-o",
+    "/dev/null",
+    "-X",
+    "OPTIONS",
+    "-H",
+    `Origin: ${dashboard}`,
+    "-H",
+    "Access-Control-Request-Method: GET",
+    "-H",
+    "Access-Control-Request-Headers: range",
+    url,
+  ])
+  const methods = headerValue(pre, "access-control-allow-methods") ?? ""
+  const headers = headerValue(pre, "access-control-allow-headers") ?? ""
+  add(
+    "dashboard preflight GET with Range",
+    allow(pre) === dashboard && /GET/i.test(methods) && /range/i.test(headers),
+    `origin ${allow(pre) ?? "(none)"}, methods ${methods || "(none)"}, headers ${headers || "(none)"}`,
+  )
+  const evil = curl(["-sI", "-H", "Origin: https://evil.example", url])
+  add("foreign origin refused", allow(evil) === null, `access-control-allow-origin: ${allow(evil) ?? "(none)"}`)
+  const webGet = curl(["-sI", "-H", `Origin: ${web}`, url])
+  add("web origin (info only, uploads need PUT)", true, `access-control-allow-origin: ${allow(webGet) ?? "(none)"}`)
+  return checks
 }
