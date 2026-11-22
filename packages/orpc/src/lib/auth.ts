@@ -1,6 +1,6 @@
-import { adminSessions, admins, type Db } from "@workspace/db"
-import { verifyPassword } from "@workspace/db/password"
-import { and, eq, gt } from "drizzle-orm"
+import { adminSessions, admins, type Db, settings } from "@workspace/db"
+import { hashPassword, verifyPassword } from "@workspace/db/password"
+import { and, eq, gt, ne } from "drizzle-orm"
 import { isLimited, LIMITS, resetLimit, takeLimit } from "./rate-limit"
 
 export const ADMIN_COOKIE = "ceraghit_admin"
@@ -59,6 +59,36 @@ export class AdminAuth {
       .where(and(eq(adminSessions.tokenHash, await sha256(token)), gt(adminSessions.expiresAt, new Date())))
       .limit(1)
     return row[0] ?? null
+  }
+
+  /**
+   * Checks the current password (counted before the slow hash, like login), stores the new one, signs every other
+   * session out and keeps the one that asked. Leaves a settings row `admin-audit:...` as the trail, never a password.
+   */
+  async changePassword(
+    admin: { id: string },
+    token: string | undefined,
+    address: string,
+    current: string,
+    next: string,
+  ): Promise<"ok" | "limited" | "wrong"> {
+    const key = `password:admin:${admin.id}`
+    if (!(await takeLimit(this.db, key, LIMITS.passwordChange, this.now()))) return "limited"
+    const row = await this.db.query.admins.findFirst({ where: eq(admins.id, admin.id) })
+    if (!row || !(await verifyPassword(current, row.passwordHash).catch(() => false))) return "wrong"
+    const passwordHash = await hashPassword(next)
+    const keep = token ? await sha256(token) : ""
+    const now = this.now()
+    await this.db.transaction(async (tx) => {
+      await tx.update(admins).set({ passwordHash }).where(eq(admins.id, admin.id))
+      await tx.delete(adminSessions).where(and(eq(adminSessions.adminId, admin.id), ne(adminSessions.tokenHash, keep)))
+      await tx.insert(settings).values({
+        key: `admin-audit:${admin.id}:${now.toISOString()}`,
+        value: { action: "password_changed", adminId: admin.id, at: now.toISOString(), address },
+      })
+    })
+    await resetLimit(this.db, key)
+    return "ok"
   }
 
   async logout(token: string | undefined): Promise<void> {
