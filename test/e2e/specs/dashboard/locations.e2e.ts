@@ -3,12 +3,16 @@ import { expect, loginAsOwnerAndWait, test } from "../../fixtures"
 import { completeSetup, openDb } from "../../helpers/db"
 import { localePath } from "../../helpers/locale"
 import { fillLocalized } from "../../helpers/products"
-import { deleteLocations, locationRows } from "../../support/locations"
+import { closeLocations, deleteLocations, locationRows } from "../../support/locations"
 
 test.beforeAll(async () => {
   const db = openDb()
   await completeSetup(db)
   await db.close()
+})
+
+test.afterAll(async () => {
+  await closeLocations()
 })
 
 test.afterEach(async () => {
@@ -63,8 +67,8 @@ test("the owner adds a workshop in three languages, edits it, and deletes it", {
       await expect(card).toContainText(HOURS[locale])
       await expect(card.locator("bdi", { hasText: PHONE })).toBeVisible()
       await expect(card.locator(`a[href="${MAP}"]`)).toBeVisible()
+      await shot(`location-on-atelier-${locale}`)
     }
-    await shot("location-on-atelier")
   })
 
   await step("editing the city shows on the storefront", async () => {

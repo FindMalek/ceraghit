@@ -21,3 +21,7 @@ export async function locationRows(namePrefix: string): Promise<LocationRow[]> {
 export async function deleteLocations(namePrefix: string): Promise<void> {
   await sql`delete from locations where name like ${`${namePrefix}%`}`
 }
+
+export async function closeLocations(): Promise<void> {
+  await sql.end()
+}
