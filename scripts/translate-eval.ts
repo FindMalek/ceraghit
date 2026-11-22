@@ -11,6 +11,9 @@ import {
 import { AI_MODELS, EVAL_ONLY_MODELS } from "../packages/orpc/src/lib/translate/models"
 import { collectSamples } from "./translate-eval.fixtures"
 
+/** The eval waits out 429 backoff (4 retries) instead of failing a sample at the owner-facing 30 s. */
+const EVAL_TIMEOUT_MS = 300_000
+
 const USAGE = "usage: bun scripts/translate-eval.ts [--models a,b] [--limit 20] [--with-preview] [--with-reference]"
 
 export function evalColumns({ models, withPreview }: { models?: string; withPreview?: boolean }): EvalColumn[] {
@@ -63,7 +66,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   const results = await runEval({
     samples,
     columns,
-    translate: translate ?? groqTranslate(apiKey as string),
+    translate: translate ?? groqTranslate(apiKey as string, undefined, EVAL_TIMEOUT_MS),
     delayMs: translate ? 0 : 250,
     onCall: (column, sample) => {
       if (sample === last) return

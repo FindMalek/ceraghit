@@ -79,3 +79,17 @@ describe("translateWith", () => {
     expect(result.error).not.toBeNull()
   })
 })
+
+test("translateWith gives up on a model that never answers, as a failed call the fallback can take over", async () => {
+  const hung = new MockLanguageModelV4({
+    doGenerate: (options) =>
+      new Promise((_resolve, reject) => {
+        options.abortSignal?.addEventListener("abort", () => reject(new Error("aborted")))
+      }),
+  })
+  const started = performance.now()
+  const result = await translateWith(hung, "low", request, 50)
+  expect(result.output).toBeNull()
+  expect(result.error).not.toBeNull()
+  expect(performance.now() - started).toBeLessThan(2000)
+})
