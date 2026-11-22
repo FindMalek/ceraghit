@@ -8,6 +8,8 @@ const target = z.object({
   testId: z.string().optional(),
   /** Which visible match to use, from 0; -1 is the last. For twins like the two Annuler buttons of a confirmation. */
   nth: z.number().int().optional(),
+  /** Match the whole name, label or text: `Adresse` against `Adresse e-mail`. */
+  exact: z.boolean().optional(),
 })
 
 export const ACTIONS = [
@@ -26,6 +28,8 @@ export const ACTIONS = [
   /** Changes the address the visit claims (`203.0.113.7`), to film the lockouts without locking the recorder out. */
   "ip",
   /** Drops the session cookies: the next request is a signed out visitor (session expired, back after logout). */
+  /** Claims the visitor's country (`BE`) the way the host does, so a first visit is priced in euros. Use after `clear-cookies`, the currency is remembered. */
+  "country",
   "clear-cookies",
   "back",
   /** Slows, drops or fails requests (see lib/net.ts): loading skeletons, error banners and error pages. */

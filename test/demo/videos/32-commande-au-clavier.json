@@ -1,0 +1,175 @@
+{
+  "id": "32",
+  "slug": "commande-au-clavier",
+  "title_fr": "Commander uniquement au clavier",
+  "devices": [
+    "desktop"
+  ],
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Remplissez et validez une commande sans souris.",
+      "holdMs": 2000
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0014",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "heading",
+        "name": "Commande",
+        "exact": true
+      },
+      "caption_fr": "Placez le curseur en haut de la page, puis lâchez la souris.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : le premier champ prend le focus, son anneau se voit.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Enter",
+      "caption_fr": "Envoyez le formulaire vide : le focus va au premier champ en erreur.",
+      "holdMs": 2800
+    },
+    {
+      "action": "press",
+      "value": "text:Amel Ben Salah",
+      "caption_fr": "Saisissez le nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : champ suivant.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "text:amel@example.com",
+      "caption_fr": "Saisissez l'email.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : champ suivant.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "text:+216 20 000 000",
+      "caption_fr": "Saisissez le téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : le pays.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : la ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "text:Tunis",
+      "caption_fr": "Saisissez la ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : l'adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "text:12 rue de Carthage",
+      "caption_fr": "Saisissez l'adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : code postal.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : note pour l'atelier.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : mode de paiement.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "ArrowDown",
+      "caption_fr": "Flèche bas : choisissez les espèces à la livraison.",
+      "holdMs": 1800
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : la case des conditions.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Space",
+      "caption_fr": "Espace : acceptez les conditions de vente.",
+      "holdMs": 1800
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : le bouton de validation.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Enter",
+      "caption_fr": "Entrée : la commande est envoyée.",
+      "holdMs": 3000
+    }
+  ]
+}

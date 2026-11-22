@@ -1,0 +1,398 @@
+{
+  "id": "28",
+  "slug": "erreurs-formulaire-commande",
+  "title_fr": "Erreurs et règles du formulaire de commande",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "goto",
+      "value": "/checkout",
+      "caption_fr": "Un panier vide ne peut pas être commandé.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/checkout",
+      "caption_fr": "Un panier vide ne peut pas être commandé.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Avec un panier vide, il n'y a rien à commander.",
+      "holdMs": 2800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Voir la boutique"
+      },
+      "caption_fr": "« Voir la boutique » vous y ramène.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Voir la boutique"
+      },
+      "caption_fr": "« Voir la boutique » vous y ramène.",
+      "only": "mobile"
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0013",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0013",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Envoyez le formulaire vide : chaque champ explique l'erreur."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Nom, email, téléphone, pays, ville et adresse : tout est vérifié.",
+      "only": "desktop",
+      "holdMs": 3500
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Nom, email, téléphone, pays, ville et adresse : tout est vérifié.",
+      "only": "mobile",
+      "holdMs": 3500
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Corrigez le nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Corrigez le nom.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Corrigez l'email.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Corrigez l'email.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Corrigez le téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Corrigez le téléphone.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Sf",
+      "caption_fr": "Tapez la ville : la liste se filtre.",
+      "only": "desktop",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Sf",
+      "caption_fr": "Tapez la ville : la liste se filtre.",
+      "only": "mobile",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Choisissez votre ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Choisissez votre ville.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Corrigez l'adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Corrigez l'adresse.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Les conditions de vente doivent être acceptées pour payer."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Case obligatoire : CGV et confidentialité.",
+      "only": "desktop",
+      "holdMs": 2800
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Case obligatoire : CGV et confidentialité.",
+      "only": "mobile",
+      "holdMs": 2800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "status 500 **/api/rpc/public/orders/create",
+      "caption_fr": "Si le serveur échoue, un message clair s'affiche.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "status 500 **/api/rpc/public/orders/create",
+      "caption_fr": "Si le serveur échoue, un message clair s'affiche.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Validez la commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Validez la commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le message s'affiche en haut de la page.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le message s'affiche en haut de la page.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Si le serveur échoue, vous voyez « La commande n'a pas pu être créée ».",
+      "holdMs": 3000
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "On rétablit le serveur.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "On rétablit le serveur.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 429 too_many_orders **/api/rpc/public/orders/create",
+      "caption_fr": "Trop d'essais de suite : on vous demande d'attendre.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 429 too_many_orders **/api/rpc/public/orders/create",
+      "caption_fr": "Trop d'essais de suite : on vous demande d'attendre.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Validez encore.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Validez encore.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le message s'affiche en haut de la page.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le message s'affiche en haut de la page.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Trop de commandes : réessayez dans quelques minutes.",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Trop de commandes : réessayez dans quelques minutes.",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "mobile"
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+  "id": "27",
+  "slug": "commander-payoneer",
+  "title_fr": "Payer avec un lien Payoneer",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "ip",
+      "value": "203.0.113.27",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "desktop",
+      "holdMs": 600
+    },
+    {
+      "action": "ip",
+      "value": "203.0.113.27",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "mobile",
+      "holdMs": 600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Depuis l'étranger, vous pouvez aussi payer avec un lien Payoneer.",
+      "holdMs": 2200
+    },
+    {
+      "action": "clear-cookies",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "desktop"
+    },
+    {
+      "action": "clear-cookies",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "mobile"
+    },
+    {
+      "action": "country",
+      "value": "BE",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "desktop"
+    },
+    {
+      "action": "country",
+      "value": "BE",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "mobile"
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0012",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0012",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Camille Payoneer",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Julie Payoneer",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "payoneer.desktop@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "payoneer.mobile@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+33 6 00 00 00 00",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+33 6 00 00 00 00",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "mobile"
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "France",
+      "caption_fr": "Choisissez votre pays.",
+      "only": "desktop"
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "France",
+      "caption_fr": "Choisissez votre pays.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Lyon",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Lyon",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "21 quai Saint-Antoine",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "21 quai Saint-Antoine",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Payoneer"
+      },
+      "caption_fr": "Choisissez Payoneer."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Confirmer la commande"
+      },
+      "caption_fr": "Confirmez la commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Confirmer la commande"
+      },
+      "caption_fr": "Confirmez la commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "L'atelier vous envoie votre lien de paiement par email.",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10096?t=demo-CER-10096",
+      "caption_fr": "Une fois le lien prêt, un bouton de paiement apparaît.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10096?t=demo-CER-10096",
+      "caption_fr": "Une fois le lien prêt, un bouton de paiement apparaît.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "link",
+        "name": "Payer avec Payoneer"
+      },
+      "caption_fr": "Il ouvre le lien Payoneer, avec la référence à indiquer.",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "link",
+        "name": "Payer avec Payoneer"
+      },
+      "caption_fr": "Il ouvre le lien Payoneer, avec la référence à indiquer.",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le statut ne change que lorsque l'atelier confirme le paiement.",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10097?t=demo-CER-10097",
+      "caption_fr": "Quand la commande est payée, le bloc Payoneer disparaît.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10097?t=demo-CER-10097",
+      "caption_fr": "Quand la commande est payée, le bloc Payoneer disparaît.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Commande payée : plus de bloc Payoneer.",
+      "only": "desktop",
+      "holdMs": 2800
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Commande payée : plus de bloc Payoneer.",
+      "only": "mobile",
+      "holdMs": 2800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "English"
+      },
+      "caption_fr": "La page existe aussi en anglais.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "English"
+      },
+      "caption_fr": "La page existe aussi en anglais.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "العربية"
+      },
+      "caption_fr": "Et en arabe.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "العربية"
+      },
+      "caption_fr": "Et en arabe.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Français"
+      },
+      "caption_fr": "Retour au français.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Français"
+      },
+      "caption_fr": "Retour au français.",
+      "only": "mobile"
+    }
+  ]
+}

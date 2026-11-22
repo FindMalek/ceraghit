@@ -1,0 +1,724 @@
+{
+  "id": "33",
+  "slug": "erreurs-stock-commande",
+  "title_fr": "Quand une pièce n'est plus disponible",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Une pièce peut être vendue pendant que vous commandez. Voici les messages.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0015",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0015",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 out_of_stock **/api/rpc/public/orders/create",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 out_of_stock **/api/rpc/public/orders/create",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une pièce du panier n'est plus en stock.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 piece_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 piece_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une pièce du panier n'est plus disponible.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 piece_unique **/api/rpc/public/orders/create",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 piece_unique **/api/rpc/public/orders/create",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une pièce unique ne se commande qu'une fois.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 option_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 option_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une option du panier n'est plus disponible.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 option_required **/api/rpc/public/orders/create",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 option_required **/api/rpc/public/orders/create",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Il faut choisir une option pour chaque pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 payment_method_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 payment_method_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Ce mode de paiement n'existe pas pour votre pays.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 country_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 country_unavailable **/api/rpc/public/orders/create",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les commandes depuis votre pays sont fermées pour le moment.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 payment_service_down **/api/rpc/public/orders/create",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 payment_service_down **/api/rpc/public/orders/create",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le service de paiement n'a pas répondu, réessayez.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Retirez la pièce du panier ou écrivez à l'atelier pour une pièce semblable.",
+      "holdMs": 3000
+    }
+  ]
+}

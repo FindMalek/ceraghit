@@ -238,6 +238,12 @@ test("CER-10100 shows the gateway mismatch then the automatic cancel, CER-10101 
   expect(shipments.some((s) => s.orderId === shipped.id)).toBe(false)
 })
 
+test("CER-10102 is a refunded order the customer can open", () => {
+  const { orders } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const refunded = orders.find((o) => o.number === "CER-10102")!
+  expect([refunded.status, refunded.publicToken, refunded.paidAt === null]).toEqual(["refunded", "demo-refunded", false])
+})
+
 test("demo requests cover every status and the extra products are drafts or archived with unique refs", () => {
   expect(new Set(demoRequests(new Date()).map((r) => r.status))).toEqual(
     new Set(["new", "contacted", "done", "declined"]),

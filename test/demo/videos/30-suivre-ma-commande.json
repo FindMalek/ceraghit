@@ -1,0 +1,271 @@
+{
+  "id": "30",
+  "slug": "suivre-ma-commande",
+  "title_fr": "Retrouver et suivre ma commande",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "ip",
+      "value": "203.0.113.30",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "desktop",
+      "holdMs": 600
+    },
+    {
+      "action": "ip",
+      "value": "203.0.113.30",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "mobile",
+      "holdMs": 600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Votre email contient un lien privé vers votre commande.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10099?t=demo-waiting",
+      "caption_fr": "En attente : le virement n'est pas encore reçu.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10099?t=demo-waiting",
+      "caption_fr": "En attente : le virement n'est pas encore reçu.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Elle montre son statut : ici, une commande réservée en attente de virement.",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10097?t=demo-CER-10097",
+      "caption_fr": "Payée : l'atelier prépare la commande.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10097?t=demo-CER-10097",
+      "caption_fr": "Payée : l'atelier prépare la commande.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Payée : le paiement est confirmé.",
+      "only": "desktop",
+      "holdMs": 2400
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Payée : le paiement est confirmé.",
+      "only": "mobile",
+      "holdMs": 2400
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=demo-1",
+      "caption_fr": "Expédiée : transporteur, date et numéro de suivi.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=demo-1",
+      "caption_fr": "Expédiée : transporteur, date et numéro de suivi.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une fois expédiée, vous voyez le transporteur et le numéro de suivi.",
+      "holdMs": 3500
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Suivre le colis"
+      },
+      "caption_fr": "« Suivre le colis » ouvre le suivi du transporteur.",
+      "only": "desktop",
+      "holdMs": 2400
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Suivre le colis"
+      },
+      "caption_fr": "« Suivre le colis » ouvre le suivi du transporteur.",
+      "only": "mobile",
+      "holdMs": 2400
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10007?t=demo-7",
+      "caption_fr": "Annulée : aucun montant n'est débité.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10007?t=demo-7",
+      "caption_fr": "Annulée : aucun montant n'est débité.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Annulée : rien n'est débité, les pièces sont remises en vente.",
+      "only": "desktop",
+      "holdMs": 2800
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Annulée : rien n'est débité, les pièces sont remises en vente.",
+      "only": "mobile",
+      "holdMs": 2800
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10102?t=demo-refunded",
+      "caption_fr": "Remboursée : le remboursement est fait.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10102?t=demo-refunded",
+      "caption_fr": "Remboursée : le remboursement est fait.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Remboursée.",
+      "only": "desktop",
+      "holdMs": 2400
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Remboursée.",
+      "only": "mobile",
+      "holdMs": 2400
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=lien-faux",
+      "caption_fr": "Un lien incorrect ne montre rien.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=lien-faux",
+      "caption_fr": "Un lien incorrect ne montre rien.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Avec un mauvais lien, la commande reste introuvable.",
+      "holdMs": 3000
+    },
+    {
+      "action": "network",
+      "value": "reason 429 too_many_lookups **/api/rpc/public/orders/get",
+      "caption_fr": "Trop d'essais : on vous demande d'attendre.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 429 too_many_lookups **/api/rpc/public/orders/get",
+      "caption_fr": "Trop d'essais : on vous demande d'attendre.",
+      "only": "mobile"
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=demo-1",
+      "caption_fr": "Trop de tentatives bloque la recherche un moment.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=demo-1",
+      "caption_fr": "Trop de tentatives bloque la recherche un moment.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Trop de tentatives : réessayez dans quelques minutes.",
+      "only": "desktop",
+      "holdMs": 3000
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Trop de tentatives : réessayez dans quelques minutes.",
+      "only": "mobile",
+      "holdMs": 3000
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "mobile"
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=demo-1",
+      "caption_fr": "Rouvrez la commande.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10001?t=demo-1",
+      "caption_fr": "Rouvrez la commande.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Voir la facture"
+      },
+      "caption_fr": "« Voir la facture » ouvre la facture.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Voir la facture"
+      },
+      "caption_fr": "« Voir la facture » ouvre la facture.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Conservez cette page : elle suit votre commande.",
+      "holdMs": 2400
+    }
+  ]
+}

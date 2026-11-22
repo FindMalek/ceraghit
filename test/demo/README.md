@@ -75,7 +75,7 @@ balance on your account before a big final pass.
 Copy `videos/34-se-connecter.json`, change `id`, `slug`, `title_fr` and the steps. A step has an `action`
 (`goto click tap fill type select upload hover scroll press wait drag`), a Playwright-style `target` (`role`+`name`,
 `label`, `text` or `testId`, never CSS), a required `caption_fr` (about 42 characters per line, two lines, vouvoiement),
-and `only: "desktop" | "mobile"` for steps that differ (silent unless `voice: true`). `{{ADMIN_EMAIL}}` style values read the environment. A desktop-only video sets `"devices": ["desktop"]`.
+and `exact: true` on a target to match the whole name (`Adresse` against `Adresse e-mail`), and `only: "desktop" | "mobile"` for steps that differ (silent unless `voice: true`). `{{ADMIN_EMAIL}}` style values read the environment. A desktop-only video sets `"devices": ["desktop"]`.
 Only visible matches are used, so a table row and its mobile card never clash. A step that changes data (ship, cancel) needs a
 different record on each device, with two `only` steps sharing one caption (a shared line is billed once), because both
 devices run on the same database; re-seed before a second take. To change a caption, edit the JSON and re-run that video.
@@ -87,9 +87,11 @@ Extra step actions for what a plain click cannot show. All of them act on the re
 | Action | `value` | Use |
 | --- | --- | --- |
 | `ip` | `203.0.113.7` (a documentation address: `192.0.2.x`, `198.51.100.x`, `203.0.113.x`) | Sends that address as the visitor address from now on, so the 5 failed attempts per address lockout (and the 10 per email one, with a few addresses and a made up email) can be filmed without locking the recorder out. Refused unless the web and dashboard urls are loopback. No api switch is needed: the limiter reads the forwarded address, as the e2e fixtures already do. Use a made up email for the lockouts, never the admin one. |
+| `country` | `BE` (two capital letters) | Sends `x-vercel-ip-country` from now on, as the host does, so a first visit is priced in euros (the shop has no currency switch). The currency is remembered in a cookie: `clear-cookies`, `country`, then `goto`. Loopback only. |
+| `press` | `Tab`, `Enter`, or `text:Amel` to type that text into the focused field | Keyboard only journeys. |
 | `clear-cookies` | none | Signed out visitor: film the session expired message by clicking anything after it. |
 | `back` | none | Browser back, for the page after a logout. |
-| `network` | `slow 4000 **/api/**`, `status 500 **/api/**`, `fail **/api/**`, `reset` | Loading skeletons (`slow`, then `goto`), error banners and pages (`status`, `fail`). The glob must start with `**/`. `reset` before the next scene. |
+| `network` | `slow 4000 **/api/**`, `status 500 **/api/**`, `reason 409 out_of_stock **/api/**` (the api's own error shape with a public reason, so the page shows its translated message: a simulated answer, say so in the PR), `fail **/api/**`, `reset` | Loading skeletons (`slow`, then `goto`), error banners and pages (`status`, `fail`). The glob must start with `**/`. `reset` before the next scene. |
 | `download` | none (the `target` is the button) | Clicks, keeps the file in `out/downloads/<video>/` and shows it over the page: a table for a CSV, the first page for a PDF (needs `pdftoppm`, otherwise a card with the name, size and page count). The card goes away at the next step. |
 
 `upload` reads from `out/assets/`, generated at every run (PNG by a tiny encoder, WebP through ffmpeg when it has libwebp, nothing committed):

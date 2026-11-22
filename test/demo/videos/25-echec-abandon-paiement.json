@@ -1,0 +1,525 @@
+{
+  "id": "25",
+  "slug": "echec-abandon-paiement",
+  "title_fr": "Paiement échoué ou abandonné",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "ip",
+      "value": "203.0.113.25",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "desktop",
+      "holdMs": 600
+    },
+    {
+      "action": "ip",
+      "value": "203.0.113.25",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "mobile",
+      "holdMs": 600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Un paiement peut échouer ou être abandonné. Voyons ce que voit votre client.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Carte bancaire ou e-DINAR"
+      },
+      "caption_fr": "Choisissez la carte bancaire.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Carte bancaire ou e-DINAR"
+      },
+      "caption_fr": "Choisissez la carte bancaire.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Payez par carte : une passerelle de test s'ouvre."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Page de test : aucun argent n'est débité.",
+      "only": "desktop",
+      "holdMs": 2200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Page de test : aucun argent n'est débité.",
+      "only": "mobile",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Simuler un échec"
+      },
+      "caption_fr": "Simulons un échec de paiement."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La commande est annulée, rien n'est débité et les pièces sont remises en vente.",
+      "holdMs": 3800
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Carte bancaire ou e-DINAR"
+      },
+      "caption_fr": "Choisissez la carte bancaire.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Carte bancaire ou e-DINAR"
+      },
+      "caption_fr": "Choisissez la carte bancaire.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Payez par carte.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Payez par carte.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Montant incorrect (test)"
+      },
+      "caption_fr": "Un montant incorrect ne marque jamais la commande payée."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le paiement n'est pas confirmé : la commande reste « En attente de paiement ».",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le paiement n'est pas confirmé : la commande reste « En attente de paiement ».",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10095?t=demo-CER-10095",
+      "caption_fr": "Une commande impayée est annulée seule après 45 minutes.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10095?t=demo-CER-10095",
+      "caption_fr": "Une commande impayée est annulée seule après 45 minutes.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Annulée automatiquement : les pièces reviennent en stock.",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Annulée automatiquement : les pièces reviennent en stock.",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10095?t=faux-lien",
+      "caption_fr": "Avec un mauvais lien, la commande n'est pas retrouvée.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10095?t=faux-lien",
+      "caption_fr": "Avec un mauvais lien, la commande n'est pas retrouvée.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Sans le bon lien, la commande reste introuvable.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Refaire une commande"
+      },
+      "caption_fr": "« Refaire une commande » ramène à la boutique.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Refaire une commande"
+      },
+      "caption_fr": "« Refaire une commande » ramène à la boutique.",
+      "only": "mobile"
+    }
+  ]
+}

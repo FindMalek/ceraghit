@@ -1,0 +1,200 @@
+{
+  "id": "49",
+  "slug": "expedition-aramex-etiquette",
+  "title_fr": "Créer une expédition Aramex et imprimer l'étiquette",
+  "devices": [
+    "desktop"
+  ],
+  "start": {
+    "app": "dashboard",
+    "path": "/",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "goto",
+      "value": "http://localhost:3063/product/medusa-0050",
+      "caption_fr": "Un client commande en espèces à la livraison.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Un client ajoute une pièce.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Il passe commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Hedi Aramex",
+      "caption_fr": "Il saisit ses coordonnées.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "hedi.aramex@example.com",
+      "caption_fr": "Il saisit ses coordonnées.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Il saisit ses coordonnées.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Il saisit ses coordonnées.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue Habib Bourgiba",
+      "caption_fr": "Il saisit ses coordonnées.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Espèces à la livraison"
+      },
+      "caption_fr": "Il choisit les espèces.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Il accepte les conditions.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Confirmer la commande"
+      },
+      "caption_fr": "Il confirme.",
+      "only": "desktop"
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3163/orders",
+      "caption_fr": "Côté atelier : ouvrez la commande à expédier.",
+      "holdMs": 2600
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "hedi.aramex@example.com",
+      "caption_fr": "Cherchez la commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "CER-",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez la commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Créer l'expédition Aramex"
+      },
+      "caption_fr": "Cliquez sur Créer l'expédition Aramex."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le colis est prérempli : poids, dimensions et adresse. L'espèce est encaissée par Aramex.",
+      "holdMs": 3800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Vérifier l'adresse avec Aramex"
+      },
+      "caption_fr": "Contrôlez l'adresse avec Aramex.",
+      "only": "desktop"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Aramex propose une autre adresse.",
+      "only": "desktop",
+      "holdMs": 2800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Utiliser cette suggestion"
+      },
+      "caption_fr": "Utilisez la suggestion.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Créer l'expédition et l'étiquette"
+      },
+      "caption_fr": "Créez l'expédition : le numéro de lettre de transport apparaît."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Commande expédiée, avec son suivi.",
+      "only": "desktop",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Télécharger l'étiquette (PDF)"
+      },
+      "caption_fr": "Téléchargez l'étiquette PDF, un lien privé et signé.",
+      "only": "desktop",
+      "holdMs": 2600
+    }
+  ]
+}

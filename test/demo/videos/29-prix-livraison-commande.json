@@ -1,0 +1,488 @@
+{
+  "id": "29",
+  "slug": "prix-livraison-commande",
+  "title_fr": "Le prix de livraison au paiement",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Le prix de livraison dépend du pays et du poids de la commande.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0015",
+      "caption_fr": "Sur la fiche pièce, estimez la livraison avant de commander.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0015",
+      "caption_fr": "Sur la fiche pièce, estimez la livraison avant de commander.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Estimer la livraison",
+        "exact": true
+      },
+      "caption_fr": "Cliquez sur Estimer la livraison.",
+      "only": "desktop",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Estimer la livraison",
+        "exact": true
+      },
+      "caption_fr": "Cliquez sur Estimer la livraison.",
+      "only": "mobile",
+      "holdMs": 1500
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays de livraison"
+      },
+      "value": "Belgique",
+      "caption_fr": "Choisissez le pays de livraison.",
+      "only": "desktop",
+      "holdMs": 2200
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays de livraison"
+      },
+      "value": "Belgique",
+      "caption_fr": "Choisissez le pays de livraison.",
+      "only": "mobile",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez la pièce au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez la pièce au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Au paiement, la ligne Livraison indique la zone et les kilos facturés.",
+      "holdMs": 3200
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Belgique",
+      "caption_fr": "Autre pays, autre zone : l'Europe est plus chère.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Belgique",
+      "caption_fr": "Autre pays, autre zone : l'Europe est plus chère.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Algérie",
+      "caption_fr": "Reste du monde : encore un autre tarif.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Algérie",
+      "caption_fr": "Reste du monde : encore un autre tarif.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Tunisie",
+      "caption_fr": "Retour en Tunisie : 11 DT pour 1 kg.",
+      "only": "desktop",
+      "holdMs": 2200
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Tunisie",
+      "caption_fr": "Retour en Tunisie : 11 DT pour 1 kg.",
+      "only": "mobile",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Saisir la ville ne vide pas le prix : Payer reste actif.",
+      "only": "desktop",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Saisir la ville ne vide pas le prix : Payer reste actif.",
+      "only": "mobile",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/product/amor-dominator-0051",
+      "caption_fr": "Au-dessus du seuil, la livraison est offerte.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/amor-dominator-0051",
+      "caption_fr": "Au-dessus du seuil, la livraison est offerte.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez une pièce plus chère.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez une pièce plus chère.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Au-dessus du seuil, la livraison est offerte.",
+      "holdMs": 3200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "amel@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Tunis",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "12 rue de Carthage",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "mobile"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 shipping_changed **/api/rpc/public/orders/create",
+      "caption_fr": "Si le prix change pendant la commande, on vous prévient.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reason 409 shipping_changed **/api/rpc/public/orders/create",
+      "caption_fr": "Si le prix change pendant la commande, on vous prévient.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Validez la commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Payer"
+      },
+      "caption_fr": "Validez la commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le message s'affiche en haut de la page.",
+      "only": "desktop"
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Le message s'affiche en haut de la page.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le prix de livraison a changé : vérifiez le total, puis validez.",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le prix de livraison a changé : vérifiez le total, puis validez.",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "desktop"
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Retour à la normale.",
+      "only": "mobile"
+    },
+    {
+      "action": "goto",
+      "value": "/product/sculpture-en-ronde-bosse-0004",
+      "caption_fr": "Un colis trop lourd ou trop long ne part pas en ligne.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/sculpture-en-ronde-bosse-0004",
+      "caption_fr": "Un colis trop lourd ou trop long ne part pas en ligne.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez la grande sculpture.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez la grande sculpture.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Trop volumineux : demandez un devis de transport à l'atelier.",
+      "holdMs": 3800
+    }
+  ]
+}
