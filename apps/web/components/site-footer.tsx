@@ -4,7 +4,7 @@ import { Link } from "@/i18n/navigation"
 import { getSettings, getSiteImages } from "@/lib/api"
 import { LEGAL_DOCS } from "@/lib/legal"
 import { formatAddress, shopName } from "@/lib/profile"
-import { siteImages } from "@/lib/site-images"
+import { medallionSrc } from "@/lib/site-images"
 import { LanguageSwitcher } from "./language-switcher"
 import { NAV_LINKS } from "./nav-links"
 
@@ -22,7 +22,7 @@ export async function SiteFooter() {
     <footer className="print:hidden mt-24 border-border border-t bg-background/80 pb-24 md:pb-0">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 md:grid-cols-3">
         <div className="space-y-3">
-          <Logo name="Ceraghit" src={siteImages("logo", images, locale)[0]?.src} />
+          <Logo name="Ceraghit" src={medallionSrc(images, locale)} />
           <p className="text-muted-foreground">{t("tagline")}</p>
         </div>
         <nav aria-label={t("explore")} className="space-y-1">
