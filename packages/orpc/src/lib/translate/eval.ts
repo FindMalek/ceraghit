@@ -37,6 +37,7 @@ export async function translateWith(
   model: LanguageModel,
   effort: EvalColumn["effort"],
   request: TranslateRequest,
+  timeoutMs: number = TRANSLATE_TIMEOUT_MS,
 ): Promise<CallResult> {
   const { system, prompt } = buildTranslatePrompt(request)
   const started = performance.now()
@@ -48,7 +49,7 @@ export async function translateWith(
       output: Output.object({ schema: translationSchema(request.targets) }),
       providerOptions: { groq: { reasoningEffort: effort, structuredOutputs: true, strictJsonSchema: true } },
       maxRetries: 4,
-      timeout: TRANSLATE_TIMEOUT_MS,
+      timeout: timeoutMs,
     })
     return {
       output: result.output as Partial<Record<Lang, string>>,
@@ -68,11 +69,11 @@ export async function translateWith(
   }
 }
 
-export function groqTranslate(apiKey: string, baseURL?: string): TranslateFn {
+export function groqTranslate(apiKey: string, baseURL?: string, timeoutMs: number = TRANSLATE_TIMEOUT_MS): TranslateFn {
   const groq = createGroq({ apiKey, ...(baseURL ? { baseURL } : {}) })
   return (column, request) =>
     withSpan("ai.translate", { model: column.model, "ai.effort": column.effort }, () =>
-      translateWith(groq(column.model), column.effort, request),
+      translateWith(groq(column.model), column.effort, request, timeoutMs),
     )
 }
 
