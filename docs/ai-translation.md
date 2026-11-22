@@ -31,7 +31,7 @@ lives only in `prompt.ts` (`buildTranslatePrompt`); a candidate prompt is compar
 
 ```sh
 export GROQ_API_KEY=...   # from the vault, never commit it, the script never prints it
-pnpm eval:groq            # same as bun scripts/translate-eval.ts                     # 120b low, 120b medium, 20b low
+pnpm eval:groq                                   # 120b low, 120b medium, 20b low (same as bun scripts/translate-eval.ts)
 bun scripts/translate-eval.ts --with-preview      # adds qwen/qwen3.8-27b
 bun scripts/translate-eval.ts --limit 10 --models openai/gpt-oss-20b
 bun scripts/translate-eval.ts --with-reference    # human en/ar next to the model output for 5 samples

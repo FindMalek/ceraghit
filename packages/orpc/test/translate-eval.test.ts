@@ -25,4 +25,11 @@ test("an offline run scores every candidate on the fixed sample set and writes t
   for (const column of ["GPT-OSS 120B low", "GPT-OSS 120B medium", "GPT-OSS 20B low"]) expect(report).toContain(column)
   expect(report).toContain("fr→ar")
   expect(report).toContain("5 samples")
+  // The fake echoes the French for en and answers a one-word Arabic: the rubric must flag both.
+  const row = (task: string) =>
+    report.split("\n").find((line) => line.startsWith("| GPT-OSS 120B low") && line.includes(task)) ?? ""
+  const cells = (line: string) => line.split("|").map((cell) => cell.trim())
+  expect(cells(row("fr→ar"))[6]).toBe("0%")
+  expect(cells(row("fr→en"))[10]).toBe("0%")
+  expect(cells(row("fr→en"))[6]).toBe("100%")
 })
