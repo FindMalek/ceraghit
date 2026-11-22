@@ -21,6 +21,11 @@ const schema = z
     SEED_DEMO: flag.default(true),
     ADMIN_EMAIL: z.string().optional(),
     ADMIN_PASSWORD: z.string().optional(),
+    /** Bootstrap keeps an existing owner password (they can change it in the dashboard); this makes ADMIN_PASSWORD win. */
+    ADMIN_PASSWORD_ROTATE: z
+      .string()
+      .optional()
+      .transform((v) => v === "1" || v === "true"),
     KONNECT_API_KEY: z.string().optional(),
     KONNECT_WALLET_ID: z.string().optional(),
     KONNECT_MODE: z.enum(["test", "live"]).default("test"),

@@ -60,7 +60,11 @@ Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Va
 
 `.github/workflows/deploy.yml`, in the `production` GitHub environment:
 
-1. `migrate`: applies Drizzle migrations to Neon and creates/updates the owner login (`admin-cli.ts`)
+1. `migrate`: applies Drizzle migrations to Neon and creates the owner login if it does not exist (`admin-cli.ts`). An
+   existing login keeps its password: the owner changes it in the dashboard (Profil, "Changer mon mot de passe"), and a
+   deploy must not undo that. To make the `ADMIN_PASSWORD` secret win again (a lost password), set the repository
+   variable `ADMIN_PASSWORD_ROTATE=1` for one deploy, then remove it; there is no email reset yet, so this is the recovery path.
+   Previews and staging always rotate (`ADMIN_PASSWORD_ROTATE=true` in `scripts/deploy/dokploy.mjs`): their secret stays the source of truth.
 2. `deploy`: `vercel pull`, `vercel build --prod` and `vercel deploy --prebuilt --prod` for `apps/api`, `apps/web`, `apps/dashboard` (Vercel's Git
    integration is **disconnected**, so Vercel posts no preview comments; deploys come only from this workflow)
 3. `smoke`: `/health` must report `env:production` (and `konnect:live` if `onlinePayments` is true), storefront and dashboard must answer

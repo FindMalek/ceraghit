@@ -16,6 +16,7 @@ const MINUTE = 60_000
 export const LIMITS = {
   loginIp: { max: 5, windowMs: 15 * MINUTE },
   loginEmail: { max: 10, windowMs: 60 * MINUTE },
+  passwordChange: { max: 5, windowMs: 15 * MINUTE },
   orderCreate: { max: 10, windowMs: 10 * MINUTE },
   orderGet: { max: 60, windowMs: 10 * MINUTE },
   shippingQuote: { max: 30, windowMs: MINUTE },

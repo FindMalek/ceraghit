@@ -25,6 +25,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Invalid file name\.?$/, () => "Nom de fichier invalide."],
   [/^Too many deletions/, () => "Trop de suppressions, réessayez dans quelques minutes."],
   [/^Email introuvable\.?$/, () => "Email introuvable."],
+  [/^Wrong current password\.?$/, () => "Le mot de passe actuel est incorrect."],
   [/^Wrong email or password\.?$/, () => "Email ou mot de passe incorrect."],
   [/^Too many attempts\. Try again in 1 hour/, () => "Trop de tentatives. Réessayez dans 1 heure."],
   [/^Too many (domain checks|test emails)/, () => "Trop d'essais, réessayez dans quelques minutes."],
