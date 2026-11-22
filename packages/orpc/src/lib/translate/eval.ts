@@ -30,6 +30,9 @@ export interface CallResult {
 
 export type TranslateFn = (column: EvalColumn, request: TranslateRequest) => Promise<CallResult>
 
+/** One call, retries included: a hung provider must not hold the owner's request open. */
+export const TRANSLATE_TIMEOUT_MS = 30_000
+
 export async function translateWith(
   model: LanguageModel,
   effort: EvalColumn["effort"],
@@ -45,6 +48,7 @@ export async function translateWith(
       output: Output.object({ schema: translationSchema(request.targets) }),
       providerOptions: { groq: { reasoningEffort: effort, structuredOutputs: true, strictJsonSchema: true } },
       maxRetries: 4,
+      timeout: TRANSLATE_TIMEOUT_MS,
     })
     return {
       output: result.output as Partial<Record<Lang, string>>,
