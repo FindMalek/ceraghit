@@ -194,6 +194,8 @@ describe("resolveTarget", () => {
       ["http://localhost:9301", "ceraghit-prod-copy"],
       ["https://acc.r2.cloudflarestorage.com", "ceraghit-dev"],
       ["https://cdn.ceraghit.com", "ceraghit-prod-copy"],
+      ["https://acc.r2.cloudflarestorage.com.", "ceraghit-dev"],
+      ["https://cdn.ceraghit.com.", "ceraghit-dev"],
     ])
       expect(() => resolveTarget({ ...base, APP_ENV: "preview", S3_ENDPOINT, S3_BUCKET }, {})).toThrow(
         "looks like production",
