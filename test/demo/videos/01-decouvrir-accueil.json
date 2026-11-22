@@ -1,0 +1,72 @@
+{
+  "id": "01",
+  "slug": "decouvrir-accueil",
+  "title_fr": "Découvrir la page d'accueil",
+  "start": { "app": "web", "path": "/", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "Voici la page d'accueil.", "holdMs": 1500 },
+    { "action": "wait", "caption_fr": "Les photos défilent toutes seules.", "holdMs": 5500 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Mettre le diaporama en pause" },
+      "caption_fr": "Le bouton pause l'arrête."
+    },
+    {
+      "action": "press",
+      "value": "Enter",
+      "caption_fr": "Entrée le relance, comme au clavier.",
+      "holdMs": 1500
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Si l'appareil réduit les animations, la première photo reste fixe.",
+      "holdMs": 2500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Découvrir la boutique" },
+      "caption_fr": "Ce bouton ouvre la boutique."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Créer une pièce unique", "nth": 0 },
+      "caption_fr": "Celui-ci, une pièce sur mesure."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Pièces à la une" },
+      "caption_fr": "Les pièces à la une."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Les collections" },
+      "caption_fr": "Chaque collection ouvre sa catégorie."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "L'atelier et son histoire" },
+      "caption_fr": "L'édito mène à l'atelier."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Dans l'atelier" },
+      "caption_fr": "Quelques photos de l'atelier."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Faire une demande" },
+      "caption_fr": "Ce bandeau lance une demande."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Explorer" },
+      "caption_fr": "Le pied de page garde les liens."
+    },
+    {
+      "action": "scroll",
+      "value": "-6000",
+      "caption_fr": "Sur téléphone, le menu et le panier restent en haut.",
+      "only": "mobile"
+    }
+  ]
+}

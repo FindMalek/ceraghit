@@ -1,0 +1,51 @@
+{
+  "id": "06",
+  "slug": "parcourir-collections",
+  "title_fr": "Parcourir les collections",
+  "start": { "app": "web", "path": "/shop", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "La boutique réunit toutes les collections.", "holdMs": 2000 },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Tout voir · Lampe votive" },
+      "caption_fr": "Chaque collection a sa grille et son lien."
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Lampe votive", "nth": 0 },
+      "caption_fr": "Une tuile ouvre sa catégorie."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "pièces", "nth": 0 },
+      "caption_fr": "Le nombre de pièces s'affiche."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "À partir de", "nth": 0 },
+      "caption_fr": "« À partir de » signale des variantes."
+    },
+    { "action": "goto", "value": "/shop/haut-relief", "caption_fr": "Les badges disent l'état de la pièce." },
+    {
+      "action": "hover",
+      "target": { "text": "Pièce unique", "nth": 0 },
+      "caption_fr": "Les badges disent l'état de la pièce."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Sur devis", "nth": 0 },
+      "caption_fr": "Sur devis : l'atelier répond par e-mail."
+    },
+    { "action": "goto", "value": "/shop/inconnue", "caption_fr": "Une catégorie inconnue donne une page introuvable.", "holdMs": 2000 },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Retour à l'accueil" },
+      "caption_fr": "Un lien ramène à l'accueil."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Sur téléphone, la grille passe sur deux colonnes.",
+      "only": "mobile"
+    }
+  ]
+}

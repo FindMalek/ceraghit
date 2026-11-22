@@ -1,0 +1,50 @@
+{
+  "id": "07",
+  "slug": "rechercher-produit",
+  "title_fr": "Rechercher une pièce",
+  "start": { "app": "web", "path": "/shop", "loggedIn": false },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "searchbox", "name": "Rechercher une pièce" },
+      "value": "0200",
+      "caption_fr": "Tapez une référence."
+    },
+    { "action": "press", "value": "Enter", "caption_fr": "Entrée lance la recherche." },
+    {
+      "action": "fill",
+      "target": { "role": "searchbox", "name": "Rechercher une pièce" },
+      "value": "lampe",
+      "caption_fr": "Ou un mot du nom."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Rechercher" },
+      "caption_fr": "La loupe fait de même."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "L'adresse garde la recherche : vous pouvez la partager.",
+      "holdMs": 2000
+    },
+    {
+      "action": "fill",
+      "target": { "role": "searchbox", "name": "Rechercher une pièce" },
+      "value": "zzzz",
+      "caption_fr": "Sans résultat, un message vous le dit."
+    },
+    { "action": "press", "value": "Enter", "caption_fr": "Sans résultat, un message vous le dit.", "holdMs": 1800 },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Voir toute la boutique" },
+      "caption_fr": "Un bouton rouvre toute la boutique."
+    },
+    {
+      "action": "fill",
+      "target": { "role": "searchbox", "name": "Rechercher une pièce" },
+      "value": "",
+      "caption_fr": "Effacez le champ pour tout revoir."
+    },
+    { "action": "press", "value": "Enter", "caption_fr": "Effacez le champ pour tout revoir." }
+  ]
+}
