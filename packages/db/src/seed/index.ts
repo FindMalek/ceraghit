@@ -5,6 +5,7 @@ import { hashPassword } from "../password"
 import {
   admins,
   categories,
+  customRequests,
   jobRuns,
   locations,
   mailLog,
@@ -28,7 +29,15 @@ import {
   ensureSiteImages,
   syncBundledMedia,
 } from "./media"
-import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS, DEMO_TN_CITIES } from "./scenario"
+import {
+  buildDemoProfile,
+  buildScenario,
+  DEMO_DESCRIPTIONS,
+  DEMO_LOCATIONS,
+  DEMO_TN_CITIES,
+  demoExtraProducts,
+  demoRequests,
+} from "./scenario"
 import { localize } from "./translations"
 
 export { buildScenario } from "./scenario"
@@ -50,8 +59,11 @@ const UNGLAZED_VARIANT_REFS = new Set([
 const UNGLAZED_DISCOUNT_EUR = 500
 
 export interface SeedOptions {
-  /** Created, or its password reset, on every start: env is the source of truth for this login. */
-  admin?: { email: string; password: string; name?: string }
+  /**
+   * Created when missing. An existing login keeps its password (the owner can change it in the dashboard) unless
+   * `rotatePassword` is set, which makes this value win again.
+   */
+  admin?: { email: string; password: string; name?: string; rotatePassword?: boolean }
   /** The real catalogue from the PDF. Only ever written into an empty database. */
   catalog?: boolean
   /** Fake orders and placeholder locations so previews have numbers to show. Implies the catalogue. */
@@ -74,11 +86,13 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
   const done = { admin: false, catalog: false, demo: false }
   if (opts.admin?.email && opts.admin.password) {
     const passwordHash = await hashPassword(opts.admin.password)
-    await db
+    const insert = db
       .insert(admins)
       .values({ email: opts.admin.email.toLowerCase(), name: opts.admin.name ?? "Sabri Ghit", passwordHash })
-      // The name belongs to the owner after onboarding: only the password follows the env.
-      .onConflictDoUpdate({ target: admins.email, set: { passwordHash } })
+    // The name belongs to the owner after onboarding, and so does the password once they changed it.
+    await (opts.admin.rotatePassword
+      ? insert.onConflictDoUpdate({ target: admins.email, set: { passwordHash } })
+      : insert.onConflictDoNothing({ target: admins.email }))
     done.admin = true
   }
   await syncBundledMedia(db)
@@ -189,6 +203,8 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
 
     if (!opts.demo) return
     await tx.insert(locations).values(DEMO_LOCATIONS)
+    await tx.insert(products).values(demoExtraProducts(cats.map((c) => c.id)))
+    await tx.insert(customRequests).values(demoRequests(new Date()))
     if ((opts.profile ?? "complete") === "complete") {
       const now = new Date()
       const profile = buildDemoProfile(now)

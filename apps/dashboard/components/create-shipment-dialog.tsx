@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
-import { formatMoney, type ShipmentCustoms, type ShipmentDraft } from "@workspace/sdk"
+import { formatMoney, postcodeHint, postcodeProblem, type ShipmentCustoms, type ShipmentDraft } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { Checkbox } from "@workspace/ui/components/checkbox"
 import {
@@ -43,8 +43,12 @@ function Field({
   onChange,
   type = "text",
   max,
+  hint,
+  problem,
 }: {
   id: string
+  hint?: string | null
+  problem?: string | null
   label: string
   value: string
   onChange: (value: string) => void
@@ -62,7 +66,14 @@ function Field({
         maxLength={max}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-invalid={problem ? true : undefined}
+        aria-describedby={hint || problem ? `${id}-hint` : undefined}
       />
+      {(problem || hint) && (
+        <p id={`${id}-hint`} className={problem ? "text-destructive text-sm" : "text-muted-foreground text-sm"}>
+          {problem || hint}
+        </p>
+      )}
     </div>
   )
 }
@@ -212,6 +223,12 @@ export function CreateShipmentDialog({
                   label="Code postal"
                   value={form.consignee.postalCode ?? ""}
                   max={10}
+                  hint={postcodeHint(form.consignee.country)}
+                  problem={
+                    form.consignee.postalCode
+                      ? postcodeProblem(form.consignee.country, form.consignee.postalCode)
+                      : null
+                  }
                   onChange={(v) => setConsignee("postalCode", v)}
                 />
               </div>

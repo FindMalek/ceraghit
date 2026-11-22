@@ -71,6 +71,17 @@ test("the owner ships an order to France with a customs declaration and gets the
     await expect(page.getByTestId("shipment-customs-total")).toContainText("€")
   })
 
+  await step("the postcode field says what France expects and refuses a wrong one", async () => {
+    await expect(page.getByText("Obligatoire, exemple : 75001")).toBeVisible()
+    await page.getByLabel("Code postal").fill("7500")
+    await expect(page.getByText("Code postal invalide pour France (exemple : 75001).").first()).toBeVisible()
+    await page.getByRole("button", { name: "Créer l'expédition et l'étiquette" }).click()
+    // the hint under the field and the message the server refused with
+    await expect(page.getByText("Code postal invalide pour France (exemple : 75001).")).toHaveCount(2)
+    await expect(page.getByText("Une erreur est survenue")).toHaveCount(0)
+    await page.getByLabel("Code postal").fill("75001")
+  })
+
   await step("a piece without a customs code cannot be sent", async () => {
     await page.getByTestId("shipment-customs").getByLabel("Code SH").fill("12")
     await page.getByRole("button", { name: "Créer l'expédition et l'étiquette" }).click()

@@ -11,6 +11,7 @@
     "./react": "./src/react.tsx",
     "./secrets": "./src/lib/secrets.ts",
     "./tutorial-cors": "./src/lib/tutorial-cors.ts",
+    "./tutorial-upload": "./src/lib/tutorial-upload.ts",
     "./fake-aramex": "./src/lib/shipping/aramex/fake.ts",
     "./rotate": "./src/lib/integrations.ts",
     "./server": "./src/server-client.ts"

@@ -91,7 +91,11 @@ unsaved values, never stores them, 10 tests per 10 minutes) and saves. The test 
   picker. `createOrder` stores the list's spelling and refuses an unknown Tunisian city (`invalid_city`) only when a list exists.
 - Dashboard: `Mettre à jour la liste des villes` (Livraison) and `Vérifier l'adresse avec Aramex` (order sheet,
   `ValidateAddress`; an Aramex failure answers `ok: false`, never a 500).
-- Not done: country postcode rules (`postCodeRequired`) and `IsAddressServiced`.
+- Postcodes: `POSTCODE_RULES` in `packages/sdk/src/postcodes.ts` holds one format per shipping country (hand-kept, not
+  fetched from `FetchCountries`). The shipment dialog shows the expected format, `createShipment` and the address check
+  refuse a wrong or missing one (required outside Tunisia where the country has postcodes).
+- `Vérifier l'adresse` also asks `IsAddressServiced` for Tunisian addresses (national product); `Aramex ne livre pas à cette adresse.`
+  when Aramex says no, and no answer never blocks.
 
 ## Suivi des colis
 
@@ -126,6 +130,7 @@ update the code named on the right. The Aramex docs PDFs return 403 to fetchers 
 | Tracking status codes | `BY_CODE`: `SH005` and `SH006` delivered, `SH003` out for delivery, `SH069` returned, `SH012` picked up; other codes fall back to English description keywords, else in transit | `lib/shipping/aramex/status.ts` |
 | Delivered code (provider side) | `deliveredCodes: ["SH005"]` tells the provider's `track` a parcel is delivered, separate from the table above | `aramex/provider.ts` `DEFAULT_ARAMEX_CONFIG`, passed by `lib/shipping/resolve.ts` |
 | Pickup | location `Atelier`, vehicle `Car`, package type `Box`, window Monday to Saturday in `Africa/Tunis` (UTC+1), at least 2 hours, last pickup 1 hour before closing | `pickupLocation`, `aramex/provider.ts` `createPickup`, `pickups.ts` `windowOf` |
+| `IsAddressServiced` `ServiceMode` | `CC`, with the DOM product type | `aramex/provider.ts` `isAddressServiced` |
 | Contact `Type`, units | `KG`, `CM` | `aramex/provider.ts` |
 | Cancel | no cancel operation: `HoldShipments` is used | `aramex/provider.ts` `cancel` |
 | Customs | EXP goods declared in the order currency; `CustomsValueAmount` is the sum of the pieces, `ProviderHSCode` and `CommodityCode` both set | `aramex/provider.ts` `createShipment` |
