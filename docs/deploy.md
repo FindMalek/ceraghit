@@ -141,6 +141,9 @@ scheduler can change without touching the api.
 The schedule still calls `cleanup-uploads` and not `media-cleanup`, because the alias is what also sweeps `rate_limits`
 and the mail log; moving the daily call to `media-cleanup` is a separate change.
 
+Trigger.dev is the only scheduler. The GitHub cron `cleanup-uploads.yml` was removed (#302): running both was harmless
+(idempotent) but wasteful. Confirm the last run under Réglages.
+
 Every job whose handler is registered in `apps/api/src/cron.ts` has a task in `apps/jobs/src/schedules.ts`;
 `media-cleanup` has a handler but no task yet (see above). `track-shipments` does nothing until shipping is switched to
 Aramex with complete credentials.
