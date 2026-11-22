@@ -11,6 +11,12 @@ function install(): void {
       <svg id="__demo_cursor" width="28" height="28" viewBox="0 0 24 24" style="position:absolute;left:0;top:0;display:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))">
         <path d="M3 2l7.5 18 2.3-7.2L20 10.5z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/>
       </svg>`
+    // The screencast sends nothing while the page is still, even when a focus ring appears. A 1px dot that never stops
+    // fading keeps frames coming, so every change shows in the video.
+    const tick = document.createElement("style")
+    tick.textContent =
+      "@keyframes __demo_tick{from{opacity:.98}to{opacity:1}}#__demo::after{content:'';position:fixed;right:0;bottom:0;width:1px;height:1px;background:#000;animation:__demo_tick .5s linear infinite alternate}"
+    root.appendChild(tick)
     document.documentElement.appendChild(root)
     const cursor = root.querySelector<SVGElement>("#__demo_cursor")
     let client = { x: -100, y: -100 }
