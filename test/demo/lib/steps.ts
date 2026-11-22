@@ -23,12 +23,21 @@ export const ACTIONS = [
   "press",
   "wait",
   "drag",
+  /** Changes the address the visit claims (`203.0.113.7`), to film the lockouts without locking the recorder out. */
+  "ip",
+  /** Drops the session cookies: the next request is a signed out visitor (session expired, back after logout). */
+  "clear-cookies",
+  "back",
+  /** Slows, drops or fails requests (see lib/net.ts): loading skeletons, error banners and error pages. */
+  "network",
+  /** Clicks the target, keeps the downloaded file and shows it over the page (CSV table, first PDF page). */
+  "download",
 ] as const
 
 const step = z.object({
   action: z.enum(ACTIONS),
   target: target.optional(),
-  /** Text to type, option, path under test/demo/assets, key, scroll distance or a path for goto. `{{NAME}}` reads the environment. */
+  /** Text to type, option, file generated under test/demo/out/assets (see lib/assets.ts), key, scroll distance or a path for goto. `{{NAME}}` reads the environment. */
   value: z.string().optional(),
   to: target.optional(),
   caption_fr: z.string().min(1),

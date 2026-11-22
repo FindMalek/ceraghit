@@ -79,3 +79,20 @@ and `only: "desktop" | "mobile"` for steps that differ (silent unless `voice: tr
 Only visible matches are used, so a table row and its mobile card never clash. A step that changes data (ship, cancel) needs a
 different record on each device, with two `only` steps sharing one caption (a shared line is billed once), because both
 devices run on the same database; re-seed before a second take. To change a caption, edit the JSON and re-run that video.
+
+## Hard to film states
+
+Extra step actions for what a plain click cannot show. All of them act on the recorded browser only.
+
+| Action | `value` | Use |
+| --- | --- | --- |
+| `ip` | `203.0.113.7` (a documentation address: `192.0.2.x`, `198.51.100.x`, `203.0.113.x`) | Sends that address as the visitor address from now on, so the 5 failed attempts per address lockout (and the 10 per email one, with a few addresses and a made up email) can be filmed without locking the recorder out. Refused unless the web and dashboard urls are loopback. No api switch is needed: the limiter reads the forwarded address, as the e2e fixtures already do. Use a made up email for the lockouts, never the admin one. |
+| `clear-cookies` | none | Signed out visitor: film the session expired message by clicking anything after it. |
+| `back` | none | Browser back, for the page after a logout. |
+| `network` | `slow 4000 **/api/**`, `status 500 **/api/**`, `fail **/api/**`, `reset` | Loading skeletons (`slow`, then `goto`), error banners and pages (`status`, `fail`). The glob must start with `**/`. `reset` before the next scene. |
+| `download` | none (the `target` is the button) | Clicks, keeps the file in `out/downloads/<video>/` and shows it over the page: a table for a CSV, the first page for a PDF (needs `pdftoppm`, otherwise a card with the name, size and page count). The card goes away at the next step. |
+
+`upload` reads from `out/assets/`, generated at every run (PNG by a tiny encoder, WebP through ffmpeg when it has libwebp, nothing committed):
+`photo-1.png`, `photo-2.png`, `photo-3.png`, `photo-1.webp`, `photo-2.webp`, `banner-1.png`, `banner-1.webp`, and `not-an-image.txt` for the wrong file type message.
+
+Seeded for these (`packages/db/src/seed/scenario.ts`, demo data only): 222 orders, so `Afficher plus de commandes` shows (the page is 200, not 50; the 170 older ones are `CER-11000` and up, over 60 days old, so the default period keeps its numbers); `CER-10100` (gateway mismatch then automatic cancel), `CER-10007` (late payment), `CER-10095` (released after the hold); `CER-10101` shipped by Rapid-Poste with a tracking number (`Modifier le suivi`, no parcel card); 12 draft or archived products (`08xx`, 42 in the list, `Voir plus de produits`); 5 customer requests, one per status plus a second new. The `Démo` label is the history line of any order paid by transfer (no admin name). An empty period: the export dialogs accept any dates, for instance 2020.
