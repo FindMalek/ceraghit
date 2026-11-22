@@ -51,6 +51,7 @@ function Poster({ src }: { src: string | null }) {
         <img
           src={src}
           alt=""
+          crossOrigin="anonymous"
           loading="lazy"
           decoding="async"
           onError={() => setBroken(true)}

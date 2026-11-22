@@ -137,6 +137,13 @@ export default defineConfig<E2EOptions>({
   webServer: [
     {
       ...server,
+      command: "bun support/stubs/server.ts",
+      cwd: E2E.repoRoot + "test/e2e",
+      url: `${E2E.stubUrl}/health`,
+      env: { E2E_STUB_PORT: String(E2E.ports.stub) },
+    },
+    {
+      ...server,
       command: "bun src/index.ts",
       cwd: `${E2E.repoRoot}apps/api`,
       url: `${E2E.apiUrl}/health`,

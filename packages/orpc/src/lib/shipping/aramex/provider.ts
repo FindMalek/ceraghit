@@ -337,6 +337,14 @@ export class AramexShippingProvider implements ShippingProvider {
     }
   }
 
+  async isAddressServiced(a: ShipAddress): Promise<boolean | null> {
+    const res = await this.client.isAddressServiced({
+      Address: address(a),
+      ServiceDetails: { ProductGroup: "DOM", ProductType: this.config.productTypes.DOM, ServiceMode: "CC" },
+    })
+    return res.IsServiced ?? null
+  }
+
   async testConnection() {
     const steps: string[] = []
     let step: "login" | "rate" = "login"
