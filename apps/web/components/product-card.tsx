@@ -45,7 +45,14 @@ export function ProductCard({
   return (
     <article className="group relative flex flex-col gap-3">
       <div className="frame relative aspect-square overflow-hidden bg-card">
-        {defer ? <InView>{photo}</InView> : photo}
+        {defer ? (
+          <>
+            <InView>{photo}</InView>
+            <noscript>{photo}</noscript>
+          </>
+        ) : (
+          photo
+        )}
         <div className="absolute start-2 top-2 flex flex-col items-start gap-1">
           {soldOut && <Tag>{t("soldOut")}</Tag>}
           {product.unique && <Tag>{t("uniquePiece")}</Tag>}

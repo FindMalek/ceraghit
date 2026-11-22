@@ -11,7 +11,10 @@ export function InView({ children, margin = "300px" }: { children: ReactNode; ma
     if (!node) return
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry?.isIntersecting) setNear(true)
+        if (entry?.isIntersecting) {
+          setNear(true)
+          observer.disconnect()
+        }
       },
       { rootMargin: margin },
     )

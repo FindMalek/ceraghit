@@ -5,7 +5,7 @@ import { imageSrc, type ProductImage, pick } from "@workspace/sdk"
 import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { useLocale, useTranslations } from "next-intl"
-import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react"
+import { type KeyboardEvent, type TouchEvent, useEffect, useRef, useState } from "react"
 import Image from "@/components/photo"
 
 /** Page gutters and the two-column grid of the product page, so a phone asks for the width it really draws. */
@@ -19,6 +19,10 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
   const [index, setIndex] = useState(0)
   /** Only the first photo loads with the page; the rest follow once it is on screen (or the visitor moves), so they never compete with the LCP photo. */
   const [warm, setWarm] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setWarm(true), 2500)
+    return () => clearTimeout(timer)
+  }, [])
   const touchStart = useRef<number | null>(null)
   const count = images.length
   const go = (to: number) => {
@@ -47,6 +51,8 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
       aria-roledescription="carousel"
       aria-label={t("gallery")}
       onKeyDown={onKey}
+      onPointerEnter={() => setWarm(true)}
+      onFocus={() => setWarm(true)}
     >
       <div
         className="frame relative aspect-square touch-pan-y overflow-hidden bg-card"
@@ -65,7 +71,7 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
               sizes={MAIN_SIZES}
               priority={i === 0}
               fetchPriority={i === 0 ? "high" : "low"}
-            quality={i === 0 ? 60 : 75}
+              quality={70}
               onLoad={i === 0 ? () => setWarm(true) : undefined}
               aria-hidden={i !== index}
               className={cn("object-cover transition-opacity duration-300", i === index ? "opacity-100" : "opacity-0")}
