@@ -67,3 +67,13 @@ test("a gateway error is a guest-safe BAD_GATEWAY and the key is never logged", 
   }
   expect(logged.join("\n")).not.toContain("secret-key")
 })
+
+test("a base url sends every call to the stub instead of the Konnect host", async () => {
+  const urls: string[] = []
+  const http = (async (url: string) => {
+    urls.push(url)
+    return Response.json(getPaymentResponse({ status: "pending" }))
+  }) as unknown as typeof fetch
+  await new KonnectProvider("k", "w", "test", http, "http://localhost:9300/konnect").check("ref1")
+  expect(urls).toEqual(["http://localhost:9300/konnect/payments/ref1"])
+})

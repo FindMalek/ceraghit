@@ -64,8 +64,8 @@ export async function translateWith(
   }
 }
 
-export function groqTranslate(apiKey: string): TranslateFn {
-  const groq = createGroq({ apiKey })
+export function groqTranslate(apiKey: string, baseURL?: string): TranslateFn {
+  const groq = createGroq({ apiKey, ...(baseURL ? { baseURL } : {}) })
   return (column, request) =>
     withSpan("ai.translate", { model: column.model, "ai.effort": column.effort }, () =>
       translateWith(groq(column.model), column.effort, request),
