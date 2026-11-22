@@ -1,12 +1,17 @@
 import { expect, test } from "bun:test"
+import { existsSync, mkdtempSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { chromium } from "@playwright/test"
+import { startRecording } from "../lib/recorder"
 import {
   applyTimeouts,
+  closingWaitMs,
   durationProblem,
   LAST_STEP_MIN_HOLD_MS,
+  runGuarded,
   stepHoldMs,
   TAIL_MS,
-  tailWaitMs,
   withDeadline,
 } from "../lib/safety"
 
@@ -37,16 +42,59 @@ test("a missing element fails at the page timeout, not at Playwright's 30 s", as
   }
 }, 20_000)
 
-test("the last step waits only for its voice, so the video ends about a second after the audio", () => {
-  const hold = stepHoldMs({ holdMs: 2500, defaultHoldMs: 1200, spokenRemainingMs: 400, last: true })
-  expect(hold).toBe(LAST_STEP_MIN_HOLD_MS)
+test("a narrated last step waits only for its voice, and the video ends about a second after the audio", () => {
+  const narrated = { holdMs: 2500, defaultHoldMs: 1200, spokenRemainingMs: 400, lastNarrated: true }
+  expect(stepHoldMs(narrated)).toBe(LAST_STEP_MIN_HOLD_MS)
   const audioEnd = 20_000
-  const stepStart = audioEnd - 2000
-  const afterHold = stepStart + 2000 + hold
-  expect(afterHold + tailWaitMs(afterHold, audioEnd) - audioEnd).toBeLessThanOrEqual(TAIL_MS + LAST_STEP_MIN_HOLD_MS)
-  expect(stepHoldMs({ holdMs: 2500, defaultHoldMs: 1200, spokenRemainingMs: 400, last: false })).toBe(2500)
-  expect(tailWaitMs(30_000, audioEnd)).toBe(0)
+  expect(closingWaitMs(audioEnd - 300, audioEnd, 1500)).toBe(TAIL_MS + 300)
+  expect(closingWaitMs(audioEnd + 5000, audioEnd, 1500)).toBe(0)
 })
+
+test("a last step without narration keeps its hold, and a video without audio keeps its closing still", () => {
+  expect(stepHoldMs({ holdMs: 2500, defaultHoldMs: 1200, spokenRemainingMs: 0, lastNarrated: false })).toBe(2500)
+  expect(stepHoldMs({ defaultHoldMs: 1200, spokenRemainingMs: 0, lastNarrated: false })).toBe(1200)
+  expect(closingWaitMs(30_000, null, 1500)).toBe(1500)
+})
+
+test("a hung run is cleaned up: ffmpeg is killed, the browser closed and the partial file removed", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "demo-guard-"))
+  const browser = await chromium.launch()
+  const file = join(dir, "partial.mp4")
+  try {
+    const page = await browser.newPage({ viewport: { width: 200, height: 120 } })
+    await page.setContent("<body>video</body>")
+    const recording = await startRecording(page, file, { width: 200, height: 120 })
+    const pid = recording.pid as number
+    expect(alive(pid)).toBe(true)
+    await expect(
+      runGuarded(() => new Promise<void>(() => {}), {
+        ms: 300,
+        label: () => "demo-desktop stuck at step 2/5",
+        cleanup: async () => {
+          recording.kill()
+          rmSync(file, { force: true })
+          await browser.close()
+        },
+      }),
+    ).rejects.toThrow("stuck at step 2/5 did not finish within 300 ms")
+    await new Promise((r) => setTimeout(r, 300))
+    expect(alive(pid)).toBe(false)
+    expect(browser.isConnected()).toBe(false)
+    expect(existsSync(file)).toBe(false)
+  } finally {
+    await browser.close().catch(() => {})
+    rmSync(dir, { recursive: true, force: true })
+  }
+}, 30_000)
+
+function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
 
 test("a video far longer than its script, or over two minutes, fails", () => {
   expect(durationProblem(40_000, 30_000)).toBeNull()

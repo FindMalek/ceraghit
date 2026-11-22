@@ -29,22 +29,42 @@ export async function withDeadline<T>(work: Promise<T>, ms: number, label: () =>
 }
 
 /**
- * How long a step keeps the screen after its action. The last step only waits for its voice, so the final
- * still (`tailMs`) is what follows the audio, instead of a long hold on top of it.
+ * How long a step keeps the screen after its action. A narrated last step only waits for its voice (the closing wait
+ * adds the tail); every other step keeps its hold.
  */
 export function stepHoldMs(opts: {
   holdMs?: number
   defaultHoldMs: number
   spokenRemainingMs: number
-  last: boolean
+  lastNarrated: boolean
 }): number {
-  if (opts.last) return Math.max(opts.spokenRemainingMs, LAST_STEP_MIN_HOLD_MS)
+  if (opts.lastNarrated) return Math.max(opts.spokenRemainingMs, LAST_STEP_MIN_HOLD_MS)
   return Math.max(opts.holdMs ?? opts.defaultHoldMs, opts.spokenRemainingMs)
 }
 
-/** Time still to wait after the last step so the video ends `TAIL_MS` after the last narration ended. */
-export function tailWaitMs(nowMs: number, lastAudioEndMs: number): number {
+/**
+ * Wait after the last step. With a voice the video ends `TAIL_MS` after the last narration; without any audio the
+ * closing still stays, so the last frame and caption are not cut.
+ */
+export function closingWaitMs(nowMs: number, lastAudioEndMs: number | null, stillMs: number): number {
+  if (lastAudioEndMs === null) return stillMs
   return Math.max(0, lastAudioEndMs + TAIL_MS - nowMs)
+}
+
+/**
+ * Runs `work` under a deadline. On a hang or an error `cleanup` runs first (kill ffmpeg, close the browser, delete the
+ * partial files) and the original error is thrown, so nothing is left running.
+ */
+export async function runGuarded<T>(
+  work: () => Promise<T>,
+  opts: { ms: number; label: () => string; cleanup: () => Promise<void> },
+): Promise<T> {
+  try {
+    return await withDeadline(work(), opts.ms, opts.label)
+  } catch (error) {
+    await opts.cleanup().catch(() => {})
+    throw error
+  }
 }
 
 /** A message when the finished video is far longer than its script says, which means something stalled. */
