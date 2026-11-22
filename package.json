@@ -13,7 +13,6 @@
     "lint": "biome ci .",
     "check": "biome check --write .",
     "media:manifest": "node scripts/media-manifest.mjs",
-    "eval:groq": "bun scripts/translate-eval.ts",
     "db:up": "docker compose -f docker/docker-compose.yml up -d",
     "db:down": "docker compose -f docker/docker-compose.yml down",
     "demo:reset": "scripts/demo-reset.sh",
