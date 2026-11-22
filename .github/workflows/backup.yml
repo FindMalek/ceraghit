@@ -1,5 +1,6 @@
 # Weekly encrypted database dump + media sync to a separate R2 bucket. Production environment only, so the backup
 # credentials are unreadable from previews. Skipped until vars.DEPLOY_ENABLED is "true", see docs/deploy.md.
+# A failed scheduled run opens, or comments on, one `backup failed` issue.
 
 name: Backup
 
@@ -23,6 +24,30 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v7
+
+      - name: Check the backup settings exist
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+          BACKUP_S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+          BACKUP_S3_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          BACKUP_S3_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+        run: |
+          missing=""
+          for name in DATABASE_URL BACKUP_AGE_RECIPIENT BACKUP_S3_ENDPOINT BACKUP_S3_ACCESS_KEY_ID BACKUP_S3_SECRET_ACCESS_KEY S3_ENDPOINT S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error title=Backup not configured::Missing in the production environment:$missing. See docs/deploy.md, section uptime and backups."
+            exit 1
+          fi
+          case "$BACKUP_AGE_RECIPIENT" in
+            age1*) ;;
+            *) echo "::error title=Backup not configured::BACKUP_AGE_RECIPIENT must be an age public key starting with age1."; exit 1 ;;
+          esac
 
       - name: Install the tools
         run: sudo apt-get update && sudo apt-get install -y postgresql-client age rclone
@@ -64,3 +89,24 @@ jobs:
           SOURCE_BUCKET: ${{ vars.S3_BUCKET || 'ceraghit-prod' }}
           BACKUP_BUCKET: ${{ vars.BACKUP_S3_BUCKET || 'ceraghit-backup' }}
         run: rclone sync "source:$SOURCE_BUCKET" "backup:$BACKUP_BUCKET/media" --backup-dir "backup:$BACKUP_BUCKET/media-deleted/$(date -u +%Y-%m-%d)"
+
+  notify:
+    needs: backup
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open or update the backup issue
+        run: |
+          title="backup failed"
+          number=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The database backup failed: $RUN_URL. If the first step says settings are missing, add them as listed in docs/deploy.md (uptime and backups). Nothing is being backed up until this is green."
+          fi

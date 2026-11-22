@@ -288,3 +288,17 @@ days (bodies hold customer details).
   `BACKUP_S3_SECRET_ACCESS_KEY`, and the source `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`.
   Variables: `BACKUP_AGE_RECIPIENT`, optional `BACKUP_S3_BUCKET` (default `ceraghit-backup`), `PRODUCTION_API_HOST`,
   `PRODUCTION_WEB_HOST`, `PRODUCTION_DASHBOARD_HOST`.
+
+### backup setup, what the owner adds
+
+A failed scheduled backup opens (or comments on) one issue titled `backup failed`; the first step of the run lists any
+missing setting by name and fails before dumping anything. Add these in GitHub, Settings, Environments, `production`
+(names only, values never go in the repo or an issue):
+
+- Secrets: `DATABASE_URL`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`,
+  `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+- Variable: `BACKUP_AGE_RECIPIENT`, the age **public** key (`age1...`, made with `age-keygen`; keep the private key offline).
+  Optional `BACKUP_S3_BUCKET` (default `ceraghit-backup`, a bucket separate from `ceraghit-prod`).
+
+Then run the workflow once with "Run workflow" and check that `db/<date>.dump.age` exists in the backup bucket. Manual
+runs do not open the issue, only scheduled ones.
