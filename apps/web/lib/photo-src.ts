@@ -7,6 +7,8 @@ const FILES_PREFIX = "/api/files/"
  */
 export function photoSrc(src: string, filesUrl = process.env.NEXT_PUBLIC_FILES_URL): string {
   if (!filesUrl || !src.startsWith(FILES_PREFIX)) return src
+  // Carrier labels and other private files are never public: they only go through the signed redirect.
+  if (/(^|\/)private\//.test(src.slice(FILES_PREFIX.length))) return src
   return `${filesUrl}/${src.slice(FILES_PREFIX.length)}`
 }
 

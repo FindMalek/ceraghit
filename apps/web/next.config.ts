@@ -6,6 +6,10 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 /** Public host of the bucket (R2 custom domain): set where the build runs, empty on the homelab (signed urls). */
 const filesUrl = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : null
 
+if (filesUrl && filesUrl.protocol !== "https:")
+  console.warn(`[next.config] S3_PUBLIC_URL is not https (${filesUrl.origin}), uploaded photos will be fetched over it`)
+if (filesUrl) console.info(`[next.config] uploaded photos are optimised from ${filesUrl.origin}`)
+
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
@@ -20,6 +24,7 @@ const nextConfig: NextConfig = {
             protocol: filesUrl.protocol === "http:" ? "http" : "https",
             hostname: filesUrl.hostname,
             port: filesUrl.port,
+            pathname: "/**",
           },
         ]
       : [],

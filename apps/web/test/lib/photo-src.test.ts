@@ -6,5 +6,11 @@ test("an uploaded photo goes to the public CDN host when there is one, and stays
     "https://cdn.ceraghit.com/media/ab/cd.webp",
   )
   expect(photoSrc("/api/files/media/ab/cd.webp", "")).toBe("/api/files/media/ab/cd.webp")
+  expect(photoSrc("/api/files/private/labels/x.pdf", "https://cdn.ceraghit.com")).toBe(
+    "/api/files/private/labels/x.pdf",
+  )
+  expect(photoSrc("/api/files/p1/private/labels/x.pdf", "https://cdn.ceraghit.com")).toBe(
+    "/api/files/p1/private/labels/x.pdf",
+  )
   expect(photoSrc("/catalogue/0010-1.webp", "https://cdn.ceraghit.com")).toBe("/catalogue/0010-1.webp")
 })
