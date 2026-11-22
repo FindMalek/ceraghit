@@ -139,7 +139,7 @@ scheduler can change without touching the api.
 | `media-cleanup` (the same cleanup without the aliases) | daily 03:30 | 26 h |
 | `release-holds` (stock held by abandoned checkouts) | hourly :05 | 2 h |
 | `track-shipments` (Aramex poll) | every 3 h | 4 h |
-| `retry-mail` (failed Resend sends) | every 10 min | 30 min |
+| `retry-mail` (failed Resend sends) | every 30 min | 90 min |
 | `ai-usage-rollover` (closes the AI quota, monthly) | 1st, 00:05 | 32 days |
 
 The schedule still calls `cleanup-uploads` and not `media-cleanup`, because the alias is what also sweeps `rate_limits`
@@ -280,7 +280,7 @@ days (bodies hold customer details).
 
 ## uptime and backups
 
-- **uptime** (`.github/workflows/uptime.yml`, every 10 min, GitHub-hosted so it never depends on the-keep): api `/health`
+- **uptime** (`.github/workflows/uptime.yml`, every 30 min, GitHub-hosted so it never depends on the-keep): api `/health`
   must answer `"env":"production"` and `"db":true`, the storefront `/` and `/shop` and the dashboard `/login` must be 200,
   and every certificate must have more than 14 days left. A failure opens or comments on one issue titled `production down`
   with the `incident` label; the next green run closes it. Skipped unless `vars.DEPLOY_ENABLED` is `true`.
@@ -309,3 +309,17 @@ missing setting by name and fails before dumping anything. Add these in GitHub, 
 
 Then run the workflow once with "Run workflow" and check that `db/<date>.dump.age` exists in the backup bucket. Manual
 runs do not open the issue, only scheduled ones.
+
+## vercel free-tier cpu
+
+The Hobby team has 4 h/month of Fluid Active CPU; going over pauses every project, shop included. The big levers, in order:
+
+- the storefront pages are `force-dynamic` (CSP nonce), so each page view, bots included, re-renders and calls the api. The
+  five public reads in `apps/web/lib/api.ts` go through `unstable_cache` (120 s, shared data cache, errors not cached): an
+  admin edit shows on the storefront within 2 minutes. Checkout re-validates every piece server-side, so a stale list
+  cannot sell something gone.
+- bots: in the Vercel dashboard, web project, Firewall: turn on Bot Protection, add a rate limit on `/shop/*` and
+  `/product/*` (for example 60 requests per minute per IP) and a rule that denies unknown paths early. Not in code.
+- polling and probes: dashboard polls every 2 to 5 min, uptime every 30 min, `retry-mail` every 30 min.
+- check: Team usage, Fluid Active CPU by project, and the runtime logs of `ceraghit-api`: the
+  `POST /rpc/public/{site/images,catalog/*}` bursts should drop to about one per read per 2 minutes.

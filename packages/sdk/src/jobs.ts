@@ -50,10 +50,10 @@ export const JOBS: JobSpec[] = [
   {
     name: "retry-mail",
     label: "Renvoi des emails en échec",
-    cron: "*/10 * * * *",
+    cron: "*/30 * * * *",
     timezone: "Africa/Tunis",
-    schedule: "Toutes les 10 minutes",
-    staleAfterMinutes: 30,
+    schedule: "Toutes les 30 minutes",
+    staleAfterMinutes: 90,
   },
   {
     name: "ai-usage-rollover",

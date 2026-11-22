@@ -24,7 +24,7 @@ export function MobileTabBar() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
   // What is waiting for the owner: orders to deal with and new requests, refreshed every minute.
-  const stats = useQuery(orpc.admin.overview.queryOptions({ input: { days: 30 }, refetchInterval: 60_000 }))
+  const stats = useQuery(orpc.admin.overview.queryOptions({ input: { days: 30 }, refetchInterval: 120_000 }))
   const remaining = useSetupStatus().data?.remaining ?? 0
   const failedMails = stats.data?.failedMails ?? 0
   const menuCount = remaining + failedMails
