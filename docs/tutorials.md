@@ -57,9 +57,39 @@ Publishing a video needs no deploy: upload its files, then add its line to `mani
 ## Publishing per environment
 
 Environments never mix. Preview uploads go to the homelab Garage bucket, production uploads go to the production R2
-bucket, with the credentials of that environment only. Record in `APP_ENV=local`, then upload the recorder output
-(`mp4`, `vtt`, `jpg`) with the S3 client of the target environment (for example `aws s3 cp --endpoint-url <endpoint>`),
-and upload `manifest.json` last so the page never points at a missing file. Never commit an mp4.
+bucket, with the credentials of that environment only. Never commit an mp4.
+
+Put the recorder output in one folder (`<id>-desktop.mp4`, `<id>-mobile.mp4`, `<id>-desktop.vtt`, `<id>-mobile.vtt`,
+`<id>.jpg`, for example `~/ceraghit-videos/draft`) and run the uploader. It reads the bucket the way the api does
+(`APP_ENV`, `DEPLOY_ENV`, `S3_*`), so the prefix is `pr-<n>/` on a preview, `staging/` on staging and empty otherwise.
+
+```sh
+# dry run first: prints what would be uploaded or skipped, writes nothing
+pnpm tutorials:upload ~/ceraghit-videos/draft --dry-run
+
+# local or preview: export that environment's S3_* (and APP_ENV, DEPLOY_ENV=pr-<n>), then
+pnpm tutorials:upload ~/ceraghit-videos/draft
+
+# production: export the production S3_* in this shell (never from a file in the repo), then
+APP_ENV=production DEPLOY_ENV=production S3_ENDPOINT=... S3_BUCKET=ceraghit-prod S3_ACCESS_KEY_ID=... \
+  S3_SECRET_ACCESS_KEY=... pnpm tutorials:upload:production ~/ceraghit-videos/draft --dry-run
+# same command without --dry-run to publish
+```
+
+What it does:
+
+- Only complete sets are uploaded and listed: a poster plus at least one device that has both its mp4 and its
+  captions. Partial sets, unknown ids, empty files, files that are not really an mp4, WebVTT or jpeg, and files over the
+  size limit (mp4 300 MB, vtt 512 KB, jpg 5 MB) are reported and skipped.
+- Content types are `video/mp4`, `text/vtt`, `image/jpeg`, with `cache-control: public, max-age=86400`.
+- Idempotent and resumable: an object with the same size (and the same md5 when the bucket etag is one) is skipped, so
+  after a crash just run it again. `tutorials/manifest.json` is written last, merged with the videos already listed, and
+  only when something changed. Per video it also records `bytes` and, when `ffprobe` is available (`FFPROBE=/path`),
+  `seconds` per device; the page ignores those extra fields.
+- Production only runs with `--env production --confirm` (the `:production` script passes both) and runs with
+  `bun --no-env-file`, so it uses only what is exported in the shell and never reads an env file. APP_ENV, DEPLOY_ENV,
+  bucket and endpoint must all agree; any other run is refused if its bucket or endpoint looks like production.
+  Secrets are never printed.
 
 ## YouTube override
 
@@ -69,6 +99,7 @@ saved under the old 11 slots (`01` to `11`) are moved to the video that replaced
 
 ## Tests
 
+`packages/orpc/test/tutorial-upload.test.ts` (uploader and environment guards, with an in-memory S3),
 `packages/sdk/test/tutorials.test.ts` (catalogue, search, manifest), `apps/dashboard/test/tutorial-query.test.ts`
 (url state) and `test/e2e/specs/dashboard/tutorials.e2e.ts`, which uploads a 2 second webm sample (Playwright's Chromium has no H.264) under the `.mp4` keys, from
 `test/e2e/fixtures/tutorials` to the e2e bucket.
