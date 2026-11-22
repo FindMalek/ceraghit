@@ -100,6 +100,11 @@ export async function startRecording(
     client.send("Page.screencastFrameAck", { sessionId: event.sessionId }).catch(() => {})
     if (pending) write(pending, Math.max(1, Math.round(((at - pendingAt) / 1000) * FPS)))
   })
+  // The screencast sends nothing while the page is still, so without a first frame the video would start at the first
+  // change and every later cue would sit ahead of the picture.
+  const initial = await client.send("Page.captureScreenshot", { format: "jpeg", quality: 90 })
+  previous = Buffer.from(initial.data, "base64")
+  previousAt = startedAt
   await client.send("Page.startScreencast", {
     format: "jpeg",
     quality: 90,
