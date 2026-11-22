@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { admins, customRequests, type Db, orderAudit, orders } from "@workspace/db"
+import { admins, customRequests, type Db, orderAudit, orders, shipments } from "@workspace/db"
 import {
   adminOrderSchema,
   type CarrierId,
@@ -16,8 +16,10 @@ import {
   orderStatusSchema,
   type PaymentMethod,
   requestStatusSchema,
+  SHIPMENT_FILTER_STATUSES,
+  type ShipmentStatus,
 } from "@workspace/sdk"
-import { and, asc, desc, eq, gte, ilike, inArray, lt, or } from "drizzle-orm"
+import { and, asc, desc, eq, gte, ilike, inArray, lt, or, sql } from "drizzle-orm"
 import { z } from "zod"
 import { tryIssueInvoice } from "../../lib/invoices"
 import {
@@ -43,12 +45,30 @@ type OrderRow = typeof orders.$inferSelect & {
 interface OrderExtras {
   references: Map<string, string>
   linkDates: Map<string, Date>
+  shipmentStatuses: Map<string, ShipmentStatus>
+}
+
+/** Newest parcel status per order, in one query. */
+async function latestShipmentStatuses(db: Db, ids: string[]): Promise<Map<string, ShipmentStatus>> {
+  if (ids.length === 0) return new Map()
+  const rows = await db
+    .select({ orderId: shipments.orderId, status: shipments.status })
+    .from(shipments)
+    .where(inArray(shipments.orderId, ids))
+    .orderBy(desc(shipments.createdAt))
+  const latest = new Map<string, ShipmentStatus>()
+  for (const row of rows) if (!latest.has(row.orderId)) latest.set(row.orderId, row.status)
+  return latest
 }
 
 async function loadExtras(db: Db, rows: { id: string }[]): Promise<OrderExtras> {
   const ids = rows.map((r) => r.id)
-  const [references, linkDates] = await Promise.all([paymentReferences(db, ids), paymentLinkDates(db, ids)])
-  return { references, linkDates }
+  const [references, linkDates, shipmentStatuses] = await Promise.all([
+    paymentReferences(db, ids),
+    paymentLinkDates(db, ids),
+    latestShipmentStatuses(db, ids),
+  ])
+  return { references, linkDates, shipmentStatuses }
 }
 
 function toAdminOrder(o: OrderRow, holds: HoldSettings, now: Date, extras: OrderExtras) {
@@ -83,6 +103,7 @@ function toAdminOrder(o: OrderRow, holds: HoldSettings, now: Date, extras: Order
     paymentLinkSetAt: payoneer ? (extras.linkDates.get(o.id)?.toISOString() ?? null) : null,
     paymentReference: extras.references.get(o.id) ?? null,
     shipping: toShipping(o),
+    shipmentStatus: extras.shipmentStatuses.get(o.id) ?? null,
   }
 }
 
@@ -113,6 +134,12 @@ export const ordersRouter = {
           input.status ? eq(orders.status, input.status) : undefined,
           search
             ? or(ilike(orders.number, search), ilike(orders.customerName, search), ilike(orders.email, search))
+            : undefined,
+          input.shipment
+            ? sql`(select s.status from shipments s where s.order_id = ${orders.id} order by s.created_at desc limit 1) in (${sql.join(
+                SHIPMENT_FILTER_STATUSES[input.shipment].map((status) => sql`${status}`),
+                sql`, `,
+              )})`
             : undefined,
         ),
         with: { items: true },

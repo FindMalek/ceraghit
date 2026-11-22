@@ -1,5 +1,5 @@
-import { customRequests, mailLog, orderItems, orders, products } from "@workspace/db"
-import { statsRangeSchema, statsSchema } from "@workspace/sdk"
+import { customRequests, mailLog, orderItems, orders, products, shipments } from "@workspace/db"
+import { SHIPMENT_FILTER_STATUSES, statsRangeSchema, statsSchema } from "@workspace/sdk"
 import { and, asc, count, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm"
 import { LAZY_SWEEP_LIMIT, releaseExpiredHolds } from "../../lib/orders"
 import { adminProcedure } from "../../procedures"
@@ -90,6 +90,8 @@ export const overview = adminProcedure
 
     const failedMails = await db.$count(mailLog, eq(mailLog.status, "failed"))
 
+    const openShipments = await db.$count(shipments, inArray(shipments.status, SHIPMENT_FILTER_STATUSES.open))
+
     return {
       days: input.days,
       revenue,
@@ -102,5 +104,6 @@ export const overview = adminProcedure
       byCountry,
       lowStock,
       failedMails,
+      openShipments,
     }
   })

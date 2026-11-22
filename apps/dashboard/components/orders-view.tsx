@@ -37,7 +37,7 @@ import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state"
 import { ShipOrderDialog } from "@/components/ship-order-dialog"
 import { ShipmentCard } from "@/components/shipment-card"
 import { SimpleSelect } from "@/components/simple-select"
-import { HoldBadge, LinkBadge, OrderStatusBadge } from "@/components/status-badge"
+import { HoldBadge, LinkBadge, OrderStatusBadge, ShipmentBadge } from "@/components/status-badge"
 import { formatDate, formatDayYear, ORDER_STATUS, PAYMENT_LABEL, PAYMENT_PROVIDER, PAYMENT_SHORT } from "@/lib/copy"
 import { errorMessage } from "@/lib/errors"
 
@@ -49,6 +49,15 @@ type Target = Exclude<Status, "pending_payment">
 const FILTERS = [
   { value: "all" as const, label: "Toutes les commandes" },
   ...Object.entries(ORDER_STATUS).map(([value, label]) => ({ value: value as Status, label })),
+]
+
+type ShipmentFilter = "all" | "open" | "delivered" | "problem"
+
+const SHIPMENT_FILTERS = [
+  { value: "all" as const, label: "Toutes les expéditions" },
+  { value: "open" as const, label: "Expédition : en cours" },
+  { value: "delivered" as const, label: "Expédition : livrée" },
+  { value: "problem" as const, label: "Expédition : problème" },
 ]
 
 interface Action {
@@ -122,7 +131,7 @@ function actionsFor(status: Status, method: PaymentMethod): Action[] {
   return []
 }
 
-function useOrders(input: { status?: Status; q?: string; limit: number }) {
+function useOrders(input: { status?: Status; q?: string; shipment?: Exclude<ShipmentFilter, "all">; limit: number }) {
   // keep the rows while a new search loads: an open order sheet must not unmount and lose what was typed in it
   return useQuery(orpc.admin.orders.list.queryOptions({ input, placeholderData: keepPreviousData }))
 }
@@ -435,8 +444,15 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
   )
 }
 
-export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
+export function OrdersView({
+  initialQuery = "",
+  initialShipment,
+}: {
+  initialQuery?: string
+  initialShipment?: Exclude<ShipmentFilter, "all">
+}) {
   const [status, setStatus] = useState<Filter>("all")
+  const [shipment, setShipment] = useState<ShipmentFilter>(initialShipment ?? "all")
   const [q, setQ] = useState(initialQuery)
   const [search, setSearch] = useState(initialQuery)
   const [selected, setSelected] = useState<string | null>(null)
@@ -447,7 +463,12 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
   }, [q])
 
   const [limit, setLimit] = useState(200)
-  const orders = useOrders({ status: status === "all" ? undefined : status, q: search || undefined, limit })
+  const orders = useOrders({
+    status: status === "all" ? undefined : status,
+    q: search || undefined,
+    shipment: shipment === "all" ? undefined : shipment,
+    limit,
+  })
   const rows = orders.data ?? []
   const current = rows.find((order) => order.id === selected) ?? null
 
@@ -473,6 +494,13 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
             options={FILTERS}
             className="h-11 w-full md:w-64"
           />
+          <SimpleSelect
+            label="Filtrer par expédition"
+            value={shipment}
+            onChange={setShipment}
+            options={SHIPMENT_FILTERS}
+            className="h-11 w-full md:w-64"
+          />
         </div>
 
         {orders.isPending && <LoadingRows />}
@@ -496,6 +524,7 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                       <span className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
                         <LinkBadge order={order} />
                         <HoldBadge order={order} />
+                        <ShipmentBadge status={order.shipmentStatus} />
                         <OrderStatusBadge status={order.status} />
                       </span>
                     </span>
@@ -543,6 +572,7 @@ export function OrdersView({ initialQuery = "" }: { initialQuery?: string }) {
                       <TableCell>
                         <span className="flex items-center gap-1.5">
                           <OrderStatusBadge status={order.status} />
+                          <ShipmentBadge status={order.shipmentStatus} />
                           <LinkBadge order={order} />
                           <HoldBadge order={order} />
                         </span>

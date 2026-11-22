@@ -1,17 +1,6 @@
 import { z } from "zod"
-import { currencySchema } from "./schemas"
+import { currencySchema, shipmentStatusSchema } from "./schemas"
 
-export const shipmentStatusSchema = z.enum([
-  "created",
-  "picked_up",
-  "in_transit",
-  "out_for_delivery",
-  "delivered",
-  "exception",
-  "returned",
-  "on_hold",
-  "cancelled",
-])
 export type ShipmentStatus = z.infer<typeof shipmentStatusSchema>
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
