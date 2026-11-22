@@ -20,12 +20,6 @@
     },
     {
       "action": "goto",
-      "value": "/sitemap.xml",
-      "caption_fr": "Le plan du site liste les pièces et les langues.",
-      "holdMs": 5500
-    },
-    {
-      "action": "goto",
       "value": "/robots.txt",
       "caption_fr": "Hors production, les robots sont tenus à l'écart.",
       "holdMs": 3500
