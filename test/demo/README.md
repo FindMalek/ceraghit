@@ -23,6 +23,8 @@ captions into the picture (needs ffmpeg with libass), `--device=desktop|mobile`.
 `lib/guard.ts` refuses to run unless `APP_ENV=local`, the database host is `localhost`, `MAIL_REDIRECT_TO` is set and
 the api's `/health` says the payment gateway is `demo:`. Fix your `.env`, never bypass it.
 
+A hung recording fails instead of waiting: page actions time out after 10 s, navigations after 15 s, a video after 180 s (the error names the step), and a finished video longer than 120 s, or more than twice its steps, fails the run. The video ends about a second after the last narration. Journeys that read the mail catcher (23, 24) use `{{MAILPIT_URL}}`: set `MAILPIT_URL` to your stack's Mailpit UI, for example `http://localhost:8061`.
+
 ## Recording backend (spike)
 
 Compared on the login page, 20 s, desktop and mobile:

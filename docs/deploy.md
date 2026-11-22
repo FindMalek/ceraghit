@@ -60,7 +60,11 @@ Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Va
 
 `.github/workflows/deploy.yml`, in the `production` GitHub environment:
 
-1. `migrate`: applies Drizzle migrations to Neon and creates/updates the owner login (`admin-cli.ts`)
+1. `migrate`: applies Drizzle migrations to Neon and creates the owner login if it does not exist (`admin-cli.ts`). An
+   existing login keeps its password: the owner changes it in the dashboard (Profil, "Changer mon mot de passe"), and a
+   deploy must not undo that. To make the `ADMIN_PASSWORD` secret win again (a lost password), set the repository
+   variable `ADMIN_PASSWORD_ROTATE=1` for one deploy, then remove it; there is no email reset yet, so this is the recovery path.
+   Previews and staging always rotate (`ADMIN_PASSWORD_ROTATE=true` in `scripts/deploy/dokploy.mjs`): their secret stays the source of truth.
 2. `deploy`: `vercel pull`, `vercel build --prod` and `vercel deploy --prebuilt --prod` for `apps/api`, `apps/web`, `apps/dashboard` (Vercel's Git
    integration is **disconnected**, so Vercel posts no preview comments; deploys come only from this workflow)
 3. `smoke`: `/health` must report `env:production` (and `konnect:live` if `onlinePayments` is true), storefront and dashboard must answer
@@ -140,6 +144,9 @@ scheduler can change without touching the api.
 
 The schedule still calls `cleanup-uploads` and not `media-cleanup`, because the alias is what also sweeps `rate_limits`
 and the mail log; moving the daily call to `media-cleanup` is a separate change.
+
+Trigger.dev is the only scheduler. The GitHub cron `cleanup-uploads.yml` was removed (#302): running both was harmless
+(idempotent) but wasteful. Confirm the last run under Réglages.
 
 Every job whose handler is registered in `apps/api/src/cron.ts` has a task in `apps/jobs/src/schedules.ts`;
 `media-cleanup` has a handler but no task yet (see above). `track-shipments` does nothing until shipping is switched to
@@ -288,3 +295,17 @@ days (bodies hold customer details).
   `BACKUP_S3_SECRET_ACCESS_KEY`, and the source `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`.
   Variables: `BACKUP_AGE_RECIPIENT`, optional `BACKUP_S3_BUCKET` (default `ceraghit-backup`), `PRODUCTION_API_HOST`,
   `PRODUCTION_WEB_HOST`, `PRODUCTION_DASHBOARD_HOST`.
+
+### backup setup, what the owner adds
+
+A failed scheduled backup opens (or comments on) one issue titled `backup failed`; the first step of the run lists any
+missing setting by name and fails before dumping anything. Add these in GitHub, Settings, Environments, `production`
+(names only, values never go in the repo or an issue):
+
+- Secrets: `DATABASE_URL`, `BACKUP_S3_ENDPOINT`, `BACKUP_S3_ACCESS_KEY_ID`, `BACKUP_S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`,
+  `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+- Variable: `BACKUP_AGE_RECIPIENT`, the age **public** key (`age1...`, made with `age-keygen`; keep the private key offline).
+  Optional `BACKUP_S3_BUCKET` (default `ceraghit-backup`, a bucket separate from `ceraghit-prod`).
+
+Then run the workflow once with "Run workflow" and check that `db/<date>.dump.age` exists in the backup bucket. Manual
+runs do not open the issue, only scheduled ones.

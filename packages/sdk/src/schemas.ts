@@ -129,6 +129,17 @@ export const requestStatusSchema = z.enum(["new", "contacted", "done", "declined
 
 export const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) })
 
+/** Same ceiling as the login field, so a new password can always be typed back in. */
+export const PASSWORD_MIN_LENGTH = 12
+export const PASSWORD_MAX_LENGTH = 200
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+    newPassword: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, { path: ["newPassword"], message: "Same password." })
+
 /** Both prices live on the product, so every price is a pair. */
 export const pricesSchema = z.object({ TND: z.number().int().nonnegative(), EUR: z.number().int().nonnegative() })
 

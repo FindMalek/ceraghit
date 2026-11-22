@@ -11,8 +11,9 @@ import { buildPlan, formatPlan, ledgerPath, narrationFor, readLedger, ttsCacheDi
 import { installOverlay } from "./lib/overlay"
 import { createPacer, DEFAULT_HOLD_MS, STILL_MS, sleep } from "./lib/pacing"
 import { type AudioClip, frameSize, mux, startRecording } from "./lib/recorder"
+import { applyTimeouts, durationProblem, stepHoldMs, tailWaitMs, VIDEO_DEADLINE_MS, withDeadline } from "./lib/safety"
 import { fileBase, parseVideo, stepsFor, type Video } from "./lib/steps"
-import { planIsCached } from "./lib/tts"
+import { planIsCached, probeDuration } from "./lib/tts"
 import { prepareVoice } from "./lib/voice"
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -99,8 +100,11 @@ async function main() {
       const raw = join(out, `${base}.raw.mp4`)
       const finalFile = join(out, "videos", `${base}.mp4`)
       const written: string[] = []
-      try {
+      let current = "opening the page"
+      let expectedMs = 3 * STILL_MS
+      const record = async (): Promise<void> => {
         const page = await context.newPage()
+        applyTimeouts(page)
         if (video.start.loggedIn) {
           await page.goto(`${urls.dashboard}/login`)
           await page.getByLabel("Email").fill(env.ADMIN_EMAIL ?? "")
@@ -124,19 +128,34 @@ async function main() {
         const captions: Caption[] = []
         const audio: AudioClip[] = []
         await sleep(STILL_MS)
+        let lastAudioEndMs = 0
         for (const [i, step] of steps.entries()) {
           const startMs = recording.now()
+          current = `step ${i + 1}/${steps.length} (${step.action}: ${step.caption_fr})`
           console.info(`${base} ${i + 1}/${steps.length} ${step.action}`)
           const line = lines[i]
           const narration = line ? clips.get(line) : undefined
-          if (narration) audio.push({ file: narration.file, atMs: startMs })
+          if (narration) {
+            audio.push({ file: narration.file, atMs: startMs })
+            lastAudioEndMs = startMs + narration.durationMs
+          }
           await pacer.run(step, substitute(step.value))
           const spoken = narration ? narration.durationMs + 250 : 0
-          await sleep(Math.max(step.holdMs ?? DEFAULT_HOLD_MS, spoken - (recording.now() - startMs)))
+          const spokenRemainingMs = spoken - (recording.now() - startMs)
+          expectedMs += Math.max(step.holdMs ?? DEFAULT_HOLD_MS, spoken)
+          await sleep(
+            stepHoldMs({
+              holdMs: step.holdMs,
+              defaultHoldMs: DEFAULT_HOLD_MS,
+              spokenRemainingMs,
+              last: i === steps.length - 1,
+            }),
+          )
           await pacer.zoomOut()
           captions.push({ startMs, endMs: recording.now(), text: step.caption_fr })
         }
-        await sleep(STILL_MS)
+        current = "closing the video"
+        await sleep(tailWaitMs(recording.now(), lastAudioEndMs))
         await recording.stop()
         await context.close()
 
@@ -153,11 +172,17 @@ async function main() {
         }
         if (audio.length > 0 || flag("burn")) mux(raw, finalFile, audio, flag("burn") ? srt : undefined)
         else renameSync(raw, finalFile)
+        const problem = durationProblem(probeDuration(finalFile), expectedMs)
+        if (problem) throw new Error(`${base}: ${problem}`)
+      }
+      try {
+        await withDeadline(record(), VIDEO_DEADLINE_MS, () => `${base} stuck at ${current}`)
       } catch (error) {
         for (const f of [...written, finalFile]) rmSync(f, { force: true })
         throw error
       } finally {
         rmSync(raw, { force: true })
+        await context.unrouteAll({ behavior: "ignoreErrors" }).catch(() => {})
         await context.close().catch(() => {})
       }
       produced.push(finalFile)

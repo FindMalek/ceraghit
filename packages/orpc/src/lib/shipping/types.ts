@@ -131,4 +131,6 @@ export interface ShippingProvider {
   fetchCities(country: string): Promise<string[]>
   /** Addresses the carrier suggests instead of the one given (empty when it is fine as typed). */
   validateAddress(address: ShipAddress): Promise<{ suggestions: ShipAddress[] }>
+  /** Whether the carrier delivers to the address with the national product; null when it cannot say. */
+  isAddressServiced(address: ShipAddress): Promise<boolean | null>
 }

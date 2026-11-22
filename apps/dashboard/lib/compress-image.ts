@@ -4,6 +4,8 @@ import { fitWithin, MEDIA_MAX_SIDE, MEDIA_MIN_SIDE } from "@workspace/sdk"
 export const MAX_SIDE = MEDIA_MAX_SIDE
 const QUALITY = 0.86
 
+export const UNSUPPORTED_FORMAT = "Ce format n'est pas pris en charge. Essayez une photo JPG ou PNG."
+
 /** Media library only (the legacy upload accepts small icons): refuses a picture under `MEDIA_MIN_SIDE`. */
 export function assertMediaSize(width: number, height: number): void {
   if (Math.min(width, height) < MEDIA_MIN_SIDE) {
@@ -11,17 +13,25 @@ export function assertMediaSize(width: number, height: number): void {
   }
 }
 
+/** The browser's own WebP encoder when it has one, the wasm one (Safari) otherwise, loaded only on that path. */
+async function encodeWebp(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): Promise<Blob | null> {
+  const native = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", QUALITY))
+  if (native?.type === "image/webp") return native
+  const { default: encode } = await import("@jsquash/webp/encode")
+  const data = await encode(context.getImageData(0, 0, canvas.width, canvas.height), { quality: QUALITY * 100 })
+  return new Blob([data], { type: "image/webp" })
+}
+
 /**
  * Re-encodes a photo as WebP in the browser before it is uploaded: at most 2400px on the long side, quality 0.86, which
- * is visually the same and typically 5 to 10 times smaller. Keeps the original when it is already smaller or the browser
- * cannot encode WebP (Safari), until the wasm fallback ships.
+ * is visually the same and typically 5 to 10 times smaller. Keeps the original when it is already smaller.
  */
 export async function compressImage(file: File): Promise<File> {
   let bitmap: ImageBitmap
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: "from-image" })
   } catch {
-    return file
+    throw new Error(UNSUPPORTED_FORMAT)
   }
   try {
     const source = { width: bitmap.width, height: bitmap.height }
@@ -42,7 +52,7 @@ export async function compressImage(file: File): Promise<File> {
     context.imageSmoothingQuality = "high"
     context.drawImage(bitmap, 0, 0, width, height)
     bitmap.close()
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", QUALITY))
+    const blob = await encodeWebp(canvas, context)
     if (blob?.type !== "image/webp") return file
     const unchanged = width === source.width && height === source.height
     if (unchanged && file.type === "image/webp" && blob.size >= file.size) return file
