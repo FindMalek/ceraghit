@@ -268,6 +268,8 @@ function previewApiEnv() {
     APP_ENV: "preview",
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    // Demo environments: the secret stays the source of truth. Production never sets this, see docs/deploy.md.
+    ADMIN_PASSWORD_ROTATE: "true",
     MAIL_REDIRECT_TO: process.env.MAIL_REDIRECT_TO,
     KONNECT_API_KEY: process.env.KONNECT_TEST_API_KEY,
     KONNECT_WALLET_ID: process.env.KONNECT_TEST_WALLET_ID,
