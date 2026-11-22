@@ -109,6 +109,33 @@ test("a big picture is shrunk to WebP in the browser, a copy is not stored twice
   })
 })
 
+test("a browser that cannot encode WebP (Safari) still uploads a WebP through the wasm encoder", {
+  tag: ["@fr", "@desktop"],
+}, async ({ page, step }) => {
+  const name = `safari-${Date.now().toString(36)}.png`
+  await loginAsOwnerAndWait(page)
+  await page.goto(`${E2E.dashboardUrl}/media`)
+
+  await step("the canvas answers a PNG when asked for WebP, as Safari does", async () => {
+    const png = await drawn(page, "image/png", 800, 600)
+    await page.evaluate(() => {
+      const toBlob = HTMLCanvasElement.prototype.toBlob
+      HTMLCanvasElement.prototype.toBlob = function (cb, type, quality) {
+        return toBlob.call(this, cb, type === "image/webp" ? "image/png" : type, quality)
+      }
+    })
+    await page.locator('input[type="file"]').first().setInputFiles({ name, mimeType: "image/png", buffer: png })
+    await expect
+      .poll(async () => (await mediaRows(name.replace(".png", "%"))).filter((r) => r.confirmed).length)
+      .toBe(1)
+  })
+
+  await step("what was stored is a real WebP", async () => {
+    const [row] = await mediaRows(name.replace(".png", "%"))
+    expect(row).toMatchObject({ mime: "image/webp", confirmed: true, width: 800, height: 600 })
+  })
+})
+
 test("the api refuses a file that is not the WebP it was signed as and leaves nothing behind", {
   tag: ["@fr", "@desktop"],
 }, async ({ page, step }) => {

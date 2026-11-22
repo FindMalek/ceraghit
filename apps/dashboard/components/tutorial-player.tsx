@@ -1,6 +1,6 @@
 "use client"
 
-import { HourglassMediumIcon, XIcon } from "@phosphor-icons/react"
+import { HourglassMediumIcon, WarningIcon, XIcon } from "@phosphor-icons/react"
 import {
   formatTutorialLength,
   playableSources,
@@ -19,7 +19,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@workspace/ui/components/dialog"
 import { useIsMobile } from "@workspace/ui/hooks/use-mobile"
 import { cn } from "@workspace/ui/lib/utils"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 export const DEVICE_LABELS: Record<TutorialDevice, string> = { desktop: "Ordinateur", mobile: "Téléphone" }
 
@@ -41,13 +41,22 @@ function Player({
 }) {
   const isMobile = useIsMobile()
   const [chosen, setChosen] = useState<TutorialDevice | null>(null)
+  const [broken, setBroken] = useState<TutorialDevice[]>([])
   const sources = playableSources(tutorial, files, link)
   const available = TUTORIAL_DEVICES.filter((d) => sources[d])
   const preferred: TutorialDevice = chosen ?? (isMobile ? "mobile" : "desktop")
   const device = available.includes(preferred) ? preferred : (available[0] ?? null)
   const source = device ? (sources[device] ?? null) : null
   const keys = device ? tutorialKeys(tutorial.id, device) : null
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const unreadable = device !== null && broken.includes(device)
   const related = relatedTutorials(tutorial, TUTORIALS)
+
+  // The file can fail before React attaches onError (server-rendered player), so look once after mount too.
+  useEffect(() => {
+    const el = videoRef.current
+    if (device && el?.error) setBroken((list) => (list.includes(device) ? list : [...list, device]))
+  }, [device])
 
   return (
     <>
@@ -74,10 +83,11 @@ function Player({
         </div>
       )}
 
-      {source?.kind === "file" && device && keys && (
+      {source?.kind === "file" && device && keys && !unreadable && (
         // biome-ignore lint/a11y/useMediaCaption: the French captions are the track below, when the file has them
         <video
           key={`${tutorial.id}-${device}`}
+          ref={videoRef}
           controls
           playsInline
           crossOrigin="anonymous"
@@ -85,6 +95,7 @@ function Player({
           poster={files?.poster ? fileUrl(prefix, keys.poster) : undefined}
           src={fileUrl(prefix, keys.video)}
           aria-label={tutorial.title}
+          onError={() => setBroken((list) => (list.includes(device) ? list : [...list, device]))}
           className={cn(
             "mx-auto block bg-black",
             device === "mobile" ? "aspect-[9/19.5] max-h-[60svh] w-auto max-w-full" : "aspect-video w-full",
@@ -108,6 +119,20 @@ function Player({
               device === "mobile" ? "aspect-[9/19.5] h-auto max-h-[60svh] w-auto max-w-full" : "aspect-video w-full",
             )}
           />
+        </div>
+      )}
+      {unreadable && (
+        <div
+          role="alert"
+          className="flex aspect-video flex-col items-center justify-center gap-2 bg-muted/60 px-6 text-center text-muted-foreground"
+        >
+          <WarningIcon className="size-8" />
+          <p className="font-medium text-foreground">Cette vidéo ne se charge pas</p>
+          <p className="text-sm">
+            {available.length > 1
+              ? "Essayez l'autre version ci-dessus, ou revenez dans un instant."
+              : "Revenez dans un instant."}
+          </p>
         </div>
       )}
       {!source && (

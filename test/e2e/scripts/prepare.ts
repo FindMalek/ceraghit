@@ -49,7 +49,7 @@ const garage = (...args: string[]) => compose("exec", "-T", "garage", "/garage",
 async function ensureAppPortsFree(): Promise<void> {
   if (process.env.E2E_REUSE === "1") return
   const taken: number[] = []
-  for (const port of [E2E.ports.web, E2E.ports.dashboard, E2E.ports.api]) {
+  for (const port of [E2E.ports.web, E2E.ports.dashboard, E2E.ports.api, E2E.ports.stub]) {
     if (await portInUse(port)) taken.push(port)
   }
   if (taken.length > 0) {
