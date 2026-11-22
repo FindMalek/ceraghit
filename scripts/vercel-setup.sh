@@ -62,6 +62,7 @@ push api DB_POOL_MAX 5
 push api OPENOBSERVE_ORG "$(val OPENOBSERVE_ORG || echo default)"
 push api OPENOBSERVE_STREAM "$(val OPENOBSERVE_STREAM || echo ceraghit)"
 push api LOG_LEVEL info
+push api TRUSTED_PROXY_HOPS 1
 for n in DATABASE_URL WEB_URL API_PUBLIC_URL CRON_SECRET PROXY_SECRET RESEND_API_KEY EMAIL_FROM S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID \
   S3_SECRET_ACCESS_KEY S3_PUBLIC_URL OPENOBSERVE_URL OPENOBSERVE_USER OPENOBSERVE_PASSWORD; do push api "$n" "$(val "$n")"; done
 # Online payment is off, so Konnect is not needed. To turn it on later: ONLINE_PAYMENTS=true, KONNECT_MODE=live and the two keys.

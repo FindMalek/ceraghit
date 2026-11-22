@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server"
-import { orders } from "@workspace/db"
+import { orders, shipments } from "@workspace/db"
 import {
   addressCheckSchema,
   adminShipmentSchema,
@@ -31,12 +31,15 @@ import {
 } from "../../lib/shipping/resolve"
 import { getShippingSettings, saveShippingSettings } from "../../lib/shipping/settings"
 import {
+  commercialInvoiceDownloadUrl,
   createShipment,
   getOrderShipment,
   labelDownloadUrl,
   prepareShipment,
+  retryCommercialInvoice,
   retryLabel,
 } from "../../lib/shipping/shipments"
+import { trackShipments } from "../../lib/shipping/tracking"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -98,18 +101,38 @@ export const shippingRouter = {
       summary: "Ask Aramex whether an order's address is recognised",
       tags: TAG,
     })
-    .input(z.object({ orderId: z.string() }))
+    .input(
+      z.object({
+        orderId: z.string(),
+        /** The address as edited in the shipment dialog, when it differs from the order's. */
+        address: z
+          .object({
+            line1: z.string().trim().min(3).max(100),
+            city: z.string().trim().min(2).max(60),
+            postalCode: z.string().trim().max(10).optional(),
+          })
+          .optional(),
+      }),
+    )
     .output(addressCheckSchema)
     .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "addressCheck",
+        "too_many_requests",
+        "Trop d'essais, réessayez dans quelques minutes.",
+      )
       const [order] = await context.db.select().from(orders).where(eq(orders.id, input.orderId)).limit(1)
       if (!order) throw new ORPCError("NOT_FOUND", { message: "Commande introuvable." })
       const result = await checkAddress(context, {
         name: order.customerName,
         phone: order.phone,
-        line1: order.address,
-        city: order.city,
+        line1: input.address?.line1 ?? order.address,
+        city: input.address?.city ?? order.city,
         country: order.country,
-        ...(order.postalCode ? { postalCode: order.postalCode } : {}),
+        ...((input.address ? input.address.postalCode : order.postalCode)
+          ? { postalCode: (input.address ? input.address.postalCode : order.postalCode) as string }
+          : {}),
       })
       return {
         ok: result.ok,
@@ -204,6 +227,40 @@ export const shippingRouter = {
     .output(z.object({ url: z.string() }))
     .handler(async ({ context, input }) => ({ url: await labelDownloadUrl(context, input.id, input.inline) })),
 
+  refresh: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/refresh",
+      summary: "Ask Aramex for the latest tracking of one shipment now",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(adminShipmentSchema)
+    .handler(async ({ context, input }) => {
+      await enforceLimit(
+        context,
+        "shipmentRefresh",
+        "too_many_requests",
+        "Trop d'actualisations, réessayez dans quelques minutes.",
+      )
+      const [row] = await context.db
+        .select({ orderId: shipments.orderId })
+        .from(shipments)
+        .where(eq(shipments.id, input.id))
+        .limit(1)
+      if (!row) throw new ORPCError("NOT_FOUND", { message: "Expédition introuvable." })
+      try {
+        const report = await trackShipments(context, undefined, { shipmentId: input.id })
+        if ("skipped" in report) throw new ORPCError("PRECONDITION_FAILED", { message: ARAMEX_MISSING })
+      } catch (error) {
+        if (error instanceof ORPCError) throw error
+        throw new ORPCError("BAD_GATEWAY", { message: "Aramex ne répond pas, réessayez dans un instant." })
+      }
+      const shipment = await getOrderShipment(context.db, row.orderId)
+      if (!shipment) throw new ORPCError("NOT_FOUND", { message: "Expédition introuvable." })
+      return shipment
+    }),
+
   openShipments: adminProcedure
     .route({
       method: "GET",
@@ -279,6 +336,31 @@ export const shippingRouter = {
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
       await retryLabel(context, input.id)
+      return { ok: true as const }
+    }),
+
+  commercialInvoiceUrl: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/commercial-invoice-url",
+      summary: "A 5 minute signed link to the commercial invoice PDF",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(z.object({ url: z.string() }))
+    .handler(async ({ context, input }) => ({ url: await commercialInvoiceDownloadUrl(context, input.id) })),
+
+  retryCommercialInvoice: adminProcedure
+    .route({
+      method: "POST",
+      path: "/admin/shipments/{id}/commercial-invoice",
+      summary: "Fetch and store the commercial invoice again",
+      tags: TAG,
+    })
+    .input(z.object({ id: z.string() }))
+    .output(z.object({ ok: z.literal(true) }))
+    .handler(async ({ context, input }) => {
+      await retryCommercialInvoice(context, input.id)
       return { ok: true as const }
     }),
 }

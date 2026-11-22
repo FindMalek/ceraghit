@@ -18,11 +18,22 @@ export const CLIENT_IP_HEADER = `${TRUSTED_PREFIX}client-ip`
 export const PROXY_SECRET_HEADER = `${TRUSTED_PREFIX}proxy-secret`
 
 /**
- * The visitor's address as the platform (Vercel, Traefik) saw it, before it becomes the web function's own.
- * x-forwarded-for first: x-real-ip is only a fallback, a client can send it and the platform does not always overwrite it.
+ * The address the `hops`-th trusted proxy from the right of x-forwarded-for saw. Each proxy appends the peer it got the
+ * request from, so only the right end is written by our own edge: the left entries are whatever the client sent.
  */
-function visitorAddress(headers: Headers): string | undefined {
-  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip")?.trim() || undefined
+export function forwardedAddress(headers: Headers, hops: number): string | undefined {
+  if (!Number.isInteger(hops) || hops < 1) return undefined
+  const entries = (headers.get("x-forwarded-for") ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+  return entries.length >= hops ? entries[entries.length - hops] : undefined
+}
+
+/** Trusted proxies in front of this proxy (Vercel overwrites the header: 1; Traefik appends: 1, behind Cloudflare 2). */
+function trustedHops(): number {
+  const hops = Number(process.env.TRUSTED_PROXY_HOPS ?? 1)
+  return Number.isInteger(hops) && hops >= 1 ? hops : 1
 }
 
 export function createProxy(allowed: RegExp[]) {
@@ -51,7 +62,7 @@ export async function proxyToApi(request: Request, allowed: RegExp[]): Promise<R
   propagation.inject(context.active(), carrier)
   if (carrier.traceparent) headers.set("traceparent", carrier.traceparent)
   const secret = process.env.PROXY_SECRET
-  const address = visitorAddress(request.headers)
+  const address = forwardedAddress(request.headers, trustedHops())
   if (secret && address) {
     headers.set(CLIENT_IP_HEADER, address)
     headers.set(PROXY_SECRET_HEADER, secret)

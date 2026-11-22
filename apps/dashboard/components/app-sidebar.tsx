@@ -18,7 +18,8 @@ import {
   TruckIcon,
   WarningIcon,
 } from "@phosphor-icons/react"
-import { browserClient } from "@workspace/orpc/react"
+import { useQuery } from "@tanstack/react-query"
+import { browserClient, orpc } from "@workspace/orpc/react"
 import { Logo } from "@workspace/ui/brand/logo"
 import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import {
@@ -39,6 +40,7 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useFailedMails } from "@/components/mail-banner"
+import { sidebarLogoSrc } from "@/lib/site-slot"
 import { useSetupStatus } from "@/lib/use-setup-status"
 
 const NAV = [
@@ -65,6 +67,8 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar()
   const remaining = useSetupStatus().data?.remaining ?? 0
+  const logoEntry = useQuery(orpc.admin.site.images.queryOptions()).data?.logo[0]
+  const logo = sidebarLogoSrc(logoEntry?.image, webUrl)
   const failedMails = useFailedMails()
   const nav = failedMails > 0 ? [...NAV.slice(0, 5), EMAILS_NAV, ...NAV.slice(5)] : NAV
   const signOut = async () => {
@@ -77,7 +81,7 @@ export function AppSidebar({ admin, webUrl }: { admin: { name: string; email: st
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/" />}>
-              <Logo />
+              <Logo src={logo} />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

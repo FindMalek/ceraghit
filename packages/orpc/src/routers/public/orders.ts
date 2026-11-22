@@ -27,7 +27,7 @@ import { createOrder, paymentReferences, settleOrder } from "../../lib/orders"
 import { DemoProvider, resolvePayments } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings } from "../../lib/settings"
-import { toShipping } from "../../lib/shipping-events"
+import { parcelOf, toShipping } from "../../lib/shipping-events"
 import { getShopProfile, studioInbox } from "../../lib/shop-profile"
 import { TOO_LARGE } from "../../lib/storage"
 import { reserveUpload } from "../../lib/uploads"
@@ -101,7 +101,7 @@ export const ordersRouter = {
         items: order.items.map(({ ref, title, unitMinor, quantity }) => ({ ref, title, unitMinor, quantity })),
         createdAt: order.createdAt.toISOString(),
         paidAt: order.paidAt?.toISOString() ?? null,
-        shipping: status === "fulfilled" ? toShipping(order) : null,
+        shipping: status === "fulfilled" ? toShipping(order, await parcelOf(context, order.id)) : null,
       }
     }),
 

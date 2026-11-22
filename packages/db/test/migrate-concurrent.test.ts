@@ -2,6 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test"
 import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
+import { ensureDatabase } from "@workspace/db/test-database"
 import { sql } from "drizzle-orm"
 import postgres from "postgres"
 
@@ -21,7 +22,7 @@ describe.skipIf(!url)("concurrent migrations", () => {
   })
 
   test("two migrators on one empty database both succeed", async () => {
-    await admin.unsafe(`create database ${scratch}`)
+    await ensureDatabase(target.toString())
     const results = await Promise.allSettled(dbs.map((d) => runMigrations(d)))
     expect(results.map((r) => r.status)).toEqual(["fulfilled", "fulfilled"])
     const [row] = await dbs[0]!.execute(sql`select to_regtype('public.currency') as t`)

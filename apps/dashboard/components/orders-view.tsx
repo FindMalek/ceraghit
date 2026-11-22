@@ -180,7 +180,6 @@ function History({ orderId }: { orderId: string }) {
   )
 }
 
-const INTERNATIONAL_LATER = "Les envois internationaux arrivent avec la déclaration en douane."
 const canCreateShipment = (o: { status: string; paymentMethod: string }) =>
   o.status === "paid" || (o.status === "pending_payment" && o.paymentMethod === "cod")
 
@@ -380,12 +379,7 @@ function OrderSheet({ order, onClose }: { order: Order | null; onClose: () => vo
                   <DownloadInvoiceButton orderId={order.id} />
                 )}
                 {aramexOn && canCreateShipment(order) && (
-                  <Button
-                    className="h-11"
-                    disabled={order.country !== "TN"}
-                    title={order.country !== "TN" ? INTERNATIONAL_LATER : undefined}
-                    onClick={() => setCreateShipment(true)}
-                  >
+                  <Button className="h-11" onClick={() => setCreateShipment(true)}>
                     Créer l'expédition Aramex
                   </Button>
                 )}

@@ -3,7 +3,7 @@ import { loginSchema } from "@workspace/sdk"
 import { z } from "zod"
 import { ADMIN_COOKIE } from "../../lib/auth"
 import { readCookie, serializeCookie } from "../../lib/cookies"
-import { clientAddress } from "../../lib/rate-limit"
+import { addressOf } from "../../lib/rate-limit"
 import { adminProcedure, publicProcedure } from "../../procedures"
 
 const adminSchema = z.object({ id: z.string(), email: z.string(), name: z.string(), nameConfirmed: z.boolean() })
@@ -14,7 +14,7 @@ export const authRouter = {
     .input(loginSchema)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      const address = clientAddress(context.headers, context.config.proxySecret)
+      const address = addressOf(context)
       const lock = await context.auth.locked(address, input.email)
       if (lock) {
         throw new ORPCError("TOO_MANY_REQUESTS", {

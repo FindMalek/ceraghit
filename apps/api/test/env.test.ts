@@ -95,3 +95,10 @@ test("ARAMEX_FAKE is refused in production and allowed elsewhere", () => {
   expect(() => loadEnv({ ...production, ARAMEX_FAKE: "true" })).toThrow(/ARAMEX_FAKE/)
   expect(loadEnv({ ...base, ARAMEX_FAKE: "true" }).ARAMEX_FAKE).toBe(true)
 })
+
+test("TRUSTED_PROXY_HOPS defaults to trusting no forwarded header and is bounded", () => {
+  expect(loadEnv(production).TRUSTED_PROXY_HOPS).toBe(0)
+  expect(loadEnv({ ...production, TRUSTED_PROXY_HOPS: "1" }).TRUSTED_PROXY_HOPS).toBe(1)
+  expect(() => loadEnv({ ...production, TRUSTED_PROXY_HOPS: "-1" })).toThrow(/TRUSTED_PROXY_HOPS/)
+  expect(() => loadEnv({ ...production, TRUSTED_PROXY_HOPS: "9" })).toThrow(/TRUSTED_PROXY_HOPS/)
+})

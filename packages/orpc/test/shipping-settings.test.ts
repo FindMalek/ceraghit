@@ -64,6 +64,7 @@ describe.skipIf(!url)("shipping settings", () => {
         createContext(services, new Headers({ cookie: `ceraghit_admin=${token}`, "x-csrf-token": "orpc" })),
     })
   const owner = () => as(base)
+  const aramexRows = () => db.select().from(integrationCredentials).where(eq(integrationCredentials.provider, "aramex"))
   const reset = async () => {
     urls.length = 0
     answers = []
@@ -90,7 +91,7 @@ describe.skipIf(!url)("shipping settings", () => {
         aramex: { config: { ...config, mode: "live", productTypesConfirmed: true } },
       }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" })
-    expect(await db.select().from(integrationCredentials)).toHaveLength(0)
+    expect(await aramexRows()).toHaveLength(0)
   })
 
   test("live in production needs confirmed product types, then uses the live host", async () => {
@@ -164,7 +165,7 @@ describe.skipIf(!url)("shipping settings", () => {
     expect(ok.ok).toBe(true)
 
     expect(JSON.stringify([failed, rate, ok])).not.toMatch(/SENTINEL|Portal Service/)
-    expect(await db.select().from(integrationCredentials)).toHaveLength(0)
+    expect(await aramexRows()).toHaveLength(0)
   })
 
   test("testConnection is rate limited", async () => {
@@ -184,7 +185,7 @@ describe.skipIf(!url)("shipping settings", () => {
     const view = await owner().shipping.getSettings({})
     expect(JSON.stringify(view)).not.toContain("SENTINEL")
     expect(view.aramex.secrets.password?.configured).toBe(true)
-    const [row] = await db.select().from(integrationCredentials)
+    const [row] = await aramexRows()
     expect(row?.updatedBy).not.toBeNull()
   })
 
@@ -212,7 +213,7 @@ describe.skipIf(!url)("shipping settings", () => {
     await reset()
     const view = await owner().shipping.saveSettings({ mode: { provider: "manual", quoteFromProvider: true } })
     expect(view.mode).toEqual({ provider: "manual", quoteFromProvider: true })
-    expect(await db.select().from(integrationCredentials)).toHaveLength(0)
+    expect(await aramexRows()).toHaveLength(0)
   })
 
   test("a refused activation leaves the credentials unsaved", async () => {
@@ -223,9 +224,7 @@ describe.skipIf(!url)("shipping settings", () => {
         aramex: { config, secrets: { password: PASSWORD } },
       }),
     ).rejects.toMatchObject({ code: "PRECONDITION_FAILED" })
-    expect(
-      await db.select().from(integrationCredentials).where(eq(integrationCredentials.provider, "aramex")),
-    ).toHaveLength(0)
+    expect(await aramexRows()).toHaveLength(0)
   })
 
   test("aramex selected without credentials degrades to manual", async () => {
