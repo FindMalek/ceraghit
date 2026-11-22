@@ -59,6 +59,8 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          # Unset: an existing owner keeps the password they chose. Set the variable to 1 for one deploy to reset it.
+          ADMIN_PASSWORD_ROTATE: ${{ vars.ADMIN_PASSWORD_ROTATE }}
         run: bun packages/db/src/admin-cli.ts
 
   deploy:

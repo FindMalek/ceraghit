@@ -149,6 +149,7 @@ export function createPacer(options: PacerOptions): Pacer {
         case "clear-cookies":
           await page.context().clearCookies()
           break
+<<<<<<< ours
         case "cookie": {
           const [name = "", ...rest] = (value ?? "").split("=")
           if (name !== "ceraghit_currency") throw new Error(`cookie steps only set ceraghit_currency, got "${name}"`)
@@ -174,6 +175,8 @@ export function createPacer(options: PacerOptions): Pacer {
           await cdp.detach()
           break
         }
+=======
+>>>>>>> theirs
         case "back":
           await page.goBack()
           break

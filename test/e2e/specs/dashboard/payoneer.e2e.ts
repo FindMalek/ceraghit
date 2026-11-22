@@ -1,9 +1,10 @@
+import { formatMoney, INVOICE_COPY } from "@workspace/sdk"
 import { E2E } from "../../env"
 import { expect, loginAsOwnerAndWait, placeOrder, test } from "../../fixtures"
 import { completeSetup, openDb } from "../../helpers/db"
 import { t } from "../../helpers/messages"
 import { pieceFor } from "../../support/catalogue"
-import { auditRows, orderRow, stockOf } from "../../support/db"
+import { auditRows, orderId, orderRow, stockOf } from "../../support/db"
 
 test.beforeAll(async () => {
   const db = openDb()
@@ -77,6 +78,16 @@ test(
         reference: "PAYONEER-REQ-1",
       })
       expect(audit?.adminId).not.toBeNull()
+    })
+
+    await step("its invoice names Payoneer and totals in euros only", async () => {
+      await page.goto(`${E2E.dashboardUrl}/invoice/${await orderId(number)}`)
+      const sheet = page.locator("article.invoice")
+      await expect(sheet).toContainText(`${INVOICE_COPY.fr.paymentMethod} : ${INVOICE_COPY.fr.payoneer}`)
+      await expect(sheet).toContainText("PAYONEER-REQ-1")
+      const total = formatMoney((await orderRow(number)).totalMinor, "EUR", "fr")
+      expect(await sheet.locator(".invoice-totals dd").last().innerText()).toBe(total)
+      await expect(sheet.locator(".invoice-totals")).not.toContainText("DT")
     })
 
     await step("the customer page no longer shows the Payoneer block", async () => {

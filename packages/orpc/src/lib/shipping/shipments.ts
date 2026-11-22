@@ -4,6 +4,7 @@ import {
   type AdminShipment,
   DEFAULT_HS_CODE,
   normalizeHsCode,
+  postcodeProblem,
   type ShipmentCustoms,
   type ShipmentDraft,
   type ShipmentDraftInput,
@@ -255,6 +256,8 @@ export async function createShipment(
     throw new ORPCError("BAD_REQUEST", { message: COD_TUNISIA_ONLY })
   }
   if (input.consignee.country !== order.country) throw new ORPCError("BAD_REQUEST", { message: COUNTRY_CHANGED })
+  const badPostcode = postcodeProblem(input.consignee.country, input.consignee.postalCode)
+  if (badPostcode) throw new ORPCError("BAD_REQUEST", { message: badPostcode })
   const customs = input.consignee.country === "TN" ? undefined : checkedCustoms(input, order.currency)
 
   const { provider, environment, config } = await aramexFor(services, CREATE_TIMEOUT_MS)

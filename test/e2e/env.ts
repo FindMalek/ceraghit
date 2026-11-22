@@ -10,6 +10,7 @@ const dbPort = num("E2E_DB_PORT", 5436)
 const s3Port = num("E2E_S3_PORT", 9100)
 const mailUiPort = num("E2E_MAILPIT_UI_PORT", 8025)
 const mailSmtpPort = num("E2E_MAILPIT_SMTP_PORT", 1025)
+const stubPort = num("E2E_STUB_PORT", 9300)
 
 /** `docker compose down -v` runs on this project, so it must never be the dev project (`ceraghit`). */
 function composeProject(): string {
@@ -32,7 +33,9 @@ export const E2E = {
     s3: s3Port,
     mailUi: mailUiPort,
     mailSmtp: mailSmtpPort,
+    stub: stubPort,
   },
+  stubUrl: `http://localhost:${stubPort}`,
   databaseUrl: `postgres://ceraghit:ceraghit@localhost:${dbPort}/ceraghit_e2e`,
   webUrl: `http://localhost:${webPort}`,
   dashboardUrl: `http://localhost:${dashboardPort}`,
@@ -82,6 +85,8 @@ export function apiEnv(): Record<string, string> {
     S3_SECRET_ACCESS_KEY: E2E.s3.secretAccessKey,
     S3_PUBLIC_URL: "",
     ARAMEX_FAKE: "true",
+    KONNECT_BASE_URL: `http://localhost:${stubPort}/konnect`,
+    GROQ_BASE_URL: `http://localhost:${stubPort}/groq/openai/v1`,
   }
 }
 

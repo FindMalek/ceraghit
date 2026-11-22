@@ -37,6 +37,9 @@ export class ManualShippingProvider implements ShippingProvider {
   async validateAddress() {
     return { suggestions: [] }
   }
+  async isAddressServiced() {
+    return null
+  }
   async testConnection() {
     return { ok: true as const }
   }

@@ -159,6 +159,14 @@ pixel or advertising script (fonts are self-hosted by `next/font`). Under the eP
 Adding analytics, a pixel, an embedded video or any third-party script means adding a consent banner first (nothing may load
 before the visitor accepts), and updating the cookie section of the privacy page in fr, en and ar.
 
+## owner password
+
+The owner changes it in the dashboard (Profil, "Changer mon mot de passe"): current password required, at least 12
+characters, 5 wrong tries per 15 minutes, every other signed-in device is signed out, and the change is recorded as a
+`settings` row `admin-audit:<admin id>:<time>` (never the password). A deploy never overwrites it. If it is lost: set the
+`production` repository variable `ADMIN_PASSWORD_ROTATE` to `1`, update the `ADMIN_PASSWORD` secret, run Deploy, then
+delete the variable. Never paste the password in an issue, a PR or a log.
+
 ## retention
 
 | data | kept | then |

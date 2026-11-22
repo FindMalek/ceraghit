@@ -43,10 +43,15 @@ describe.skipIf(!url)("aramex city list and address checks", () => {
   const calls: string[] = []
   const validated: { Line1?: string; City?: string; PostCode?: string }[] = []
   let down = false
+  let serviced: boolean | null = null
   const http = (async (input: RequestInfo | URL, init?: RequestInit) => {
     calls.push(String(input))
     if (String(input).endsWith("/ValidateAddress")) validated.push(JSON.parse(String(init?.body ?? "{}")).Address)
     if (down) throw new Error("network down")
+    if (serviced !== null && String(input).endsWith("/IsAddressServiced"))
+      return new Response(
+        JSON.stringify({ Transaction: null, Notifications: [], HasErrors: false, IsServiced: serviced }),
+      )
     return fake(input, init)
   }) as typeof fetch
   let now = new Date()
@@ -217,6 +222,43 @@ describe.skipIf(!url)("aramex city list and address checks", () => {
     await db.update(orders).set({ city: "Sousse" }).where(eq(orders.id, row!.id))
     down = false
     expect(await owner().shipping.checkAddress({ orderId: row!.id })).toMatchObject({ ok: true })
+  })
+
+  test("a recognised Tunisian address Aramex does not deliver to is flagged, and a bad postcode is caught first", async () => {
+    await clear()
+    const [row] = await db
+      .insert(orders)
+      .values({
+        number: `LOC-${Date.now().toString(36)}-S`,
+        publicToken: "t",
+        status: "paid",
+        paymentMethod: "transfer",
+        currency: "TND",
+        subtotalMinor: 1000,
+        totalMinor: 1000,
+        customerName: "Locations Buyer",
+        email: "locations-serviced@example.test",
+        phone: "+21620000000",
+        country: "TN",
+        city: "Sousse",
+        address: "1 rue du test",
+        locale: "fr",
+      })
+      .returning({ id: orders.id })
+    expect(await owner().shipping.checkAddress({ orderId: row!.id })).toMatchObject({ ok: true })
+    serviced = false
+    expect(await owner().shipping.checkAddress({ orderId: row!.id })).toMatchObject({
+      ok: false,
+      message: "Aramex ne livre pas à cette adresse.",
+    })
+    serviced = null
+    calls.length = 0
+    const bad = await owner().shipping.checkAddress({
+      orderId: row!.id,
+      address: { line1: "1 rue du test", city: "Sousse", postalCode: "40" },
+    })
+    expect(bad).toMatchObject({ ok: false, message: expect.stringContaining("Code postal invalide") })
+    expect(calls).toHaveLength(0)
   })
 
   test("a demo list is not fresh once Aramex is on: it is fetched and replaces the demo list", async () => {

@@ -118,6 +118,11 @@ export async function deleteOrdersLike(prefix: string): Promise<void> {
   await sql`delete from orders where number like ${`${prefix}%`}`
 }
 
+/** Forgets the Aramex keys of the vault, so a form test starts like a fresh install. */
+export async function clearAramexCredentials(): Promise<void> {
+  await sql`delete from integration_credentials where provider = 'aramex'`
+}
+
 export async function orderId(number: string): Promise<string> {
   const [row] = await sql<{ id: string }[]>`select id from orders where number = ${number}`
   if (!row) throw new Error(`no order ${number}`)
