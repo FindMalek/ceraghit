@@ -3,7 +3,7 @@ import { createRouterClient } from "@orpc/server"
 import { createDb, orders, shipments } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { inArray, like } from "drizzle-orm"
+import { eq, inArray, like } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
 import { DemoProvider } from "../src/lib/payments"
@@ -106,6 +106,34 @@ describe.skipIf(!url)("orders list by shipment", () => {
     const all = await owner.orders.list({ q: tag, limit: 50 })
     expect(all.find((o) => o.number === none)?.shipmentStatus).toBeNull()
     expect(all.find((o) => o.number === stuck)?.shipmentStatus).toBe("exception")
+  })
+
+  test("an order with two parcels is read by its newest one, in the badge, the filter and the overview", async () => {
+    const number = await parcel("cancelled")
+    const [row] = await db.select({ id: orders.id }).from(orders).where(eq(orders.number, number))
+    await db.insert(shipments).values({
+      orderId: row!.id,
+      provider: "aramex",
+      environment: "fake",
+      waybill: `${number}-W2`,
+      productGroup: "DOM",
+      productType: "ONP",
+      currency: "TND",
+      weightGrams: 900,
+      status: "in_transit",
+      createdAt: new Date(Date.now() + 60_000),
+    })
+    const listed = async (shipment: "open" | "problem" | "delivered") =>
+      (await owner.orders.list({ q: number, shipment, limit: 5 })).map((o) => o.number)
+    expect(await listed("open")).toEqual([number])
+    expect(await listed("delivered")).toEqual([])
+    expect((await owner.orders.list({ q: number, limit: 5 }))[0]?.shipmentStatus).toBe("in_transit")
+    const before = await owner.overview({ days: 7 })
+    await db
+      .update(shipments)
+      .set({ status: "delivered" })
+      .where(eq(shipments.waybill, `${number}-W2`))
+    expect(before.openShipments - (await owner.overview({ days: 7 })).openShipments).toBe(1)
   })
 
   test("the overview counts parcels still on their way", async () => {

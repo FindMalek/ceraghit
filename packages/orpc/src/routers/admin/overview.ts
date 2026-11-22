@@ -90,7 +90,17 @@ export const overview = adminProcedure
 
     const failedMails = await db.$count(mailLog, eq(mailLog.status, "failed"))
 
-    const openShipments = await db.$count(shipments, inArray(shipments.status, SHIPMENT_FILTER_STATUSES.open))
+    // Orders whose newest parcel is still on its way: the same rule as the orders list filter.
+    const [{ n: openShipments } = { n: 0 }] = await db
+      .select({ n: count() })
+      .from(
+        db
+          .selectDistinctOn([shipments.orderId], { status: shipments.status })
+          .from(shipments)
+          .orderBy(shipments.orderId, desc(shipments.createdAt))
+          .as("latest"),
+      )
+      .where(inArray(sql`latest.status`, SHIPMENT_FILTER_STATUSES.open))
 
     return {
       days: input.days,
