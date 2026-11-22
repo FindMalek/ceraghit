@@ -73,6 +73,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
     /^(Une expédition existe déjà|Aramex n'a pas répondu|Ce colis dépasse|Le pays du destinataire|L'étiquette n'a pas pu|Aramex n'est pas configuré|Ajoutez le code douanier|La valeur déclarée doit|La facture commerciale n'a pas|Facture commerciale indisponible|Le paiement à la livraison n'(?:existe|est possible)|Étiquette indisponible|Aramex a refusé|Aramex ne répond pas|Réponse inattendue d'Aramex|Identifiants Aramex refusés|Le transporteur est momentanément|Les informations d'expédition|Cette action n'est pas disponible)/,
     (m) => m.input ?? "",
   ],
+  [/^(Code postal invalide|Le code postal est obligatoire)/, (m) => m.input ?? ""],
   [/^Cette commande ne peut pas être expédiée/, (m) => m.input ?? ""],
   [/^Seule une commande expédiée/, (m) => m.input ?? ""],
   [/^Le lien de suivi doit commencer/, (m) => m.input ?? ""],

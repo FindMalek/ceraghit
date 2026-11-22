@@ -76,7 +76,9 @@ test("the owner ships an order to France with a customs declaration and gets the
     await page.getByLabel("Code postal").fill("7500")
     await expect(page.getByText("Code postal invalide pour France (exemple : 75001).").first()).toBeVisible()
     await page.getByRole("button", { name: "Créer l'expédition et l'étiquette" }).click()
-    await expect(page.getByText("Code postal invalide pour France (exemple : 75001).").first()).toBeVisible()
+    // the hint under the field and the message the server refused with
+    await expect(page.getByText("Code postal invalide pour France (exemple : 75001).")).toHaveCount(2)
+    await expect(page.getByText("Une erreur est survenue")).toHaveCount(0)
     await page.getByLabel("Code postal").fill("75001")
   })
 

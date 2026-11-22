@@ -33,7 +33,7 @@ export const POSTCODE_RULES: Record<string, Rule> = {
   AT: digits(4, "1010"),
   CH: digits(4, "8001"),
   GB: { pattern: /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/, example: "SW1A 1AA", required: true },
-  IE: { pattern: /^[A-Z]\d{2} ?[A-Z\d]{4}$/, example: "D02 X285", required: false },
+  IE: { pattern: /^([A-Z]\d{2}|D6W) ?[A-Z\d]{4}$/, example: "D02 X285", required: false },
   SE: { pattern: /^\d{3} ?\d{2}$/, example: "111 22", required: true },
   DK: digits(4, "1050"),
   FI: digits(5, "00100"),
