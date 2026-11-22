@@ -139,7 +139,7 @@ export default async function ProductPage({ params }: Params) {
       {related.length > 0 && (
         <section className="mt-20 space-y-8">
           <SectionHeading title={t("related")} />
-          <ProductGrid products={related} currency={currency} />
+          <ProductGrid products={related} currency={currency} defer />
         </section>
       )}
     </div>
