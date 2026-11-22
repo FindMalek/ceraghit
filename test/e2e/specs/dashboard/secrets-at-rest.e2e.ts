@@ -89,7 +89,14 @@ test("a saved secret is encrypted in the database, decrypts to what was typed, a
       expect(existsSync(E2E.apiLog), `the api stdout is written to ${E2E.apiLog}`).toBe(true)
       const log = readFileSync(E2E.apiLog, "utf8")
       expect(log.length, "the log is not empty").toBeGreaterThan(0)
-      for (const value of [groq, ...Object.values(aramex), E2E.adminPassword, E2E.cronSecret])
+      for (const value of [
+        groq,
+        ...Object.values(aramex),
+        E2E.adminPassword,
+        E2E.cronSecret,
+        apiEnv().SECRETS_KEY,
+        "e2e-proxy-secret-0123456789abcdef",
+      ])
         expect(log, "the api log must not hold a secret").not.toContain(value)
     })
   } finally {
