@@ -52,6 +52,7 @@ Checks: `pnpm check` (format), `pnpm lint`, `pnpm check-types`, `pnpm test` (nee
 
 ## Docs
 
+- Owner guide (French): [docs/handover.md](docs/handover.md); operator runbook: [docs/runbook.md](docs/runbook.md)
 - Deploy, previews, environments and the daily jobs: [docs/deploy.md](docs/deploy.md)
 - Payments: [docs/payments.md](docs/payments.md)
 - Brand and how to change it: [docs/brand.md](docs/brand.md)
