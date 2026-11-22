@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto"
-import { readdirSync, readFileSync, statSync } from "node:fs"
+import { closeSync, openSync, readdirSync, readFileSync, readSync, statSync } from "node:fs"
 import { join } from "node:path"
 import {
   TUTORIAL_DEVICES,
@@ -13,6 +13,7 @@ import { AwsClient } from "aws4fetch"
 export type UploadEnv = "local" | "preview" | "production"
 
 export const MAX_BYTES = { mp4: 300 * 1024 * 1024, vtt: 512 * 1024, jpg: 5 * 1024 * 1024 } as const
+export const PROD_BUCKET = "ceraghit-prod"
 const CACHE = "public, max-age=86400"
 
 export interface RemoteObject {
@@ -95,7 +96,13 @@ const FILE = /^(.+?)(?:-(desktop|mobile))?\.(mp4|vtt|jpg)$/
 function checkFile(path: string, ext: "mp4" | "vtt" | "jpg", size: number): string | null {
   if (size === 0) return "empty file"
   if (size > MAX_BYTES[ext]) return `larger than the ${Math.round(MAX_BYTES[ext] / 1024 / 1024)} MB limit`
-  const head = readFileSync(path).subarray(0, 12)
+  const head = Buffer.alloc(12)
+  const fd = openSync(path, "r")
+  try {
+    readSync(fd, head, 0, 12, 0)
+  } finally {
+    closeSync(fd)
+  }
   if (ext === "mp4" && head.subarray(4, 8).toString("latin1") !== "ftyp") return "not an mp4 (no ftyp box)"
   if (ext === "vtt" && !head.toString("utf8").replace(/^﻿/, "").startsWith("WEBVTT"))
     return "not WebVTT (no WEBVTT header)"
@@ -189,6 +196,8 @@ export interface UploadOptions {
   prefix: string
   dir: string
   dryRun?: boolean
+  /** Replace an unreadable remote manifest instead of aborting. */
+  resetManifest?: boolean
   /** Seconds of a local mp4, when ffprobe is around. */
   probeSeconds?: (path: string) => number | null
   log?: (line: string) => void
@@ -212,14 +221,14 @@ function identical(file: LocalFile, remote: RemoteObject | null): boolean {
   return remote.etag === createHash("md5").update(readFileSync(file.path)).digest("hex")
 }
 
-function remoteVideos(text: string | null): Record<string, unknown> {
+/** An absent manifest is empty; one that exists but is not `{ videos: {...} }` is never silently replaced. */
+function remoteVideos(text: string | null, reset: boolean): Record<string, unknown> {
+  if (text === null || reset) return {}
   try {
-    const json = text ? JSON.parse(text) : null
-    const videos = json?.videos
-    return videos && typeof videos === "object" && !Array.isArray(videos) ? videos : {}
-  } catch {
-    return {}
-  }
+    const videos = JSON.parse(text)?.videos
+    if (videos && typeof videos === "object" && !Array.isArray(videos)) return videos
+  } catch {}
+  throw new Error("the manifest in the bucket is unreadable: fix or delete it, or rerun with --reset-manifest")
 }
 
 /**
@@ -233,6 +242,8 @@ export async function uploadTutorials(opts: UploadOptions): Promise<UploadReport
   const { videos, rejected } = scanTutorialFolder(opts.dir)
   const { complete, incomplete } = splitComplete(videos)
   const report: UploadReport = { uploaded: [], skipped: [], incomplete, rejected, listed: [], manifestWritten: false }
+  const manifestKey = `${prefix}${TUTORIAL_MANIFEST_KEY}`
+  const before = remoteVideos(await bucket.get(manifestKey), opts.resetManifest ?? false)
 
   for (const video of complete) {
     for (const file of video.files) {
@@ -251,8 +262,6 @@ export async function uploadTutorials(opts: UploadOptions): Promise<UploadReport
     }
   }
 
-  const manifestKey = `${prefix}${TUTORIAL_MANIFEST_KEY}`
-  const before = remoteVideos(await bucket.get(manifestKey))
   const after: Record<string, unknown> = { ...before }
   for (const v of complete) {
     const seconds: Partial<Record<TutorialDevice, number>> = {}
@@ -261,13 +270,16 @@ export async function uploadTutorials(opts: UploadOptions): Promise<UploadReport
       const s = path ? opts.probeSeconds?.(path) : null
       if (s) seconds[d] = Math.round(s)
     }
+    // Devices already listed stay listed: a folder holding only the desktop files must not unlist the mobile ones.
+    const prev = (before[v.id] ?? {}) as { desktop?: unknown; mobile?: unknown; bytes?: object; seconds?: object }
+    const merged = { ...prev.seconds, ...seconds }
     after[v.id] = {
-      desktop: v.desktop,
-      mobile: v.mobile,
+      desktop: v.desktop || prev.desktop === true,
+      mobile: v.mobile || prev.mobile === true,
       captions: true,
       poster: true,
-      bytes: v.bytes,
-      ...(Object.keys(seconds).length ? { seconds } : {}),
+      bytes: { ...prev.bytes, ...v.bytes },
+      ...(Object.keys(merged).length ? { seconds: merged } : {}),
     }
   }
   const sorted = Object.fromEntries(Object.entries(after).sort(([a], [b]) => a.localeCompare(b)))
@@ -295,6 +307,7 @@ export interface TargetEnv {
   S3_REGION?: string
   S3_ACCESS_KEY_ID?: string
   S3_SECRET_ACCESS_KEY?: string
+  TUTORIALS_PROD_BUCKET?: string
 }
 
 export interface Target {
@@ -303,9 +316,21 @@ export interface Target {
   config: BucketConfig
 }
 
+const R2_HOST = /\.r2\.cloudflarestorage\.com$/
+const CDN_HOST = "cdn.ceraghit.com"
+
+function host(endpoint: string): string {
+  try {
+    return new URL(endpoint).hostname.toLowerCase()
+  } catch {
+    throw new Error(`S3_ENDPOINT is not a url: ${endpoint}`)
+  }
+}
+
 /**
- * Reads the bucket the way the api does and refuses anything ambiguous. Production needs `--env production --confirm`
- * and every signal (APP_ENV, DEPLOY_ENV, bucket, endpoint) must agree; any other run must not look like production.
+ * Reads the bucket the way the api does. Production is an allowlist: `--env production --confirm`, APP_ENV and
+ * DEPLOY_ENV both `production`, an R2 endpoint, and exactly the production bucket (`ceraghit-prod`, or the name in
+ * TUTORIALS_PROD_BUCKET). Any other run refuses everything that looks like production.
  */
 export function resolveTarget(env: TargetEnv, flags: { env?: string; confirm?: boolean }): Target {
   const appEnv = env.APP_ENV || "local"
@@ -316,14 +341,16 @@ export function resolveTarget(env: TargetEnv, flags: { env?: string; confirm?: b
   if (!endpoint || !bucket || !accessKeyId || !secret)
     throw new Error("S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are required")
   const deploy = env.DEPLOY_ENV || "local"
-  const looksProd = /r2\.cloudflarestorage\.com/.test(endpoint) || bucket === "ceraghit-prod"
+  const endpointHost = host(endpoint)
   if (appEnv === "production") {
     if (!(flags.env === "production" && flags.confirm)) throw new Error("production needs --env production --confirm")
     if (deploy !== "production") throw new Error("production needs DEPLOY_ENV=production")
-    if (bucket === "ceraghit-dev" || bucket.startsWith("ceraghit-e2e"))
-      throw new Error(`bucket ${bucket} is not a production bucket`)
+    if (!R2_HOST.test(endpointHost)) throw new Error(`production needs a Cloudflare R2 endpoint, got ${endpointHost}`)
+    const expected = env.TUTORIALS_PROD_BUCKET || PROD_BUCKET
+    if (bucket !== expected) throw new Error(`production uploads go to ${expected}, not ${bucket}`)
   } else {
-    if (looksProd) throw new Error(`bucket ${bucket} looks like production but APP_ENV=${appEnv}`)
+    if (R2_HOST.test(endpointHost) || endpointHost === CDN_HOST || bucket.startsWith(PROD_BUCKET))
+      throw new Error(`bucket ${bucket} at ${endpointHost} looks like production but APP_ENV=${appEnv}`)
     if (deploy === "production") throw new Error("DEPLOY_ENV=production is only allowed with APP_ENV=production")
   }
   return {

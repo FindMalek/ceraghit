@@ -20,7 +20,7 @@ const optionValue = (name: string) => {
 }
 const dir = args.find((a, i) => !a.startsWith("--") && args[i - 1] !== "--env")
 if (!dir) {
-  console.error("usage: tutorials:upload <folder> [--dry-run] [--env production --confirm]")
+  console.error("usage: tutorials:upload <folder> [--dry-run] [--reset-manifest] [--env production --confirm]")
   process.exit(1)
 }
 
@@ -45,6 +45,7 @@ try {
     prefix: target.prefix,
     dir,
     dryRun,
+    resetManifest: flag("--reset-manifest"),
     probeSeconds,
     log: (line) => console.info(line),
   })

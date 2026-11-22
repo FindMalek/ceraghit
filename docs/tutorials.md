@@ -86,10 +86,13 @@ What it does:
   after a crash just run it again. `tutorials/manifest.json` is written last, merged with the videos already listed, and
   only when something changed. Per video it also records `bytes` and, when `ffprobe` is available (`FFPROBE=/path`),
   `seconds` per device; the page ignores those extra fields.
-- Production only runs with `--env production --confirm` (the `:production` script passes both) and runs with
-  `bun --no-env-file`, so it uses only what is exported in the shell and never reads an env file. APP_ENV, DEPLOY_ENV,
-  bucket and endpoint must all agree; any other run is refused if its bucket or endpoint looks like production.
-  Secrets are never printed.
+- Production is an allowlist: `--env production --confirm` (the `:production` script passes both and runs
+  `bun --no-env-file`, so only the shell env counts and no env file is read), `APP_ENV=production`,
+  `DEPLOY_ENV=production`, an R2 endpoint (`*.r2.cloudflarestorage.com`) and exactly the bucket `ceraghit-prod`
+  (`TUTORIALS_PROD_BUCKET` if the production bucket has another name). Any other run refuses a bucket named
+  `ceraghit-prod*`, an R2 endpoint or the `cdn.ceraghit.com` host. Secrets are never printed.
+- An existing manifest that cannot be read stops the run before any upload (`--reset-manifest` replaces it). Devices
+  already listed for a video stay listed, so a desktop-only folder does not unlist the mobile version.
 
 ## YouTube override
 

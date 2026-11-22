@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdtempSync, rmSync, truncateSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { type Bucket, resolveTarget, uploadTutorials } from "../src/lib/tutorial-upload"
@@ -170,11 +170,91 @@ describe("resolveTarget", () => {
     expect(resolveTarget(prod, confirmed).env).toBe("production")
   })
 
+  test("production is an allowlist: DEPLOY_ENV, R2 host and the exact bucket", () => {
+    expect(() => resolveTarget({ ...prod, DEPLOY_ENV: "local" }, confirmed)).toThrow("DEPLOY_ENV=production")
+    expect(() => resolveTarget({ ...prod, DEPLOY_ENV: undefined }, confirmed)).toThrow("DEPLOY_ENV=production")
+    const refused: [string, string][] = [
+      ["https://garage.homelab", "ceraghit-x"],
+      ["http://localhost:9301", "ceraghit-prev"],
+      ["https://acc.r2.cloudflarestorage.com", "ceraghit-staging"],
+      ["https://acc.eu.r2.cloudflarestorage.com", "ceraghit-dev2"],
+      ["https://acc.r2.cloudflarestorage.com", "ceraghit-prod-copy"],
+      ["https://cdn.ceraghit.com", "ceraghit-prod"],
+    ]
+    for (const [S3_ENDPOINT, S3_BUCKET] of refused)
+      expect(() => resolveTarget({ ...prod, S3_ENDPOINT, S3_BUCKET }, confirmed)).toThrow()
+    expect(
+      resolveTarget({ ...prod, S3_BUCKET: "ceraghit-other", TUTORIALS_PROD_BUCKET: "ceraghit-other" }, confirmed).env,
+    ).toBe("production")
+  })
+
+  test("a non-production run refuses anything that looks like production", () => {
+    for (const [S3_ENDPOINT, S3_BUCKET] of [
+      ["http://localhost:9301", "ceraghit-prod"],
+      ["http://localhost:9301", "ceraghit-prod-copy"],
+      ["https://acc.r2.cloudflarestorage.com", "ceraghit-dev"],
+      ["https://cdn.ceraghit.com", "ceraghit-prod-copy"],
+    ])
+      expect(() => resolveTarget({ ...base, APP_ENV: "preview", S3_ENDPOINT, S3_BUCKET }, {})).toThrow(
+        "looks like production",
+      )
+  })
+
   test("environments never mix", () => {
     expect(() => resolveTarget(base, confirmed)).toThrow("does not match")
-    expect(() => resolveTarget({ ...prod, APP_ENV: "local" }, {})).toThrow("looks like production")
     expect(() => resolveTarget({ ...base, DEPLOY_ENV: "production" }, {})).toThrow("DEPLOY_ENV=production")
-    expect(() => resolveTarget({ ...prod, S3_BUCKET: "ceraghit-dev" }, confirmed)).toThrow("not a production bucket")
     expect(() => resolveTarget({ ...prod, S3_SECRET_ACCESS_KEY: undefined }, confirmed)).toThrow("required")
+  })
+})
+
+describe("file sanity limits", () => {
+  const rejectedOf = async (name: string) =>
+    (await uploadTutorials({ bucket: fakeBucket().bucket, prefix: "", dir, dryRun: true })).rejected
+      .join("\n")
+      .includes(name)
+
+  test("empty files are rejected", async () => {
+    write(`${ID}.jpg`, Buffer.alloc(0))
+    expect(await rejectedOf(`${ID}.jpg: empty file`)).toBe(true)
+  })
+
+  test("files over 300 MB (mp4), 512 KB (vtt) and 5 MB (jpg) are rejected, at the limit they pass", async () => {
+    write(`${ID}-desktop.mp4`, MP4)
+    truncateSync(join(dir, `${ID}-desktop.mp4`), 300 * 1024 * 1024 + 1)
+    write(`${ID}-desktop.vtt`, VTT)
+    truncateSync(join(dir, `${ID}-desktop.vtt`), 512 * 1024 + 1)
+    write(`${ID}.jpg`, JPG)
+    truncateSync(join(dir, `${ID}.jpg`), 5 * 1024 * 1024 + 1)
+    const report = await uploadTutorials({ bucket: fakeBucket().bucket, prefix: "", dir, dryRun: true })
+    expect(report.rejected).toHaveLength(3)
+    truncateSync(join(dir, `${ID}.jpg`), 5 * 1024 * 1024)
+    truncateSync(join(dir, `${ID}-desktop.vtt`), 512 * 1024)
+    const ok = await uploadTutorials({ bucket: fakeBucket().bucket, prefix: "", dir, dryRun: true })
+    expect(ok.rejected).toHaveLength(1)
+  })
+})
+
+describe("manifest safety", () => {
+  test("an unreadable remote manifest aborts before any upload unless --reset-manifest", async () => {
+    fullSet()
+    const s3 = fakeBucket()
+    s3.objects.set("tutorials/manifest.json", { body: Buffer.from("{not json"), headers: {} })
+    await expect(uploadTutorials({ bucket: s3.bucket, prefix: "", dir })).rejects.toThrow("--reset-manifest")
+    expect(s3.puts).toEqual([])
+    await uploadTutorials({ bucket: s3.bucket, prefix: "", dir, resetManifest: true })
+    expect(s3.manifest().videos[ID]).toMatchObject({ desktop: true })
+  })
+
+  test("a desktop-only folder keeps the mobile flag already listed", async () => {
+    write(`${ID}-desktop.mp4`, MP4)
+    write(`${ID}-desktop.vtt`, VTT)
+    write(`${ID}.jpg`, JPG)
+    const s3 = fakeBucket()
+    s3.objects.set("tutorials/manifest.json", {
+      body: Buffer.from(JSON.stringify({ videos: { [ID]: { desktop: true, mobile: true, bytes: { mobile: 9 } } } })),
+      headers: {},
+    })
+    await uploadTutorials({ bucket: s3.bucket, prefix: "", dir })
+    expect(s3.manifest().videos[ID]).toMatchObject({ desktop: true, mobile: true, bytes: { mobile: 9 } })
   })
 })
