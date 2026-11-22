@@ -40,7 +40,7 @@ So there is no big-bang switch left: the release is a series of owner-driven swi
 - [ ] `cdn.ceraghit.com` attached to the R2 bucket; both CORS rules of `docs/deploy.md` present:
   `curl -sI -H "Origin: https://dashboard.ceraghit.com" https://cdn.ceraghit.com/<key>` returns `access-control-allow-origin`
 - [ ] `http://` redirects to `https://`; HSTS present on the three hosts
-- [ ] old site URLs from the client, if any, added to `redirects()` in `apps/web/next.config.ts`
+- [ ] old site URLs from the client, if any, redirected: `apps/web/next.config.ts` has no `redirects()` yet, so add a `redirects()` block there (or extend `apps/web/proxy.ts`, which already does the `www` 308)
 
 ## 3. Konnect live switch (needs the client's keys, #1 then #6)
 
@@ -74,7 +74,7 @@ curl -sI https://www.ceraghit.com | head -1          # 308
 curl -s https://ceraghit.com/robots.txt | head -5    # allows
 curl -s https://ceraghit.com/sitemap.xml | grep -c '<loc>'
 curl -sI https://dashboard.ceraghit.com/login | grep -i 'x-robots-tag'
-curl -s -o /dev/null -w '%{http_code}\n' https://api.ceraghit.com/rpc/admin/settings/get   # never 200 for a visitor
+curl -s -o /dev/null -w '%{http_code}\n' -X POST -H 'content-type: application/json' -H 'x-csrf-token: orpc' -d '{}' https://api.ceraghit.com/rpc/admin/overview   # 401 for a visitor (without the csrf header: 403)
 ```
 
 Then by hand: the storefront in fr, en and ar, one product page, the legal pages (no `[` placeholder left), the dashboard login
