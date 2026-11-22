@@ -247,6 +247,21 @@ describe.skipIf(!url)("aramex shipments", () => {
     expect(sent).toHaveLength(0)
   })
 
+  test("a postcode that does not fit the country is refused before Aramex, with an example", async () => {
+    const id = await order({ country: "FR", city: "Paris", postalCode: "75001", currency: "EUR" })
+    const input = await draftFor(id)
+    sent.length = 0
+    const refused = (postalCode: string | undefined) =>
+      owner().shipping.createShipment({ ...input, consignee: { ...input.consignee, postalCode } })
+    await expect(refused("7500")).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringContaining("exemple : 75001"),
+    })
+    await expect(refused(undefined)).rejects.toMatchObject({ message: expect.stringContaining("obligatoire") })
+    expect(sent).toHaveLength(0)
+    await expect(refused("75001")).resolves.toMatchObject({ waybill: expect.stringContaining("FAKE") })
+  })
+
   test("a parcel over the carrier limits gives a blocked draft, not a capped one", async () => {
     const id = await order({}, 40)
     const draft = await owner().shipping.draft({ orderId: id })
@@ -337,7 +352,7 @@ describe.skipIf(!url)("aramex shipments", () => {
 
   describe("international parcels", () => {
     const abroad = (over: Partial<typeof orders.$inferInsert> = {}) =>
-      order({ country: "FR", city: "Paris", currency: "EUR", ...over })
+      order({ country: "FR", city: "Paris", postalCode: "75001", currency: "EUR", ...over })
     const createCall = () => JSON.parse(sent.find((c) => c.url.endsWith("/CreateShipments"))!.body)
 
     test("an EUR order declares its goods in EUR, ships EXP and stores the invoice privately", async () => {
