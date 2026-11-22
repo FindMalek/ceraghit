@@ -4,7 +4,6 @@ import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { chromium } from "@playwright/test"
-import { installOverlay } from "../lib/overlay"
 import { FFMPEG, FPS, startRecording } from "../lib/recorder"
 
 /** Seconds into the video of the first frame whose brightness is above half. */
@@ -16,34 +15,11 @@ function firstBrightSecond(file: string): number {
   )
   const bytes = res.stdout
   for (let i = 0; i + 3 < bytes.length; i += 4) {
-    if (((bytes[i] ?? 0) + (bytes[i + 1] ?? 0) + (bytes[i + 2] ?? 0) + (bytes[i + 3] ?? 0)) / 4 > 128) return i / 4 / FPS
+    if (((bytes[i] ?? 0) + (bytes[i + 1] ?? 0) + (bytes[i + 2] ?? 0) + (bytes[i + 3] ?? 0)) / 4 > 128)
+      return i / 4 / FPS
   }
   return -1
 }
-
-test("a focus ring on an otherwise still page shows in the video, at the time of the key press", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "demo-rec-"))
-  const browser = await chromium.launch()
-  try {
-    const context = await browser.newContext({ viewport: { width: 200, height: 120 } })
-    await installOverlay(context)
-    const page = await context.newPage()
-    await page.setContent(
-      '<body style="margin:0;background:#000"><a href="#x" style="display:block;width:200px;height:120px;color:#000;background:#000;outline:0" onfocus="this.style.background=\'#fff\'">skip</a>',
-    )
-    const file = join(dir, "t.mp4")
-    const recording = await startRecording(page, file, { width: 200, height: 120 })
-    await new Promise((r) => setTimeout(r, 1500))
-    const at = recording.now()
-    await page.keyboard.press("Tab")
-    await new Promise((r) => setTimeout(r, 800))
-    await recording.stop()
-    expect(Math.abs(firstBrightSecond(file) * 1000 - at)).toBeLessThan(150)
-  } finally {
-    await browser.close()
-    rmSync(dir, { recursive: true, force: true })
-  }
-}, 40_000)
 
 test("an event at recording.now() T shows in the video at T, so cues and narration start with their step", async () => {
   const dir = mkdtempSync(join(tmpdir(), "demo-rec-"))

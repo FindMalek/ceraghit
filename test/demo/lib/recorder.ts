@@ -81,7 +81,7 @@ export async function startRecording(
   let previous: Buffer | null = null
   let previousAt = 0
   const startedAt = Date.now()
-    let queue: Promise<void> = Promise.resolve()
+  let queue: Promise<void> = Promise.resolve()
   const write = (frame: Buffer, copies: number) => {
     queue = queue.then(async () => {
       for (let i = 0; i < copies && !dead; i++) {
