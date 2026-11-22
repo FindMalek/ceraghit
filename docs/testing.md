@@ -36,6 +36,7 @@ bucket. Playwright then starts the api (3001), the storefront (3000) and the das
   `E2E_WEB_PORT`, `E2E_DASHBOARD_PORT`, `E2E_API_PORT`, `E2E_DB_PORT`, `E2E_S3_PORT`, `E2E_MAILPIT_UI_PORT`,
   `E2E_MAILPIT_SMTP_PORT` and `E2E_COMPOSE_PROJECT` (must start with `ceraghit-e2e`, it is torn down with `-v`; see `test/e2e/env.ts`).
 - Demo payments live in the api's memory: never restart the api mid-run.
+- The api's stdout and stderr go to `test/e2e/artifacts/api.log` (`E2E.apiLog`), so a spec can scan it for leaks.
 - Seeded pending online orders auto-cancel when opened: a spec creates its own orders.
 - iPhone 14 runs webkit, so fonts and `-webkit-text-stroke` differ from chromium.
 
