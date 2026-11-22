@@ -14,6 +14,12 @@ export interface SiteImage {
   height: number | null
 }
 
+/** The 36px medallion of the header and footer: the bundled logo has a 112px copy (4 KB instead of 29 KB). */
+export function medallionSrc(data: Partial<PublicSiteImages>, locale: string): string | undefined {
+  const src = siteImages("logo", data, locale)[0]?.src
+  return src === "/logo.webp" ? "/logo-sm.webp" : src
+}
+
 /** The slot's pictures in order, alt picked for the locale. A missing slot (api down) falls back to the bundled pictures. */
 export function siteImages(slot: SiteSlot, data: Partial<PublicSiteImages>, locale: string): SiteImage[] {
   const entries = data[slot]

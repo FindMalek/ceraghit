@@ -11,7 +11,11 @@ const result = await seed(db, {
   catalog: catalogOnly,
   demo: !catalogOnly,
   profile: process.argv.includes("--onboarding") ? "empty" : "complete",
-  admin: { email: process.env.ADMIN_EMAIL ?? "", password: process.env.ADMIN_PASSWORD ?? "" },
+  admin: {
+    email: process.env.ADMIN_EMAIL ?? "",
+    password: process.env.ADMIN_PASSWORD ?? "",
+    rotatePassword: ["1", "true"].includes(process.env.ADMIN_PASSWORD_ROTATE ?? ""),
+  },
 })
 await db.close()
 console.info("seeded", result)
