@@ -60,4 +60,6 @@ pnpm + Turborepo, Next.js 16 (App Router, `proxy.ts`, `params` are Promises), oR
 - Commits `type(scope): subject`, one issue per PR, branch via `gh issue develop <n> --checkout`. Agents do not commit,
   push or reply to reviews unless the owner says so in that message. No AI attribution anywhere.
 
+Owner guide (French) is `docs/handover.md`, operator runbook is `docs/runbook.md`: update them when a screen or an ops step changes.
+
 Next.js docs for this version: `node_modules/next/dist/docs/`, read the relevant guide before writing Next code.
