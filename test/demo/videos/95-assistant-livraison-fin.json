@@ -1,0 +1,48 @@
+{
+  "id": "95",
+  "slug": "assistant-livraison-fin",
+  "title_fr": "Assistant : frais de livraison et fin",
+  "start": { "app": "dashboard", "path": "/onboarding?step=shipping", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Les frais de livraison de départ.", "holdMs": 2200 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Les tarifs me conviennent" },
+      "caption_fr": "Ils vous conviennent ? Validez."
+    },
+    { "action": "wait", "caption_fr": "Facultatif, ici.", "holdMs": 1800 },
+    { "action": "click", "target": { "role": "button", "name": "Retour" }, "caption_fr": "Revenons sur les tarifs." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Modifier les tarifs" },
+      "caption_fr": "Sinon, cliquez sur Modifier."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Prix de base en dinars", "nth": 0 },
+      "value": "14",
+      "caption_fr": "Changez un prix de base."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Remettre les valeurs par défaut" },
+      "caption_fr": "On peut tout remettre à zéro."
+    },
+    { "action": "wait", "caption_fr": "Rien n'est enregistré avant.", "holdMs": 1800 },
+    { "action": "click", "target": { "role": "button", "name": "Remettre", "nth": -1 }, "caption_fr": "Confirmez." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer et continuer" },
+      "caption_fr": "Enregistrez et continuez."
+    },
+    { "action": "wait", "caption_fr": "Rien d'obligatoire ici.", "holdMs": 2000 },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "Tout est prêt, étape par étape.", "holdMs": 2400 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ouvrir mon tableau de bord" },
+      "caption_fr": "Ouvrez votre tableau de bord."
+    },
+    { "action": "wait", "caption_fr": "La carte liste le reste.", "holdMs": 2400 }
+  ]
+}
