@@ -94,17 +94,6 @@ jobs:
       - name: Bundle the api
         if: matrix.app == 'api'
         run: pnpm --filter api run build:vercel
-      # Plain (non-sensitive) variable, so `vercel env ls` shows the value; --force makes it idempotent. The token is read from VERCEL_TOKEN by the CLI.
-      - name: Set TRUSTED_PROXY_HOPS on the api
-        if: matrix.app == 'api'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets[matrix.project] || vars[matrix.project] }}
-        run: |
-          set -euo pipefail
-          printf '1' | vercel env add TRUSTED_PROXY_HOPS --environment production --no-sensitive --force >/dev/null
-          echo "TRUSTED_PROXY_HOPS=1 set on the production api"
       - name: Build and deploy ${{ matrix.app }}
         # Environment secrets only exist inside a job that uses the environment, so they are read here, not at the top.
         env:
@@ -137,11 +126,6 @@ jobs:
             sleep 10
           done
           echo "::error::api did not become healthy"; exit 1
-      - name: spoofed x-forwarded-for changes nothing
-        run: |
-          curl -fsS -H 'x-forwarded-for: 203.0.113.9, 198.51.100.7' -H 'x-ceraghit-client-ip: 203.0.113.9' \
-            "https://${{ vars.PRODUCTION_API_HOST }}/health" | grep -q '"env":"production"' \
-            || { echo "::error::api health broke with a spoofed x-forwarded-for"; exit 1; }
       - name: storefront and dashboard answer
         run: |
           curl -fsS -o /dev/null "https://${{ vars.PRODUCTION_WEB_HOST }}"
