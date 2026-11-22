@@ -58,3 +58,25 @@ test("home has business JSON-LD and robots disallows everything outside producti
   const robots = await page.request.get(`${E2E.webUrl}/robots.txt`)
   expect(await robots.text()).toMatch(/^Disallow: \/$/m)
 })
+
+test("a trailing slash and a www host redirect permanently to the one canonical url", {
+  tag: ["@fr", "@desktop"],
+}, async ({ request, step }) => {
+  const get = (path: string, headers: Record<string, string> = {}) =>
+    request.get(`${E2E.webUrl}${path}`, { maxRedirects: 0, headers })
+  await step("/shop/ goes to /shop, in French and with a locale prefix", async () => {
+    for (const [from, to] of [
+      ["/shop/", "/shop"],
+      ["/en/shop/", "/en/shop"],
+    ] as const) {
+      const res = await get(from)
+      expect(res.status(), from).toBe(308)
+      expect(new URL(res.headers().location ?? "", E2E.webUrl).pathname, from).toBe(to)
+    }
+  })
+  await step("www.<domain> goes to the apex over https, path kept", async () => {
+    const res = await get("/shop?sort=newest", { host: "www.ceraghit.com" })
+    expect(res.status()).toBe(308)
+    expect(res.headers().location).toBe("https://ceraghit.com/shop?sort=newest")
+  })
+})

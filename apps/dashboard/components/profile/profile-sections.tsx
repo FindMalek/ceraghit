@@ -6,6 +6,7 @@ import type { ShopProfile } from "@workspace/sdk"
 import { useRouter } from "next/navigation"
 import { BankSection } from "@/components/profile/bank-section"
 import { OwnerSection } from "@/components/profile/owner-section"
+import { PasswordSection } from "@/components/profile/password-section"
 import { ShopSection } from "@/components/profile/shop-section"
 
 /** The three sections one under the other; saving refreshes the server data (sidebar name included). */
@@ -26,6 +27,9 @@ export function ProfileSections({ owner, shop }: { owner: { name: string }; shop
       </div>
       <div id="bank" className="scroll-mt-20">
         <BankSection initial={shop} onSaved={refresh} />
+      </div>
+      <div id="password" className="scroll-mt-20">
+        <PasswordSection />
       </div>
     </div>
   )

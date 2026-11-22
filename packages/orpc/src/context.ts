@@ -39,6 +39,9 @@ export interface Services {
     onlinePayments: boolean
     /** ARAMEX_FAKE: Aramex calls are answered by the sandbox stand-in (the api refuses it in production). */
     aramexFake?: boolean
+    /** KONNECT_BASE_URL / GROQ_BASE_URL: e2e stubs stand in for the providers (the api refuses both in production). */
+    konnectBaseUrl?: string
+    groqBaseUrl?: string
     /** Bearer token of the daily GitHub job that calls /cron/cleanup-uploads. Unset: the route does not exist. */
     cronSecret?: string
     /** Names the api answers on `POST /cron/<name>`; the dashboard shows the other catalogued jobs as not active yet. */

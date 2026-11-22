@@ -65,7 +65,7 @@ export async function resolvePayments(services: Services): Promise<PaymentProvid
   if (!apiKey || typeof walletId !== "string" || !walletId) return services.payments
   const mode = found.config.mode === "live" ? "live" : "test"
   if ((services.config.appEnv === "production") !== (mode === "live")) return services.payments
-  return new KonnectProvider(apiKey, walletId, mode, services.http)
+  return new KonnectProvider(apiKey, walletId, mode, services.http, services.config.konnectBaseUrl)
 }
 
 export interface KonnectCheck {
@@ -81,9 +81,10 @@ export async function testKonnectKey(
   apiKey: string,
   mode: "test" | "live",
   http: typeof fetch = fetch,
+  baseUrl: string = KONNECT_HOSTS[mode],
 ): Promise<KonnectCheck> {
   try {
-    const res = await http(`${KONNECT_HOSTS[mode]}/payments/${crypto.randomUUID()}`, {
+    const res = await http(`${baseUrl}/payments/${crypto.randomUUID()}`, {
       headers: { "x-api-key": apiKey },
       signal: AbortSignal.timeout(8000),
     })
@@ -103,10 +104,11 @@ export class KonnectProvider implements PaymentProvider {
     private walletId: string,
     readonly mode: "test" | "live",
     private http: typeof fetch = fetch,
+    private baseUrl: string = KONNECT_HOSTS[mode],
   ) {}
 
   private async call<T>(path: string, init?: RequestInit): Promise<T> {
-    const res = await this.http(`${KONNECT_HOSTS[this.mode]}${path}`, {
+    const res = await this.http(`${this.baseUrl}${path}`, {
       ...init,
       headers: { "x-api-key": this.apiKey, "content-type": "application/json" },
     })

@@ -154,7 +154,7 @@ export async function translateField(
     })
   }
 
-  const translate = deps.translate ?? groqTranslate(apiKey)
+  const translate = deps.translate ?? groqTranslate(apiKey, services.config.groqBaseUrl)
   const request: TranslateRequest = {
     field: input.field,
     maxLength,

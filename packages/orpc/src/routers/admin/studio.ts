@@ -158,7 +158,7 @@ const konnectRouter = {
         throw new ORPCError("PRECONDITION_FAILED", { message: "Saisissez la clé API Konnect avant de tester." })
       const mode = input.mode ?? (saved?.config.mode === "live" ? "live" : "test")
       assertKonnectMode(context.config.appEnv, mode)
-      return testKonnectKey(apiKey, mode, context.http)
+      return testKonnectKey(apiKey, mode, context.http, context.config.konnectBaseUrl)
     }),
 
   clear: adminProcedure
