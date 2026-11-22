@@ -40,7 +40,10 @@ test("an online payment confirmed by the gateway sends one paid confirmation, in
       expect(mail.text).not.toContain(copy.confirmation.transfer)
 
       await page.reload()
-      await expect.poll(() => countMailsWithSubject(copy.confirmation.subject(order.number))).toBe(1)
+      await page.waitForLoadState("networkidle")
+      const count = () => countMailsWithSubject(copy.confirmation.subject(order.number))
+      await expect.poll(count).toBe(1)
+      await expect.poll(count, { intervals: [1500], timeout: 3000 }).toBe(1)
     })
   }
 })
@@ -102,11 +105,18 @@ test("the test mail goes to the notification address of the shop and says where 
     expect(await res.json()).toEqual({ ok: true, to: "shop@e2e.local" })
   })
   await step("Mailpit holds it, addressed to the shop, with the environment and a recent date", async () => {
+    const sentMinute = Math.floor(stamp / 60_000) * 60_000
+    const dateOf = (text: string) => {
+      const [, date] = /Date : (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC/.exec(text) ?? []
+      return new Date(`${date}:00Z`).getTime()
+    }
+    await expect
+      .poll(async () => dateOf((await mailWithSubject("Email de test Ceraghit")).text), { timeout: 15_000 })
+      .toBeGreaterThanOrEqual(sentMinute)
     const mail = await mailWithSubject("Email de test Ceraghit")
     expect(mail.to).toContain("shop@e2e.local")
     expect(mail.subject).toBe("Email de test Ceraghit")
     expect(mail.text).toContain("Environnement : local")
-    const [, date] = /Date : (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC/.exec(mail.text) ?? []
-    expect(Math.abs(new Date(`${date}:00Z`).getTime() - stamp)).toBeLessThan(15 * 60_000)
+    expect(dateOf(mail.text)).toBeLessThanOrEqual(Date.now())
   })
 })
