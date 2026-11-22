@@ -10,6 +10,7 @@
     "./metrics": "./src/lib/metrics.ts",
     "./react": "./src/react.tsx",
     "./secrets": "./src/lib/secrets.ts",
+    "./tutorial-cors": "./src/lib/tutorial-cors.ts",
     "./fake-aramex": "./src/lib/shipping/aramex/fake.ts",
     "./rotate": "./src/lib/integrations.ts",
     "./server": "./src/server-client.ts"
