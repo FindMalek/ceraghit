@@ -12,7 +12,12 @@
       "caption_fr": "Pas de bouton de devise : le pays décide."
     },
     { "action": "cookie", "value": "ceraghit_currency=EUR", "caption_fr": "Ailleurs, la même pièce est en euros." },
-    { "action": "goto", "value": "/product/curda-seca-0010", "caption_fr": "Ailleurs, la même pièce est en euros.", "holdMs": 2200 },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Ailleurs, la même pièce est en euros.",
+      "holdMs": 2200
+    },
     {
       "action": "wait",
       "caption_fr": "L'atelier fixe deux prix : jamais convertis.",

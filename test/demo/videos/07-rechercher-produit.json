@@ -9,6 +9,14 @@
   },
   "steps": [
     {
+      "action": "click",
+      "target": {
+        "role": "searchbox",
+        "name": "Rechercher une pièce"
+      },
+      "caption_fr": "Cliquez dans le champ."
+    },
+    {
       "action": "fill",
       "target": {
         "role": "searchbox",
@@ -46,7 +54,7 @@
         "name": "Rechercher une pièce"
       },
       "value": "zzzz",
-      "caption_fr": "Sans résultat, un message vous le dit."
+      "caption_fr": "Essayez un nom inconnu."
     },
     {
       "action": "press",

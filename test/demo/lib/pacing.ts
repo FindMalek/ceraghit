@@ -38,7 +38,10 @@ export function locate(page: Page, target: Target): Locator {
 export function anyMatch(page: Page, target: Target): Locator {
   if (target.testId) return page.getByTestId(target.testId)
   if (target.role) {
-    return page.getByRole(target.role as Parameters<Page["getByRole"]>[0], target.name ? { name: target.name, exact: target.exact } : {})
+    return page.getByRole(
+      target.role as Parameters<Page["getByRole"]>[0],
+      target.name ? { name: target.name, exact: target.exact } : {},
+    )
   }
   if (target.label) return page.getByLabel(target.label, { exact: target.exact })
   if (target.text) return page.getByText(target.text, { exact: target.exact })
@@ -149,7 +152,6 @@ export function createPacer(options: PacerOptions): Pacer {
         case "clear-cookies":
           await page.context().clearCookies()
           break
-<<<<<<< ours
         case "cookie": {
           const [name = "", ...rest] = (value ?? "").split("=")
           if (name !== "ceraghit_currency") throw new Error(`cookie steps only set ceraghit_currency, got "${name}"`)
@@ -175,8 +177,6 @@ export function createPacer(options: PacerOptions): Pacer {
           await cdp.detach()
           break
         }
-=======
->>>>>>> theirs
         case "back":
           await page.goBack()
           break

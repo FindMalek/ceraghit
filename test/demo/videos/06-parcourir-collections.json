@@ -36,7 +36,12 @@
       "target": { "text": "Sur devis", "nth": 0 },
       "caption_fr": "Sur devis : l'atelier répond par e-mail."
     },
-    { "action": "goto", "value": "/shop/inconnue", "caption_fr": "Une catégorie inconnue donne une page introuvable.", "holdMs": 2000 },
+    {
+      "action": "goto",
+      "value": "/shop/inconnue",
+      "caption_fr": "Une catégorie inconnue donne une page introuvable.",
+      "holdMs": 2000
+    },
     {
       "action": "click",
       "target": { "role": "link", "name": "Retour à l'accueil" },

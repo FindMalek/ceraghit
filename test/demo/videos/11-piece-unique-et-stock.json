@@ -16,7 +16,11 @@
       "holdMs": 1800
     },
     { "action": "press", "value": "Escape", "caption_fr": "On ne peut l'ajouter qu'une fois." },
-    { "action": "goto", "value": "/product/curda-seca-0010", "caption_fr": "Peu de stock : le nombre restant s'affiche." },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Peu de stock : le nombre restant s'affiche."
+    },
     {
       "action": "hover",
       "target": { "text": "Plus que 3 en stock" },

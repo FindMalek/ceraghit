@@ -21,21 +21,14 @@ import {
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
-import {
-  DEMO_HIDDEN_HERO,
-  DEMO_MAIN_SECOND_REF,
-  DEMO_MEDIA_BY_REF,
-  DEMO_UNUSED_MEDIA,
-  ensureSiteImages,
-  syncBundledMedia,
-} from "./media"
+import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA, ensureSiteImages, syncBundledMedia } from "./media"
 import {
   buildDemoProfile,
   buildScenario,
   DEMO_DESCRIPTIONS,
   DEMO_LOCATIONS,
-  DEMO_TN_CITIES,
   DEMO_STOCK_STATES,
+  DEMO_TN_CITIES,
   demoExtraProducts,
   demoRequests,
 } from "./scenario"

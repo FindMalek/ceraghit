@@ -82,6 +82,12 @@
       "value": "/shop?sort=price-asc",
       "caption_fr": "Le tri suit la devise du visiteur.",
       "holdMs": 2000
+    },
+    {
+      "action": "scroll",
+      "value": "450",
+      "caption_fr": "Le tri suit la devise du visiteur.",
+      "only": "mobile"
     }
   ]
 }
