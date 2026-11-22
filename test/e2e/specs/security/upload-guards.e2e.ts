@@ -40,14 +40,14 @@ test("the public photo upload refuses what is not a small image", ONCE, async ({
       { contentType: "text/plain", size: 100 },
       { contentType: "application/javascript", size: 100 },
       { contentType: "image/svg+xml", size: 100 },
-      { contentType: "image/png", size: 0 },
+      { contentType: "image/webp", size: 0 },
     ]) {
       const res = await request.post(url, { data })
       expect(res.status(), JSON.stringify(data)).toBe(400)
     }
   })
   await step("a photo over the size limit is refused", async () => {
-    const res = await request.post(url, { data: { contentType: "image/png", size: 100 * 1024 * 1024 } })
+    const res = await request.post(url, { data: { contentType: "image/webp", size: 100 * 1024 * 1024 } })
     expect(res.status()).toBe(400)
   })
 })

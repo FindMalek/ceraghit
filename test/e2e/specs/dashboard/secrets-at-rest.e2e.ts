@@ -28,7 +28,9 @@ test("a saved secret is encrypted in the database, decrypts to what was typed, a
   const keyring = parseKeyring(apiEnv().SECRETS_KEY)
   expect(keyring, "the e2e api runs with a vault key").not.toBeNull()
 
-  await loginAsOwnerAndWait(page)
+  await step("the owner signs in", async () => {
+    await loginAsOwnerAndWait(page)
+  })
   await clear()
   try {
     await step("the owner saves a Groq key and the Aramex password and pin", async () => {
@@ -86,6 +88,10 @@ test("a saved secret is encrypted in the database, decrypts to what was typed, a
     await step("the api log was captured and holds none of the values", async () => {
       await api.get(`${E2E.apiUrl}/v1/admin/integrations/groq`, { headers: HEADERS })
       await api.get(`${E2E.apiUrl}/v1/admin/integrations/aramex`, { headers: HEADERS })
+      expect(
+        process.env.E2E_REUSE,
+        "E2E_REUSE=1 tests an api this run did not start, so its output is not in api.log: run without it",
+      ).not.toBe("1")
       expect(existsSync(E2E.apiLog), `the api stdout is written to ${E2E.apiLog}`).toBe(true)
       const log = readFileSync(E2E.apiLog, "utf8")
       expect(log.length, "the log is not empty").toBeGreaterThan(0)
