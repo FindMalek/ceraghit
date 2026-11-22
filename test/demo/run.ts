@@ -4,6 +4,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { chromium, devices } from "@playwright/test"
 import { parseArgs } from "./lib/args"
+import { generateAssets } from "./lib/assets"
 import { type Caption, toSrt, toVtt } from "./lib/captions"
 import { assertAdminCredentials, assertSafe } from "./lib/guard"
 import { buildPlan, formatPlan, ledgerPath, narrationFor, readLedger, ttsCacheDir } from "./lib/narration"
@@ -62,6 +63,9 @@ async function main() {
   if (videos.length === 0) throw new Error(`no video matches ${ids.join(", ") || "(none found)"}`)
   if (videos.some((v) => v.start.loggedIn)) assertAdminCredentials(env)
   mkdirSync(join(out, "videos"), { recursive: true })
+  const assets = generateAssets(join(out, "assets"))
+  if (assets.skipped.length > 0)
+    console.warn(`warning: no webp encoder in ffmpeg, skipped ${assets.skipped.join(", ")}`)
 
   const clips = await prepareVoice({
     voice,
@@ -113,7 +117,8 @@ async function main() {
           device,
           app: video.start.app,
           baseUrl: (app) => urls[app],
-          assetsDir: join(here, "assets"),
+          assetsDir: join(out, "assets"),
+          downloadsDir: join(out, "downloads", base),
           zoom: flag("zoom"),
         })
         const captions: Caption[] = []
