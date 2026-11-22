@@ -42,10 +42,12 @@ describe.skipIf(!url)("aramex shipments", () => {
   const sent: { url: string; body: string }[] = []
   const puts: { key: string; type: string; bytes: number }[] = []
   let failPut = false
+  let failInvoice = false
   const shipped: string[] = []
   const fake = createFakeAramexFetch()
   const http = (async (input: RequestInfo | URL, init?: RequestInit) => {
     sent.push({ url: String(input), body: String(init?.body ?? "") })
+    if (failInvoice && String(input).endsWith("/commercial-invoice.pdf")) return new Response("no", { status: 404 })
     return fake(input, init)
   }) as typeof fetch
   const storage = {
@@ -118,6 +120,7 @@ describe.skipIf(!url)("aramex shipments", () => {
       description: draft.description,
       fragile: draft.fragile,
       insurance: null,
+      customs: draft.customs,
     }
   }
 
@@ -330,5 +333,73 @@ describe.skipIf(!url)("aramex shipments", () => {
     expect(keys.has(open)).toBe(true)
     expect(keys.has(recent)).toBe(true)
     expect(keys.has(old)).toBe(false)
+  })
+
+  describe("international parcels", () => {
+    const abroad = (over: Partial<typeof orders.$inferInsert> = {}) =>
+      order({ country: "FR", city: "Paris", currency: "EUR", ...over })
+    const createCall = () => JSON.parse(sent.find((c) => c.url.endsWith("/CreateShipments"))!.body)
+
+    test("an EUR order declares its goods in EUR, ships EXP and stores the invoice privately", async () => {
+      const id = await abroad()
+      sent.length = 0
+      const { shipmentId } = await owner().shipping.createShipment(await draftFor(id))
+      const details = createCall().Shipments[0].Details
+      expect(details.ProductGroup).toBe("EXP")
+      expect(details.CustomsValueAmount).toEqual({ CurrencyCode: "EUR", Value: 800 })
+      expect(details.Items[0]).toMatchObject({ ProviderHSCode: "691390", CountryOfOrigin: "TN", Quantity: 1 })
+      expect(JSON.stringify(details)).not.toContain("TND")
+      const [row] = await db.select().from(shipments).where(eq(shipments.id, shipmentId))
+      expect(row?.commercialInvoiceKey).toStartWith("pr-7/private/invoices/")
+      expect(await db.select().from(uploads).where(eq(uploads.key, row!.commercialInvoiceKey!))).toHaveLength(1)
+      expect((await protectedKeys(db)).has(row!.commercialInvoiceKey!)).toBe(true)
+      expect((await owner().shipping.shipmentOf({ orderId: id }))?.hasCommercialInvoice).toBe(true)
+      const { url: link } = await owner().shipping.commercialInvoiceUrl({ id: shipmentId })
+      expect(link).toContain(`${row!.commercialInvoiceKey}?X-Amz-Signature`)
+    })
+
+    test("no HS code on a piece is refused before Aramex", async () => {
+      const id = await abroad()
+      const input = await draftFor(id)
+      sent.length = 0
+      await expect(
+        owner().shipping.createShipment({
+          ...input,
+          customs: { ...input.customs!, items: input.customs!.items.map((i) => ({ ...i, hsCode: "12" })) },
+        }),
+      ).rejects.toMatchObject({ code: "BAD_REQUEST", message: "Ajoutez le code douanier (SH) de chaque pièce." })
+      expect(sent).toHaveLength(0)
+    })
+
+    test("a declaration in another currency than the order is refused", async () => {
+      const id = await abroad()
+      const input = await draftFor(id)
+      await expect(
+        owner().shipping.createShipment({ ...input, customs: { ...input.customs!, currency: "TND" } }),
+      ).rejects.toMatchObject({ code: "BAD_REQUEST" })
+    })
+
+    test("without an attachment the invoice is asked from Aramex", async () => {
+      const id = await abroad({ number: `${tag}-nv-FAKE-NOINVOICE` })
+      sent.length = 0
+      const { shipmentId } = await owner().shipping.createShipment(await draftFor(id))
+      expect(sent.some((c) => c.url.endsWith("/PrintCommercialInvoice"))).toBe(true)
+      const [row] = await db.select().from(shipments).where(eq(shipments.id, shipmentId))
+      expect(row?.commercialInvoiceKey).not.toBeNull()
+    })
+
+    test("an invoice that cannot be fetched keeps the shipment, and can be retried", async () => {
+      const id = await abroad()
+      failInvoice = true
+      const { shipmentId } = await owner().shipping.createShipment(await draftFor(id))
+      const view = await owner().shipping.shipmentOf({ orderId: id })
+      expect(view).toMatchObject({ hasCommercialInvoice: false, hasLabel: true })
+      expect(view?.errors.map((e) => e.code)).toContain("INVOICE")
+      failInvoice = false
+      await owner().shipping.retryCommercialInvoice({ id: shipmentId })
+      const after = await owner().shipping.shipmentOf({ orderId: id })
+      expect(after).toMatchObject({ hasCommercialInvoice: true })
+      expect(after?.errors.map((e) => e.code)).not.toContain("INVOICE")
+    })
   })
 })

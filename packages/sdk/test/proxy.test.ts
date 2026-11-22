@@ -23,7 +23,7 @@ test("the proxy drops client x-ceraghit-* headers and sets the real client addre
     "x-ceraghit-client-ip": "6.6.6.6",
     "x-ceraghit-proxy-secret": "guess",
     "x-ceraghit-other": "1",
-    "x-forwarded-for": "203.0.113.7, 10.0.0.1",
+    "x-forwarded-for": "6.6.6.6, 203.0.113.7",
   })
   expect(seen.get("x-ceraghit-client-ip")).toBe("203.0.113.7")
   expect(seen.get("x-ceraghit-proxy-secret")).toBe("p".repeat(32))
@@ -38,7 +38,7 @@ test("without PROXY_SECRET nothing client-sent is forwarded as trusted", async (
 
 test("a forged x-real-ip next to the platform's x-forwarded-for loses", async () => {
   process.env.PROXY_SECRET = "p".repeat(32)
-  const seen = await forwardedHeaders({ "x-real-ip": "6.6.6.6", "x-forwarded-for": "203.0.113.7, 10.0.0.1" })
+  const seen = await forwardedHeaders({ "x-real-ip": "6.6.6.6", "x-forwarded-for": "6.6.6.6, 203.0.113.7" })
   expect(seen.get("x-ceraghit-client-ip")).toBe("203.0.113.7")
-  expect((await forwardedHeaders({ "x-real-ip": "203.0.113.8" })).get("x-ceraghit-client-ip")).toBe("203.0.113.8")
+  expect((await forwardedHeaders({ "x-real-ip": "203.0.113.8" })).get("x-ceraghit-client-ip")).toBeNull()
 })

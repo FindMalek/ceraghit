@@ -46,6 +46,32 @@ export const shipmentParcelSchema = z.object({
   pieces: z.number().int().min(1).max(10),
 })
 
+export const DEFAULT_HS_CODE = "691390"
+
+export const customsItemSchema = z.object({
+  description: z.string().trim().min(2).max(50),
+  quantity: z.number().int().min(1).max(999),
+  weightGrams: z.number().int().min(1).max(30_000),
+  /** Total of the line (unit price x quantity) in the order currency, never converted. */
+  valueMinor: z.number().int().min(1).max(100_000_000),
+  hsCode: z.string().trim(),
+  originCountry: z.string().trim().toUpperCase().length(2),
+})
+export type CustomsItemInput = z.infer<typeof customsItemSchema>
+
+/** Declared goods of an international parcel, in the currency of the order. */
+export const shipmentCustomsSchema = z.object({
+  currency: currencySchema,
+  items: z.array(customsItemSchema).min(1).max(30),
+})
+export type ShipmentCustoms = z.infer<typeof shipmentCustomsSchema>
+
+/** 4 to 10 digits once dots and spaces are removed. */
+export const normalizeHsCode = (value: string): string | null => {
+  const digits = value.replace(/[.\s]/g, "")
+  return /^\d{4,10}$/.test(digits) ? digits : null
+}
+
 export const shipmentDraftSchema = z.object({
   orderId: z.string(),
   orderNumber: z.string(),
@@ -69,6 +95,8 @@ export const shipmentDraftSchema = z.object({
   /** Why the owner cannot create it (international, already shipped...), null when it can be created. */
   blocked: z.string().nullable(),
   warnings: z.array(z.string()),
+  /** Prefilled goods declaration for a destination outside Tunisia, null for a national parcel. */
+  customs: shipmentCustomsSchema.nullable(),
 })
 export type ShipmentDraft = z.infer<typeof shipmentDraftSchema>
 
@@ -79,6 +107,7 @@ export const shipmentDraftInputSchema = z.object({
   description: z.string().trim().min(3).max(50),
   fragile: z.boolean(),
   insurance: z.object({ amountMinor: z.number().int().min(1).max(100_000_000) }).nullable(),
+  customs: shipmentCustomsSchema.nullable().optional(),
 })
 export type ShipmentDraftInput = z.infer<typeof shipmentDraftInputSchema>
 
@@ -93,9 +122,14 @@ export const adminShipmentSchema = z.object({
   insuranceMinor: z.number().int().nullable(),
   currency: currencySchema,
   hasLabel: z.boolean(),
+  hasCommercialInvoice: z.boolean(),
   /** The Aramex pickup this parcel is booked in, null when none. */
   pickupId: z.string().nullable(),
   errors: z.array(z.object({ at: z.string(), code: z.string(), message: z.string() })),
+  /** Newest first. */
+  events: z.array(z.object({ code: z.string(), description: z.string(), at: z.string(), location: z.string() })),
+  lastPolledAt: z.string().nullable(),
+  deliveredAt: z.string().nullable(),
   createdAt: z.string(),
 })
 export type AdminShipment = z.infer<typeof adminShipmentSchema>

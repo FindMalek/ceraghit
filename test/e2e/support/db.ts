@@ -137,3 +137,8 @@ export async function mailKinds(number: string, status?: string): Promise<Record
 export async function neutraliseOrder(number: string): Promise<void> {
   await sql`update orders set customer_name = 'Client export', city = 'Tunis' where number = ${number}`
 }
+
+/** Gives an order's shipment a waybill the simulated Aramex answers with a given story (`DELIVERED`, `PROBLEM`). */
+export async function setShipmentWaybill(number: string, waybill: string): Promise<void> {
+  await sql`update shipments set waybill = ${waybill}, status = 'created' where order_id = (select id from orders where number = ${number})`
+}

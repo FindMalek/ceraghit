@@ -109,7 +109,18 @@ Limits are counted in the `rate_limits` table (fixed windows, shared by every ap
 login 5 failures per 15 min per address and 10 per hour per email, orders 10 per 10 min, order lookups 60 per 10 min,
 unique piece requests 5 per hour, request photo uploads 12 per 10 min. Behind the `/api` proxy the api only sees the web
 function, so the proxy forwards the real address in `x-ceraghit-client-ip` with `PROXY_SECRET`; the api ignores it without
-the matching secret. The daily cleanup also deletes counters older than a day. To unlock the owner right away:
+the matching secret. The api never reads a client supplied `x-forwarded-for`: it uses the signed address, else the entry
+of `x-forwarded-for` that its own edge appended, counted from the right (`TRUSTED_PROXY_HOPS`, default 0 = none), else
+the socket address (one shared bucket when the host gives none). The web and dashboard proxies read the same header with
+`TRUSTED_PROXY_HOPS` too (default 1). What each environment sets:
+
+| environment | edge | api | web and dashboard |
+| :-- | :-- | :-- | :-- |
+| production (Vercel) | overwrites `x-forwarded-for` with the real address | `PROXY_SECRET`, `TRUSTED_PROXY_HOPS=1` (direct calls to the api origin) | `PROXY_SECRET`, default hops 1 |
+| preview (homelab Traefik via Dokploy) | appends the peer it saw to `x-forwarded-for`, so the left entries are the client's | `PROXY_SECRET`, `TRUSTED_PROXY_HOPS=1` (the deploy script sets both) | `PROXY_SECRET`, default hops 1; set 2 if another proxy such as Cloudflare sits in front of Traefik |
+| local, e2e, demo recorder | none | `APP_ENV=local` honours the rightmost `x-forwarded-for` entry, so fixtures and the recorder `ip` step pick their own address | no secret needed |
+
+Outside `APP_ENV=local` a spoofed `x-forwarded-for` therefore changes nothing. The daily cleanup also deletes counters older than a day. To unlock the owner right away:
 `delete from rate_limits where key like 'login:%'`. Optional on top: Vercel WAF rate limiting rules.
 
 ## scheduled jobs

@@ -4,6 +4,7 @@ import {
   categories,
   createDb,
   demoRef,
+  integrationCredentials,
   invoiceCounters,
   invoices,
   mailLog,
@@ -131,6 +132,7 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     await db.delete(invoiceCounters).where(eq(invoiceCounters.year, 2096))
     await db.delete(products).where(eq(products.id, productId))
     await db.delete(categories).where(eq(categories.slug, "tst-st"))
+    await db.delete(integrationCredentials).where(eq(integrationCredentials.provider, "konnect"))
   })
 
   test("a demo order is never checked by the konnect gateway", async () => {
