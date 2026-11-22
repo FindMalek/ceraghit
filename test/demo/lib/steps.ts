@@ -32,6 +32,10 @@ export const ACTIONS = [
   "network",
   /** Clicks the target, keeps the downloaded file and shows it over the page (CSV table, first PDF page). */
   "download",
+  /** Sets a cookie on the current app (`ceraghit_currency=EUR`), to film what a cookie decides. */
+  "cookie",
+  /** Slides a finger across the target (`left` or `right`), for galleries that listen to touch events. Phone only. */
+  "swipe",
 ] as const
 
 const step = z.object({

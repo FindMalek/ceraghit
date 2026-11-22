@@ -6,6 +6,7 @@ import {
   buildScenario,
   DEMO_DESCRIPTIONS,
   DEMO_LOCATIONS,
+  DEMO_STOCK_STATES,
   DEMO_TN_CITIES,
   demoExtraProducts,
   demoRequests,
@@ -249,4 +250,15 @@ test("demo requests cover every status and the extra products are drafts or arch
   )
   expect(extra.every((p) => p.status !== "published")).toBe(true)
   expect(new Set(extra.map((p) => p.categoryId)).size).toBe(3)
+})
+
+test("the stock states the storefront videos film exist in the catalogue", () => {
+  const byRef = new Map(CATALOGUE.map((p) => [p.ref, p]))
+  const { lastRef, soldOutRef, soldOutOptionRef } = DEMO_STOCK_STATES
+  for (const ref of [lastRef, soldOutRef, soldOutOptionRef]) {
+    const piece = byRef.get(ref)
+    expect(piece?.unique).toBe(false)
+    expect(piece?.quoteOnly).toBe(false)
+  }
+  expect(new Set([lastRef, soldOutRef, soldOutOptionRef]).size).toBe(3)
 })

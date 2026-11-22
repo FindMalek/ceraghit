@@ -291,6 +291,9 @@ export function demoRequests(now: Date): (typeof customRequests.$inferInsert)[] 
   ]
 }
 
+/** Storefront stock states the videos film: a last piece, a sold out piece, and a sold out option on a piece with options. */
+export const DEMO_STOCK_STATES = { lastRef: "0015", soldOutRef: "0210", soldOutOptionRef: "0209" } as const
+
 /** Draft and archived pieces, so the product list passes its 40 row page and the status filters have rows. Refs 08xx, the journeys create 09xx. */
 export function demoExtraProducts(categoryIds: string[]): (typeof products.$inferInsert)[] {
   const names = [

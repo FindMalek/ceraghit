@@ -1,4 +1,4 @@
-import { count, eq, inArray } from "drizzle-orm"
+import { and, count, eq, inArray } from "drizzle-orm"
 import type { Db } from "../index"
 import { withSeedLock } from "../migrate"
 import { hashPassword } from "../password"
@@ -35,6 +35,7 @@ import {
   DEMO_DESCRIPTIONS,
   DEMO_LOCATIONS,
   DEMO_TN_CITIES,
+  DEMO_STOCK_STATES,
   demoExtraProducts,
   demoRequests,
 } from "./scenario"
@@ -199,6 +200,14 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
     if (!opts.demo) return
     await tx.insert(locations).values(DEMO_LOCATIONS)
     await tx.insert(products).values(demoExtraProducts(cats.map((c) => c.id)))
+    await tx.update(products).set({ stock: 1 }).where(eq(products.ref, DEMO_STOCK_STATES.lastRef))
+    await tx.update(products).set({ stock: 0 }).where(eq(products.ref, DEMO_STOCK_STATES.soldOutRef))
+    const optionPiece = rows.find((r) => r.ref === DEMO_STOCK_STATES.soldOutOptionRef)
+    if (optionPiece)
+      await tx
+        .update(productVariants)
+        .set({ stock: 0 })
+        .where(and(eq(productVariants.productId, optionPiece.id), eq(productVariants.position, 1)))
     await tx.insert(customRequests).values(demoRequests(new Date()))
     if ((opts.profile ?? "complete") === "complete") {
       const now = new Date()

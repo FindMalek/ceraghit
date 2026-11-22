@@ -91,6 +91,8 @@ Extra step actions for what a plain click cannot show. All of them act on the re
 | `back` | none | Browser back, for the page after a logout. |
 | `network` | `slow 4000 **/api/**`, `status 500 **/api/**`, `fail **/api/**`, `reset` | Loading skeletons (`slow`, then `goto`), error banners and pages (`status`, `fail`). The glob must start with `**/`. `reset` before the next scene. |
 | `download` | none (the `target` is the button) | Clicks, keeps the file in `out/downloads/<video>/` and shows it over the page: a table for a CSV, the first page for a PDF (needs `pdftoppm`, otherwise a card with the name, size and page count). The card goes away at the next step. |
+| `cookie` | `name=value` | Sets a cookie on the current app, for example `ceraghit_currency=EUR` on the storefront (local and previews only). |
+| `swipe` | `left` or `right` | A finger drag across the target through touch events (the product gallery listens to them). Meant for the phone run. |
 
 `upload` reads from `out/assets/`, generated at every run (PNG by a tiny encoder, WebP through ffmpeg when it has libwebp, nothing committed):
 `photo-1.png`, `photo-2.png`, `photo-3.png`, `photo-1.webp`, `photo-2.webp`, `banner-1.png`, `banner-1.webp`, and `not-an-image.txt` for the wrong file type message.

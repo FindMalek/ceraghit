@@ -149,6 +149,30 @@ export function createPacer(options: PacerOptions): Pacer {
         case "clear-cookies":
           await page.context().clearCookies()
           break
+        case "cookie": {
+          const [name = "", ...rest] = (value ?? "").split("=")
+          await page.context().addCookies([{ name, value: rest.join("="), url: options.baseUrl(options.app) }])
+          break
+        }
+        case "swipe": {
+          if (!target) throw new Error("swipe needs a target")
+          const from = await centerOf(target)
+          const dx = value === "right" ? 140 : -140
+          const cdp = await page.context().newCDPSession(page)
+          const touch = (type: "touchStart" | "touchMove" | "touchEnd", x: number) =>
+            cdp.send("Input.dispatchTouchEvent", {
+              type,
+              touchPoints: type === "touchEnd" ? [] : [{ x, y: from.y }],
+            })
+          await touch("touchStart", from.x)
+          for (let i = 1; i <= 8; i++) {
+            await touch("touchMove", from.x + (dx * i) / 8)
+            await sleep(30)
+          }
+          await touch("touchEnd", from.x + dx)
+          await cdp.detach()
+          break
+        }
         case "back":
           await page.goBack()
           break
