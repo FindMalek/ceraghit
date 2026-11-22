@@ -36,6 +36,9 @@ test("the reset button clears the product filters", { tag: ["@fr"] }, async ({ p
 test("the product list shows 40 rows and loads the rest on demand", { tag: ["@fr"] }, async ({ page, step }) => {
   const db = openDb()
   await db.execute(sql`delete from products where ref like 'zz-%'`)
+  const [{ n: total } = { n: 0 }] = (await db.execute(sql`select count(*)::int as n from products`)) as unknown as {
+    n: number
+  }[]
   await db.execute(sql`
     insert into products (ref, slug, category_id, title, price_tnd, price_eur, stock, status)
     select 'zz-' || g, 'zz-load-more-' || g, (select id from categories limit 1), '{"fr":"Pièce de test"}'::jsonb, 1000, 300, 1, 'draft'
@@ -59,7 +62,7 @@ test("the product list shows 40 rows and loads the rest on demand", { tag: ["@fr
       await page.getByRole("button", { name: "Réinitialiser les filtres" }).click()
       await expect(rows).toHaveCount(40)
       await more.click()
-      await expect(rows).toHaveCount(45)
+      await expect(rows).toHaveCount(total + 15)
       await expect(more).toHaveCount(0)
     })
   } finally {
@@ -121,6 +124,9 @@ test("the request list shows 20 at a time and the filter has a reset", { tag: ["
   const [{ n } = { n: 0 }] = (await db.execute(sql`select count(*)::int as n from custom_requests`)) as unknown as {
     n: number
   }[]
+  const [{ contacted } = { contacted: 0 }] = (await db.execute(
+    sql`select count(*)::int as contacted from custom_requests where status = 'contacted'`,
+  )) as unknown as { contacted: number }[]
   const extra = Math.max(25 - n, 4)
   await db.execute(sql`
     insert into custom_requests (name, email, description, status)
@@ -148,7 +154,7 @@ test("the request list shows 20 at a time and the filter has a reset", { tag: ["
     await step("a status filter narrows the list and the reset brings it back", async () => {
       await page.getByRole("combobox", { name: "Filtrer par statut" }).click()
       await page.getByRole("option", { name: "Contactée" }).click()
-      await expect(rows).toHaveCount(3)
+      await expect(rows).toHaveCount(contacted + 3)
       await expect(more).toHaveCount(0)
       await page.getByRole("button", { name: "Réinitialiser le filtre" }).click()
       await expect(rows).toHaveCount(20)
