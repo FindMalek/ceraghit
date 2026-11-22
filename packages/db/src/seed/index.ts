@@ -5,6 +5,7 @@ import { hashPassword } from "../password"
 import {
   admins,
   categories,
+  customRequests,
   jobRuns,
   locations,
   mailLog,
@@ -28,7 +29,15 @@ import {
   ensureSiteImages,
   syncBundledMedia,
 } from "./media"
-import { buildDemoProfile, buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS, DEMO_TN_CITIES } from "./scenario"
+import {
+  buildDemoProfile,
+  buildScenario,
+  DEMO_DESCRIPTIONS,
+  DEMO_LOCATIONS,
+  DEMO_TN_CITIES,
+  demoExtraProducts,
+  demoRequests,
+} from "./scenario"
 import { localize } from "./translations"
 
 export { buildScenario } from "./scenario"
@@ -189,6 +198,8 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
 
     if (!opts.demo) return
     await tx.insert(locations).values(DEMO_LOCATIONS)
+    await tx.insert(products).values(demoExtraProducts(cats.map((c) => c.id)))
+    await tx.insert(customRequests).values(demoRequests(new Date()))
     if ((opts.profile ?? "complete") === "complete") {
       const now = new Date()
       const profile = buildDemoProfile(now)

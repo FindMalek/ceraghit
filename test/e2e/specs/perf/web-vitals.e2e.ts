@@ -159,8 +159,7 @@ test(
   },
 )
 
-test("shop: the grid only loads the first viewport and a few more", ONCE, async ({ page, isMobile, step }) => {
-  test.fixme(isMobile, "#350 the shop loads the category tiles and the cards eagerly on a phone")
+test("shop: the grid only loads the first viewport and a few more", ONCE, async ({ page, step }) => {
   await step("the shop grid opens", async () => {
     await page.goto(`${E2E.webUrl}/shop`)
     await page.waitForLoadState("networkidle")

@@ -2,7 +2,14 @@ import { expect, test } from "bun:test"
 import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
-import { buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS, DEMO_TN_CITIES } from "../../src/seed/scenario"
+import {
+  buildScenario,
+  DEMO_DESCRIPTIONS,
+  DEMO_LOCATIONS,
+  DEMO_TN_CITIES,
+  demoExtraProducts,
+  demoRequests,
+} from "../../src/seed/scenario"
 
 const products = [
   { id: "a", ref: "0010", title: "Curda Seca", priceTnd: 40_000, priceEur: 1_200 },
@@ -207,4 +214,39 @@ test("one demo location has a bundled photo so the atelier card shows an image",
   const withPhoto = DEMO_LOCATIONS.filter((l) => l.image)
   expect(withPhoto).toHaveLength(1)
   expect(withPhoto[0]?.image).toStartWith("/catalogue/")
+})
+
+test("the order list passes its 200 row page, the older orders stay out of the default 30 days", () => {
+  const now = new Date("2026-10-22T12:00:00Z")
+  const { orders } = buildScenario(now, products)
+  expect(orders.length).toBeGreaterThan(200)
+  expect(new Set(orders.map((o) => o.number)).size).toBe(orders.length)
+  const older = orders.filter((o) => o.number!.startsWith("CER-11"))
+  expect(older.every((o) => now.getTime() - o.createdAt!.getTime() > 60 * 864e5)).toBe(true)
+  expect(older.every((o) => o.status !== "pending_payment")).toBe(true)
+})
+
+test("CER-10100 shows the gateway mismatch then the automatic cancel, CER-10101 is shipped without a parcel card", () => {
+  const { orders, audit, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const mismatch = orders.find((o) => o.number === "CER-10100")!
+  expect(audit.filter((a) => a.orderId === mismatch.id).map((a) => a.action)).toEqual([
+    "gateway_mismatch",
+    "hold_expired",
+  ])
+  const shipped = orders.find((o) => o.number === "CER-10101")!
+  expect([shipped.status, shipped.carrier, Boolean(shipped.trackingNumber)]).toEqual(["fulfilled", "rapid-poste", true])
+  expect(shipments.some((s) => s.orderId === shipped.id)).toBe(false)
+})
+
+test("demo requests cover every status and the extra products are drafts or archived with unique refs", () => {
+  expect(new Set(demoRequests(new Date()).map((r) => r.status))).toEqual(
+    new Set(["new", "contacted", "done", "declined"]),
+  )
+  const extra = demoExtraProducts(["c1", "c2", "c3"])
+  expect(CATALOGUE.length + extra.length).toBeGreaterThan(40)
+  expect(new Set([...CATALOGUE.map((p) => p.ref), ...extra.map((p) => p.ref)]).size).toBe(
+    CATALOGUE.length + extra.length,
+  )
+  expect(extra.every((p) => p.status !== "published")).toBe(true)
+  expect(new Set(extra.map((p) => p.categoryId)).size).toBe(3)
 })
