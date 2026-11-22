@@ -34,7 +34,7 @@ const schema = z
      * the dashboard, that row wins. Production still offers card only through live Konnect (gatewayReady).
      */
     ONLINE_PAYMENTS: flag.default(false),
-    /** Lets the daily GitHub job delete files nothing uses any more, see .github/workflows/cleanup-uploads.yml. */
+    /** Lets the daily Trigger.dev job delete files nothing uses any more, see docs/deploy.md (scheduled jobs). */
     CRON_SECRET: z.string().min(24).optional(),
     /** Shared with the web and dashboard proxies so the api trusts the client address they forward. Required in production. */
     PROXY_SECRET: z.string().min(24).optional(),
