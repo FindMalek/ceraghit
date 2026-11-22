@@ -22,6 +22,11 @@ type NewJobRun = typeof jobRuns.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
 
+/** The studio settings of the demo: WhatsApp and Instagram shown in the footer. Rates stay the defaults. */
+export function demoStudioSettings(rates: unknown) {
+  return { whatsapp: "+216 20 000 000", instagram: "@ceraghit_demo", shippingRates: rates, shippingNote: null }
+}
+
 export interface ScenarioProduct {
   id: string
   ref: string
@@ -132,6 +137,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     city: "Nabeul",
     country: "Tunisie",
     image: "/catalogue/studio-interior.webp",
+    mapUrl: "https://www.openstreetmap.org/search?query=Nabeul",
     phone: "+216 20 000 000",
     hours: {
       fr: "Du mardi au samedi, 10h à 18h",
@@ -150,6 +156,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     address: "Rue Haute 120",
     city: "Bruxelles",
     country: "Belgique",
+    mapUrl: "https://www.openstreetmap.org/search?query=Bruxelles",
     phone: "+32 470 00 00 00",
     hours: {
       fr: "Du mercredi au samedi, 11h à 19h",

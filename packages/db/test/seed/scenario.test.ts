@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { DEFAULT_SHIPPING_RATES, studioSettingsSchema } from "@workspace/sdk"
 import { parseDemoRef } from "../../src/demo-ref"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
@@ -9,6 +10,7 @@ import {
   DEMO_TN_CITIES,
   demoExtraProducts,
   demoRequests,
+  demoStudioSettings,
 } from "../../src/seed/scenario"
 
 const products = [
@@ -236,6 +238,12 @@ test("CER-10100 shows the gateway mismatch then the automatic cancel, CER-10101 
   const shipped = orders.find((o) => o.number === "CER-10101")!
   expect([shipped.status, shipped.carrier, Boolean(shipped.trackingNumber)]).toEqual(["fulfilled", "rapid-poste", true])
   expect(shipments.some((s) => s.orderId === shipped.id)).toBe(false)
+})
+
+test("the demo studio settings are valid and fill the footer links", () => {
+  const parsed = studioSettingsSchema.parse(demoStudioSettings(DEFAULT_SHIPPING_RATES))
+  expect([parsed.whatsapp, parsed.instagram].every(Boolean)).toBe(true)
+  expect(DEMO_LOCATIONS.every((l) => l.mapUrl)).toBe(true)
 })
 
 test("demo requests cover every status and the extra products are drafts or archived with unique refs", () => {
