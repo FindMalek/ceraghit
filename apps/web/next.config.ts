@@ -3,13 +3,26 @@ import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
+/** Public host of the bucket (R2 custom domain): set where the build runs, empty on the homelab (signed urls). */
+const filesUrl = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : null
+
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   transpilePackages: ["@workspace/ui", "@workspace/sdk"],
-  // Static catalogue photos are resized per device, see components/photo.tsx.
+  env: { NEXT_PUBLIC_FILES_URL: filesUrl?.origin ?? "" },
+  // Catalogue photos and uploads from the public bucket host are resized per device, see components/photo.tsx.
   images: {
     formats: ["image/webp"],
+    remotePatterns: filesUrl
+      ? [
+          {
+            protocol: filesUrl.protocol === "http:" ? "http" : "https",
+            hostname: filesUrl.hostname,
+            port: filesUrl.port,
+          },
+        ]
+      : [],
     localPatterns: [{ pathname: "/catalogue/**" }, { pathname: "/api/files/**" }, { pathname: "/logo.webp" }],
   },
   poweredByHeader: false,
