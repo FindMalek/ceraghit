@@ -38,7 +38,7 @@ ni à personne. Pour la changer, saisissez-en une nouvelle.
 - **Deux prix, jamais convertis** : chaque produit a un prix en dinars (DT) et un prix en euros (EUR). Vous fixez les deux.
   Le site n'en calcule jamais un à partir de l'autre, et un client ne voit qu'une seule monnaie à la fois.
 - **Pièce unique** : une seule disponible, elle ne peut pas être commandée deux fois.
-- **Sur devis** : pas de bouton d'achat, le client vous écrit depuis la page « Demande ».
+- **Sur devis** : pas de bouton d'achat, le client vous écrit depuis le bouton « Demander un devis ».
 - **Variantes** : tailles ou finitions, avec leur prix et leur stock.
 - **Dépublier** : le produit disparaît du site mais reste dans le tableau de bord. **Supprimer** : définitif, si aucune commande
   ne s'y rapporte.
@@ -63,7 +63,7 @@ Facebook). On change une image comme dans la médiathèque. Le site se met à jo
 
 ## 6. Traductions
 
-Les textes se saisissent en français, puis en anglais et en arabe. Le bouton de **traduction automatique**, à côté des onglets
+Les textes se saisissent en français, puis en anglais et en arabe. Le bouton **Traduire**, à côté des onglets
 de langue, propose un brouillon en anglais et en arabe : il ne remplit que les onglets vides et rien n'est enregistré avant
 que vous cliquiez sur « Enregistrer ». Relisez surtout l'arabe. Une traduction de longueur très différente du français est
 refusée : reformulez plutôt que d'ajouter du remplissage.
@@ -74,13 +74,13 @@ refusée : reformulez plutôt que d'ajouter du remplissage.
 
 | type | qui paie comment | ce que vous faites |
 | :-- | :-- | :-- |
-| Paiement à la livraison (Tunisie, en DT) | le client paie le livreur | expédier, puis marquer payée quand l'argent est reçu |
+| Paiement à la livraison (Tunisie, en DT) | le client paie le livreur | marquer expédiée, puis marquer payée quand l'argent est reçu |
 | Virement (étranger, en EUR) | le client vire sur votre compte, le numéro de commande sert de référence | vérifier la banque, puis **marquer payée** |
 | Paiement en ligne (carte, via Konnect) | le client paie sur la page de Konnect | rien : la commande passe payée toute seule quand Konnect confirme |
 | Lien Payoneer | vous envoyez un lien de paiement, le client paie | coller le lien sur la commande, puis **marquer payée** à la réception |
 
 - **Marquer payée** est la seule façon de valider un paiement à la main. L'action est enregistrée (qui, quand).
-- **Expédier** : choisissez le transporteur et saisissez le numéro de suivi, ou créez l'envoi Aramex. Le client reçoit un
+- **Marquer expédiée** : choisissez le transporteur et saisissez le numéro de suivi, ou créez l'expédition Aramex. Le client reçoit un
   e-mail avec le suivi.
 - **Annuler** ou **rembourser** : la boîte de confirmation indique l'effet sur le stock. Un remboursement s'effectue chez
   vous (banque, Konnect, Payoneer), le site ne rend pas l'argent tout seul.
@@ -100,7 +100,7 @@ carte reste coupé et le site propose uniquement la livraison payée à la réce
   mot de passe, le numéro de compte, le PIN, l'entité (souvent `TUN`) et le pays (`TN`). Cliquez sur « Tester la connexion » :
   le test dit quelle étape échoue (identifiants ou compte). Tant que la configuration n'est pas complète, la boutique reste
   en livraison manuelle et la page le dit.
-- **Étiquettes** : depuis la commande, « Créer l'envoi » produit l'étiquette PDF, à imprimer et coller sur le colis.
+- **Étiquettes** : depuis la commande, « Créer l'expédition Aramex » ouvre une fenêtre dont le bouton « Créer l'expédition et l'étiquette » produit l'étiquette PDF, à imprimer et coller sur le colis.
   Les étiquettes sont privées : seul le tableau de bord les ouvre.
 - **Suivi** : il se met à jour toutes les 3 heures, ou tout de suite avec « Actualiser » sur la carte de l'envoi.
 - **Enlèvement** : une fois l'étiquette créée, « Demander l'enlèvement » sur la carte de l'envoi réserve le passage du livreur à l'atelier (du lundi au samedi) ; vous pouvez l'annuler depuis la même carte.
@@ -122,11 +122,11 @@ se suit sans trou et un numéro n'est jamais réutilisé.
 
 Le site envoie au client : confirmation de commande, paiement reçu, expédition. Il vous envoie : nouvelle commande, demande de
 pièce unique. Si l'envoi d'un e-mail échoue, une bannière apparaît et la page **Emails** (menu) liste les échecs : cliquez
-sur « renvoyer » ou « ignorer ». Si les échecs se répètent, prévenez l'opérateur.
+sur « Renvoyer » ou « Ignorer ». Si les échecs se répètent, prévenez l'opérateur.
 
 ## 12. Demandes de pièces uniques
 
-« Demandes » : les messages du formulaire « Demande » du site, avec les photos du client. Répondez vous-même par e-mail,
+« Demandes » : les messages du formulaire « Créer une pièce unique » du site, avec les photos du client. Répondez vous-même par e-mail,
 depuis votre boîte habituelle. Les demandes terminées depuis plus de 12 mois sont supprimées à la main par l'opérateur.
 
 ## 13. Quand quelque chose ne marche pas
@@ -136,9 +136,9 @@ depuis votre boîte habituelle. Les demandes terminées depuis plus de 12 mois s
 | le site ne s'ouvre pas | attendre 5 minutes, essayer en 4G, puis écrire à l'opérateur ; le site se surveille tout seul | opérateur |
 | un client dit avoir payé par carte mais la commande reste en attente | ne pas l'expédier, ouvrir la commande et regarder son statut ; si le paiement est confirmé côté Konnect, écrire à l'opérateur avec le numéro de commande | opérateur |
 | un virement ou un lien Payoneer est arrivé | « Marquer payée » sur la commande | vous |
-| un e-mail n'est pas arrivé | page « Emails » : renvoyer ; vérifier les indésirables du client | vous, puis opérateur |
+| un e-mail n'est pas arrivé | page « Emails » : « Renvoyer » ; vérifier les indésirables du client | vous, puis opérateur |
 | une photo ne s'envoie pas | réessayer ; vérifier l'usage de l'espace dans « Réglages » (limite 2,5 Go) ; supprimer les photos inutiles | vous, puis opérateur |
-| « Livraison » dit « Identifiants refusés » | vérifier le nom d'utilisateur, le mot de passe et le PIN avec Aramex | vous, puis conseiller Aramex |
+| « Livraison » dit « Identifiants Aramex refusés (nom d'utilisateur, mot de passe, numéro de compte ou PIN) » | vérifier le nom d'utilisateur, le mot de passe et le PIN avec Aramex | vous, puis conseiller Aramex |
 | mot de passe oublié ou connexion bloquée | écrire à l'opérateur | opérateur |
 | une alerte rouge dans « Réglages » (tâche automatique en retard) | noter le nom de la tâche et écrire à l'opérateur | opérateur |
 
