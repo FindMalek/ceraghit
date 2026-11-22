@@ -1,4 +1,5 @@
 import { context, propagation, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api"
+import { flushErrors, reportError } from "@workspace/errors"
 import { logger, patchConsole, resolveRequestId, withRequestId } from "@workspace/logger"
 import { recordHttpRequest } from "@workspace/orpc/metrics"
 import type { Env } from "./env"
@@ -50,7 +51,15 @@ export function withRequestLogging(next: Handler): Handler {
         try {
           response = await next(request)
         } catch (error) {
-          logger.error("request failed", { method: request.method, path: pathname, route, err: error })
+          const eventId = reportError(error, { tags: { route, method: request.method } })
+          logger.error("request failed", {
+            method: request.method,
+            path: pathname,
+            route,
+            err: error,
+            glitchtip_event_id: eventId,
+          })
+          if (process.env.VERCEL) await flushErrors()
           recordHttpRequest({ route, status: 500, ms: performance.now() - started })
           span.setStatus({ code: SpanStatusCode.ERROR, message: error instanceof Error ? error.message : "failed" })
           span.end()
@@ -61,7 +70,7 @@ export function withRequestLogging(next: Handler): Handler {
         if (response.status >= 500) span.setStatus({ code: SpanStatusCode.ERROR })
         span.end()
         const log = pathname === "/health" ? logger.debug : logger.info
-        log("request", { method: request.method, path: pathname, status: response.status, ms: Math.round(ms) })
+        log("request", { method: request.method, path: pathname, route, status: response.status, ms: Math.round(ms) })
         recordHttpRequest({ route, status: response.status, ms })
         const withId = new Response(response.body, response)
         withId.headers.set("x-request-id", requestId)

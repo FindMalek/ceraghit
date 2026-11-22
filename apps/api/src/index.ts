@@ -1,6 +1,7 @@
 import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
+import { initNode } from "@workspace/errors/node"
 import { logger } from "@workspace/logger"
 import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
 import { createFakeAramexFetch } from "@workspace/orpc/fake-aramex"
@@ -16,6 +17,7 @@ import { flushAfter, startTelemetry } from "./telemetry"
 const env = loadEnv()
 startLogger(env)
 const telemetry = startTelemetry(env)
+initNode(env as unknown as Record<string, string | undefined>, "ceraghit-api")
 if (!telemetry.enabled && env.APP_ENV === "production") {
   logger.warn("telemetry off: set OPENOBSERVE_URL, OPENOBSERVE_USER and OPENOBSERVE_PASSWORD to ship")
 }

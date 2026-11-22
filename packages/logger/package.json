@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./redact": "./src/redact.ts",
     "./next": "./src/next.ts",
     "./otel": "./src/otel.ts",
     "./openobserve": "./src/openobserve.ts"

@@ -1,3 +1,4 @@
+import { glitchtipIssues } from "@workspace/errors/config"
 import { parseKeyEntry } from "@workspace/orpc/secrets"
 import { z } from "zod"
 
@@ -85,6 +86,14 @@ const schema = z
     OPENOBSERVE_USER: z.string().optional(),
     OPENOBSERVE_PASSWORD: z.string().optional(),
     OPENOBSERVE_STREAM: z.string().default("ceraghit"),
+    /**
+     * GlitchTip (Sentry compatible error tracking). Optional: without a DSN, or with APP_ENV=local, nothing starts. One
+     * project per environment: GLITCHTIP_ENV declares which one the DSN belongs to and must equal APP_ENV.
+     */
+    GLITCHTIP_DSN: z.string().optional(),
+    GLITCHTIP_ENV: z.enum(["preview", "production"]).optional(),
+    GLITCHTIP_RELEASE: z.string().optional(),
+    GLITCHTIP_SAMPLE_RATE: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     const fail = (message: string) => ctx.addIssue({ code: "custom", message })
@@ -105,6 +114,7 @@ const schema = z
       )
         fail("SECRETS_KEY_PREVIOUS must have a lower version than SECRETS_KEY")
     }
+    for (const issue of glitchtipIssues(env as unknown as Record<string, string | undefined>)) fail(issue)
     if (env.APP_ENV === "production") {
       if (env.ARAMEX_FAKE) fail("ARAMEX_FAKE is only allowed outside production")
       if (env.KONNECT_BASE_URL) fail("KONNECT_BASE_URL is only allowed outside production")
