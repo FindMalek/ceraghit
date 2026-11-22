@@ -1,4 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
+import { captureDownload, hideFile, showFile } from "./files"
+import { assertLoopbackUrls, spoofedIp } from "./guard"
+import { applyNetwork, parseNetwork } from "./net"
 import type { Device, Step, Target } from "./steps"
 
 export const DEFAULT_HOLD_MS = 1200
@@ -31,7 +34,8 @@ export function locate(page: Page, target: Target): Locator {
   return target.nth === undefined ? visible : visible.nth(target.nth)
 }
 
-function anyMatch(page: Page, target: Target): Locator {
+/** Visible or not: a file input is hidden behind its button. */
+export function anyMatch(page: Page, target: Target): Locator {
   if (target.testId) return page.getByTestId(target.testId)
   if (target.role) {
     return page.getByRole(target.role as Parameters<Page["getByRole"]>[0], target.name ? { name: target.name } : {})
@@ -57,6 +61,8 @@ export interface PacerOptions {
   baseUrl: (app: "web" | "dashboard") => string
   app: "web" | "dashboard"
   assetsDir: string
+  /** Where `download` steps keep their files. */
+  downloadsDir?: string
   zoom: boolean
   seed?: number
 }
@@ -133,7 +139,28 @@ export function createPacer(options: PacerOptions): Pacer {
     },
     async run(step, value) {
       const { action, target } = step
+      await hideFile(page)
       switch (action) {
+        case "ip": {
+          assertLoopbackUrls([options.baseUrl("web"), options.baseUrl("dashboard")])
+          await page.context().setExtraHTTPHeaders({ "x-forwarded-for": spoofedIp(value) })
+          break
+        }
+        case "clear-cookies":
+          await page.context().clearCookies()
+          break
+        case "back":
+          await page.goBack()
+          break
+        case "network":
+          await applyNetwork(page.context(), parseNetwork(value))
+          break
+        case "download": {
+          if (!target) throw new Error("download needs a target")
+          const file = await captureDownload(page, options.downloadsDir ?? "out/downloads", () => press(target))
+          await showFile(page, file)
+          break
+        }
         case "goto": {
           await page.goto(new URL(value ?? "/", options.baseUrl(options.app)).toString())
           break
@@ -160,7 +187,7 @@ export function createPacer(options: PacerOptions): Pacer {
           break
         case "upload":
           if (!target) throw new Error("upload needs a target")
-          await locate(page, target)
+          await (target.nth === undefined ? anyMatch(page, target) : anyMatch(page, target).nth(target.nth))
             .first()
             .setInputFiles(`${options.assetsDir}/${value ?? ""}`)
           break

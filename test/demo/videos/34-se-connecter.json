@@ -2,58 +2,194 @@
   "id": "34",
   "slug": "se-connecter",
   "title_fr": "Se connecter et se déconnecter",
-  "start": { "app": "dashboard", "path": "/", "loggedIn": false },
+  "start": {
+    "app": "dashboard",
+    "path": "/",
+    "loggedIn": false
+  },
   "steps": [
-    { "action": "wait", "caption_fr": "Sans session, le tableau de bord vous renvoie ici.", "holdMs": 1500 },
+    {
+      "action": "wait",
+      "caption_fr": "Sans session, le tableau de bord vous renvoie ici.",
+      "holdMs": 1500
+    },
     {
       "action": "fill",
-      "target": { "label": "Email" },
+      "target": {
+        "label": "Email"
+      },
       "value": "{{ADMIN_EMAIL}}",
       "caption_fr": "Saisissez votre adresse email."
     },
     {
       "action": "fill",
-      "target": { "label": "Mot de passe" },
+      "target": {
+        "label": "Mot de passe"
+      },
       "value": "mauvais-mot-de-passe",
       "caption_fr": "Un mauvais mot de passe, par exemple."
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Se connecter" },
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
       "caption_fr": "Cliquez sur Se connecter."
     },
-    { "action": "wait", "caption_fr": "Le message ne dit pas ce qui est faux.", "holdMs": 1800 },
+    {
+      "action": "wait",
+      "caption_fr": "Le message ne dit pas ce qui est faux.",
+      "holdMs": 1800
+    },
     {
       "action": "fill",
-      "target": { "label": "Mot de passe" },
+      "target": {
+        "label": "Mot de passe"
+      },
       "value": "{{ADMIN_PASSWORD}}",
       "caption_fr": "Saisissez le bon mot de passe."
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Se connecter" },
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
       "caption_fr": "Cliquez sur Se connecter."
     },
-    { "action": "wait", "caption_fr": "Vous arrivez sur la vue d'ensemble.", "holdMs": 1800 },
-    { "action": "wait", "caption_fr": "Pour quitter, utilisez le bouton du compte.", "holdMs": 800 },
+    {
+      "action": "wait",
+      "caption_fr": "Vous arrivez sur la vue d'ensemble.",
+      "holdMs": 1800
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Pour quitter, utilisez le bouton du compte.",
+      "holdMs": 800
+    },
     {
       "action": "tap",
-      "target": { "role": "button", "name": "Menu" },
+      "target": {
+        "role": "button",
+        "name": "Menu"
+      },
       "caption_fr": "Ouvrez l'onglet Menu.",
       "only": "mobile"
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Sabri Ghit" },
+      "target": {
+        "role": "button",
+        "name": "Sabri Ghit"
+      },
       "caption_fr": "Cliquez sur votre nom, en bas à gauche.",
       "only": "desktop"
     },
     {
       "action": "tap",
-      "target": { "role": "button", "name": "Sabri Ghit" },
+      "target": {
+        "role": "button",
+        "name": "Sabri Ghit"
+      },
       "caption_fr": "Touchez votre nom, en bas du menu.",
       "only": "mobile"
     },
-    { "action": "wait", "caption_fr": "Vous êtes revenu sur la connexion.", "holdMs": 1800 }
+    {
+      "action": "wait",
+      "caption_fr": "Vous êtes revenu sur la connexion.",
+      "holdMs": 1800
+    },
+    {
+      "action": "ip",
+      "value": "203.0.113.21",
+      "caption_fr": "Cinq essais ratés bloquent l'adresse 15 minutes.",
+      "holdMs": 1500
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Email"
+      },
+      "value": "inconnu@example.com",
+      "caption_fr": "Saisissez une adresse inconnue."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Mot de passe"
+      },
+      "value": "faux",
+      "caption_fr": "Un mauvais mot de passe, par exemple."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
+      "caption_fr": "Cliquez sur Se connecter."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
+      "caption_fr": "Cliquez sur Se connecter."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
+      "caption_fr": "Cliquez sur Se connecter."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
+      "caption_fr": "Cliquez sur Se connecter."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
+      "caption_fr": "Cliquez sur Se connecter."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Email"
+      },
+      "value": "{{ADMIN_EMAIL}}",
+      "caption_fr": "Saisissez votre adresse email."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Mot de passe"
+      },
+      "value": "{{ADMIN_PASSWORD}}",
+      "caption_fr": "Saisissez le bon mot de passe."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Se connecter"
+      },
+      "caption_fr": "Cliquez sur Se connecter."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Même le bon mot de passe est refusé.",
+      "holdMs": 2200
+    }
   ]
 }
