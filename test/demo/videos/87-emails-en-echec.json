@@ -2,26 +2,69 @@
   "id": "87",
   "slug": "emails-en-echec",
   "title_fr": "Emails en échec : renvoyer ou ignorer",
-  "start": { "app": "dashboard", "path": "/", "loggedIn": true },
+  "start": {
+    "app": "dashboard",
+    "path": "/",
+    "loggedIn": true
+  },
   "steps": [
-    { "action": "wait", "caption_fr": "Un bandeau signale les emails en échec.", "holdMs": 2200 },
-    { "action": "click", "target": { "role": "link", "name": "Voir", "nth": -1 }, "caption_fr": "Cliquez sur Voir." },
-    { "action": "wait", "caption_fr": "Chaque email en échec est listé.", "holdMs": 2000 },
+    {
+      "action": "wait",
+      "caption_fr": "Un bandeau signale les emails en échec.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Voir",
+        "nth": -1
+      },
+      "caption_fr": "Cliquez sur Voir."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Chaque email en échec est listé.",
+      "holdMs": 2000
+    },
     {
       "action": "wait",
       "caption_fr": "Sur téléphone, chaque email devient une carte.",
       "only": "mobile",
       "holdMs": 1800
     },
-    { "action": "scroll", "value": "420", "caption_fr": "Chaque erreur est expliquée en clair.", "holdMs": 2200 },
-    { "action": "scroll", "value": "420", "caption_fr": "Chaque erreur est expliquée en clair.", "holdMs": 2200 },
-    { "action": "scroll", "value": "-1000", "caption_fr": "Type, destinataire, erreur, essais.", "holdMs": 1200 },
+    {
+      "action": "scroll",
+      "value": "420",
+      "caption_fr": "Chaque erreur est expliquée en clair.",
+      "holdMs": 2200
+    },
+    {
+      "action": "scroll",
+      "value": "420",
+      "caption_fr": "Chaque erreur est expliquée en clair.",
+      "holdMs": 2200
+    },
+    {
+      "action": "scroll",
+      "value": "-1000",
+      "caption_fr": "Type, destinataire, erreur, essais.",
+      "holdMs": 1200
+    },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Renvoyer", "nth": 0 },
+      "target": {
+        "role": "button",
+        "name": "Renvoyer",
+        "nth": 0
+      },
       "caption_fr": "Renvoyer : trois tentatives."
     },
-    { "action": "wait", "caption_fr": "Parti : la ligne disparaît.", "holdMs": 2000 },
+    {
+      "action": "wait",
+      "caption_fr": "Parti : la ligne disparaît.",
+      "holdMs": 2000
+    },
     {
       "action": "network",
       "value": "status 500 **/resend**",
@@ -30,92 +73,314 @@
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Renvoyer", "nth": 0 },
+      "target": {
+        "role": "button",
+        "name": "Renvoyer",
+        "nth": 0
+      },
       "caption_fr": "Un renvoi peut échouer."
     },
-    { "action": "wait", "caption_fr": "Une erreur s'affiche.", "holdMs": 2200 },
-    { "action": "network", "value": "reset", "caption_fr": "Le service revient.", "holdMs": 400 },
+    {
+      "action": "wait",
+      "caption_fr": "Une erreur s'affiche.",
+      "holdMs": 2200
+    },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
+      "target": {
+        "role": "button",
+        "name": "Fermer"
+      },
+      "caption_fr": "Fermez-le."
+    },
+    {
+      "action": "network",
+      "value": "reset",
+      "caption_fr": "Le service revient.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
       "caption_fr": "Ignorer : plus de renvoi."
     },
-    { "action": "wait", "caption_fr": "On demande confirmation.", "holdMs": 1800 },
+    {
+      "action": "wait",
+      "caption_fr": "On demande confirmation.",
+      "holdMs": 1800
+    },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Annuler" },
+      "target": {
+        "role": "button",
+        "name": "Annuler"
+      },
       "caption_fr": "Annulez pour garder la ligne."
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
       "caption_fr": "Ignorer : plus de renvoi."
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": -1 },
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
       "caption_fr": "Confirmez."
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
       "caption_fr": "Ignorez les autres."
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": -1 },
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
       "caption_fr": "Confirmez."
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
-      "caption_fr": "Ignorez les autres."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "desktop",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": -1 },
-      "caption_fr": "Confirmez."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "desktop",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
-      "caption_fr": "Ignorez les autres."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "mobile",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": -1 },
-      "caption_fr": "Confirmez."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "mobile",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
-      "caption_fr": "Ignorez les autres."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "desktop",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": -1 },
-      "caption_fr": "Confirmez."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "desktop",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
-      "caption_fr": "Ignorez les autres."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "mobile",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": -1 },
-      "caption_fr": "Confirmez."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "mobile",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
-      "caption_fr": "Ignorez les autres."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "desktop",
+      "holdMs": 700
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "Ignorer", "nth": -1 },
-      "caption_fr": "Confirmez."
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "desktop",
+      "holdMs": 700
     },
-    { "action": "wait", "caption_fr": "Aucun email en échec.", "holdMs": 2400 }
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "mobile",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "mobile",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "desktop",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "desktop",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "mobile",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "mobile",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "desktop",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "desktop",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": 0
+      },
+      "caption_fr": "Ignorez les autres.",
+      "only": "mobile",
+      "holdMs": 700
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ignorer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez.",
+      "only": "mobile",
+      "holdMs": 700
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Aucun email en échec.",
+      "holdMs": 2400
+    }
   ]
 }
