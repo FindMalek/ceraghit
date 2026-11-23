@@ -346,7 +346,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 90,
     tags: ["payoneer", "lien de paiement", "étranger", "euros"],
     description: "Payer en euros avec un lien Payoneer envoyé par l'atelier.",
-    status: "soon",
   },
   {
     id: "28-erreurs-formulaire-commande",
@@ -581,7 +580,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 75,
     tags: ["payoneer", "lien de paiement", "confirmer", "euros"],
     description: "Suivre et confirmer le paiement d'une commande réglée avec Payoneer.",
-    status: "soon",
   },
   {
     id: "49-expedition-aramex-etiquette",
@@ -593,7 +591,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 90,
     tags: ["aramex", "expédition", "étiquette", "colis", "cod"],
     description: "Créer l'envoi chez Aramex et imprimer l'étiquette du colis.",
-    status: "soon",
   },
   {
     id: "50-liste-produits",
