@@ -155,6 +155,7 @@ jobs:
           OPENOBSERVE_STREAM: ${{ vars.OPENOBSERVE_STREAM }}
           OPENOBSERVE_USER: ${{ secrets.OPENOBSERVE_USER }}
           OPENOBSERVE_PASSWORD: ${{ secrets.OPENOBSERVE_PASSWORD }}
+          GLITCHTIP_DSN: ${{ secrets.GLITCHTIP_DSN }}
         run: node scripts/deploy/dokploy.mjs preview-up
       - name: Mark failed
         if: failure()

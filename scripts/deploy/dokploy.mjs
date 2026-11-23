@@ -194,6 +194,8 @@ function telemetryEnv() {
     OPENOBSERVE_USER: process.env.OPENOBSERVE_USER,
     OPENOBSERVE_PASSWORD: process.env.OPENOBSERVE_PASSWORD,
     OPENOBSERVE_STREAM: process.env.OPENOBSERVE_STREAM,
+    // GlitchTip: the preview project's DSN from a repo secret, never the production one. Without it nothing is set.
+    ...(process.env.GLITCHTIP_DSN ? { GLITCHTIP_DSN: process.env.GLITCHTIP_DSN, GLITCHTIP_ENV: "preview" } : {}),
     LOG_LEVEL: process.env.LOG_LEVEL || "info",
   }
 }
