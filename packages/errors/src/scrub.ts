@@ -12,6 +12,10 @@ const DROPPED_BREADCRUMBS = new Set(["console", "ui.input", "navigation"])
 const BEARER = /Bearer\s+[A-Za-z0-9._~+/=-]+/gi
 const IBAN = /\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/g
 const PHONE = /\+?\d[\d\s().-]{7,}\d/g
+const BASIC = /Basic\s+[A-Za-z0-9+/=]{6,}/gi
+/** `"password":"x"`, `password=x`, `'token': 'x'`: the key stays, the value goes. */
+const CREDENTIAL_FIELD =
+  /(["']?(?:pass(?:word|wd)?|secret|token|authorization|cookie|api[-_]?key|credential|session|dsn)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;&}]+)/gi
 const LONG_SECRET = /\b[A-Za-z0-9_-]{32,}\b/g
 
 /** A message or url keeps its meaning but loses emails, phones, ibans, bearer tokens and anything key-shaped. */
@@ -19,6 +23,8 @@ export function scrubString(value: string): string {
   const masked = redact(value) as string
   return masked
     .replace(BEARER, "Bearer [redacted]")
+    .replace(BASIC, "Basic [redacted]")
+    .replace(CREDENTIAL_FIELD, "$1[redacted]")
     .replace(IBAN, "[iban]")
     .replace(PHONE, (match) => (match.replace(/\D/g, "").length >= 9 ? "[phone]" : match))
     .replace(LONG_SECRET, "[redacted]")
@@ -42,12 +48,23 @@ export const SENSITIVE_ROUTE =
 
 const isBag = (value: unknown): value is Bag => typeof value === "object" && value !== null && !Array.isArray(value)
 
+/** Every depth, arrays included: bodies removed, strings scrubbed, urls cut to their path. */
+function deepScrub(value: unknown, depth = 0): unknown {
+  if (typeof value === "string") return scrubString(value)
+  if (depth > 8 || typeof value !== "object" || value === null) return value
+  if (Array.isArray(value)) return value.map((item) => deepScrub(item, depth + 1))
+  const out: Bag = {}
+  for (const [key, item] of Object.entries(value)) {
+    if (BODY_KEYS.includes(key)) continue
+    out[key] =
+      ["url", "from", "to"].includes(key) && typeof item === "string" ? scrubUrl(item) : deepScrub(item, depth + 1)
+  }
+  return out
+}
+
 function scrubData(data: unknown): Bag | undefined {
   if (!isBag(data)) return undefined
-  const out = redact(data) as Bag
-  for (const key of BODY_KEYS) delete out[key]
-  for (const key of ["url", "from", "to"]) if (typeof out[key] === "string") out[key] = scrubUrl(out[key])
-  return out
+  return deepScrub(redact(data)) as Bag
 }
 
 interface BreadcrumbLike {
@@ -110,7 +127,9 @@ export function scrubEvent<T>(input: T): T | null {
   if (typeof next.transaction === "string") next.transaction = scrubUrl(next.transaction)
 
   const request = event.request
-  const sensitive = typeof request?.url === "string" && SENSITIVE_ROUTE.test(request.url)
+  const route = typeof event.tags?.route === "string" ? event.tags.route : ""
+  const sensitive =
+    (typeof request?.url === "string" && SENSITIVE_ROUTE.test(request.url)) || SENSITIVE_ROUTE.test(route)
   if (request) {
     const headers = isBag(request.headers)
       ? Object.fromEntries(Object.entries(request.headers).filter(([name]) => KEPT_HEADERS.has(name.toLowerCase())))

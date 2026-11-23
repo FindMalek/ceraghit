@@ -1,10 +1,16 @@
 import { expect, test } from "bun:test"
 import * as Sentry from "@sentry/node"
-import { initNode } from "../src/node"
 import { glitchtipIssues, glitchtipOrigin, resolveGlitchtip } from "../src/config"
 import { errorsEnabled, reportError } from "../src/index"
+import { initNode } from "../src/node"
 
 const DSN = "https://publickey@errors.example.com/7"
+
+test("a DSN needs a numeric project id", () => {
+  expect(glitchtipOrigin("https://key@errors.example.com/not-a-project")).toBeNull()
+  const env = { APP_ENV: "preview", GLITCHTIP_ENV: "preview", GLITCHTIP_DSN: "https://key@errors.example.com/x" }
+  expect(glitchtipIssues(env)).toHaveLength(1)
+})
 
 test("no DSN: nothing resolves", () => {
   expect(resolveGlitchtip({ APP_ENV: "production" })).toBeNull()
