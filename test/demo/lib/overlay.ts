@@ -15,7 +15,7 @@ function install(): void {
     // fading keeps frames coming, so every change shows in the video.
     const tick = document.createElement("style")
     tick.textContent =
-      "@keyframes __demo_tick{from{opacity:.98}to{opacity:1}}#__demo::after{content:'';position:fixed;right:0;bottom:0;width:1px;height:1px;background:rgba(0,0,0,.02);animation:__demo_tick .5s linear infinite alternate}"
+      "@keyframes __demo_tick{from{opacity:.98}to{opacity:1}}#__demo::after{content:'';position:fixed;right:0;bottom:0;width:1px;height:1px;background:rgba(0,0,0,.02);animation:__demo_tick .5s linear infinite alternate;pointer-events:none}"
     root.appendChild(tick)
     document.documentElement.appendChild(root)
     const cursor = root.querySelector<SVGElement>("#__demo_cursor")
