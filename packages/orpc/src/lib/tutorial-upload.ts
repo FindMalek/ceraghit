@@ -321,7 +321,7 @@ const CDN_HOST = "cdn.ceraghit.com"
 
 function host(endpoint: string): string {
   try {
-    return new URL(endpoint).hostname.toLowerCase()
+    return new URL(endpoint).hostname.toLowerCase().replace(/\.$/, "")
   } catch {
     throw new Error(`S3_ENDPOINT is not a url: ${endpoint}`)
   }

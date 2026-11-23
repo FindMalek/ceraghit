@@ -3,13 +3,31 @@ import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
+/** Public host of the bucket (R2 custom domain): set where the build runs, empty on the homelab (signed urls). */
+const filesUrl = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : null
+
+if (filesUrl && filesUrl.protocol !== "https:")
+  console.warn(`[next.config] S3_PUBLIC_URL is not https (${filesUrl.origin}), uploaded photos will be fetched over it`)
+if (filesUrl) console.info(`[next.config] uploaded photos are optimised from ${filesUrl.origin}`)
+
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   transpilePackages: ["@workspace/ui", "@workspace/sdk"],
-  // Static catalogue photos are resized per device, see components/photo.tsx.
+  env: { NEXT_PUBLIC_FILES_URL: filesUrl?.origin ?? "" },
+  // Catalogue photos and uploads from the public bucket host are resized per device, see components/photo.tsx.
   images: {
     formats: ["image/webp"],
+    remotePatterns: filesUrl
+      ? [
+          {
+            protocol: filesUrl.protocol === "http:" ? "http" : "https",
+            hostname: filesUrl.hostname,
+            port: filesUrl.port,
+            pathname: "/**",
+          },
+        ]
+      : [],
     // 70 is the product gallery: lighter than the default, no visible banding on glazes.
     qualities: [70, 75],
     // 1000 sits between 828 and 1080: a 412px phone at 2.6x draws 380 css px of gallery photo, i.e. 990 device px.
