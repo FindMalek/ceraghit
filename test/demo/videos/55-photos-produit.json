@@ -180,7 +180,8 @@
         "role": "button",
         "name": "Fermer"
       },
-      "caption_fr": "Elles s'ajoutent à la médiathèque et au produit."
+      "caption_fr": "Elles s'ajoutent à la médiathèque et au produit.",
+      "holdMs": 2500
     }
   ]
 }

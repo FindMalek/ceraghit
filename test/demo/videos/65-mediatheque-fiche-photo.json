@@ -106,7 +106,7 @@
         "name": "Enregistrer"
       },
       "caption_fr": "Enregistrez la fiche.",
-      "holdMs": 1800
+      "holdMs": 3500
     }
   ]
 }

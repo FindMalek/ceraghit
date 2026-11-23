@@ -14,7 +14,8 @@
         "role": "heading",
         "name": "Médiathèque"
       },
-      "caption_fr": "Toutes vos photos sont ici."
+      "caption_fr": "Toutes vos photos sont ici.",
+      "holdMs": 2500
     },
     {
       "action": "upload",
@@ -77,20 +78,12 @@
       "only": "mobile"
     },
     {
-      "action": "upload",
-      "target": {
-        "label": "Choisir des photos"
-      },
-      "value": "not-an-image.txt",
-      "caption_fr": "Seules les images sont acceptées.",
-      "holdMs": 2000
-    },
-    {
       "action": "hover",
       "target": {
         "text": "Stockage"
       },
-      "caption_fr": "Le stockage utilisé est suivi ici."
+      "caption_fr": "Le stockage utilisé est suivi ici.",
+      "holdMs": 2500
     }
   ]
 }

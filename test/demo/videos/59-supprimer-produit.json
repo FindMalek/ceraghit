@@ -111,12 +111,14 @@
       "action": "goto",
       "value": "{{WEB_URL}}/product/curda-seca-0010",
       "caption_fr": "Sa fiche publique n'existe plus : page introuvable.",
+      "holdMs": 3000,
       "only": "desktop"
     },
     {
       "action": "goto",
       "value": "{{WEB_URL}}/product/curda-seca-0011",
       "caption_fr": "Sa fiche publique n'existe plus : page introuvable.",
+      "holdMs": 3000,
       "only": "mobile"
     }
   ]

@@ -146,7 +146,7 @@
       "action": "scroll",
       "value": "-3000",
       "caption_fr": "Déplacez ou supprimez d'abord ses produits.",
-      "holdMs": 3000
+      "holdMs": 4500
     }
   ]
 }

@@ -51,7 +51,15 @@
         "name": "Rechercher une photo"
       },
       "value": "zzzz",
-      "caption_fr": "Rien ne correspond : effacez la recherche."
+      "caption_fr": "Cherchez une photo qui n'existe pas."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Aucune photo ne correspond"
+      },
+      "caption_fr": "Rien ne correspond à cette recherche.",
+      "holdMs": 2000
     },
     {
       "action": "click",
@@ -59,7 +67,7 @@
         "role": "button",
         "name": "Effacer la recherche"
       },
-      "caption_fr": "Rien ne correspond : effacez la recherche."
+      "caption_fr": "Effacez la recherche pour tout revoir."
     },
     {
       "action": "click",

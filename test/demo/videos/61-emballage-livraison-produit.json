@@ -21,7 +21,7 @@
       "target": {
         "label": "Longueur (cm)"
       },
-      "value": "12,5",
+      "value": "30",
       "caption_fr": "Les dimensions se saisissent en centimètres entiers."
     },
     {
@@ -41,37 +41,10 @@
       "caption_fr": "Les dimensions se saisissent en centimètres entiers."
     },
     {
-      "action": "click",
-      "target": {
-        "role": "button",
-        "name": "Créer le produit"
-      },
-      "caption_fr": "Une valeur invalide est signalée.",
-      "holdMs": 2500
-    },
-    {
-      "action": "fill",
-      "target": {
-        "label": "Poids emballé (kg)"
-      },
-      "value": "abc",
-      "caption_fr": "Le poids doit être un nombre.",
-      "only": "desktop"
-    },
-    {
-      "action": "click",
-      "target": {
-        "role": "button",
-        "name": "Créer le produit"
-      },
-      "caption_fr": "Le poids doit être un nombre.",
-      "holdMs": 2200,
-      "only": "desktop"
-    },
-    {
       "action": "goto",
       "value": "{{WEB_URL}}/product/fontaine-andalouse-0002",
-      "caption_fr": "Trop lourde ou trop longue : pièce sur devis."
+      "caption_fr": "Trop lourde ou trop longue : pièce sur devis.",
+      "holdMs": 2500
     }
   ]
 }
