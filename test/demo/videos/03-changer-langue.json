@@ -1,0 +1,58 @@
+{
+  "id": "03",
+  "slug": "changer-langue",
+  "title_fr": "Changer de langue",
+  "start": { "app": "web", "path": "/", "loggedIn": false },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Français" },
+      "caption_fr": "La langue se change en bas de page."
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "English" },
+      "caption_fr": "Choisissez English.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "العربية" },
+      "caption_fr": "Ou l'arabe.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Français" },
+      "caption_fr": "Revenez au français.",
+      "holdMs": 1500
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0012",
+      "caption_fr": "La page reste la même après le changement."
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "English" },
+      "caption_fr": "La page reste la même après le changement.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/",
+      "caption_fr": "Votre choix est mémorisé."
+    },
+    {
+      "action": "goto",
+      "value": "/en/cart",
+      "caption_fr": "Même le panier vide change de langue.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Français" },
+      "caption_fr": "Retour au français."
+    }
+  ]
+}
