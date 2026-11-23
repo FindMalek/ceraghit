@@ -80,7 +80,8 @@ for app in web dashboard; do
   push "$app" OPENOBSERVE_ORG "$(val OPENOBSERVE_ORG || echo default)"
   push "$app" OPENOBSERVE_STREAM "$(val OPENOBSERVE_STREAM || echo ceraghit)"
   push "$app" LOG_LEVEL info
-  # Both feed the CSP only (img/media sources); the dashboard plays the hosted tutorial videos from S3_PUBLIC_URL.
+  # S3_ENDPOINT feeds the CSP (img/media sources). S3_PUBLIC_URL feeds the CSP at runtime and, on web, is also read at BUILD time
+  # (next.config.ts: image optimizer host for uploaded photos); the dashboard plays the hosted tutorial videos from it.
   push "$app" S3_ENDPOINT "$(val S3_ENDPOINT)"
   push "$app" S3_PUBLIC_URL "$(val S3_PUBLIC_URL)"
   for n in OPENOBSERVE_URL OPENOBSERVE_USER OPENOBSERVE_PASSWORD; do push "$app" "$n" "$(val "$n")"; done

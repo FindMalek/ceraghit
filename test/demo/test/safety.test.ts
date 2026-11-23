@@ -6,6 +6,7 @@ import { join } from "node:path"
 import { chromium } from "@playwright/test"
 import { FFMPEG, startRecording } from "../lib/recorder"
 import {
+  abortRecording,
   applyTimeouts,
   closingWaitMs,
   durationProblem,
@@ -59,7 +60,7 @@ test("a last step without narration keeps its hold, and a video without audio ke
   expect(closingWaitMs(30_000, null, 1500)).toBe(1500)
 })
 
-test.skipIf(!haveFfmpeg)(
+test.skipIf(!haveFfmpeg && !process.env.CI)(
   "a hung run is cleaned up: ffmpeg is killed, the browser closed and the partial file removed",
   async () => {
     const dir = mkdtempSync(join(tmpdir(), "demo-guard-"))
@@ -75,11 +76,7 @@ test.skipIf(!haveFfmpeg)(
         runGuarded(() => new Promise<void>(() => {}), {
           ms: 300,
           label: () => "demo-desktop stuck at step 2/5",
-          cleanup: async () => {
-            recording.kill()
-            rmSync(file, { force: true })
-            await browser.close()
-          },
+          cleanup: () => abortRecording({ recording, files: [file], browser }),
         }),
       ).rejects.toThrow("stuck at step 2/5 did not finish within 300 ms")
       await new Promise((r) => setTimeout(r, 300))
