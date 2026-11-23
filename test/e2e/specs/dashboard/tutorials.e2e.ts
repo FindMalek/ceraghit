@@ -164,7 +164,7 @@ test("the YouTube links sheet lists the hosted videos and filters them by title"
     await page.goto(help)
     await page.getByRole("button", { name: "Liens YouTube" }).click()
     await expect(first).toBeVisible()
-    await expect(sheet.locator("fieldset")).toHaveCount(91)
+    await expect(sheet.locator("fieldset")).toHaveCount(94)
   })
   await step("a video made for one device only asks for that device's link", async () => {
     await expect(sheet.locator("fieldset", { hasText: "97 · Démo" }).getByRole("textbox")).toHaveCount(1)
