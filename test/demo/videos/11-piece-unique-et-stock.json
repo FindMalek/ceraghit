@@ -1,0 +1,63 @@
+{
+  "id": "11",
+  "slug": "piece-unique-et-stock",
+  "title_fr": "Pièce unique, dernier exemplaire, épuisé",
+  "start": { "app": "web", "path": "/product/masque-de-carthage-0700", "loggedIn": false },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "text": "Pièce unique : une seule existe" },
+      "caption_fr": "Une pièce unique n'existe qu'en un exemplaire."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter au panier" },
+      "caption_fr": "On ne peut l'ajouter qu'une fois.",
+      "holdMs": 1800
+    },
+    { "action": "press", "value": "Escape", "caption_fr": "On ne peut l'ajouter qu'une fois." },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Peu de stock : le nombre restant s'affiche."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Plus que 3 en stock" },
+      "caption_fr": "Peu de stock : le nombre restant s'affiche."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Augmenter la quantité" },
+      "caption_fr": "La quantité s'arrête au stock."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Augmenter la quantité" },
+      "caption_fr": "La quantité s'arrête au stock."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Diminuer la quantité" },
+      "caption_fr": "Moins revient en arrière."
+    },
+    { "action": "goto", "value": "/product/curda-seca-0015", "caption_fr": "Une seule en stock : dernière pièce." },
+    {
+      "action": "hover",
+      "target": { "text": "Dernière pièce disponible" },
+      "caption_fr": "Une seule en stock : dernière pièce."
+    },
+    { "action": "goto", "value": "/product/lampe-votive-0210", "caption_fr": "Épuisée, la pièce ne s'achète plus." },
+    {
+      "action": "hover",
+      "target": { "text": "Cette pièce n'est plus disponible." },
+      "caption_fr": "Épuisée, la pièce ne s'achète plus."
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Demander une pièce similaire" },
+      "caption_fr": "Demandez-en une similaire.",
+      "holdMs": 1800
+    }
+  ]
+}
