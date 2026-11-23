@@ -1,0 +1,58 @@
+{
+  "id": "88",
+  "slug": "domaine-et-test-email",
+  "title_fr": "Domaine d'envoi et email de test",
+  "devices": ["desktop"],
+  "start": { "app": "dashboard", "path": "/settings", "loggedIn": true },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Emails" },
+      "caption_fr": "La carte Emails donne l'état du domaine d'envoi.",
+      "holdMs": 2400
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Les emails partent de" },
+      "caption_fr": "Voici l'adresse d'où partent vos emails.",
+      "holdMs": 2200
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Les aperçus envoient leurs emails dans Mailpit" },
+      "caption_fr": "En aperçu, il n'y a rien à vérifier.",
+      "holdMs": 2400
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer un email de test" },
+      "caption_fr": "Envoyez un email de test."
+    },
+    { "action": "wait", "caption_fr": "Un message confirme l'envoi.", "holdMs": 2200 },
+    {
+      "action": "goto",
+      "value": "http://localhost:8066",
+      "caption_fr": "Il arrive dans la boîte de test.",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3166/settings",
+      "caption_fr": "Revenons aux réglages.",
+      "holdMs": 800
+    },
+    {
+      "action": "network",
+      "value": "status 500 **/mail/test**",
+      "caption_fr": "Si le service est coupé, l'envoi échoue.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer un email de test" },
+      "caption_fr": "Renvoyez un test."
+    },
+    { "action": "wait", "caption_fr": "Une erreur s'affiche en haut.", "holdMs": 2400 },
+    { "action": "network", "value": "reset", "caption_fr": "Le service revient.", "holdMs": 400 }
+  ]
+}

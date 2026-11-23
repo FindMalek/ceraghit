@@ -1,0 +1,47 @@
+{
+  "id": "85",
+  "slug": "emails-paiement-expedition",
+  "title_fr": "Emails \"Paiement reçu\" et \"Commande expédiée\"",
+  "devices": ["desktop"],
+  "start": { "app": "dashboard", "path": "/login", "loggedIn": false },
+  "steps": [
+    {
+      "action": "goto",
+      "value": "http://localhost:8066",
+      "caption_fr": "Deux emails suivent la vie d'une commande.",
+      "holdMs": 2400
+    },
+    {
+      "action": "click",
+      "target": { "text": "Payment received" },
+      "caption_fr": "Vous confirmez un paiement : un seul email part.",
+      "holdMs": 3200
+    },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "text": "est en route" },
+      "caption_fr": "Vous expédiez : le client reçoit le suivi.",
+      "holdMs": 3200
+    },
+    {
+      "action": "click",
+      "target": { "role": "tab", "name": "Text" },
+      "caption_fr": "Transporteur, numéro de suivi et lien du colis.",
+      "holdMs": 3200
+    },
+    { "action": "wait", "caption_fr": "Payé à la livraison : le montant est rappelé.", "holdMs": 2600 },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    { "action": "wait", "caption_fr": "Chaque email part une seule fois.", "holdMs": 2400 }
+  ]
+}
