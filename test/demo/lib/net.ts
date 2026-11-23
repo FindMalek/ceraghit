@@ -6,7 +6,8 @@ export type NetworkRule =
   | { kind: "fail"; pattern: string }
   | { kind: "status"; code: number; pattern: string }
 
-const MAX_SLOW_MS = 30_000
+/** Under the 10 s page timeout, a slower answer would fail the step instead of showing a skeleton. */
+const MAX_SLOW_MS = 8_000
 
 /**
  * The `value` of a `network` step, to film loading skeletons and error pages:
@@ -18,7 +19,7 @@ export function parseNetwork(value: string | undefined): NetworkRule {
   const [kind, ...rest] = parts
   if (kind === "reset" && rest.length === 0) return { kind: "reset" }
   const pattern = (glob: string | undefined): string => {
-    if (!glob || !glob.startsWith("**/") || glob.length < 5) {
+    if (!glob?.startsWith("**/") || glob.length < 5) {
       throw new Error(`a network pattern must start with "**/" and name a path, got "${glob ?? ""}"`)
     }
     return glob

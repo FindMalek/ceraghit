@@ -10,6 +10,9 @@ export interface Recording {
   /** Milliseconds since the recording started. */
   now(): number
   stop(): Promise<void>
+  /** Failure path: kills ffmpeg now and leaves the partial file for the caller to delete. */
+  kill(): void
+  pid: number | undefined
 }
 
 /** The even pixel size of the video: the viewport times the device scale factor. */
@@ -100,6 +103,11 @@ export async function startRecording(
     client.send("Page.screencastFrameAck", { sessionId: event.sessionId }).catch(() => {})
     if (pending) write(pending, Math.max(1, Math.round(((at - pendingAt) / 1000) * FPS)))
   })
+  // The screencast sends nothing while the page is still, so without a first frame the video would start at the first
+  // change and every later cue would sit ahead of the picture.
+  const initial = await client.send("Page.captureScreenshot", { format: "jpeg", quality: 90 })
+  previous = Buffer.from(initial.data, "base64")
+  previousAt = startedAt
   await client.send("Page.startScreencast", {
     format: "jpeg",
     quality: 90,
@@ -110,6 +118,11 @@ export async function startRecording(
 
   return {
     now: () => Date.now() - startedAt,
+    pid: ffmpeg.pid,
+    kill() {
+      ffmpeg.kill("SIGKILL")
+      client.detach().catch(() => {})
+    },
     async stop() {
       await client.send("Page.stopScreencast").catch(() => {})
       if (previous) write(previous, Math.max(1, Math.round(((Date.now() - previousAt) / 1000) * FPS)))
