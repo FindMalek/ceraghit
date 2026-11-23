@@ -53,7 +53,7 @@
       "action": "click",
       "target": {
         "role": "button",
-        "name": "photo-1.png, ouvrir"
+        "name": "photo-1"
       },
       "caption_fr": "Ouvrez-la.",
       "only": "desktop"
@@ -62,7 +62,7 @@
       "action": "click",
       "target": {
         "role": "button",
-        "name": "photo-2.png, ouvrir"
+        "name": "photo-2"
       },
       "caption_fr": "Ouvrez-la.",
       "only": "mobile"

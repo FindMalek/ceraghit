@@ -36,17 +36,20 @@
         "name": "Enregistrer",
         "nth": -1
       },
-      "caption_fr": "Il faut au moins un moyen."
+      "caption_fr": "Il faut au moins un moyen.",
+      "only": "desktop"
     },
     {
       "action": "scroll",
       "value": "3000",
-      "caption_fr": "Sans moyen, l'enregistrement est refusé."
+      "caption_fr": "Sans moyen, l'enregistrement est refusé.",
+      "only": "desktop"
     },
     {
       "action": "wait",
       "caption_fr": "Sans moyen, l'enregistrement est refusé.",
-      "holdMs": 2500
+      "holdMs": 2500,
+      "only": "desktop"
     },
     {
       "action": "scroll",

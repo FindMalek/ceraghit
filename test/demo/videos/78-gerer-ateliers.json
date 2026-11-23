@@ -104,6 +104,12 @@
       "caption_fr": "Enregistrez."
     },
     {
+      "action": "scroll",
+      "value": "500",
+      "caption_fr": "Le badge Masqué sur le site apparaît.",
+      "only": "mobile"
+    },
+    {
       "action": "wait",
       "caption_fr": "Le badge Masqué sur le site apparaît.",
       "holdMs": 2200
@@ -116,6 +122,15 @@
         "nth": -1
       },
       "caption_fr": "Supprimez l'atelier d'essai."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": -1
+      },
+      "caption_fr": "Confirmez."
     },
     {
       "action": "wait",
