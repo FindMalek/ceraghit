@@ -2,9 +2,7 @@
   "id": "53",
   "slug": "traduire-avec-ia",
   "title_fr": "Traduire un produit avec l'IA",
-  "devices": [
-    "desktop"
-  ],
+  "devices": ["desktop"],
   "start": {
     "app": "dashboard",
     "path": "/products/new",
