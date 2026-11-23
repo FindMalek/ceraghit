@@ -114,3 +114,21 @@ not local demo data.
 Every device needs a fresh state (both write to the same database), so reseed between takes. 93, 94 start from an empty
 profile (`bun src/seed-cli.ts --onboarding` in `packages/db`); 95 and 96 from the same seed with the required steps done
 (95 also with the shipping rates not confirmed); 81 and 82 from an onboarded shop whose legal profile and bank account are blank.
+
+### Storefront rate limits and mails (videos 15, 16, 23, 24)
+
+The limits are stored in the `rate_limits` table, one row per `<limit>:<address>`. Videos 15 and 16 switch address with an
+`ip` step and need that address already used up, so prime it on the throwaway demo database before recording (never
+production), and clear the table between takes:
+
+```sql
+delete from rate_limits;
+insert into rate_limits(key, window_start, count) values
+  ('requestCreate:198.51.100.15', now(), 5),  -- video 15, "Trop de demandes"
+  ('uploadUrl:198.51.100.17', now(), 12);     -- video 16, "Trop d'envois"
+```
+
+Videos 23 and 24 open the first message called "Votre commande" in Mailpit, which is the newest one, so empty the Mailpit
+inbox before a take and keep the order of devices (each device places its own order). The storefront origin must be allowed
+by the bucket CORS rules for the photo upload of video 16. Video 22 films `/robots.txt` and the share images on the stack
+as it is; the sitemap is empty outside production and is not filmed.
