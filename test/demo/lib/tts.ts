@@ -2,6 +2,7 @@ import { type SpawnSyncReturns, spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
+import { TOOL_TIMEOUT_MS } from "./recorder"
 
 export type TtsProvider = "elevenlabs" | "say"
 
@@ -88,13 +89,19 @@ function macSay(text: string, file: string): void {
   if (res.status !== 0) throw new Error("macOS `say -v Thomas` failed, is the French voice installed?")
 }
 
-type Spawn = (command: string, args: string[], options: { encoding: "utf8" }) => SpawnSyncReturns<string>
+type Spawn = (
+  command: string,
+  args: string[],
+  options: { encoding: "utf8"; timeout: number; killSignal: "SIGKILL" },
+) => SpawnSyncReturns<string>
 
 /** Duration of an audio file in ms; throws when ffprobe is missing, fails or prints nothing usable. */
 export function probeDuration(file: string, spawn: Spawn = spawnSync): number {
   const command = process.env.FFPROBE || "ffprobe"
   const res = spawn(command, ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], {
     encoding: "utf8",
+    timeout: TOOL_TIMEOUT_MS,
+    killSignal: "SIGKILL",
   })
   const ms = Math.round(Number.parseFloat(res.stdout ?? "") * 1000)
   if (res.error || res.status !== 0 || !Number.isFinite(ms) || ms <= 0) {
