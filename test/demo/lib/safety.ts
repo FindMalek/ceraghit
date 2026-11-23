@@ -1,3 +1,4 @@
+import { rmSync } from "node:fs"
 import type { Page } from "@playwright/test"
 
 /** A recording that hangs must fail fast with the step it hung on, not run for ten minutes. */
@@ -65,6 +66,20 @@ export async function runGuarded<T>(
     await opts.cleanup().catch(() => {})
     throw error
   }
+}
+
+/** Failure path shared by the runner and its test: kill ffmpeg, delete the partial files, close the browser. */
+export async function abortRecording(opts: {
+  recording?: { kill(): void }
+  files: string[]
+  browser: { close(): Promise<void> }
+  closeWaitMs?: number
+}): Promise<void> {
+  opts.recording?.kill()
+  for (const f of opts.files) rmSync(f, { force: true })
+  await Promise.race([opts.browser.close(), new Promise<void>((r) => setTimeout(r, opts.closeWaitMs ?? 5000))]).catch(
+    () => {},
+  )
 }
 
 /** A message when the finished video is far longer than its script says, which means something stalled. */

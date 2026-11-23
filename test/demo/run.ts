@@ -11,7 +11,15 @@ import { buildPlan, formatPlan, ledgerPath, narrationFor, readLedger, ttsCacheDi
 import { installOverlay } from "./lib/overlay"
 import { createPacer, DEFAULT_HOLD_MS, STILL_MS, sleep } from "./lib/pacing"
 import { type AudioClip, frameSize, mux, type Recording, startRecording } from "./lib/recorder"
-import { applyTimeouts, closingWaitMs, durationProblem, runGuarded, stepHoldMs, VIDEO_DEADLINE_MS } from "./lib/safety"
+import {
+  abortRecording,
+  applyTimeouts,
+  closingWaitMs,
+  durationProblem,
+  runGuarded,
+  stepHoldMs,
+  VIDEO_DEADLINE_MS,
+} from "./lib/safety"
 import { fileBase, parseVideo, stepsFor, type Video } from "./lib/steps"
 import { planIsCached, probeDuration } from "./lib/tts"
 import { prepareVoice } from "./lib/voice"
@@ -181,9 +189,7 @@ async function main() {
           ms: VIDEO_DEADLINE_MS,
           label: () => `${base} stuck at ${current}`,
           cleanup: async () => {
-            recording?.kill()
-            for (const f of [...written, finalFile, raw]) rmSync(f, { force: true })
-            await Promise.race([browser.close(), sleep(5000)]).catch(() => {})
+            await abortRecording({ recording, files: [...written, finalFile, raw], browser })
           },
         })
       } catch (error) {
