@@ -1,0 +1,28 @@
+{
+  "id": "22",
+  "slug": "referencement-partage",
+  "title_fr": "Comment la boutique apparaît sur Google et au partage",
+  "devices": ["desktop"],
+  "start": { "app": "web", "path": "/fr/product/lampe-votive-0201", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "Voici une fiche, telle qu'un visiteur la voit.", "holdMs": 2000 },
+    {
+      "action": "goto",
+      "value": "/fr/product/lampe-votive-0201/opengraph-image",
+      "caption_fr": "Cette image apparaît quand on partage la pièce.",
+      "holdMs": 3500
+    },
+    {
+      "action": "goto",
+      "value": "/fr/atelier/opengraph-image",
+      "caption_fr": "Chaque page a sa propre image de partage.",
+      "holdMs": 3000
+    },
+    {
+      "action": "goto",
+      "value": "/robots.txt",
+      "caption_fr": "Hors production, les robots sont tenus à l'écart.",
+      "holdMs": 3500
+    }
+  ]
+}

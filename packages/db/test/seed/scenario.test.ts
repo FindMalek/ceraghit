@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { DEFAULT_SHIPPING_RATES, studioSettingsSchema } from "@workspace/sdk"
 import { parseDemoRef } from "../../src/demo-ref"
 import { UNGLAZED_VARIANT_REFS } from "../../src/seed"
 import { CATALOGUE } from "../../src/seed/catalogue"
@@ -11,6 +12,7 @@ import {
   DEMO_TN_CITIES,
   demoExtraProducts,
   demoRequests,
+  demoStudioSettings,
 } from "../../src/seed/scenario"
 
 const products = [
@@ -252,6 +254,14 @@ test("CER-10102 is a refunded order the customer can open", () => {
     "demo-refunded",
     false,
   ])
+})
+
+test("the demo studio settings are valid and fill the footer links", () => {
+  const parsed = studioSettingsSchema.parse(demoStudioSettings(DEFAULT_SHIPPING_RATES))
+  expect([parsed.whatsapp, parsed.instagram].every(Boolean)).toBe(true)
+  expect(
+    DEMO_LOCATIONS.every((l) => l.mapUrl?.endsWith(encodeURIComponent(`${l.address}, ${l.city}`).replace(/'/g, "%27"))),
+  ).toBe(true)
 })
 
 test("demo requests cover every status and the extra products are drafts or archived with unique refs", () => {
