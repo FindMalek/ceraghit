@@ -15,6 +15,8 @@ async function expectNoViolations(page: Page, label: string) {
 }
 
 test("the storefront has no serious accessibility violation", async ({ page, home, request, step }) => {
+  // ten pages, each with a full axe scan: over the 30 s default on slow CI runners
+  test.setTimeout(90_000)
   const { stocked } = pickKinds(await catalogue(request))
   const pages: [string, string][] = [
     ["home", "/"],
