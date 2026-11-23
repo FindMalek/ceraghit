@@ -10,6 +10,9 @@ export interface Recording {
   /** Milliseconds since the recording started. */
   now(): number
   stop(): Promise<void>
+  /** Failure path: kills ffmpeg now and leaves the partial file for the caller to delete. */
+  kill(): void
+  pid: number | undefined
 }
 
 /** The even pixel size of the video: the viewport times the device scale factor. */
@@ -115,6 +118,11 @@ export async function startRecording(
 
   return {
     now: () => Date.now() - startedAt,
+    pid: ffmpeg.pid,
+    kill() {
+      ffmpeg.kill("SIGKILL")
+      client.detach().catch(() => {})
+    },
     async stop() {
       await client.send("Page.stopScreencast").catch(() => {})
       if (previous) write(previous, Math.max(1, Math.round(((Date.now() - previousAt) / 1000) * FPS)))

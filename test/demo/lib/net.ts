@@ -7,7 +7,8 @@ export type NetworkRule =
   | { kind: "status"; code: number; pattern: string }
   | { kind: "reason"; code: number; reason: string; pattern: string }
 
-const MAX_SLOW_MS = 30_000
+/** Under the 10 s page timeout, a slower answer would fail the step instead of showing a skeleton. */
+const MAX_SLOW_MS = 8_000
 
 /**
  * The `value` of a `network` step, to film loading skeletons and error pages:
