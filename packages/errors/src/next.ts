@@ -33,8 +33,16 @@ export function reportRequestError(
   requestId: string,
 ): string | undefined {
   const digest =
-    typeof error === "object" && error !== null && "digest" in error ? String((error as { digest: unknown }).digest) : ""
+    typeof error === "object" && error !== null && "digest" in error
+      ? String((error as { digest: unknown }).digest)
+      : ""
   return reportError(error, {
-    tags: { route: context.routePath, route_type: context.routeType, method: request.method, digest, request_id: requestId },
+    tags: {
+      route: context.routePath,
+      route_type: context.routeType,
+      method: request.method,
+      digest,
+      request_id: requestId,
+    },
   })
 }
