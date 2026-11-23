@@ -69,7 +69,13 @@ export async function applyNetwork(context: BrowserContext, rule: NetworkRule): 
             status: rule.code,
             contentType: "application/json",
             body: JSON.stringify({
-              json: { defined: true, code: "BAD_REQUEST", status: rule.code, message: "Erreur", data: { reason: rule.reason } },
+              json: {
+                defined: true,
+                code: "BAD_REQUEST",
+                status: rule.code,
+                message: "Erreur",
+                data: { reason: rule.reason },
+              },
               meta: [],
             }),
           })
