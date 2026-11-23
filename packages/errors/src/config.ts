@@ -24,7 +24,11 @@ export const CLIENT_NAMES: GlitchtipNames = {
 function validDsn(value: string): boolean {
   try {
     const url = new URL(value)
-    return (url.protocol === "https:" || url.protocol === "http:") && !!url.username && url.pathname.length > 1
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      !!url.username &&
+      /^\d+$/.test(url.pathname.split("/").filter(Boolean).pop() ?? "")
+    )
   } catch {
     return false
   }

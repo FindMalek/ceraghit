@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { setReporter } from "@workspace/errors"
 import type { Services } from "@workspace/orpc"
 import { withRequestLogging } from "../src/logger"
 import { createServer } from "../src/server"
@@ -36,6 +37,22 @@ test("production sends HSTS and hides the api docs and spec", async () => {
     const res = await fetch(get(path))
     expect(res.status).toBe(404)
     expect(res.headers.get("strict-transport-security")).toContain("max-age=63072000")
+  }
+})
+
+test("a procedure that blows up is reported to GlitchTip with its route, and the client still gets a 500", async () => {
+  const seen: { tags: Record<string, string> }[] = []
+  setReporter((_error, context) => {
+    seen.push(context)
+    return "evt"
+  })
+  try {
+    const res = await serverFor("preview")(get("/v1/site/images"))
+    expect(res.status).toBe(500)
+    expect(seen).toHaveLength(1)
+    expect(seen[0]?.tags.route).toContain("/site/images")
+  } finally {
+    setReporter(null)
   }
 })
 

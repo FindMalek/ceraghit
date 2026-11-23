@@ -1,9 +1,11 @@
 import { timingSafeEqual } from "node:crypto"
 import { OpenAPIHandler } from "@orpc/openapi/fetch"
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
+import { ORPCError } from "@orpc/server"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ResponseHeadersPlugin, SimpleCsrfProtectionHandlerPlugin } from "@orpc/server/plugins"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
+import { reportError } from "@workspace/errors"
 import {
   appRouter,
   createContext,
@@ -17,6 +19,7 @@ import {
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
 import { CRON_JOBS, type CronJob } from "./cron"
+import { routeTemplate } from "./logger"
 
 async function paymentsHealth(services: Services, db: boolean): Promise<string> {
   const payments = db
@@ -60,12 +63,34 @@ export function rememberPeer(request: Request, address: string | undefined): voi
   if (address) peers.set(request, address)
 }
 
+/**
+ * oRPC turns a handler failure into a 500 answer before the request wrapper sees it, so GlitchTip would never hear of it.
+ * This interceptor reports the failures that are ours (unexpected errors and explicit 5xx) and rethrows unchanged: the
+ * client response does not change, and 4xx answers stay out.
+ */
+const reportHandlerErrors = {
+  async interceptor<T>(options: { request: { url: URL; method: string }; next: () => Promise<T> }): Promise<T> {
+    try {
+      return await options.next()
+    } catch (error) {
+      if (!(error instanceof ORPCError) || error.status >= 500) {
+        reportError(error, {
+          tags: { route: routeTemplate(options.request.url.pathname), method: options.request.method },
+        })
+      }
+      throw error
+    }
+  },
+}
+
 export function createServer(services: Services, jobs: Record<string, CronJob> = CRON_JOBS) {
   const rpc = new RPCHandler(appRouter, {
+    interceptors: [reportHandlerErrors.interceptor],
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
   })
   const production = services.config.appEnv === "production"
   const rest = new OpenAPIHandler(appRouter, {
+    interceptors: [reportHandlerErrors.interceptor],
     plugins: [
       new ResponseHeadersPlugin(),
       ...(production

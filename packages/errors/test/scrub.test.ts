@@ -110,3 +110,38 @@ test("typing and console breadcrumbs are dropped", () => {
   expect(scrubBreadcrumb({ category: "ui.input", message: "input#password" })).toBeNull()
   expect(scrubBreadcrumb({ category: "console", message: "x" })).toBeNull()
 })
+
+test("credentials written inside a message are masked and the rest of the text stays", () => {
+  const out = scrubEvent({
+    message:
+      'provider said {"password":"hunter2","note":"ok"} and Authorization: Basic dXNlcjpwYXNz token=abc123 failed',
+  }) as { message: string }
+  expect(out.message).not.toMatch(/hunter2|dXNlcjpwYXNz|abc123/)
+  expect(out.message).toContain("provider said")
+  expect(out.message).toContain("failed")
+})
+
+test("a thrown object keeps its useful fields but loses nested bodies and nested credentials", () => {
+  const out = scrubEvent({
+    request: { method: "GET", url: "https://api.ceraghit.tn/rpc/orders/get" },
+    extra: {
+      __serialized__: {
+        message: "provider failed",
+        detail: "Bearer abcdefghijklmnop",
+        attempts: [{ body: { note: "private delivery instructions" }, status: 502 }],
+      },
+    },
+  }) as { extra: { __serialized__: { message: string; attempts: Record<string, unknown>[] } } }
+  const json = JSON.stringify(out.extra)
+  expect(json).not.toContain("abcdefghijklmnop")
+  expect(json).not.toContain("private delivery")
+  expect(out.extra.__serialized__.message).toBe("provider failed")
+  expect(out.extra.__serialized__.attempts[0]).toEqual({ status: 502 })
+})
+
+test("the api route tag marks an admin failure sensitive even without a request url", () => {
+  const out = scrubEvent({ tags: { route: "/rpc/admin/vault/save" }, extra: { __serialized__: { note: "x" } } }) as {
+    extra?: unknown
+  }
+  expect(out.extra).toBeUndefined()
+})
