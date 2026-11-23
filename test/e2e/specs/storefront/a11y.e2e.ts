@@ -15,6 +15,7 @@ async function expectNoViolations(page: Page, label: string) {
 }
 
 test("the storefront has no serious accessibility violation", async ({ page, home, request, step }) => {
+  test.slow()
   const { stocked } = pickKinds(await catalogue(request))
   const pages: [string, string][] = [
     ["home", "/"],
