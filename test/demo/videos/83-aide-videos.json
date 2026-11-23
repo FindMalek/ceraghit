@@ -1,0 +1,92 @@
+{
+  "id": "83",
+  "slug": "aide-videos",
+  "title_fr": "La page Aide et ses vidéos",
+  "start": { "app": "dashboard", "path": "/help", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Toutes les vidéos sont ici.", "holdMs": 2200 },
+    {
+      "action": "fill",
+      "target": { "label": "Rechercher une vidéo" },
+      "value": "facture",
+      "caption_fr": "Cherchez : facture."
+    },
+    { "action": "wait", "caption_fr": "La liste se réduit.", "holdMs": 2000 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Réinitialiser les filtres" },
+      "caption_fr": "Effacez les filtres."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Mise en route" },
+      "caption_fr": "Filtrez par domaine."
+    },
+    { "action": "wait", "caption_fr": "Seul ce domaine reste.", "holdMs": 1800 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Réinitialiser les filtres" },
+      "caption_fr": "Effacez les filtres."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Rechercher une vidéo" },
+      "value": "zzzz",
+      "caption_fr": "Un mot introuvable."
+    },
+    { "action": "wait", "caption_fr": "Aucune vidéo trouvée.", "holdMs": 2000 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Voir toutes les vidéos" },
+      "caption_fr": "Voir toutes les vidéos."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "bientôt disponible", "nth": 0 },
+      "caption_fr": "Sans lien : bientôt disponible."
+    },
+    { "action": "wait", "caption_fr": "Rien n'est chargé.", "holdMs": 1800 },
+    { "action": "click", "target": { "role": "button", "name": "Fermer" }, "caption_fr": "Fermez la fenêtre." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Liens YouTube" },
+      "caption_fr": "Ajoutez un lien YouTube."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Chercher une vidéo à modifier" },
+      "value": "panier",
+      "caption_fr": "Trouvez la fiche."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Ordinateur", "nth": 0 },
+      "value": "pas un lien",
+      "caption_fr": "Un lien faux."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer" },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    { "action": "wait", "caption_fr": "Lien YouTube non reconnu.", "holdMs": 2200 },
+    {
+      "action": "fill",
+      "target": { "label": "Ordinateur", "nth": 0 },
+      "value": "https://youtu.be/abcdefghijk",
+      "caption_fr": "Collez le bon lien."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer" },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    { "action": "wait", "caption_fr": "Une vidéo est disponible.", "holdMs": 2200 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Regarder", "nth": 0 },
+      "caption_fr": "Cliquez sur la carte."
+    },
+    { "action": "wait", "caption_fr": "Au clic seulement.", "holdMs": 2000 }
+  ]
+}

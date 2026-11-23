@@ -1,0 +1,39 @@
+{
+  "id": "99",
+  "slug": "securite-donnees-sauvegardes",
+  "title_fr": "Sécurité, vie privée et exploitation (RGPD, cookies, sauvegardes)",
+  "devices": ["desktop"],
+  "start": { "app": "web", "path": "/fr", "loggedIn": false },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Aucun bandeau de cookies : seuls les cookies nécessaires existent.",
+      "holdMs": 3400
+    },
+    {
+      "action": "goto",
+      "value": "/fr/legal/privacy",
+      "caption_fr": "La page confidentialité dit quelles données sont gardées.",
+      "holdMs": 3200
+    },
+    { "action": "scroll", "value": "700", "caption_fr": "Combien de temps, et pourquoi.", "holdMs": 3000 },
+    { "action": "scroll", "value": "700", "caption_fr": "Combien de temps, et pourquoi.", "holdMs": 3000 },
+    {
+      "action": "goto",
+      "value": "http://localhost:3166/login",
+      "caption_fr": "Les tentatives de connexion sont limitées.",
+      "holdMs": 2400
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3067/health",
+      "caption_fr": "L'API répond à une sonde de disponibilité.",
+      "holdMs": 3000
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Sauvegardes et alertes se règlent côté serveur, jamais ici.",
+      "holdMs": 3000
+    }
+  ]
+}

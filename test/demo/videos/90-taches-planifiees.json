@@ -1,0 +1,56 @@
+{
+  "id": "90",
+  "slug": "taches-planifiees",
+  "title_fr": "Tâches planifiées (ce qui tourne tout seul)",
+  "start": { "app": "dashboard", "path": "/settings", "loggedIn": true },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Tâches planifiées" },
+      "caption_fr": "Ici, ce qui tourne tout seul.",
+      "holdMs": 2200
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Nettoyage des photos" },
+      "caption_fr": "Chaque tâche a son horaire et son dernier passage.",
+      "holdMs": 2200
+    },
+    {
+      "action": "hover",
+      "target": { "text": "En retard : aucun passage depuis" },
+      "caption_fr": "En retard : elle aurait déjà dû passer.",
+      "holdMs": 2400
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Libération du stock réservé" },
+      "caption_fr": "Le stock réservé se libère chaque heure.",
+      "holdMs": 1500
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Délai dépassé" },
+      "caption_fr": "Échec : la raison est écrite en rouge.",
+      "holdMs": 2400
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Le dernier passage s'est arrêté avant la fin." },
+      "caption_fr": "Interrompu : le passage s'est arrêté net.",
+      "holdMs": 2400
+    },
+    {
+      "action": "hover",
+      "target": { "text": "2 emails renvoyés" },
+      "caption_fr": "OK : les compteurs disent ce qui a été fait.",
+      "holdMs": 2400
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Clôture du quota IA" },
+      "caption_fr": "Jamais lancée : pas encore son tour.",
+      "holdMs": 2400
+    }
+  ]
+}
