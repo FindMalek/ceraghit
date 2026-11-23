@@ -1,0 +1,58 @@
+{
+  "id": "82",
+  "slug": "compte-bancaire",
+  "title_fr": "Saisir son compte bancaire pour les virements",
+  "start": { "app": "dashboard", "path": "/settings/profile", "loggedIn": true },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Sans compte complet, le virement n'est pas proposé.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Titulaire du compte" },
+      "value": "Ceraghit Creation",
+      "caption_fr": "Le titulaire et la banque."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Banque", "nth": 0 },
+      "value": "Banque de démonstration",
+      "caption_fr": "Le titulaire et la banque."
+    },
+    { "action": "fill", "target": { "label": "RIB" }, "value": "123", "caption_fr": "Un RIB trop court." },
+    { "action": "fill", "target": { "label": "IBAN" }, "value": "TN59 1000", "caption_fr": "Un IBAN faux." },
+    { "action": "fill", "target": { "label": "BIC / SWIFT" }, "value": "ABC", "caption_fr": "Un BIC trop court." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer", "nth": -1 },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    { "action": "wait", "caption_fr": "Chaque erreur dit quoi corriger.", "holdMs": 2600 },
+    {
+      "action": "fill",
+      "target": { "label": "RIB" },
+      "value": "10006035183598478831",
+      "caption_fr": "Le RIB compte 20 chiffres."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "IBAN" },
+      "value": "TN5910006035183598478831",
+      "caption_fr": "L'IBAN commence par TN59."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "BIC / SWIFT" },
+      "value": "BIATTNTT",
+      "caption_fr": "Le BIC a 8 ou 11 caractères."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer", "nth": -1 },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    { "action": "wait", "caption_fr": "Les clients paient maintenant par virement.", "holdMs": 2400 }
+  ]
+}

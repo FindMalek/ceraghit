@@ -1068,7 +1068,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 60,
     tags: ["payoneer", "lien", "email", "commande"],
     description: "Envoyer au client le lien Payoneer de sa commande par email.",
-    status: "soon",
   },
   {
     id: "92-suivi-colis-automatique",
@@ -1080,7 +1079,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 60,
     tags: ["suivi", "aramex", "colis", "chronologie", "actualiser"],
     description: "Suivre l'avancement des colis Aramex sans quitter le tableau de bord.",
-    status: "soon",
   },
   {
     id: "93-premiere-ouverture",
