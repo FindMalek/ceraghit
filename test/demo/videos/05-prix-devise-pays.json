@@ -1,0 +1,38 @@
+{
+  "id": "05",
+  "slug": "prix-devise-pays",
+  "title_fr": "Pourquoi des dinars ou des euros",
+  "devices": ["desktop"],
+  "start": { "app": "web", "path": "/product/curda-seca-0010", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "En Tunisie, les prix sont en dinars.", "holdMs": 2200 },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Curda Seca" },
+      "caption_fr": "Pas de bouton de devise : le pays décide."
+    },
+    { "action": "cookie", "value": "ceraghit_currency=EUR", "caption_fr": "Ailleurs, la même pièce est en euros." },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0010",
+      "caption_fr": "Ailleurs, la même pièce est en euros.",
+      "holdMs": 2200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "L'atelier fixe deux prix : jamais convertis.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter au panier" },
+      "caption_fr": "Le panier garde la devise choisie."
+    },
+    { "action": "goto", "value": "/checkout", "caption_fr": "Au paiement, la devise est rappelée." },
+    {
+      "action": "hover",
+      "target": { "text": "Vous payez en" },
+      "caption_fr": "Vous payez dans la devise de la commande."
+    }
+  ]
+}

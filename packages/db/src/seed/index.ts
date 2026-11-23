@@ -1,5 +1,5 @@
 import { DEFAULT_SHIPPING_RATES } from "@workspace/sdk"
-import { count, eq, inArray } from "drizzle-orm"
+import { and, count, eq, inArray } from "drizzle-orm"
 import type { Db } from "../index"
 import { withSeedLock } from "../migrate"
 import { hashPassword } from "../password"
@@ -22,19 +22,13 @@ import {
   shopProfile,
 } from "../schema"
 import { CATALOGUE, CATEGORIES } from "./catalogue"
-import {
-  DEMO_HIDDEN_HERO,
-  DEMO_MAIN_SECOND_REF,
-  DEMO_MEDIA_BY_REF,
-  DEMO_UNUSED_MEDIA,
-  ensureSiteImages,
-  syncBundledMedia,
-} from "./media"
+import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA, ensureSiteImages, syncBundledMedia } from "./media"
 import {
   buildDemoProfile,
   buildScenario,
   DEMO_DESCRIPTIONS,
   DEMO_LOCATIONS,
+  DEMO_STOCK_STATES,
   DEMO_TN_CITIES,
   demoExtraProducts,
   demoRequests,
@@ -45,7 +39,7 @@ import { localize } from "./translations"
 export { buildScenario } from "./scenario"
 
 /** Every glazed lampe votive also exists unglazed for 5 EUR less (0210 is already the unglazed one). */
-const UNGLAZED_VARIANT_REFS = new Set([
+export const UNGLAZED_VARIANT_REFS = new Set([
   "0200",
   "0201",
   "0202",
@@ -206,6 +200,15 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
     if (!opts.demo) return
     await tx.insert(locations).values(DEMO_LOCATIONS)
     await tx.insert(products).values(demoExtraProducts(cats.map((c) => c.id)))
+    const { last, soldOut, soldOutOption } = DEMO_STOCK_STATES
+    await tx.update(products).set({ stock: last.stock }).where(eq(products.ref, last.ref))
+    await tx.update(products).set({ stock: soldOut.stock }).where(eq(products.ref, soldOut.ref))
+    const optionPiece = rows.find((r) => r.ref === soldOutOption.ref)
+    if (!optionPiece) throw new Error(`demo stock state: ${soldOutOption.ref} is not in the catalogue`)
+    await tx
+      .update(productVariants)
+      .set({ stock: soldOutOption.stock })
+      .where(and(eq(productVariants.productId, optionPiece.id), eq(productVariants.position, 1)))
     await tx.insert(customRequests).values(demoRequests(new Date()))
     if ((opts.profile ?? "complete") === "complete") {
       const now = new Date()

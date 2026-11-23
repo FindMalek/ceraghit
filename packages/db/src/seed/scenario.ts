@@ -137,7 +137,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     city: "Nabeul",
     country: "Tunisie",
     image: "/catalogue/studio-interior.webp",
-    mapUrl: "https://www.openstreetmap.org/search?query=Nabeul",
+    mapUrl: "https://www.openstreetmap.org/search?query=Avenue%20Habib%20Bourguiba%2C%20Nabeul",
     phone: "+216 20 000 000",
     hours: {
       fr: "Du mardi au samedi, 10h à 18h",
@@ -156,7 +156,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     address: "Rue Haute 120",
     city: "Bruxelles",
     country: "Belgique",
-    mapUrl: "https://www.openstreetmap.org/search?query=Bruxelles",
+    mapUrl: "https://www.openstreetmap.org/search?query=Rue%20Haute%20120%2C%20Bruxelles",
     phone: "+32 470 00 00 00",
     hours: {
       fr: "Du mercredi au samedi, 11h à 19h",
@@ -297,6 +297,13 @@ export function demoRequests(now: Date): (typeof customRequests.$inferInsert)[] 
     },
   ]
 }
+
+/** Storefront stock states the videos film: a last piece, a sold out piece, and a sold out option on a piece with options. */
+export const DEMO_STOCK_STATES = {
+  last: { ref: "0015", stock: 1 },
+  soldOut: { ref: "0210", stock: 0 },
+  soldOutOption: { ref: "0209", stock: 0 },
+} as const
 
 /** Draft and archived pieces, so the product list passes its 40 row page and the status filters have rows. Refs 08xx, the journeys create 09xx. */
 export function demoExtraProducts(categoryIds: string[]): (typeof products.$inferInsert)[] {
