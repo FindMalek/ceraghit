@@ -32,11 +32,7 @@ test("the catalogue is valid: unique ids, slugs matching ids, lengths within 30 
   expect(new Set(TUTORIALS.map((t) => t.id)).size).toBe(TUTORIALS.length)
   expect(TUTORIALS.length).toBe(99)
   for (const t of TUTORIALS) expect(t.id).toBe(`${t.id.slice(0, 2)}-${t.slug}`)
-  expect(TUTORIALS.filter((t) => t.status === "soon").map((t) => t.id.slice(0, 2))).toEqual([
-    "27",
-    "48",
-    "49",
-  ])
+  expect(TUTORIALS.filter((t) => t.status === "soon").map((t) => t.id.slice(0, 2))).toEqual(["27", "48", "49"])
 })
 
 test("the schema refuses a bad tag, a length out of range and an unknown device", () => {
