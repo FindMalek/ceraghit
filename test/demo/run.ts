@@ -10,8 +10,16 @@ import { assertAdminCredentials, assertSafe } from "./lib/guard"
 import { buildPlan, formatPlan, ledgerPath, narrationFor, readLedger, ttsCacheDir } from "./lib/narration"
 import { installOverlay } from "./lib/overlay"
 import { createPacer, DEFAULT_HOLD_MS, STILL_MS, sleep } from "./lib/pacing"
-import { type AudioClip, frameSize, mux, startRecording } from "./lib/recorder"
-import { applyTimeouts, durationProblem, stepHoldMs, tailWaitMs, VIDEO_DEADLINE_MS, withDeadline } from "./lib/safety"
+import { type AudioClip, frameSize, mux, type Recording, startRecording } from "./lib/recorder"
+import {
+  abortRecording,
+  applyTimeouts,
+  closingWaitMs,
+  durationProblem,
+  runGuarded,
+  stepHoldMs,
+  VIDEO_DEADLINE_MS,
+} from "./lib/safety"
 import { fileBase, parseVideo, stepsFor, type Video } from "./lib/steps"
 import { planIsCached, probeDuration } from "./lib/tts"
 import { prepareVoice } from "./lib/voice"
@@ -101,6 +109,7 @@ async function main() {
       const finalFile = join(out, "videos", `${base}.mp4`)
       const written: string[] = []
       let current = "opening the page"
+      let recording: Recording | undefined
       let expectedMs = 3 * STILL_MS
       const record = async (): Promise<void> => {
         const page = await context.newPage()
@@ -115,7 +124,7 @@ async function main() {
         await page.goto(`${urls[video.start.app]}${video.start.path}`)
         await page.waitForLoadState("networkidle")
 
-        const recording = await startRecording(page, raw, frameSize(viewport ?? { width: 1440, height: 900 }, 2))
+        recording = await startRecording(page, raw, frameSize(viewport ?? { width: 1440, height: 900 }, 2))
         const pacer = createPacer({
           page,
           device,
@@ -128,7 +137,7 @@ async function main() {
         const captions: Caption[] = []
         const audio: AudioClip[] = []
         await sleep(STILL_MS)
-        let lastAudioEndMs = 0
+        let lastAudioEndMs: number | null = null
         for (const [i, step] of steps.entries()) {
           const startMs = recording.now()
           current = `step ${i + 1}/${steps.length} (${step.action}: ${step.caption_fr})`
@@ -148,14 +157,14 @@ async function main() {
               holdMs: step.holdMs,
               defaultHoldMs: DEFAULT_HOLD_MS,
               spokenRemainingMs,
-              last: i === steps.length - 1,
+              lastNarrated: i === steps.length - 1 && Boolean(narration),
             }),
           )
           await pacer.zoomOut()
           captions.push({ startMs, endMs: recording.now(), text: step.caption_fr })
         }
         current = "closing the video"
-        await sleep(tailWaitMs(recording.now(), lastAudioEndMs))
+        await sleep(closingWaitMs(recording.now(), lastAudioEndMs, STILL_MS))
         await recording.stop()
         await context.close()
 
@@ -176,7 +185,13 @@ async function main() {
         if (problem) throw new Error(`${base}: ${problem}`)
       }
       try {
-        await withDeadline(record(), VIDEO_DEADLINE_MS, () => `${base} stuck at ${current}`)
+        await runGuarded(record, {
+          ms: VIDEO_DEADLINE_MS,
+          label: () => `${base} stuck at ${current}`,
+          cleanup: async () => {
+            await abortRecording({ recording, files: [...written, finalFile, raw], browser })
+          },
+        })
       } catch (error) {
         for (const f of [...written, finalFile]) rmSync(f, { force: true })
         throw error
