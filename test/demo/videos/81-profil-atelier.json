@@ -1,0 +1,105 @@
+{
+  "id": "81",
+  "slug": "profil-atelier",
+  "title_fr": "Remplir le profil de l'atelier",
+  "start": { "app": "dashboard", "path": "/settings/profile", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Le profil sert aux factures et aux emails.", "holdMs": 2200 },
+    {
+      "action": "fill",
+      "target": { "label": "Votre prénom et nom" },
+      "value": "S",
+      "caption_fr": "Votre nom : un seul caractère."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer", "nth": 0 },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    { "action": "wait", "caption_fr": "Entre 2 et 80 caractères.", "holdMs": 2000 },
+    {
+      "action": "fill",
+      "target": { "label": "Votre prénom et nom" },
+      "value": "Sabri Ghit",
+      "caption_fr": "Corrigez le nom."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer", "nth": 0 },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Raison sociale" },
+      "value": "Ceraghit Creation",
+      "caption_fr": "La raison sociale et le matricule fiscal."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Matricule fiscal" },
+      "value": "1234567/A/M/000",
+      "caption_fr": "La raison sociale et le matricule fiscal."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse", "nth": 0 },
+      "value": "1 rue de l'Atelier",
+      "caption_fr": "L'adresse de l'atelier."
+    },
+    { "action": "fill", "target": { "label": "Code postal" }, "value": "8000", "caption_fr": "Code postal et ville." },
+    { "action": "fill", "target": { "label": "Ville" }, "value": "Nabeul", "caption_fr": "Code postal et ville." },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter un numéro" },
+      "caption_fr": "Ajoutez un téléphone."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Téléphone 1" },
+      "value": "12",
+      "caption_fr": "Un numéro trop court."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Email de contact" },
+      "value": "contact",
+      "caption_fr": "Un email incomplet."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer", "nth": 1 },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    { "action": "wait", "caption_fr": "Les champs fautifs sont signalés.", "holdMs": 2400 },
+    {
+      "action": "fill",
+      "target": { "label": "Téléphone 1" },
+      "value": "20 000 000",
+      "caption_fr": "On corrige."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Email de contact" },
+      "value": "contact@ceraghit.example",
+      "caption_fr": "On corrige."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Email des notifications" },
+      "value": "commandes@ceraghit.example",
+      "caption_fr": "Ici arrivent les commandes."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Mention fiscale sur les factures" },
+      "value": "TVA non applicable",
+      "caption_fr": "La mention figure sur chaque facture."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Enregistrer", "nth": 1 },
+      "caption_fr": "Cliquez sur Enregistrer."
+    },
+    { "action": "wait", "caption_fr": "Le compteur d'étapes baisse.", "holdMs": 2400 }
+  ]
+}

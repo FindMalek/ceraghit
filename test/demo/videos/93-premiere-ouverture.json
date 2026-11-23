@@ -1,0 +1,60 @@
+{
+  "id": "93",
+  "slug": "premiere-ouverture",
+  "title_fr": "Première ouverture : votre nom",
+  "start": { "app": "dashboard", "path": "/", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Première connexion : l'assistant s'ouvre seul.", "holdMs": 1800 },
+    {
+      "action": "wait",
+      "caption_fr": "Aucun menu n'est proposé tant que la configuration n'est pas finie.",
+      "only": "mobile",
+      "holdMs": 1800
+    },
+    { "action": "wait", "caption_fr": "Dix minutes, reprise possible à tout moment.", "holdMs": 1500 },
+    { "action": "click", "target": { "role": "button", "name": "Commencer" }, "caption_fr": "Cliquez sur Commencer." },
+    { "action": "wait", "caption_fr": "Première question : votre nom.", "holdMs": 1500 },
+    {
+      "action": "fill",
+      "target": { "label": "Votre prénom et nom" },
+      "value": "S",
+      "caption_fr": "Un seul caractère, c'est trop court."
+    },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "Entre 2 et 80 caractères.", "holdMs": 2000 },
+    {
+      "action": "fill",
+      "target": { "label": "Votre prénom et nom" },
+      "value": "Sabri Ghit",
+      "caption_fr": "Écrivez votre prénom et nom."
+    },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "La barre montre où vous en êtes.", "holdMs": 2000 },
+    { "action": "clear-cookies", "caption_fr": "Vous fermez la page.", "holdMs": 800 },
+    { "action": "goto", "value": "/login", "caption_fr": "Puis vous revenez.", "holdMs": 800 },
+    {
+      "action": "fill",
+      "target": { "label": "Email" },
+      "value": "{{ADMIN_EMAIL}}",
+      "caption_fr": "Votre email.",
+      "holdMs": 300
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Mot de passe" },
+      "value": "{{ADMIN_PASSWORD}}",
+      "caption_fr": "Votre mot de passe.",
+      "holdMs": 300
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Se connecter" },
+      "caption_fr": "Cliquez sur Se connecter."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le nom ne revient pas : place à l'atelier.",
+      "holdMs": 2200
+    }
+  ]
+}
