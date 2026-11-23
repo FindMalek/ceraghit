@@ -608,7 +608,40 @@ export function buildScenario(
       sentAt: ok ? at : null,
     })
   }
+  addMailFailures(out, now, confirmed.slice(2))
   return out
+}
+
+/** Seven more failed mails, one per kind but the first and one per error the failures page words in French. */
+const MAIL_FAILURES: [kind: NewMail["kind"], error: string | null, attempts: number][] = [
+  ["order_studio", "resend 403: domain is not verified", 3],
+  ["request_studio", "resend 401: invalid api key", 1],
+  ["payment_received", "resend 429: rate limit exceeded", 3],
+  ["shipped", "resend 422: invalid to address", 1],
+  ["order_expired", "network error: fetch failed", 3],
+  ["payment_link", null, 1],
+  ["test", "resend 400: bad request", 1],
+]
+
+function addMailFailures(out: Built, now: Date, orders: Built["orders"]): void {
+  for (const [i, [kind, error, attempts]] of MAIL_FAILURES.entries()) {
+    const order = orders[i]
+    if (!order) continue
+    const at = new Date(now.getTime() - (4 + i) * 3600e3)
+    out.mail.push({
+      kind,
+      orderId: kind === "test" ? null : order.id,
+      to: order.email,
+      subject: `Message de démonstration ${order.number}`,
+      text: `Bonjour ${order.customerName},\n\nMessage de démonstration.\n\nCeraghit Creation`,
+      status: "failed",
+      providerId: null,
+      error,
+      attempts,
+      createdAt: at,
+      sentAt: null,
+    })
+  }
 }
 
 type Built = ReturnType<typeof buildScenario>

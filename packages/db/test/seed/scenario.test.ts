@@ -98,10 +98,14 @@ test("the demo shows one late payment on a cancelled online order", () => {
   expect(orders.find((o) => o.id === rows[0]!.orderId)).toMatchObject({ paymentMethod: "online", status: "cancelled" })
 })
 
-test("the demo has one sent and one failed mail on real orders, so the failures page is never empty", () => {
+test("the demo has one sent mail and eight failed ones (every kind but two, every error wording), on real orders", () => {
   const { orders, mail } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
-  expect(mail.map((m) => m.status).sort()).toEqual(["failed", "sent"])
-  const failed = mail.find((m) => m.status === "failed")!
+  expect(mail.filter((m) => m.status === "sent")).toHaveLength(1)
+  const failures = mail.filter((m) => m.status === "failed")
+  expect(failures).toHaveLength(8)
+  expect(new Set(failures.map((m) => m.kind)).size).toBe(8)
+  expect(new Set(failures.map((m) => m.error)).size).toBe(8)
+  const failed = failures[0]!
   expect(failed.error).toBe("resend 503: service unavailable")
   expect(orders.find((o) => o.id === failed.orderId)?.email).toBe(failed.to)
 })
