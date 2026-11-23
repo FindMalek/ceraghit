@@ -8,7 +8,7 @@ const target = z.object({
   testId: z.string().optional(),
   /** Which visible match to use, from 0; -1 is the last. For twins like the two Annuler buttons of a confirmation. */
   nth: z.number().int().optional(),
-  /** Match the whole name, label or text: `Adresse` against `Adresse e-mail`. */
+  /** Whole text or name must match, not a part of it (an option labelled "Émaillée" next to "non émaillée"). */
   exact: z.boolean().optional(),
 })
 
@@ -36,6 +36,10 @@ export const ACTIONS = [
   "network",
   /** Clicks the target, keeps the downloaded file and shows it over the page (CSV table, first PDF page). */
   "download",
+  /** Sets a cookie on the current app (`ceraghit_currency=EUR`), to film what a cookie decides. */
+  "cookie",
+  /** Slides a finger across the target (`left` or `right`), for galleries that listen to touch events. Phone only. */
+  "swipe",
 ] as const
 
 const step = z.object({

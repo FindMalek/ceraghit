@@ -1,0 +1,38 @@
+{
+  "id": "12",
+  "slug": "demander-un-devis",
+  "title_fr": "Pièce sur devis",
+  "start": { "app": "web", "path": "/shop/haut-relief", "loggedIn": false },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "text": "Sur devis", "nth": 0 },
+      "caption_fr": "Le badge « Sur devis » marque ces pièces."
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Fontaine andalouse" },
+      "caption_fr": "Ouvrez la fiche."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Cette pièce est réalisée sur commande." },
+      "caption_fr": "Pas de panier : la pièce se fait sur commande."
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Demander un devis" },
+      "caption_fr": "Le bouton ouvre une demande."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "textbox", "name": "Votre projet" },
+      "caption_fr": "Le message est déjà rempli.",
+      "holdMs": 2200
+    },
+    {
+      "action": "back",
+      "caption_fr": "Revenez à la fiche si besoin."
+    }
+  ]
+}

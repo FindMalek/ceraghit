@@ -4,6 +4,9 @@ import type { CDPSession, Page } from "@playwright/test"
 
 export const FPS = 30
 
+/** ffmpeg/ffprobe run synchronously, so a hung one would block the process past the video deadline. */
+export const TOOL_TIMEOUT_MS = 60_000
+
 export const FFMPEG = process.env.FFMPEG || "ffmpeg"
 
 export interface Recording {
@@ -82,8 +85,9 @@ export async function startRecording(
   })
 
   let previous: Buffer | null = null
-  let previousAt = 0
   const startedAt = Date.now()
+  /** Frames sent so far: each frame is repeated up to its end on the 30 fps grid, so rounding never adds up to drift. */
+  let sent = 0
   let queue: Promise<void> = Promise.resolve()
   const write = (frame: Buffer, copies: number) => {
     queue = queue.then(async () => {
@@ -94,20 +98,23 @@ export async function startRecording(
     })
   }
 
+  const writeUntil = (frame: Buffer, atMs: number) => {
+    const copies = Math.max(0, Math.round(((atMs - startedAt) / 1000) * FPS) - sent)
+    sent += copies
+    write(frame, copies)
+  }
+
   client.on("Page.screencastFrame", (event) => {
     const at = (event.metadata.timestamp ?? Date.now() / 1000) * 1000
     const pending = previous
-    const pendingAt = previousAt
     previous = Buffer.from(event.data, "base64")
-    previousAt = at
     client.send("Page.screencastFrameAck", { sessionId: event.sessionId }).catch(() => {})
-    if (pending) write(pending, Math.max(1, Math.round(((at - pendingAt) / 1000) * FPS)))
+    if (pending) writeUntil(pending, at)
   })
   // The screencast sends nothing while the page is still, so without a first frame the video would start at the first
   // change and every later cue would sit ahead of the picture.
   const initial = await client.send("Page.captureScreenshot", { format: "jpeg", quality: 90 })
   previous = Buffer.from(initial.data, "base64")
-  previousAt = startedAt
   await client.send("Page.startScreencast", {
     format: "jpeg",
     quality: 90,
@@ -125,7 +132,7 @@ export async function startRecording(
     },
     async stop() {
       await client.send("Page.stopScreencast").catch(() => {})
-      if (previous) write(previous, Math.max(1, Math.round(((Date.now() - previousAt) / 1000) * FPS)))
+      if (previous) writeUntil(previous, Date.now())
       await queue
       ffmpeg.stdin.end()
       const code = await closed
@@ -140,7 +147,14 @@ export interface AudioClip {
 }
 
 /** Adds the narration clips at their start times and, with `burnFile`, the captions into the picture. */
-export function mux(input: string, output: string, clips: AudioClip[], burnFile?: string): void {
+export function mux(
+  input: string,
+  output: string,
+  clips: AudioClip[],
+  burnFile?: string,
+  tool: { ffmpeg?: string; timeoutMs?: number } = {},
+): void {
+  const timeoutMs = tool.timeoutMs ?? TOOL_TIMEOUT_MS
   const args = ["-y", "-i", input]
   for (const clip of clips) args.push("-i", clip.file)
   const filters: string[] = []
@@ -155,6 +169,8 @@ export function mux(input: string, output: string, clips: AudioClip[], burnFile?
   args.push("-c:v", burnFile ? "libx264" : "copy")
   if (burnFile) args.push("-crf", "18", "-pix_fmt", "yuv420p")
   args.push("-movflags", "+faststart", output)
-  const res = spawnSync(FFMPEG, args, { encoding: "utf8" })
+  const res = spawnSync(tool.ffmpeg ?? FFMPEG, args, { encoding: "utf8", timeout: timeoutMs, killSignal: "SIGKILL" })
+  if (res.error || res.status === null)
+    throw new Error(`ffmpeg mux did not finish within ${timeoutMs} ms: ${res.error}`)
   if (res.status !== 0) throw new Error(`ffmpeg mux failed: ${res.stderr.slice(-1500)}`)
 }

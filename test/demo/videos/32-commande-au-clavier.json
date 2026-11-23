@@ -2,9 +2,7 @@
   "id": "32",
   "slug": "commande-au-clavier",
   "title_fr": "Commander uniquement au clavier",
-  "devices": [
-    "desktop"
-  ],
+  "devices": ["desktop"],
   "start": {
     "app": "web",
     "path": "/",

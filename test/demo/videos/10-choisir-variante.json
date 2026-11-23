@@ -1,0 +1,78 @@
+{
+  "id": "10",
+  "slug": "choisir-variante",
+  "title_fr": "Choisir une variante",
+  "start": {
+    "app": "web",
+    "path": "/shop/lampe-votive",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "hover",
+      "target": {
+        "text": "À partir de",
+        "nth": 0
+      },
+      "caption_fr": "« À partir de » annonce des options."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Lampe votive",
+        "nth": 1
+      },
+      "caption_fr": "Ouvrez une lampe votive."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Option"
+      },
+      "caption_fr": "Chaque option affiche son prix."
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Terre cuite non émaillée"
+      },
+      "caption_fr": "Choisissez non émaillée : le prix suit."
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Émaillée",
+        "exact": true
+      },
+      "caption_fr": "Ou émaillée."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Le panier garde le libellé de l'option.",
+      "holdMs": 2000
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Le panier garde le libellé de l'option."
+    },
+    {
+      "action": "goto",
+      "value": "/product/lampe-votive-0209",
+      "caption_fr": "Une option épuisée est grisée."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Épuisé"
+      },
+      "caption_fr": "Une option épuisée est grisée, non cliquable.",
+      "holdMs": 2000
+    }
+  ]
+}
