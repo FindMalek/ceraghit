@@ -19,7 +19,7 @@
     },
     {
       "action": "click",
-      "target": { "role": "button", "name": "1 article" },
+      "target": { "role": "button", "name": "1 article", "nth": -1 },
       "caption_fr": "Elle rouvre le panier d'un geste.",
       "only": "mobile",
       "holdMs": 1800

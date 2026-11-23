@@ -249,7 +249,9 @@ test("CER-10100 shows the gateway mismatch then the automatic cancel, CER-10101 
 test("the demo studio settings are valid and fill the footer links", () => {
   const parsed = studioSettingsSchema.parse(demoStudioSettings(DEFAULT_SHIPPING_RATES))
   expect([parsed.whatsapp, parsed.instagram].every(Boolean)).toBe(true)
-  expect(DEMO_LOCATIONS.every((l) => l.mapUrl)).toBe(true)
+  expect(
+    DEMO_LOCATIONS.every((l) => l.mapUrl?.endsWith(encodeURIComponent(`${l.address}, ${l.city}`).replace(/'/g, "%27"))),
+  ).toBe(true)
 })
 
 test("demo requests cover every status and the extra products are drafts or archived with unique refs", () => {

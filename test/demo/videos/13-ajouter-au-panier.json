@@ -45,7 +45,8 @@
     {
       "action": "click",
       "target": { "role": "link", "name": "Parcourir la boutique" },
-      "caption_fr": "Un panier vide mène à la boutique."
+      "caption_fr": "Un panier vide mène à la boutique.",
+      "holdMs": 3000
     }
   ]
 }
