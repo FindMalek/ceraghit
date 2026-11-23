@@ -1,3 +1,4 @@
+import { DEFAULT_SHIPPING_RATES } from "@workspace/sdk"
 import { and, count, eq, inArray } from "drizzle-orm"
 import type { Db } from "../index"
 import { withSeedLock } from "../migrate"
@@ -31,6 +32,7 @@ import {
   DEMO_TN_CITIES,
   demoExtraProducts,
   demoRequests,
+  demoStudioSettings,
 } from "./scenario"
 import { localize } from "./translations"
 
@@ -242,6 +244,10 @@ async function seedRows(db: Db, opts: SeedOptions): Promise<{ admin: boolean; ca
     await tx
       .insert(settings)
       .values({ key: "shipping", value: { provider: "manual", quoteFromProvider: false } })
+      .onConflictDoNothing()
+    await tx
+      .insert(settings)
+      .values({ key: "studio", value: demoStudioSettings(DEFAULT_SHIPPING_RATES) })
       .onConflictDoNothing()
     done.demo = true
   })

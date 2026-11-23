@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { DEFAULT_SHIPPING_RATES, studioSettingsSchema } from "@workspace/sdk"
 import { parseDemoRef } from "../../src/demo-ref"
 import { UNGLAZED_VARIANT_REFS } from "../../src/seed"
 import { CATALOGUE } from "../../src/seed/catalogue"
@@ -11,6 +12,7 @@ import {
   DEMO_TN_CITIES,
   demoExtraProducts,
   demoRequests,
+  demoStudioSettings,
 } from "../../src/seed/scenario"
 
 const products = [
@@ -242,6 +244,24 @@ test("CER-10100 shows the gateway mismatch then the automatic cancel, CER-10101 
   const shipped = orders.find((o) => o.number === "CER-10101")!
   expect([shipped.status, shipped.carrier, Boolean(shipped.trackingNumber)]).toEqual(["fulfilled", "rapid-poste", true])
   expect(shipments.some((s) => s.orderId === shipped.id)).toBe(false)
+})
+
+test("CER-10102 is a refunded order the customer can open", () => {
+  const { orders } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const refunded = orders.find((o) => o.number === "CER-10102")!
+  expect([refunded.status, refunded.publicToken, refunded.paidAt === null]).toEqual([
+    "refunded",
+    "demo-refunded",
+    false,
+  ])
+})
+
+test("the demo studio settings are valid and fill the footer links", () => {
+  const parsed = studioSettingsSchema.parse(demoStudioSettings(DEFAULT_SHIPPING_RATES))
+  expect([parsed.whatsapp, parsed.instagram].every(Boolean)).toBe(true)
+  expect(
+    DEMO_LOCATIONS.every((l) => l.mapUrl?.endsWith(encodeURIComponent(`${l.address}, ${l.city}`).replace(/'/g, "%27"))),
+  ).toBe(true)
 })
 
 test("demo requests cover every status and the extra products are drafts or archived with unique refs", () => {

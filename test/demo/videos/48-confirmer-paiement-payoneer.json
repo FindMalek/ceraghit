@@ -1,0 +1,334 @@
+{
+  "id": "48",
+  "slug": "confirmer-paiement-payoneer",
+  "title_fr": "Commande Payoneer côté propriétaire",
+  "start": {
+    "app": "dashboard",
+    "path": "/",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Une commande Payoneer : vous envoyez le lien, puis vous confirmez le paiement.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/payments",
+      "caption_fr": "Dans Paiements, la carte Payoneer règle le mode de lien.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/payments",
+      "caption_fr": "Dans Paiements, la carte Payoneer règle le mode de lien.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "scroll",
+      "value": "650",
+      "caption_fr": "La carte Payoneer est plus bas dans la page.",
+      "only": "desktop",
+      "holdMs": 1500
+    },
+    {
+      "action": "scroll",
+      "value": "650",
+      "caption_fr": "La carte Payoneer est plus bas dans la page.",
+      "only": "mobile",
+      "holdMs": 1500
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Un lien par commande est le mode conseillé.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Un lien par commande est le mode conseillé.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/orders",
+      "caption_fr": "Ouvrez la liste des commandes.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/orders",
+      "caption_fr": "Ouvrez la liste des commandes.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "payoneer.desktop@example.com",
+      "caption_fr": "Cherchez la commande Payoneer.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "payoneer.mobile@example.com",
+      "caption_fr": "Cherchez la commande Payoneer.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "« Lien à envoyer » : le client attend son lien.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "« Lien à envoyer » : le client attend son lien.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "CER-",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez la commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "CER-",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez la commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Collez le lien Payoneer : seul un lien payoneer.com est accepté.",
+      "holdMs": 2000
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien Payoneer"
+      },
+      "value": "https://payoneer.com.evil.tld/pay",
+      "caption_fr": "Un faux lien est refusé.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien Payoneer"
+      },
+      "value": "https://payoneer.com.evil.tld/pay",
+      "caption_fr": "Un faux lien est refusé.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Envoyer au client"
+      },
+      "caption_fr": "Cliquez sur Envoyer au client.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Envoyer au client"
+      },
+      "caption_fr": "Cliquez sur Envoyer au client.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Collez un lien https de payoneer.com.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Collez un lien https de payoneer.com.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien Payoneer"
+      },
+      "value": "https://link.payoneer.com/pay/demo-48-d-{{TAKE}}",
+      "caption_fr": "Collez le vrai lien.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien Payoneer"
+      },
+      "value": "https://link.payoneer.com/pay/demo-48-m-{{TAKE}}",
+      "caption_fr": "Collez le vrai lien.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Envoyer au client"
+      },
+      "caption_fr": "Envoyez-le au client par email."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Lien envoyé : vous pouvez le remplacer si besoin.",
+      "only": "desktop",
+      "holdMs": 2800
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Lien envoyé : vous pouvez le remplacer si besoin.",
+      "only": "mobile",
+      "holdMs": 2800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Marquer payée",
+        "exact": true
+      },
+      "caption_fr": "L'argent est arrivé sur votre compte Payoneer.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Marquer payée",
+        "exact": true
+      },
+      "caption_fr": "L'argent est arrivé sur votre compte Payoneer.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Payoneer est déjà choisi dans « Reçu par ».",
+      "only": "desktop",
+      "holdMs": 2400
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Payoneer est déjà choisi dans « Reçu par ».",
+      "only": "mobile",
+      "holdMs": 2400
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Référence du paiement (facultatif)"
+      },
+      "value": "PAYONEER-48",
+      "caption_fr": "Notez la référence Payoneer.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Référence du paiement (facultatif)"
+      },
+      "value": "PAYONEER-48",
+      "caption_fr": "Notez la référence Payoneer.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Confirmer le paiement"
+      },
+      "caption_fr": "Confirmez : vous seul marquez Payoneer payé."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La commande est payée, le client est prévenu.",
+      "only": "desktop",
+      "holdMs": 2400
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La commande est payée, le client est prévenu.",
+      "only": "mobile",
+      "holdMs": 2400
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "CER-",
+        "nth": 0
+      },
+      "caption_fr": "Rouvrez la commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "CER-",
+        "nth": 0
+      },
+      "caption_fr": "Rouvrez la commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "heading",
+        "name": "Historique"
+      },
+      "caption_fr": "L'historique garde le paiement Payoneer et sa référence.",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Facture"
+      },
+      "caption_fr": "Ouvrez la facture.",
+      "only": "desktop",
+      "holdMs": 3500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Facture"
+      },
+      "caption_fr": "Ouvrez la facture.",
+      "only": "mobile",
+      "holdMs": 3500
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La facture indique Payoneer comme mode de paiement.",
+      "holdMs": 3500
+    }
+  ]
+}

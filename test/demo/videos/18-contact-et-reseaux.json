@@ -1,0 +1,50 @@
+{
+  "id": "18",
+  "slug": "contact-et-reseaux",
+  "title_fr": "Contacter l'atelier (pied de page, WhatsApp, Instagram)",
+  "start": { "app": "web", "path": "/fr", "loggedIn": false },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "text": "Céramiques modelées à la main." },
+      "caption_fr": "Le pied de page est en bas de chaque page.",
+      "holdMs": 2000
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "atelier@example.com" },
+      "caption_fr": "Un clic sur l'email ouvre votre messagerie.",
+      "holdMs": 1500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "+216 20 000 000", "nth": 0 },
+      "caption_fr": "Le téléphone appelle l'atelier.",
+      "holdMs": 1500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "WhatsApp" },
+      "caption_fr": "WhatsApp ouvre une conversation.",
+      "holdMs": 1500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Instagram" },
+      "caption_fr": "Instagram ouvre le compte de l'atelier.",
+      "holdMs": 1500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Mentions légales" },
+      "caption_fr": "Les informations légales sont juste en dessous.",
+      "holdMs": 1500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "English" },
+      "caption_fr": "Le sélecteur de langue est tout en bas.",
+      "holdMs": 1800
+    }
+  ]
+}

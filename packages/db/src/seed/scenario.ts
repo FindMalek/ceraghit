@@ -22,6 +22,11 @@ type NewJobRun = typeof jobRuns.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
 
+/** The studio settings of the demo: WhatsApp and Instagram shown in the footer. Rates stay the defaults. */
+export function demoStudioSettings(rates: unknown) {
+  return { whatsapp: "+216 20 000 000", instagram: "@ceraghit_demo", shippingRates: rates, shippingNote: null }
+}
+
 export interface ScenarioProduct {
   id: string
   ref: string
@@ -132,6 +137,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     city: "Nabeul",
     country: "Tunisie",
     image: "/catalogue/studio-interior.webp",
+    mapUrl: "https://www.openstreetmap.org/search?query=Avenue%20Habib%20Bourguiba%2C%20Nabeul",
     phone: "+216 20 000 000",
     hours: {
       fr: "Du mardi au samedi, 10h à 18h",
@@ -150,6 +156,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     address: "Rue Haute 120",
     city: "Bruxelles",
     country: "Belgique",
+    mapUrl: "https://www.openstreetmap.org/search?query=Rue%20Haute%20120%2C%20Bruxelles",
     phone: "+32 470 00 00 00",
     hours: {
       fr: "Du mercredi au samedi, 11h à 19h",
@@ -590,6 +597,7 @@ export function buildScenario(
   }
   addGatewayAlert(out, now, waiting)
   addCorrectableShipment(out, now, products[1] ?? waiting)
+  addRefundedOrder(out, now, products[2] ?? waiting)
   addOlderHistory(out, now, products)
   out.shipments = demoShipments(out.orders, now)
   const confirmed = out.orders.filter((o) => o.status === "paid" || o.status === "fulfilled")
@@ -821,6 +829,57 @@ function addCorrectableShipment(out: Built, now: Date, product: ScenarioProduct)
     title: product.title,
     unitMinor: product.priceTnd,
     quantity: 1,
+  })
+}
+
+/** CER-10102: a shipped order the owner refunded, so the customer page and the dashboard show the "Remboursée" state. */
+function addRefundedOrder(out: Built, now: Date, product: ScenarioProduct): void {
+  const id = crypto.randomUUID()
+  const paidAt = new Date(now.getTime() - 9 * 864e5)
+  out.orders.push({
+    id,
+    number: "CER-10102",
+    publicToken: "demo-refunded",
+    status: "refunded",
+    currency: "TND",
+    subtotalMinor: product.priceTnd,
+    shippingMinor: 0,
+    totalMinor: product.priceTnd,
+    customerName: "Hela Mansouri",
+    email: "hela.mansouri.refund@example.com",
+    phone: "+216 20 000 000",
+    country: "TN",
+    city: "Monastir",
+    address: "8 avenue Habib Bourguiba",
+    locale: "fr",
+    paymentMethod: "online",
+    paymentProvider: "demo",
+    paymentRef: demoRef({
+      outcome: "paid",
+      orderNumber: "CER-10102",
+      amountMinor: product.priceTnd,
+      currency: "TND",
+      nonce: "c".padStart(32, "0"),
+    }),
+    paidAt,
+    createdAt: new Date(paidAt.getTime() - 5 * 60_000),
+  })
+  out.items.push({
+    orderId: id,
+    productId: product.id,
+    ref: product.ref,
+    title: product.title,
+    unitMinor: product.priceTnd,
+    quantity: 1,
+  })
+  out.audit.push({
+    orderId: id,
+    adminId: null,
+    action: "set_status",
+    fromStatus: "paid",
+    toStatus: "refunded",
+    note: "remboursement (démo)",
+    createdAt: new Date(paidAt.getTime() + 2 * 864e5),
   })
 }
 

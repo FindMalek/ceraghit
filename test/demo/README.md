@@ -77,10 +77,12 @@ balance on your account before a big final pass.
 Copy `videos/34-se-connecter.json`, change `id`, `slug`, `title_fr` and the steps. A step has an `action`
 (`goto click tap fill type select upload hover scroll press wait drag`), a Playwright-style `target` (`role`+`name`,
 `label`, `text` or `testId`, never CSS), a required `caption_fr` (about 42 characters per line, two lines, vouvoiement),
-and `only: "desktop" | "mobile"` for steps that differ (silent unless `voice: true`). `{{ADMIN_EMAIL}}` style values read the environment. A desktop-only video sets `"devices": ["desktop"]`.
+and `exact: true` on a target to match the whole name (`Adresse` against `Adresse e-mail`), and `only: "desktop" | "mobile"` for steps that differ (silent unless `voice: true`). `{{ADMIN_EMAIL}}` style values read the environment. A desktop-only video sets `"devices": ["desktop"]`.
 Only visible matches are used, so a table row and its mobile card never clash. A step that changes data (ship, cancel) needs a
 different record on each device, with two `only` steps sharing one caption (a shared line is billed once), because both
 devices run on the same database; re-seed before a second take. To change a caption, edit the JSON and re-run that video.
+
+Video 48 types a Payoneer link that must be new on every take (the shop refuses a link already used on another order): set `TAKE=<n>` to a new value per take (`demo-48-d-{{TAKE}}` on desktop, `demo-48-m-{{TAKE}}` on mobile). Record 27 before 48 on the same database, 48 searches the orders that 27 creates (`payoneer.desktop@example.com`, `payoneer.mobile@example.com`).
 
 ## Hard to film states
 
@@ -89,9 +91,11 @@ Extra step actions for what a plain click cannot show. All of them act on the re
 | Action | `value` | Use |
 | --- | --- | --- |
 | `ip` | `203.0.113.7` (a documentation address: `192.0.2.x`, `198.51.100.x`, `203.0.113.x`) | Sends that address as the visitor address from now on, so the 5 failed attempts per address lockout (and the 10 per email one, with a few addresses and a made up email) can be filmed without locking the recorder out. Refused unless the web and dashboard urls are loopback. No api switch is needed: the limiter reads the forwarded address, as the e2e fixtures already do. Use a made up email for the lockouts, never the admin one. |
+| `country` | `BE` (two capital letters) | Sends `x-vercel-ip-country` from now on, as the host does, so a first visit is priced in euros (the shop has no currency switch). The currency is remembered in a cookie: `clear-cookies`, `country`, then `goto`. Loopback only. |
+| `press` | `Tab`, `Enter`, or `text:Amel` to type that text into the focused field | Keyboard only journeys. |
 | `clear-cookies` | none | Signed out visitor: film the session expired message by clicking anything after it. |
 | `back` | none | Browser back, for the page after a logout. |
-| `network` | `slow 4000 **/api/**`, `status 500 **/api/**`, `fail **/api/**`, `reset` | Loading skeletons (`slow`, then `goto`), error banners and pages (`status`, `fail`). The glob must start with `**/`. `reset` before the next scene. |
+| `network` | `slow 4000 **/api/**`, `status 500 **/api/**`, `reason 409 out_of_stock **/api/**` (the api's own error shape with a public reason, so the page shows its translated message: a simulated answer, say so in the PR), `fail **/api/**`, `reset` | Loading skeletons (`slow`, then `goto`), error banners and pages (`status`, `fail`). The glob must start with `**/`. `reset` before the next scene. |
 | `download` | none (the `target` is the button) | Clicks, keeps the file in `out/downloads/<video>/` and shows it over the page: a table for a CSV, the first page for a PDF (needs `pdftoppm`, otherwise a card with the name, size and page count). The card goes away at the next step. |
 | `cookie` | `name=value` | Sets `ceraghit_currency=EUR` (or `TND`) on the storefront, the only cookie allowed (local and previews only). |
 | `swipe` | `left` or `right` | A finger drag across the target through touch events (the product gallery listens to them). Meant for the phone run. |
@@ -114,3 +118,21 @@ not local demo data.
 Every device needs a fresh state (both write to the same database), so reseed between takes. 93, 94 start from an empty
 profile (`bun src/seed-cli.ts --onboarding` in `packages/db`); 95 and 96 from the same seed with the required steps done
 (95 also with the shipping rates not confirmed); 81 and 82 from an onboarded shop whose legal profile and bank account are blank.
+
+### Storefront rate limits and mails (videos 15, 16, 23, 24)
+
+The limits are stored in the `rate_limits` table, one row per `<limit>:<address>`. Videos 15 and 16 switch address with an
+`ip` step and need that address already used up, so prime it on the throwaway demo database before recording (never
+production), and clear the table between takes:
+
+```sql
+delete from rate_limits;
+insert into rate_limits(key, window_start, count) values
+  ('requestCreate:198.51.100.15', now(), 5),  -- video 15, "Trop de demandes"
+  ('uploadUrl:198.51.100.17', now(), 12);     -- video 16, "Trop d'envois"
+```
+
+Videos 23 and 24 open the first message called "Votre commande" in Mailpit, which is the newest one, so empty the Mailpit
+inbox before a take and keep the order of devices (each device places its own order). The storefront origin must be allowed
+by the bucket CORS rules for the photo upload of video 16. Video 22 films `/robots.txt` and the share images on the stack
+as it is; the sitemap is empty outside production and is not filmed.

@@ -1,0 +1,110 @@
+{
+  "id": "31",
+  "slug": "facture-client",
+  "title_fr": "Télécharger ou imprimer ma facture",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "goto",
+      "value": "/order/CER-10003?t=demo-3",
+      "caption_fr": "Ouvrez votre commande payée.",
+      "only": "desktop",
+      "holdMs": 4000
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10003?t=demo-3",
+      "caption_fr": "Ouvrez votre commande payée.",
+      "only": "mobile",
+      "holdMs": 4000
+    },
+    {
+      "action": "ip",
+      "value": "203.0.113.31",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "desktop",
+      "holdMs": 600
+    },
+    {
+      "action": "ip",
+      "value": "203.0.113.31",
+      "caption_fr": "Un visiteur ouvre la boutique.",
+      "only": "mobile",
+      "holdMs": 600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Sur une commande payée, ouvrez la facture depuis la page de commande.",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Voir la facture"
+      },
+      "caption_fr": "Cliquez sur Voir la facture.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Voir la facture"
+      },
+      "caption_fr": "Cliquez sur Voir la facture.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La facture porte son numéro, le matricule fiscal et la mention légale.",
+      "holdMs": 3500
+    },
+    {
+      "action": "scroll",
+      "value": "400",
+      "caption_fr": "Montants, mode de paiement et mention de TVA.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "scroll",
+      "value": "400",
+      "caption_fr": "Montants, mode de paiement et mention de TVA.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Imprimer ou enregistrer en PDF"
+      },
+      "caption_fr": "Imprimez-la ou enregistrez-la en PDF.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10099?t=demo-waiting",
+      "caption_fr": "Une commande non payée n'a pas de facture.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/order/CER-10099?t=demo-waiting",
+      "caption_fr": "Une commande non payée n'a pas de facture.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Tant que la commande n'est pas payée, il n'y a pas de facture.",
+      "holdMs": 3200
+    }
+  ]
+}
