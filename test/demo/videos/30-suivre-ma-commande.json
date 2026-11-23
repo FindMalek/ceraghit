@@ -181,56 +181,6 @@
       "holdMs": 3000
     },
     {
-      "action": "network",
-      "value": "reason 429 too_many_lookups **/api/rpc/public/orders/get",
-      "caption_fr": "Trop d'essais : on vous demande d'attendre.",
-      "only": "desktop"
-    },
-    {
-      "action": "network",
-      "value": "reason 429 too_many_lookups **/api/rpc/public/orders/get",
-      "caption_fr": "Trop d'essais : on vous demande d'attendre.",
-      "only": "mobile"
-    },
-    {
-      "action": "goto",
-      "value": "/order/CER-10001?t=demo-1",
-      "caption_fr": "Trop de tentatives bloque la recherche un moment.",
-      "only": "desktop",
-      "holdMs": 2600
-    },
-    {
-      "action": "goto",
-      "value": "/order/CER-10001?t=demo-1",
-      "caption_fr": "Trop de tentatives bloque la recherche un moment.",
-      "only": "mobile",
-      "holdMs": 2600
-    },
-    {
-      "action": "wait",
-      "caption_fr": "Trop de tentatives : réessayez dans quelques minutes.",
-      "only": "desktop",
-      "holdMs": 3000
-    },
-    {
-      "action": "wait",
-      "caption_fr": "Trop de tentatives : réessayez dans quelques minutes.",
-      "only": "mobile",
-      "holdMs": 3000
-    },
-    {
-      "action": "network",
-      "value": "reset",
-      "caption_fr": "Retour à la normale.",
-      "only": "desktop"
-    },
-    {
-      "action": "network",
-      "value": "reset",
-      "caption_fr": "Retour à la normale.",
-      "only": "mobile"
-    },
-    {
       "action": "goto",
       "value": "/order/CER-10001?t=demo-1",
       "caption_fr": "Rouvrez la commande.",
