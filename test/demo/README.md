@@ -82,6 +82,8 @@ Only visible matches are used, so a table row and its mobile card never clash. A
 different record on each device, with two `only` steps sharing one caption (a shared line is billed once), because both
 devices run on the same database; re-seed before a second take. To change a caption, edit the JSON and re-run that video.
 
+Video 48 types a Payoneer link that must be new on every take (the shop refuses a link already used on another order): set `TAKE=<n>` to a new value per take (`demo-48-d-{{TAKE}}` on desktop, `demo-48-m-{{TAKE}}` on mobile). Record 27 before 48 on the same database, 48 searches the orders that 27 creates (`payoneer.desktop@example.com`, `payoneer.mobile@example.com`).
+
 ## Hard to film states
 
 Extra step actions for what a plain click cannot show. All of them act on the recorded browser only.
