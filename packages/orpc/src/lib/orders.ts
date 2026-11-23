@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { type Db, mailLog, orderAudit, orderItems, orders, products, productVariants } from "@workspace/db"
+import { reportError } from "@workspace/errors"
 import {
   type Currency,
   holdDays,
@@ -205,9 +206,10 @@ let lastSweep = 0
 export async function sweepExpiredHolds(services: Services, now: Date): Promise<void> {
   if (now.getTime() - lastSweep < 60_000) return
   lastSweep = now.getTime()
-  await releaseExpiredHolds(services, now, { limit: LAZY_SWEEP_LIMIT }).catch((error) =>
-    console.error("[holds] sweep failed", error),
-  )
+  await releaseExpiredHolds(services, now, { limit: LAZY_SWEEP_LIMIT }).catch((error) => {
+    console.error("[holds] sweep failed", error)
+    reportError(error, { tags: { job: "holds-lazy-sweep" } })
+  })
 }
 
 function newNumber(): string {
@@ -622,6 +624,10 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
     order.paymentProvider === "demo" && resolved.name !== "demo" ? new DemoProvider(services.config.webUrl) : resolved
   if (order.paymentProvider === "konnect" && payments.name !== "konnect") {
     console.error(`[settle ${order.number}] konnect order but no konnect keys: left unchanged`)
+    reportError(new Error("konnect order settled without konnect keys"), {
+      tags: { order: order.number, provider: "konnect", reason: "no_keys" },
+      level: "warning",
+    })
     return { number: order.number, status: order.status }
   }
   if (order.status === "cancelled" && order.paymentMethod === "online") {
@@ -658,6 +664,9 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
     if (!paymentMatches(order, check)) {
       recordPaymentSettle("mismatch")
       console.error(`[settle ${order.number}] payment does not match the order`)
+      reportError(new Error("gateway payment does not match the order"), {
+        tags: { order: order.number, provider: order.paymentProvider ?? undefined, reason: "mismatch" },
+      })
       await recordAuditOnce(db, {
         orderId: order.id,
         adminId: null,

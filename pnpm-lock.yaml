@@ -503,6 +503,9 @@ importers:
       '@workspace/db':
         specifier: workspace:*
         version: link:../db
+      '@workspace/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@workspace/sdk':
         specifier: workspace:*
         version: link:../sdk

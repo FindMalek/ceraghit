@@ -3,6 +3,7 @@ import { createRouterClient } from "@orpc/server"
 import { createDb, jobRuns } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
+import { setReporter } from "@workspace/errors"
 import { JOBS } from "@workspace/sdk"
 import { inArray } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
@@ -87,6 +88,24 @@ describe.skipIf(!url)("jobs", () => {
     })
     expect(outcome).toEqual({ ok: false })
     expect((await holds()).lastRun).toMatchObject({ ok: false, error: "boom" })
+  })
+
+  test("a failed run is reported to GlitchTip with its job name and nothing else", async () => {
+    const seen: { tags: Record<string, string> }[] = []
+    setReporter((_error, context) => {
+      seen.push(context)
+      return "evt"
+    })
+    try {
+      await runJob(services, "release-holds", async () => {
+        throw new Error("boom")
+      })
+      await runJob(services, "release-holds", async () => ({ released: 1 }))
+    } finally {
+      setReporter(null)
+    }
+    expect(seen).toHaveLength(1)
+    expect(seen[0]?.tags).toEqual({ job: "release-holds" })
   })
 
   test("runs older than 90 days are deleted at the end of a run", async () => {

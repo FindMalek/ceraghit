@@ -1,4 +1,5 @@
 import { mailLog } from "@workspace/db"
+import { reportError } from "@workspace/errors"
 import { and, asc, eq, gt, lt, lte, ne } from "drizzle-orm"
 import type { Services } from "../context"
 import { type Mail, MailError } from "./mailer"
@@ -95,7 +96,12 @@ export async function deliverMail(
     console.error("[mail log]", describe(e))
   }
   recordEmail(kind, ok, opts.locale)
-  if (!ok) console.error(`[mail ${kind}] ${mail.to}:`, error)
+  if (!ok) {
+    console.error(`[mail ${kind}] ${mail.to}:`, error)
+    reportError(new Error(`mail ${kind} failed: ${error}`), {
+      tags: { mail_kind: kind, attempts, order_id: opts.orderId, resend: opts.existingId ? "yes" : "no" },
+    })
+  }
   return ok
 }
 

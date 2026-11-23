@@ -169,9 +169,10 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
     if (pathname === "/webhooks/konnect") {
       const ref = url.searchParams.get("payment_ref")
       if (ref && PAYMENT_REF.test(ref))
-        await settleOrder(services, ref).catch((error) =>
-          console.error("[webhook]", error instanceof Error ? error.message : "settle failed"),
-        )
+        await settleOrder(services, ref).catch((error) => {
+          console.error("[webhook]", error instanceof Error ? error.message : "settle failed")
+          reportError(error, { tags: { source: "konnect-webhook" } })
+        })
       return Response.json({ ok: true })
     }
     if (pathname.startsWith("/files/")) {

@@ -26,6 +26,7 @@
     "@orpc/server": "catalog:",
     "ai": "7.0.173",
     "aws4fetch": "1.0.20",
+    "@workspace/errors": "workspace:*",
     "@workspace/db": "workspace:*",
     "@workspace/sdk": "workspace:*",
     "drizzle-orm": "catalog:",
