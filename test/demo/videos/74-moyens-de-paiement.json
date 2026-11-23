@@ -79,6 +79,28 @@
       "action": "wait",
       "caption_fr": "Le paiement à la livraison : Tunisie seulement.",
       "holdMs": 2500
+    },
+    {
+      "action": "scroll",
+      "caption_fr": "Réactivez un moyen.",
+      "value": "-3000"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Carte bancaire (Konnect)"
+      },
+      "caption_fr": "Carte, espèces ou virement."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
     }
   ]
 }

@@ -53,10 +53,19 @@
       "action": "click",
       "target": {
         "role": "button",
-        "name": "ouvrir",
-        "nth": 0
+        "name": "photo-1.png, ouvrir"
       },
-      "caption_fr": "Ouvrez-la."
+      "caption_fr": "Ouvrez-la.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "photo-2.png, ouvrir"
+      },
+      "caption_fr": "Ouvrez-la.",
+      "only": "mobile"
     },
     {
       "action": "click",
