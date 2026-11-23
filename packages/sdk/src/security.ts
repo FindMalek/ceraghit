@@ -13,6 +13,8 @@ export interface CspOptions {
   s3PublicUrl?: string
   /** The storefront: the dashboard shows its static catalogue photos. */
   webUrl?: string
+  /** `NEXT_PUBLIC_GLITCHTIP_DSN`: the browser SDK posts errors to this origin. Left out, connect-src stays as before. */
+  glitchtipDsn?: string
 }
 
 export const YOUTUBE_EMBED_ORIGIN = "https://www.youtube-nocookie.com"
@@ -42,6 +44,7 @@ export function buildCsp(options: CspOptions): string {
   const { app, nonce, appEnv, dev = false } = options
   const uploadHost = originOf(options.s3Endpoint)
   const buckets = [...new Set([uploadHost, originOf(options.s3PublicUrl)].filter(Boolean))] as string[]
+  const glitchtip = originOf(options.glitchtipDsn)
   const storefront = options.app === "dashboard" ? originOf(options.webUrl) : null
   const dashboard = app === "dashboard"
   const directives: Record<string, string[]> = {
@@ -70,6 +73,7 @@ export function buildCsp(options: CspOptions): string {
       "'self'",
       ...(dashboard ? ["data:"] : []),
       ...(uploadHost ? [uploadHost] : []),
+      ...(glitchtip ? [glitchtip] : []),
       ...(dev ? ["ws:", "wss:"] : []),
     ],
     "frame-src": dashboard ? [YOUTUBE_EMBED_ORIGIN] : ["'none'"],
@@ -104,6 +108,8 @@ export function securityFromEnv(app: CspApp, env: Record<string, string | undefi
     s3Endpoint: env.S3_ENDPOINT,
     s3PublicUrl: env.S3_PUBLIC_URL,
     webUrl: env.WEB_URL,
+    // The client SDK never starts on APP_ENV=local, so the policy does not open a hole there either.
+    glitchtipDsn: appEnv === "local" ? undefined : env.NEXT_PUBLIC_GLITCHTIP_DSN,
     reportOnly: env.CSP_REPORT_ONLY === "true",
   })
   const policy = Object.entries(response).find(([name]) => name.startsWith("Content-Security-Policy"))?.[1] ?? ""

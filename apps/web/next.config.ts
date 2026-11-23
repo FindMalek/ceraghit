@@ -3,10 +3,16 @@ import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
+const release = process.env.NEXT_PUBLIC_GLITCHTIP_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_SHA
+
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
-  transpilePackages: ["@workspace/ui", "@workspace/sdk"],
+  transpilePackages: ["@workspace/ui", "@workspace/sdk", "@workspace/errors", "@workspace/logger"],
+  // The browser reports to GlitchTip only when NEXT_PUBLIC_GLITCHTIP_DSN is set at build time; the release is the commit.
+  env: {
+    ...(release ? { NEXT_PUBLIC_GLITCHTIP_RELEASE: release } : {}),
+  },
   // Static catalogue photos are resized per device, see components/photo.tsx.
   images: {
     formats: ["image/webp"],

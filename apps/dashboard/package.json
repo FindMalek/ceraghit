@@ -23,6 +23,7 @@
     "@react-pdf/renderer": "^4.9.0",
     "@tanstack/react-query": "catalog:",
     "@vercel/otel": "catalog:",
+    "@workspace/errors": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/orpc": "workspace:*",
     "@workspace/sdk": "workspace:*",
