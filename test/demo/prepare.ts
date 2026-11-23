@@ -19,13 +19,22 @@ async function call<T>(method: string, path: string, body?: unknown, headers: Re
   return { json: (await res.json().catch(() => ({}))) as T, res }
 }
 
-await assertSafe({ ...env, WEB_URL: env.WEB_URL ?? "http://localhost:3000", DASHBOARD_URL: env.DASHBOARD_URL ?? "http://localhost:3100" })
+await assertSafe({
+  ...env,
+  WEB_URL: env.WEB_URL ?? "http://localhost:3000",
+  DASHBOARD_URL: env.DASHBOARD_URL ?? "http://localhost:3100",
+})
 
 const login = await call("POST", "/v1/admin/login", { email: env.ADMIN_EMAIL, password: env.ADMIN_PASSWORD })
 const cookie = (login.res.headers.getSetCookie() ?? []).map((c) => c.split(";")[0]).join("; ")
 const admin = { cookie }
 
-const products = (await call<{ id: string; unique: boolean; quoteOnly: boolean; variants: unknown[]; stock: number }[]>("GET", "/v1/products")).json
+const products = (
+  await call<{ id: string; unique: boolean; quoteOnly: boolean; variants: unknown[]; stock: number }[]>(
+    "GET",
+    "/v1/products",
+  )
+).json
 const pieces = products.filter((p) => !p.unique && !p.quoteOnly && p.variants.length === 0 && p.stock >= 1)
 const piece = (i: number) => pieces[i % pieces.length]!.id
 
@@ -38,7 +47,13 @@ const buyer = (n: number) => ({
 })
 
 const place = async (n: number, order: Record<string, unknown>) =>
-  (await call<{ number: string; payUrl: string }>("POST", "/v1/orders", { items: [{ productId: piece(n), quantity: 1 }], ...buyer(n), ...order })).json
+  (
+    await call<{ number: string; payUrl: string }>("POST", "/v1/orders", {
+      items: [{ productId: piece(n), quantity: 1 }],
+      ...buyer(n),
+      ...order,
+    })
+  ).json
 
 if (process.argv[2] === "expiry") {
   const { number } = await place(20, { currency: "EUR", country: "FR", paymentMethod: "transfer", locale: "fr" })
@@ -63,12 +78,29 @@ const unpaid = await place(6, { currency: "EUR", country: "FR", paymentMethod: "
 mkdirSync("out", { recursive: true })
 writeFileSync("out/demo-pay-url.txt", unpaid.payUrl)
 
-const list = (await call<{ items?: { id: string; number: string; totalMinor: number }[] }>("GET", "/v1/admin/orders", undefined, admin)).json
+const list = (
+  await call<{ items?: { id: string; number: string; totalMinor: number }[] }>(
+    "GET",
+    "/v1/admin/orders",
+    undefined,
+    admin,
+  )
+).json
 const rows = list.items ?? (list as unknown as { id: string; number: string; totalMinor: number }[])
 const idOf = (number: string) => rows.find((o) => o.number === number)!
 const paid = idOf(transfer.number)
-await call("POST", `/v1/admin/orders/${paid.id}/mark-paid`, { method: "transfer", reference: "VIR-0086", note: null, totalMinor: paid.totalMinor, currency: "EUR" }, admin)
-await call("POST", `/v1/admin/orders/${idOf(cod.number).id}/ship`, { id: idOf(cod.number).id, carrier: "rapid-poste", trackingNumber: "RP123456789TN" }, admin)
+await call(
+  "POST",
+  `/v1/admin/orders/${paid.id}/mark-paid`,
+  { method: "transfer", reference: "VIR-0086", note: null, totalMinor: paid.totalMinor, currency: "EUR" },
+  admin,
+)
+await call(
+  "POST",
+  `/v1/admin/orders/${idOf(cod.number).id}/ship`,
+  { id: idOf(cod.number).id, carrier: "rapid-poste", trackingNumber: "RP123456789TN" },
+  admin,
+)
 
 await call("POST", "/v1/requests", {
   name: "Lina Dupont",

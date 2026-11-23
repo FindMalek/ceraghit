@@ -29,8 +29,18 @@
       "value": "1 rue de l'Atelier",
       "caption_fr": "Remplissez les champs de l'atelier."
     },
-    { "action": "fill", "target": { "label": "Code postal" }, "value": "8000", "caption_fr": "Remplissez les champs de l'atelier." },
-    { "action": "fill", "target": { "label": "Ville" }, "value": "Nabeul", "caption_fr": "Remplissez les champs de l'atelier." },
+    {
+      "action": "fill",
+      "target": { "label": "Code postal" },
+      "value": "8000",
+      "caption_fr": "Remplissez les champs de l'atelier."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Ville" },
+      "value": "Nabeul",
+      "caption_fr": "Remplissez les champs de l'atelier."
+    },
     {
       "action": "fill",
       "target": { "label": "Téléphone 1" },
@@ -67,8 +77,18 @@
       "caption_fr": "Titulaire et banque."
     },
     { "action": "fill", "target": { "label": "RIB" }, "value": "123", "caption_fr": "Des valeurs fausses, pour voir." },
-    { "action": "fill", "target": { "label": "IBAN" }, "value": "TN59 0000", "caption_fr": "Des valeurs fausses, pour voir." },
-    { "action": "fill", "target": { "label": "BIC / SWIFT" }, "value": "ABC", "caption_fr": "Des valeurs fausses, pour voir." },
+    {
+      "action": "fill",
+      "target": { "label": "IBAN" },
+      "value": "TN59 0000",
+      "caption_fr": "Des valeurs fausses, pour voir."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "BIC / SWIFT" },
+      "value": "ABC",
+      "caption_fr": "Des valeurs fausses, pour voir."
+    },
     { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
     { "action": "wait", "caption_fr": "RIB, IBAN et BIC sont contrôlés.", "holdMs": 2400 },
     {
@@ -83,12 +103,22 @@
       "value": "TN5910006035183598478831",
       "caption_fr": "Les vraies valeurs."
     },
-    { "action": "fill", "target": { "label": "BIC / SWIFT" }, "value": "BIATTNTT", "caption_fr": "Les vraies valeurs." },
+    {
+      "action": "fill",
+      "target": { "label": "BIC / SWIFT" },
+      "value": "BIATTNTT",
+      "caption_fr": "Les vraies valeurs."
+    },
     { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
     { "action": "wait", "caption_fr": "Enregistré : les frais de livraison suivent.", "holdMs": 1800 },
     { "action": "click", "target": { "role": "button", "name": "Retour" }, "caption_fr": "Retour revient en arrière." },
     { "action": "wait", "caption_fr": "Vos valeurs sont gardées.", "holdMs": 1500 },
-    { "action": "goto", "value": "/onboarding?step=done", "caption_fr": "On ne peut pas sauter une étape.", "holdMs": 800 },
+    {
+      "action": "goto",
+      "value": "/onboarding?step=done",
+      "caption_fr": "On ne peut pas sauter une étape.",
+      "holdMs": 800
+    },
     { "action": "wait", "caption_fr": "La liste dit ce qu'il reste.", "holdMs": 2400 }
   ]
 }
