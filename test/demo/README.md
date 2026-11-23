@@ -98,3 +98,17 @@ Extra step actions for what a plain click cannot show. All of them act on the re
 `photo-1.png`, `photo-2.png`, `photo-3.png`, `photo-1.webp`, `photo-2.webp`, `banner-1.png`, `banner-1.webp`, and `not-an-image.txt` for the wrong file type message.
 
 Seeded for these (`packages/db/src/seed/scenario.ts`, demo data only): 222 orders, so `Afficher plus de commandes` shows (the page is 200, not 50; the 170 older ones are `CER-11000` and up, over 60 days old, so the default period keeps its numbers); `CER-10100` (gateway mismatch then automatic cancel), `CER-10007` (late payment), `CER-10095` (released after the hold); `CER-10101` shipped by Rapid-Poste with a tracking number (`Modifier le suivi`, no parcel card); 12 draft or archived products (`08xx`, 42 in the list, `Voir plus de produits`); 5 customer requests, one per status plus a second new. The `Démo` label is the history line of any order paid by transfer (no admin name). An empty period: the export dialogs accept any dates, for instance 2020.
+
+## Email and setup journeys (81 to 99)
+
+Journeys that open Mailpit use an absolute url in a `goto` step (`http://localhost:8025`, or the port of your stack). Run
+`bun prepare.ts` once on a fresh seed first: through the api only, it places a card, a cash on delivery, a transfer, an arabic
+and a Payoneer order, confirms one payment, ships one order and sends a unique piece request, so the mails exist.
+`bun prepare.ts expiry` places a transfer order, ages it past its 7 days and runs `/cron/release-holds`, for the cancellation
+mail of video 89. It also writes `out/demo-pay-url.txt` (the checkout url of an unpaid order), read as `{{DEMO_PAY_URL}}` by
+video 97. It needs `API_URL`, `CRON_SECRET`, `DATABASE_URL` and the admin login of the stack, and refuses anything that is
+not local demo data.
+
+Every device needs a fresh state (both write to the same database), so reseed between takes. 93, 94 start from an empty
+profile (`bun src/seed-cli.ts --onboarding` in `packages/db`); 95 and 96 from the same seed with the required steps done
+(95 also with the shipping rates not confirmed); 81 and 82 from an onboarded shop whose legal profile and bank account are blank.

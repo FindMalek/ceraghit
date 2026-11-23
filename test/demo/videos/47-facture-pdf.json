@@ -22,10 +22,10 @@
     },
     { "action": "click", "target": { "text": "CER-100" }, "caption_fr": "Voici la commande." },
     {
-      "action": "click",
+      "action": "download",
       "target": { "role": "button", "name": "Facture PDF" },
-      "caption_fr": "Cliquez sur Facture PDF."
-    },
-    { "action": "wait", "caption_fr": "Le fichier PDF se télécharge, avec la devise de la commande.", "holdMs": 2500 }
+      "caption_fr": "Facture PDF : le fichier se télécharge, dans la devise de la commande.",
+      "holdMs": 3200
+    }
   ]
 }
