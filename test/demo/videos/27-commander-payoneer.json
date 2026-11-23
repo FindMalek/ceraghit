@@ -13,14 +13,14 @@
       "value": "203.0.113.27",
       "caption_fr": "Un visiteur ouvre la boutique.",
       "only": "desktop",
-      "holdMs": 600
+      "holdMs": 4000
     },
     {
       "action": "ip",
       "value": "203.0.113.27",
       "caption_fr": "Un visiteur ouvre la boutique.",
       "only": "mobile",
-      "holdMs": 600
+      "holdMs": 4000
     },
     {
       "action": "wait",
@@ -328,58 +328,46 @@
       "holdMs": 2800
     },
     {
-      "action": "click",
-      "target": {
-        "role": "link",
-        "name": "English"
-      },
-      "caption_fr": "La page existe aussi en anglais.",
-      "only": "desktop"
+      "action": "goto",
+      "value": "/en/order/CER-10097?t=demo-CER-10097",
+      "caption_fr": "La même page existe en anglais.",
+      "only": "desktop",
+      "holdMs": 3200
     },
     {
-      "action": "click",
-      "target": {
-        "role": "link",
-        "name": "English"
-      },
-      "caption_fr": "La page existe aussi en anglais.",
-      "only": "mobile"
+      "action": "goto",
+      "value": "/en/order/CER-10097?t=demo-CER-10097",
+      "caption_fr": "La même page existe en anglais.",
+      "only": "mobile",
+      "holdMs": 3200
     },
     {
-      "action": "click",
-      "target": {
-        "role": "link",
-        "name": "العربية"
-      },
+      "action": "goto",
+      "value": "/ar/order/CER-10097?t=demo-CER-10097",
       "caption_fr": "Et en arabe.",
-      "only": "desktop"
+      "only": "desktop",
+      "holdMs": 3200
     },
     {
-      "action": "click",
-      "target": {
-        "role": "link",
-        "name": "العربية"
-      },
+      "action": "goto",
+      "value": "/ar/order/CER-10097?t=demo-CER-10097",
       "caption_fr": "Et en arabe.",
-      "only": "mobile"
+      "only": "mobile",
+      "holdMs": 3200
     },
     {
-      "action": "click",
-      "target": {
-        "role": "link",
-        "name": "Français"
-      },
+      "action": "goto",
+      "value": "/order/CER-10097?t=demo-CER-10097",
       "caption_fr": "Retour au français.",
-      "only": "desktop"
+      "only": "desktop",
+      "holdMs": 3200
     },
     {
-      "action": "click",
-      "target": {
-        "role": "link",
-        "name": "Français"
-      },
+      "action": "goto",
+      "value": "/order/CER-10097?t=demo-CER-10097",
       "caption_fr": "Retour au français.",
-      "only": "mobile"
+      "only": "mobile",
+      "holdMs": 3200
     }
   ]
 }

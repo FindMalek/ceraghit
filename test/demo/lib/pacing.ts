@@ -165,9 +165,12 @@ export function createPacer(options: PacerOptions): Pacer {
         case "back":
           await page.goBack()
           break
-        case "network":
-          await applyNetwork(page.context(), parseNetwork(value))
+        case "network": {
+          const rule = parseNetwork(value)
+          if (rule.kind === "reason") assertLoopbackUrls([options.baseUrl("web"), options.baseUrl("dashboard")])
+          await applyNetwork(page.context(), rule)
           break
+        }
         case "download": {
           if (!target) throw new Error("download needs a target")
           const file = await captureDownload(page, options.downloadsDir ?? "out/downloads", () => press(target))

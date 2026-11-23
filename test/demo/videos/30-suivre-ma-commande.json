@@ -13,14 +13,14 @@
       "value": "203.0.113.30",
       "caption_fr": "Un visiteur ouvre la boutique.",
       "only": "desktop",
-      "holdMs": 600
+      "holdMs": 4000
     },
     {
       "action": "ip",
       "value": "203.0.113.30",
       "caption_fr": "Un visiteur ouvre la boutique.",
       "only": "mobile",
-      "holdMs": 600
+      "holdMs": 4000
     },
     {
       "action": "wait",

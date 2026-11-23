@@ -2,7 +2,9 @@
   "id": "32",
   "slug": "commande-au-clavier",
   "title_fr": "Commander uniquement au clavier",
-  "devices": ["desktop"],
+  "devices": [
+    "desktop"
+  ],
   "start": {
     "app": "web",
     "path": "/",
@@ -12,14 +14,14 @@
     {
       "action": "wait",
       "caption_fr": "Remplissez et validez une commande sans souris.",
-      "holdMs": 2000
+      "holdMs": 4000
     },
     {
       "action": "goto",
       "value": "/product/curda-seca-0014",
       "caption_fr": "Ouvrez une pièce.",
       "only": "desktop",
-      "holdMs": 2600
+      "holdMs": 4000
     },
     {
       "action": "click",
@@ -156,6 +158,18 @@
       "value": "Space",
       "caption_fr": "Espace : acceptez les conditions de vente.",
       "holdMs": 1800
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : le lien des conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab : le lien de confidentialité.",
+      "only": "desktop"
     },
     {
       "action": "press",

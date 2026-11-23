@@ -29,14 +29,14 @@
     },
     {
       "action": "scroll",
-      "value": "1200",
+      "value": "650",
       "caption_fr": "La carte Payoneer est plus bas dans la page.",
       "only": "desktop",
       "holdMs": 1500
     },
     {
       "action": "scroll",
-      "value": "1200",
+      "value": "650",
       "caption_fr": "La carte Payoneer est plus bas dans la page.",
       "only": "mobile",
       "holdMs": 1500
@@ -73,7 +73,7 @@
         "role": "textbox",
         "name": "Numéro, nom ou email"
       },
-      "value": "CER-10098",
+      "value": "payoneer.desktop@example.com",
       "caption_fr": "Cherchez la commande Payoneer.",
       "only": "desktop"
     },
@@ -322,9 +322,9 @@
         "role": "link",
         "name": "Facture"
       },
-      "caption_fr": "La facture indique Payoneer comme mode de paiement.",
+      "caption_fr": "Ouvrez la facture.",
       "only": "desktop",
-      "holdMs": 4500
+      "holdMs": 3500
     },
     {
       "action": "click",
@@ -332,9 +332,21 @@
         "role": "link",
         "name": "Facture"
       },
+      "caption_fr": "Ouvrez la facture.",
+      "only": "mobile",
+      "holdMs": 3500
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La facture indique Payoneer comme mode de paiement.",
+      "only": "desktop",
+      "holdMs": 3500
+    },
+    {
+      "action": "wait",
       "caption_fr": "La facture indique Payoneer comme mode de paiement.",
       "only": "mobile",
-      "holdMs": 4500
+      "holdMs": 3500
     }
   ]
 }

@@ -13,14 +13,14 @@
       "value": "/order/CER-10003?t=demo-3",
       "caption_fr": "Ouvrez votre commande payée.",
       "only": "desktop",
-      "holdMs": 2600
+      "holdMs": 4000
     },
     {
       "action": "goto",
       "value": "/order/CER-10003?t=demo-3",
       "caption_fr": "Ouvrez votre commande payée.",
       "only": "mobile",
-      "holdMs": 2600
+      "holdMs": 4000
     },
     {
       "action": "ip",

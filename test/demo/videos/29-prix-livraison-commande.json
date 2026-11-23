@@ -11,14 +11,14 @@
     {
       "action": "wait",
       "caption_fr": "Le prix de livraison dépend du pays et du poids de la commande.",
-      "holdMs": 2200
+      "holdMs": 4000
     },
     {
       "action": "goto",
       "value": "/product/curda-seca-0015",
       "caption_fr": "Sur la fiche pièce, estimez la livraison avant de commander.",
       "only": "desktop",
-      "holdMs": 2600
+      "holdMs": 4000
     },
     {
       "action": "goto",
@@ -102,6 +102,13 @@
       },
       "caption_fr": "Passez commande.",
       "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "1150",
+      "caption_fr": "Sur mobile, le récapitulatif est en bas de la page.",
+      "only": "mobile",
+      "holdMs": 900
     },
     {
       "action": "wait",
@@ -115,9 +122,9 @@
         "exact": true
       },
       "value": "Belgique",
-      "caption_fr": "Autre pays, autre zone : l'Europe est plus chère.",
+      "caption_fr": "Choisissez la Belgique.",
       "only": "desktop",
-      "holdMs": 2600
+      "holdMs": 1500
     },
     {
       "action": "select",
@@ -126,6 +133,25 @@
         "exact": true
       },
       "value": "Belgique",
+      "caption_fr": "Choisissez la Belgique.",
+      "only": "mobile",
+      "holdMs": 1500
+    },
+    {
+      "action": "scroll",
+      "value": "1150",
+      "caption_fr": "Sur mobile, le récapitulatif est en bas de la page.",
+      "only": "mobile",
+      "holdMs": 900
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Autre pays, autre zone : l'Europe est plus chère.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
       "caption_fr": "Autre pays, autre zone : l'Europe est plus chère.",
       "only": "mobile",
       "holdMs": 2600
@@ -137,9 +163,9 @@
         "exact": true
       },
       "value": "Algérie",
-      "caption_fr": "Reste du monde : encore un autre tarif.",
+      "caption_fr": "Choisissez l'Algérie.",
       "only": "desktop",
-      "holdMs": 2600
+      "holdMs": 1500
     },
     {
       "action": "select",
@@ -148,6 +174,25 @@
         "exact": true
       },
       "value": "Algérie",
+      "caption_fr": "Choisissez l'Algérie.",
+      "only": "mobile",
+      "holdMs": 1500
+    },
+    {
+      "action": "scroll",
+      "value": "1150",
+      "caption_fr": "Sur mobile, le récapitulatif est en bas de la page.",
+      "only": "mobile",
+      "holdMs": 900
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Reste du monde : encore un autre tarif.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
       "caption_fr": "Reste du monde : encore un autre tarif.",
       "only": "mobile",
       "holdMs": 2600
@@ -159,9 +204,9 @@
         "exact": true
       },
       "value": "Tunisie",
-      "caption_fr": "Retour en Tunisie : 11 DT pour 1 kg.",
+      "caption_fr": "Revenez en Tunisie.",
       "only": "desktop",
-      "holdMs": 2200
+      "holdMs": 1500
     },
     {
       "action": "select",
@@ -170,9 +215,28 @@
         "exact": true
       },
       "value": "Tunisie",
-      "caption_fr": "Retour en Tunisie : 11 DT pour 1 kg.",
+      "caption_fr": "Revenez en Tunisie.",
       "only": "mobile",
-      "holdMs": 2200
+      "holdMs": 1500
+    },
+    {
+      "action": "scroll",
+      "value": "1150",
+      "caption_fr": "Sur mobile, le récapitulatif est en bas de la page.",
+      "only": "mobile",
+      "holdMs": 900
+    },
+    {
+      "action": "wait",
+      "caption_fr": "En Tunisie : 11 DT pour 1 kg.",
+      "only": "desktop",
+      "holdMs": 2400
+    },
+    {
+      "action": "wait",
+      "caption_fr": "En Tunisie : 11 DT pour 1 kg.",
+      "only": "mobile",
+      "holdMs": 2400
     },
     {
       "action": "fill",
@@ -195,6 +259,13 @@
       "caption_fr": "Saisir la ville ne vide pas le prix : Payer reste actif.",
       "only": "mobile",
       "holdMs": 2200
+    },
+    {
+      "action": "scroll",
+      "value": "1150",
+      "caption_fr": "Sur mobile, le récapitulatif est en bas de la page.",
+      "only": "mobile",
+      "holdMs": 900
     },
     {
       "action": "goto",
@@ -245,6 +316,13 @@
       },
       "caption_fr": "Passez commande.",
       "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "1150",
+      "caption_fr": "Sur mobile, le récapitulatif est en bas de la page.",
+      "only": "mobile",
+      "holdMs": 900
     },
     {
       "action": "wait",
@@ -478,6 +556,13 @@
       },
       "caption_fr": "Passez commande.",
       "only": "mobile"
+    },
+    {
+      "action": "scroll",
+      "value": "1150",
+      "caption_fr": "Sur mobile, le récapitulatif est en bas de la page.",
+      "only": "mobile",
+      "holdMs": 900
     },
     {
       "action": "wait",

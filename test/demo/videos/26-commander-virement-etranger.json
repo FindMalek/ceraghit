@@ -11,12 +11,13 @@
     {
       "action": "wait",
       "caption_fr": "Depuis la Belgique ou la France, on paie en euros, par virement bancaire.",
-      "holdMs": 2200
+      "holdMs": 4000
     },
     {
       "action": "clear-cookies",
       "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
-      "only": "desktop"
+      "only": "desktop",
+      "holdMs": 4000
     },
     {
       "action": "clear-cookies",
@@ -355,8 +356,9 @@
         "exact": true
       },
       "value": "Tunisie",
-      "caption_fr": "En euros, la Tunisie n'a aucun moyen de paiement.",
-      "only": "desktop"
+      "caption_fr": "Choisissez la Tunisie, toujours en euros.",
+      "only": "desktop",
+      "holdMs": 1500
     },
     {
       "action": "select",
@@ -365,12 +367,39 @@
         "exact": true
       },
       "value": "Tunisie",
-      "caption_fr": "En euros, la Tunisie n'a aucun moyen de paiement.",
-      "only": "mobile"
+      "caption_fr": "Choisissez la Tunisie, toujours en euros.",
+      "only": "mobile",
+      "holdMs": 1500
+    },
+    {
+      "action": "scroll",
+      "value": "700",
+      "caption_fr": "Descendez jusqu'au mode de paiement.",
+      "only": "desktop",
+      "holdMs": 1200
+    },
+    {
+      "action": "scroll",
+      "value": "700",
+      "caption_fr": "Descendez jusqu'au mode de paiement.",
+      "only": "mobile",
+      "holdMs": 1200
     },
     {
       "action": "wait",
-      "caption_fr": "Changez de devise ou écrivez à l'atelier.",
+      "caption_fr": "En Tunisie, le virement n'est pas proposé : seule la carte l'est.",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "En Tunisie, le virement n'est pas proposé : seule la carte l'est.",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le virement est réservé aux commandes depuis l'étranger.",
       "holdMs": 3000
     }
   ]

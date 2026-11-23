@@ -13,14 +13,14 @@
       "value": "/checkout",
       "caption_fr": "Un panier vide ne peut pas être commandé.",
       "only": "desktop",
-      "holdMs": 2600
+      "holdMs": 4000
     },
     {
       "action": "goto",
       "value": "/checkout",
       "caption_fr": "Un panier vide ne peut pas être commandé.",
       "only": "mobile",
-      "holdMs": 2600
+      "holdMs": 4000
     },
     {
       "action": "wait",

@@ -11,14 +11,14 @@
     {
       "action": "wait",
       "caption_fr": "Une pièce peut être vendue pendant que vous commandez. Voici les messages.",
-      "holdMs": 2200
+      "holdMs": 4000
     },
     {
       "action": "goto",
       "value": "/product/curda-seca-0015",
       "caption_fr": "Ouvrez une pièce.",
       "only": "desktop",
-      "holdMs": 2600
+      "holdMs": 4000
     },
     {
       "action": "goto",

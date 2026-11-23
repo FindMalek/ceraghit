@@ -2,7 +2,9 @@
   "id": "49",
   "slug": "expedition-aramex-etiquette",
   "title_fr": "Créer une expédition Aramex et imprimer l'étiquette",
-  "devices": ["desktop"],
+  "devices": [
+    "desktop"
+  ],
   "start": {
     "app": "dashboard",
     "path": "/",
