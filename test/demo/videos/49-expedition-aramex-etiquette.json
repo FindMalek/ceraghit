@@ -143,7 +143,7 @@
     },
     {
       "action": "wait",
-      "caption_fr": "Le colis est prérempli : poids, dimensions et adresse. L'espèce est encaissée par Aramex.",
+      "caption_fr": "Le colis est prérempli : poids, dimensions et adresse. Les espèces sont encaissées par Aramex.",
       "holdMs": 3800
     },
     {

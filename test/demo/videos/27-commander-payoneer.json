@@ -331,42 +331,18 @@
       "action": "goto",
       "value": "/en/order/CER-10097?t=demo-CER-10097",
       "caption_fr": "La même page existe en anglais.",
-      "only": "desktop",
-      "holdMs": 3200
-    },
-    {
-      "action": "goto",
-      "value": "/en/order/CER-10097?t=demo-CER-10097",
-      "caption_fr": "La même page existe en anglais.",
-      "only": "mobile",
       "holdMs": 3200
     },
     {
       "action": "goto",
       "value": "/ar/order/CER-10097?t=demo-CER-10097",
       "caption_fr": "Et en arabe.",
-      "only": "desktop",
-      "holdMs": 3200
-    },
-    {
-      "action": "goto",
-      "value": "/ar/order/CER-10097?t=demo-CER-10097",
-      "caption_fr": "Et en arabe.",
-      "only": "mobile",
       "holdMs": 3200
     },
     {
       "action": "goto",
       "value": "/order/CER-10097?t=demo-CER-10097",
       "caption_fr": "Retour au français.",
-      "only": "desktop",
-      "holdMs": 3200
-    },
-    {
-      "action": "goto",
-      "value": "/order/CER-10097?t=demo-CER-10097",
-      "caption_fr": "Retour au français.",
-      "only": "mobile",
       "holdMs": 3200
     }
   ]

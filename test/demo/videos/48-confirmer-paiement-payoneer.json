@@ -175,7 +175,7 @@
       "target": {
         "label": "Lien Payoneer"
       },
-      "value": "https://link.payoneer.com/pay/demo-48",
+      "value": "https://link.payoneer.com/pay/demo-48-d-{{TAKE}}",
       "caption_fr": "Collez le vrai lien.",
       "only": "desktop"
     },
@@ -184,7 +184,7 @@
       "target": {
         "label": "Lien Payoneer"
       },
-      "value": "https://link.payoneer.com/pay/demo-48",
+      "value": "https://link.payoneer.com/pay/demo-48-m-{{TAKE}}",
       "caption_fr": "Collez le vrai lien.",
       "only": "mobile"
     },
@@ -264,7 +264,7 @@
         "role": "button",
         "name": "Confirmer le paiement"
       },
-      "caption_fr": "Confirmez : seul vous marquez Payoneer payé."
+      "caption_fr": "Confirmez : vous seul marquez Payoneer payé."
     },
     {
       "action": "wait",
@@ -303,17 +303,6 @@
         "name": "Historique"
       },
       "caption_fr": "L'historique garde le paiement Payoneer et sa référence.",
-      "only": "desktop",
-      "holdMs": 2600
-    },
-    {
-      "action": "hover",
-      "target": {
-        "role": "heading",
-        "name": "Historique"
-      },
-      "caption_fr": "L'historique garde le paiement Payoneer et sa référence.",
-      "only": "mobile",
       "holdMs": 2600
     },
     {
@@ -339,13 +328,6 @@
     {
       "action": "wait",
       "caption_fr": "La facture indique Payoneer comme mode de paiement.",
-      "only": "desktop",
-      "holdMs": 3500
-    },
-    {
-      "action": "wait",
-      "caption_fr": "La facture indique Payoneer comme mode de paiement.",
-      "only": "mobile",
       "holdMs": 3500
     }
   ]

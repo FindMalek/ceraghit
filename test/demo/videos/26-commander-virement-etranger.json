@@ -267,14 +267,14 @@
     },
     {
       "action": "goto",
-      "value": "http://localhost:8063/",
+      "value": "{{MAILPIT_URL}}/",
       "caption_fr": "Vous recevez aussi un email avec l'IBAN.",
       "only": "desktop",
       "holdMs": 2600
     },
     {
       "action": "goto",
-      "value": "http://localhost:8063/",
+      "value": "{{MAILPIT_URL}}/",
       "caption_fr": "Vous recevez aussi un email avec l'IBAN.",
       "only": "mobile",
       "holdMs": 2600

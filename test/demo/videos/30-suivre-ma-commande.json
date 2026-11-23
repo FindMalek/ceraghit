@@ -111,14 +111,14 @@
     },
     {
       "action": "goto",
-      "value": "/order/CER-10007?t=demo-7",
+      "value": "/order/CER-10095?t=demo-CER-10095",
       "caption_fr": "Annulée : aucun montant n'est débité.",
       "only": "desktop",
       "holdMs": 2600
     },
     {
       "action": "goto",
-      "value": "/order/CER-10007?t=demo-7",
+      "value": "/order/CER-10095?t=demo-CER-10095",
       "caption_fr": "Annulée : aucun montant n'est débité.",
       "only": "mobile",
       "holdMs": 2600
