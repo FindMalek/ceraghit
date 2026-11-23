@@ -23,11 +23,15 @@ There is no public translation benchmark for gpt-oss in Arabic, so the eval belo
 been run with a real key yet.** The default stays 120b low until the results are posted on the GitHub issue. If Arabic
 slips (script, glossary, round trip), switch `DEFAULT_REASONING_EFFORT` to `medium`.
 
+The harness itself is tested offline (`packages/orpc/test/translate-eval.test.ts`: a fake model over the fixed sample
+set, report written, no key and no network, so CI never calls Groq). Only the manual run below needs a key. The prompt
+lives only in `prompt.ts` (`buildTranslatePrompt`); a candidate prompt is compared by editing it there and re-running.
+
 ## Running the eval
 
 ```sh
-export GROQ_API_KEY=...   # never commit it, the script never prints it
-bun scripts/translate-eval.ts                     # 120b low, 120b medium, 20b low
+export GROQ_API_KEY=...   # from the vault, never commit it, the script never prints it
+pnpm eval:groq                                   # 120b low, 120b medium, 20b low (same as bun scripts/translate-eval.ts)
 bun scripts/translate-eval.ts --with-preview      # adds qwen/qwen3.8-27b
 bun scripts/translate-eval.ts --limit 10 --models openai/gpt-oss-20b
 bun scripts/translate-eval.ts --with-reference    # human en/ar next to the model output for 5 samples
