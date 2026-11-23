@@ -81,6 +81,13 @@
       "caption_fr": "Un renvoi peut échouer."
     },
     {
+      "action": "scroll",
+      "value": "-1000",
+      "only": "mobile",
+      "caption_fr": "Remontez en haut de la page.",
+      "holdMs": 600
+    },
+    {
       "action": "wait",
       "caption_fr": "Une erreur s'affiche.",
       "holdMs": 2200
@@ -319,7 +326,7 @@
         "nth": 0
       },
       "caption_fr": "Ignorez les autres.",
-      "only": "mobile",
+      "only": "desktop",
       "holdMs": 700
     },
     {
@@ -330,7 +337,7 @@
         "nth": -1
       },
       "caption_fr": "Confirmez.",
-      "only": "mobile",
+      "only": "desktop",
       "holdMs": 700
     },
     {
@@ -341,7 +348,7 @@
         "nth": 0
       },
       "caption_fr": "Ignorez les autres.",
-      "only": "desktop",
+      "only": "mobile",
       "holdMs": 700
     },
     {
@@ -352,7 +359,7 @@
         "nth": -1
       },
       "caption_fr": "Confirmez.",
-      "only": "desktop",
+      "only": "mobile",
       "holdMs": 700
     },
     {
@@ -380,7 +387,7 @@
     {
       "action": "wait",
       "caption_fr": "Aucun email en échec.",
-      "holdMs": 2400
+      "holdMs": 1500
     }
   ]
 }
