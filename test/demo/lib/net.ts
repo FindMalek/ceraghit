@@ -5,6 +5,7 @@ export type NetworkRule =
   | { kind: "slow"; ms: number; pattern: string }
   | { kind: "fail"; pattern: string }
   | { kind: "status"; code: number; pattern: string }
+  | { kind: "reason"; code: number; reason: string; pattern: string }
 
 /** Under the 10 s page timeout, a slower answer would fail the step instead of showing a skeleton. */
 const MAX_SLOW_MS = 8_000
@@ -35,8 +36,15 @@ export function parseNetwork(value: string | undefined): NetworkRule {
     if (!Number.isInteger(code) || code < 400 || code > 599) throw new Error("status takes a code from 400 to 599")
     return { kind: "status", code, pattern: pattern(rest[1]) }
   }
+  if (kind === "reason" && rest.length === 3) {
+    const code = Number(rest[0])
+    if (!Number.isInteger(code) || code < 400 || code > 599) throw new Error("reason takes a code from 400 to 599")
+    if (!/^[a-z_]+$/.test(rest[1] ?? ""))
+      throw new Error(`reason names a public error reason like out_of_stock, got "${rest[1]}"`)
+    return { kind: "reason", code, reason: rest[1] as string, pattern: pattern(rest[2]) }
+  }
   throw new Error(
-    `unknown network rule "${value ?? ""}": use slow <ms> <glob>, fail <glob>, status <code> <glob> or reset`,
+    `unknown network rule "${value ?? ""}": use slow <ms> <glob>, fail <glob>, status <code> <glob>, reason <code> <reason> <glob> or reset`,
   )
 }
 
@@ -53,6 +61,26 @@ export async function applyNetwork(context: BrowserContext, rule: NetworkRule): 
       break
     case "fail":
       await context.route(rule.pattern, (route) => route.abort("connectionrefused").catch(() => {}))
+      break
+    case "reason":
+      await context.route(rule.pattern, (route) =>
+        route
+          .fulfill({
+            status: rule.code,
+            contentType: "application/json",
+            body: JSON.stringify({
+              json: {
+                defined: true,
+                code: "BAD_REQUEST",
+                status: rule.code,
+                message: "Erreur",
+                data: { reason: rule.reason },
+              },
+              meta: [],
+            }),
+          })
+          .catch(() => {}),
+      )
       break
     case "status":
       await context.route(rule.pattern, (route) =>
