@@ -4,7 +4,12 @@
   "title_fr": "Joindre des photos à ma demande",
   "start": { "app": "web", "path": "/fr/custom", "loggedIn": false },
   "steps": [
-    { "action": "hover", "target": { "role": "button", "name": "Ajouter des photos" }, "caption_fr": "Joignez jusqu'à trois photos.", "holdMs": 1500 },
+    {
+      "action": "hover",
+      "target": { "role": "button", "name": "Ajouter des photos" },
+      "caption_fr": "Joignez jusqu'à trois photos.",
+      "holdMs": 1500
+    },
     {
       "action": "network",
       "value": "slow 3000 **/ceraghit-e2e/**",
