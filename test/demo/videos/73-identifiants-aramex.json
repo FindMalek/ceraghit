@@ -2,9 +2,7 @@
   "id": "73",
   "slug": "identifiants-aramex",
   "title_fr": "Configurer Aramex",
-  "devices": [
-    "desktop"
-  ],
+  "devices": ["desktop"],
   "start": {
     "app": "dashboard",
     "path": "/shipping",

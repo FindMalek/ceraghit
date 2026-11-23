@@ -2,9 +2,7 @@
   "id": "77",
   "slug": "reglages-payoneer",
   "title_fr": "Activer Payoneer",
-  "devices": [
-    "desktop"
-  ],
+  "devices": ["desktop"],
   "start": {
     "app": "dashboard",
     "path": "/payments",

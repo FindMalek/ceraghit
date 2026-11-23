@@ -2,9 +2,7 @@
   "id": "71",
   "slug": "mode-livraison-grille",
   "title_fr": "Régler les prix de livraison",
-  "devices": [
-    "desktop"
-  ],
+  "devices": ["desktop"],
   "start": {
     "app": "dashboard",
     "path": "/settings",

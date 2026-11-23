@@ -2,9 +2,7 @@
   "id": "80",
   "slug": "traduction-auto-reglages",
   "title_fr": "Réglages de la traduction automatique",
-  "devices": [
-    "desktop"
-  ],
+  "devices": ["desktop"],
   "start": {
     "app": "dashboard",
     "path": "/settings",

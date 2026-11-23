@@ -2,9 +2,7 @@
   "id": "76",
   "slug": "cles-konnect",
   "title_fr": "Enregistrer ses clés Konnect",
-  "devices": [
-    "desktop"
-  ],
+  "devices": ["desktop"],
   "start": {
     "app": "dashboard",
     "path": "/payments",
