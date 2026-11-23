@@ -14,8 +14,10 @@
         "role": "textbox",
         "name": "Référence ou nom"
       },
-      "value": "0013",
-      "caption_fr": "Ouvrez le produit à illustrer."
+      "value": "0210",
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "desktop",
+      "voice": true
     },
     {
       "action": "click",
@@ -24,7 +26,31 @@
         "name": "Modifier",
         "nth": 0
       },
-      "caption_fr": "Ouvrez le produit à illustrer."
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0211",
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Modifier",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "mobile",
+      "voice": true
     },
     {
       "action": "click",
@@ -54,7 +80,8 @@
     {
       "action": "fill",
       "target": {
-        "label": "Texte alternatif"
+        "role": "textbox",
+        "name": "Texte alternatif"
       },
       "value": "Plat bleu vu de dessus",
       "caption_fr": "Décrivez la photo pour les personnes qui ne la voient pas."
@@ -124,6 +151,14 @@
     {
       "action": "click",
       "target": {
+        "role": "heading",
+        "name": "Modifier le produit"
+      },
+      "caption_fr": "Choisissez dans la médiathèque."
+    },
+    {
+      "action": "click",
+      "target": {
         "role": "button",
         "name": "Choisir dans la médiathèque"
       },
@@ -180,8 +215,51 @@
         "role": "button",
         "name": "Fermer"
       },
-      "caption_fr": "Elles s'ajoutent à la médiathèque et au produit.",
-      "holdMs": 2500
+      "caption_fr": "Elles s'ajoutent à la médiathèque et au produit."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "heading",
+        "name": "Modifier le produit"
+      },
+      "caption_fr": "Enregistrez : photos et texte alternatif sont sauvés."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez : photos et texte alternatif sont sauvés.",
+      "holdMs": 1500
+    },
+    {
+      "action": "goto",
+      "value": "/products",
+      "caption_fr": "La liste montre la nouvelle photo."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0210",
+      "caption_fr": "La liste montre la nouvelle photo.",
+      "holdMs": 2500,
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0211",
+      "caption_fr": "La liste montre la nouvelle photo.",
+      "holdMs": 2500,
+      "only": "mobile"
     }
   ]
 }
