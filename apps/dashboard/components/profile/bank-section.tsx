@@ -3,6 +3,7 @@
 import { useMutation } from "@tanstack/react-query"
 import { orpc } from "@workspace/orpc/react"
 import { type ShopProfile, shopProfileInputSchema } from "@workspace/sdk"
+import { Button } from "@workspace/ui/components/button"
 import { clearError, showError } from "@workspace/ui/components/error-banner"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@workspace/ui/components/field"
 import { Input } from "@workspace/ui/components/input"
@@ -60,6 +61,11 @@ export function BankSection({
   const [eurIban, setEurIban] = useState(formatAccount(initial.bankEurIban ?? ""))
   const [eurBic, setEurBic] = useState(compactAccount(initial.bankEurBic ?? ""))
   const [eurAddress, setEurAddress] = useState(initial.bankEurAddress ?? "")
+  const [showEur, setShowEur] = useState(
+    [initial.bankEurHolder, initial.bankEurName, initial.bankEurIban, initial.bankEurBic, initial.bankEurAddress].some(
+      Boolean,
+    ),
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState(false)
 
@@ -191,66 +197,74 @@ export function BankSection({
         </p>
         {errors.eur && <FieldError>{errors.eur}</FieldError>}
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field data-invalid={Boolean(errors.bankEurHolder)}>
-          <FieldLabel htmlFor="bank-eur-holder">Titulaire du compte</FieldLabel>
-          <Input
-            id="bank-eur-holder"
-            className="h-11"
-            aria-invalid={Boolean(errors.bankEurHolder)}
-            value={eurHolder}
-            onChange={(e) => edit(setEurHolder)(e.target.value)}
-          />
-          {errors.bankEurHolder && <FieldError>{errors.bankEurHolder}</FieldError>}
-        </Field>
-        <Field data-invalid={Boolean(errors.bankEurName)}>
-          <FieldLabel htmlFor="bank-eur-name">Banque</FieldLabel>
-          <Input
-            id="bank-eur-name"
-            className="h-11"
-            aria-invalid={Boolean(errors.bankEurName)}
-            value={eurBank}
-            onChange={(e) => edit(setEurBank)(e.target.value)}
-          />
-          {errors.bankEurName && <FieldError>{errors.bankEurName}</FieldError>}
-        </Field>
-      </div>
-      <Field data-invalid={Boolean(errors.bankEurIban)}>
-        <FieldLabel htmlFor="bank-eur-iban">IBAN</FieldLabel>
-        <Input
-          id="bank-eur-iban"
-          className="h-11 tabular-nums"
-          autoComplete="off"
-          aria-invalid={Boolean(errors.bankEurIban)}
-          value={eurIban}
-          onChange={(e) => edit(setEurIban)(formatAccount(e.target.value))}
-        />
-        {errors.bankEurIban && <FieldError>{errors.bankEurIban}</FieldError>}
-      </Field>
-      <Field data-invalid={Boolean(errors.bankEurBic)}>
-        <FieldLabel htmlFor="bank-eur-bic">BIC / SWIFT</FieldLabel>
-        <Input
-          id="bank-eur-bic"
-          className="h-11 sm:max-w-xs"
-          autoComplete="off"
-          aria-invalid={Boolean(errors.bankEurBic)}
-          value={eurBic}
-          onChange={(e) => edit(setEurBic)(compactAccount(e.target.value))}
-        />
-        {errors.bankEurBic && <FieldError>{errors.bankEurBic}</FieldError>}
-      </Field>
-      <Field data-invalid={Boolean(errors.bankEurAddress)}>
-        <FieldLabel htmlFor="bank-eur-address">Adresse de la banque</FieldLabel>
-        <Textarea
-          id="bank-eur-address"
-          rows={2}
-          aria-invalid={Boolean(errors.bankEurAddress)}
-          value={eurAddress}
-          onChange={(e) => edit(setEurAddress)(e.target.value)}
-        />
-        <FieldDescription>Facultatif, utile pour les virements depuis l'étranger.</FieldDescription>
-        {errors.bankEurAddress && <FieldError>{errors.bankEurAddress}</FieldError>}
-      </Field>
+      {showEur ? (
+        <>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field data-invalid={Boolean(errors.bankEurHolder)}>
+              <FieldLabel htmlFor="bank-eur-holder">Titulaire du compte</FieldLabel>
+              <Input
+                id="bank-eur-holder"
+                className="h-11"
+                aria-invalid={Boolean(errors.bankEurHolder)}
+                value={eurHolder}
+                onChange={(e) => edit(setEurHolder)(e.target.value)}
+              />
+              {errors.bankEurHolder && <FieldError>{errors.bankEurHolder}</FieldError>}
+            </Field>
+            <Field data-invalid={Boolean(errors.bankEurName)}>
+              <FieldLabel htmlFor="bank-eur-name">Banque</FieldLabel>
+              <Input
+                id="bank-eur-name"
+                className="h-11"
+                aria-invalid={Boolean(errors.bankEurName)}
+                value={eurBank}
+                onChange={(e) => edit(setEurBank)(e.target.value)}
+              />
+              {errors.bankEurName && <FieldError>{errors.bankEurName}</FieldError>}
+            </Field>
+          </div>
+          <Field data-invalid={Boolean(errors.bankEurIban)}>
+            <FieldLabel htmlFor="bank-eur-iban">IBAN</FieldLabel>
+            <Input
+              id="bank-eur-iban"
+              className="h-11 tabular-nums"
+              autoComplete="off"
+              aria-invalid={Boolean(errors.bankEurIban)}
+              value={eurIban}
+              onChange={(e) => edit(setEurIban)(formatAccount(e.target.value))}
+            />
+            {errors.bankEurIban && <FieldError>{errors.bankEurIban}</FieldError>}
+          </Field>
+          <Field data-invalid={Boolean(errors.bankEurBic)}>
+            <FieldLabel htmlFor="bank-eur-bic">BIC / SWIFT</FieldLabel>
+            <Input
+              id="bank-eur-bic"
+              className="h-11 sm:max-w-xs"
+              autoComplete="off"
+              aria-invalid={Boolean(errors.bankEurBic)}
+              value={eurBic}
+              onChange={(e) => edit(setEurBic)(compactAccount(e.target.value))}
+            />
+            {errors.bankEurBic && <FieldError>{errors.bankEurBic}</FieldError>}
+          </Field>
+          <Field data-invalid={Boolean(errors.bankEurAddress)}>
+            <FieldLabel htmlFor="bank-eur-address">Adresse de la banque</FieldLabel>
+            <Textarea
+              id="bank-eur-address"
+              rows={2}
+              aria-invalid={Boolean(errors.bankEurAddress)}
+              value={eurAddress}
+              onChange={(e) => edit(setEurAddress)(e.target.value)}
+            />
+            <FieldDescription>Facultatif, utile pour les virements depuis l'étranger.</FieldDescription>
+            {errors.bankEurAddress && <FieldError>{errors.bankEurAddress}</FieldError>}
+          </Field>
+        </>
+      ) : (
+        <Button type="button" variant="outline" className="h-11 self-start" onClick={() => setShowEur(true)}>
+          Ajouter un compte en euros
+        </Button>
+      )}
     </SectionCard>
   )
 }

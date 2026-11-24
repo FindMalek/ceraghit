@@ -158,7 +158,7 @@ export function OrderStatus({ number, token }: { number: string; token: string }
             {order.bank.address && (
               <>
                 <dt className="text-muted-foreground">{t("bankAddress")}</dt>
-                <dd>{order.bank.address}</dd>
+                <dd dir="auto">{order.bank.address}</dd>
               </>
             )}
             {order.bank.rib && (

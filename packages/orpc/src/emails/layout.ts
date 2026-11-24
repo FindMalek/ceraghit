@@ -63,7 +63,7 @@ export function bankBlock(
     `${k.bankTitle}:`,
     `${k.holder}: ${bank.holder}`,
     `${k.bank}: ${bank.bank}`,
-    ...(bank.address ? [`${k.bankAddress}: ${bank.address}`] : []),
+    ...(bank.address ? [`${k.bankAddress}: ${ltr(bank.address, locale)}`] : []),
     ...(bank.rib ? [`RIB: ${ltr(bank.rib, locale)}`] : []),
     ...(bank.iban ? [`IBAN: ${ltr(bank.iban, locale)}`] : []),
     ...(bank.bic ? [`BIC: ${ltr(bank.bic, locale)}`] : []),

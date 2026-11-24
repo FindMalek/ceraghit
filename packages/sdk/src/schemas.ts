@@ -345,36 +345,47 @@ const profileIban = z
   .optional()
 const BIC_PATTERN = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/
 
-export const shopProfileInputSchema = z.object({
-  legalName: profileText(120),
-  displayName: profileText(120),
-  legalForm: profileText(120),
-  taxId: profileText(40),
-  registryNumber: profileText(40),
-  address: profileText(300),
-  postalCode: profileText(20),
-  city: profileText(120),
-  country: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(/^[A-Z]{2}$/)
-    .optional(),
-  phones: z.array(z.string().trim().min(6).max(30)).max(4).optional(),
-  email: z.email().max(200).nullable().optional(),
-  notifyEmail: z.email().max(200).nullable().optional(),
-  bankHolder: profileText(120),
-  bankName: profileText(120),
-  bankRib: profileCode(/^\d{20}$/),
-  bankIban: profileIban,
-  bankBic: profileCode(BIC_PATTERN, true),
-  bankEurHolder: profileText(120),
-  bankEurName: profileText(120),
-  bankEurIban: profileIban,
-  bankEurBic: profileCode(BIC_PATTERN, true),
-  bankEurAddress: profileText(300),
-  invoiceNote: localizedSchema.nullable().optional(),
-})
+export const shopProfileInputSchema = z
+  .object({
+    legalName: profileText(120),
+    displayName: profileText(120),
+    legalForm: profileText(120),
+    taxId: profileText(40),
+    registryNumber: profileText(40),
+    address: profileText(300),
+    postalCode: profileText(20),
+    city: profileText(120),
+    country: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z]{2}$/)
+      .optional(),
+    phones: z.array(z.string().trim().min(6).max(30)).max(4).optional(),
+    email: z.email().max(200).nullable().optional(),
+    notifyEmail: z.email().max(200).nullable().optional(),
+    bankHolder: profileText(120),
+    bankName: profileText(120),
+    bankRib: profileCode(/^\d{20}$/),
+    bankIban: profileIban,
+    bankBic: profileCode(BIC_PATTERN, true),
+    bankEurHolder: profileText(120),
+    bankEurName: profileText(120),
+    bankEurIban: profileIban,
+    bankEurBic: profileCode(BIC_PATTERN, true),
+    bankEurAddress: profileText(300),
+    invoiceNote: localizedSchema.nullable().optional(),
+  })
+  .superRefine((input, ctx) => {
+    const eur = [input.bankEurHolder, input.bankEurName, input.bankEurIban, input.bankEurBic]
+    if (eur.some((v) => v) && eur.some((v) => v === null || v === "")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["bankEurIban"],
+        message: "Complétez le titulaire, la banque, l'IBAN et le BIC du compte en euros, ou videz-les.",
+      })
+    }
+  })
 export type ShopProfileInput = z.infer<typeof shopProfileInputSchema>
 
 /**

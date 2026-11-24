@@ -154,7 +154,7 @@ export function InvoiceDocument({ view }: { view: PublicInvoiceView }) {
           </p>
           {seller.bank.address && (
             <p>
-              {t.bankAddress} : {seller.bank.address}
+              {t.bankAddress} : <bdi dir="auto">{seller.bank.address}</bdi>
             </p>
           )}
           {seller.bank.iban && (

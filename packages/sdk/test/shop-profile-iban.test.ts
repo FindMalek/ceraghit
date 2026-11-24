@@ -18,3 +18,18 @@ test("the euro account gets the same IBAN checksum and a 8 or 11 character BIC",
     bankEurBic: "DEMODEFF",
   })
 })
+
+test("a half filled euro account is refused, a full or an empty one passes", () => {
+  const full = {
+    bankEurHolder: "Atelier",
+    bankEurName: "Demo Bank AG",
+    bankEurIban: "DE89 3704 0044 0532 0130 00",
+    bankEurBic: "DEMODEFF",
+  }
+  expect(shopProfileInputSchema.safeParse({ ...full, bankEurBic: null }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse(full).success).toBe(true)
+  expect(
+    shopProfileInputSchema.safeParse({ bankEurHolder: null, bankEurName: null, bankEurIban: null, bankEurBic: null })
+      .success,
+  ).toBe(true)
+})
