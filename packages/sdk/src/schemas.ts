@@ -332,6 +332,27 @@ export function ibanChecksumOk(iban: string): boolean {
 }
 
 /** Editable fields only, each optional so the onboarding can save one step at a time. */
+/** ISO 13616 lengths of the countries the shop deals with; other country codes only get the checksum. */
+const IBAN_LENGTHS: Record<string, number> = {
+  AT: 20,
+  BE: 16,
+  CH: 21,
+  DE: 22,
+  ES: 24,
+  FR: 27,
+  GB: 22,
+  IE: 22,
+  IT: 27,
+  LU: 20,
+  NL: 18,
+  PT: 25,
+  TN: 24,
+}
+const ibanLengthOk = (iban: string): boolean => {
+  const expected = IBAN_LENGTHS[iban.slice(0, 2)]
+  return expected === undefined || iban.length === expected
+}
+
 const profileIban = z
   .string()
   .transform((value) => compact(value).toUpperCase())
@@ -339,11 +360,12 @@ const profileIban = z
     z
       .string()
       .regex(/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/)
+      .refine(ibanLengthOk)
       .refine(ibanChecksumOk),
   )
   .nullable()
   .optional()
-const BIC_PATTERN = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/
+const BIC_PATTERN = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/
 
 export const shopProfileInputSchema = z
   .object({

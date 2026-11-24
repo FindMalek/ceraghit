@@ -33,3 +33,8 @@ test("a half filled euro account is refused, a full or an empty one passes", () 
       .success,
   ).toBe(true)
 })
+
+test("an IBAN with the wrong length for its country and a BIC without a country code are refused", () => {
+  expect(shopProfileInputSchema.safeParse({ bankEurIban: "DE36 0000 0000 00" }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse({ bankBic: "12345678" }).success).toBe(false)
+})
