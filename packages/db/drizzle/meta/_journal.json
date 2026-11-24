@@ -127,6 +127,13 @@
       "when": 1795190437264,
       "tag": "0017_pale_squirrel_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795511759674,
+      "tag": "0018_secret_riptide",
+      "breakpoints": true
     }
   ]
 }

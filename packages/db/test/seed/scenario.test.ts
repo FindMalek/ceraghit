@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test"
-import { DEFAULT_SHIPPING_RATES, studioSettingsSchema } from "@workspace/sdk"
+import { bankForCurrency, DEFAULT_SHIPPING_RATES, studioSettingsSchema } from "@workspace/sdk"
 import { parseDemoRef } from "../../src/demo-ref"
 import { UNGLAZED_VARIANT_REFS } from "../../src/seed"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
 import {
+  buildDemoProfile,
   buildScenario,
   DEMO_DESCRIPTIONS,
   DEMO_LOCATIONS,
@@ -30,6 +31,13 @@ test("the demo shop has both currencies, paid revenue and a pending order", () =
     const lines = items.filter((i) => i.orderId === order.id)
     expect(lines.reduce((sum, i) => sum + i.unitMinor * i.quantity, 0)).toBe(order.totalMinor)
   }
+})
+
+test("the demo profile has a separate euro account, valid and obviously fake", () => {
+  const profile = buildDemoProfile(new Date("2026-10-22T12:00:00Z"))
+  const full = { ...profile, bankEurHolder: profile.bankEurHolder ?? null } as Parameters<typeof bankForCurrency>[0]
+  expect(bankForCurrency(full, "EUR")?.iban).toBe("DE89370400440532013000")
+  expect(bankForCurrency(full, "TND")?.iban).toBe(profile.bankIban!)
 })
 
 test("seeded online orders carry a gateway ref that matches them and none is pending", () => {
