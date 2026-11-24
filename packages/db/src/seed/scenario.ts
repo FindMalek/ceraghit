@@ -115,6 +115,11 @@ export function buildDemoProfile(now: Date): NewProfile {
     bankRib: "00000000000000000000",
     bankIban: "TN5900000000000000000000",
     bankBic: "DEMOTNTT",
+    bankEurHolder: "Ceraghit Creation (démo)",
+    bankEurName: "Demo Bank AG",
+    bankEurIban: "DE89370400440532013000",
+    bankEurBic: "DEMODEFF",
+    bankEurAddress: "1 Demo Strasse, 10115 Berlin",
     invoiceNote: {
       fr: "TVA non applicable (démo).",
       en: "VAT not applicable (demo).",

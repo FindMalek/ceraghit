@@ -155,6 +155,12 @@ export function OrderStatus({ number, token }: { number: string; token: string }
             <dd>{order.bank.holder}</dd>
             <dt className="text-muted-foreground">{t("bank")}</dt>
             <dd>{order.bank.bank}</dd>
+            {order.bank.address && (
+              <>
+                <dt className="text-muted-foreground">{t("bankAddress")}</dt>
+                <dd>{order.bank.address}</dd>
+              </>
+            )}
             {order.bank.rib && (
               <>
                 <dt className="text-muted-foreground">{t("rib")}</dt>

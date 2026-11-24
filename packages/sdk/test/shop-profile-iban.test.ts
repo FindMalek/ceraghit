@@ -7,3 +7,14 @@ test("an IBAN with a wrong checksum is refused, a correct one is compacted", () 
     "TN5910006035183598478831",
   )
 })
+
+test("the euro account gets the same IBAN checksum and a 8 or 11 character BIC", () => {
+  expect(shopProfileInputSchema.safeParse({ bankEurIban: "DE89 3704 0044 0532 0130 01" }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse({ bankEurBic: "DEMOD" }).success).toBe(false)
+  expect(
+    shopProfileInputSchema.parse({ bankEurIban: "de89 3704 0044 0532 0130 00", bankEurBic: "demodeff" }),
+  ).toMatchObject({
+    bankEurIban: "DE89370400440532013000",
+    bankEurBic: "DEMODEFF",
+  })
+})

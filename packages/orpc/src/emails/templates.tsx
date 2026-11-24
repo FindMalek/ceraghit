@@ -143,6 +143,7 @@ function Bank({ order, ctx, locale }: { order: ConfirmationOrder; ctx: MailConte
   const rows: [string, string][] = [
     [k.holder, bank.holder],
     [k.bank, bank.bank],
+    ...(bank.address ? [[k.bankAddress, bank.address] as [string, string]] : []),
     ...(bank.rib ? [["RIB", ltr(bank.rib, locale)] as [string, string]] : []),
     ...(bank.iban ? [["IBAN", ltr(bank.iban, locale)] as [string, string]] : []),
     ...(bank.bic ? [["BIC", ltr(bank.bic, locale)] as [string, string]] : []),
