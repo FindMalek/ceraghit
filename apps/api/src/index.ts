@@ -26,7 +26,14 @@ const db = createDb(env.DATABASE_URL, env.DB_POOL_MAX, {
 
 if (env.BOOTSTRAP) {
   await runMigrations(db)
-  await seed(db, { demo: env.SEED_DEMO, admin: { email: env.ADMIN_EMAIL ?? "", password: env.ADMIN_PASSWORD ?? "" } })
+  await seed(db, {
+    demo: env.SEED_DEMO,
+    admin: {
+      email: env.ADMIN_EMAIL ?? "",
+      password: env.ADMIN_PASSWORD ?? "",
+      rotatePassword: env.ADMIN_PASSWORD_ROTATE,
+    },
+  })
 }
 
 const secrets = parseKeyring(env.SECRETS_KEY, env.SECRETS_KEY_PREVIOUS)
@@ -34,7 +41,7 @@ await assertVaultKeyForRows(db, secrets)
 
 const payments =
   env.KONNECT_API_KEY && env.KONNECT_WALLET_ID
-    ? new KonnectProvider(env.KONNECT_API_KEY, env.KONNECT_WALLET_ID, env.KONNECT_MODE)
+    ? new KonnectProvider(env.KONNECT_API_KEY, env.KONNECT_WALLET_ID, env.KONNECT_MODE, undefined, env.KONNECT_BASE_URL)
     : new DemoProvider(env.WEB_URL)
 
 assertNoDemoInProduction({ appEnv: env.APP_ENV, onlinePayments: env.ONLINE_PAYMENTS }, payments)
@@ -67,6 +74,8 @@ const fetch = flushAfter(
         secureCookies: env.APP_ENV !== "local",
         onlinePayments: env.ONLINE_PAYMENTS,
         aramexFake: env.ARAMEX_FAKE,
+        konnectBaseUrl: env.KONNECT_BASE_URL,
+        groqBaseUrl: env.GROQ_BASE_URL,
         cronSecret: env.CRON_SECRET,
         cronJobs: Object.keys(CRON_JOBS),
         proxySecret: env.PROXY_SECRET,

@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server"
 import { customRequests, orders, uploads } from "@workspace/db"
 import {
-  bankFromProfile,
+  bankForCurrency,
   checkoutSchema,
   customRequestInputSchema,
   holdExpiresAt,
@@ -92,7 +92,7 @@ export const ordersRouter = {
         status,
         bank:
           order.paymentMethod === "transfer" && status === "pending_payment"
-            ? bankFromProfile(await getShopProfile(context.db))
+            ? bankForCurrency(await getShopProfile(context.db), order.currency)
             : null,
         currency: order.currency,
         subtotalMinor: order.subtotalMinor,

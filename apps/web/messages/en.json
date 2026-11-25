@@ -207,6 +207,7 @@
     "bankTitle": "Bank details",
     "holder": "Account holder",
     "bank": "Bank",
+    "bankAddress": "Bank address",
     "iban": "IBAN",
     "rib": "RIB",
     "bic": "BIC",

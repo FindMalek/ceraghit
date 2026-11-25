@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-time: puts the production secrets and variables in the GitHub `production` environment, read from
-# .env.production.local, so deploy.yml (migrate, deploy, smoke) and cleanup-uploads.yml can run.
+# .env.production.local, so deploy.yml (migrate, deploy, smoke) can run.
 # VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID_* are not set here: the token is yours, the ids come from vercel-setup.sh.
 #
 # Usage: scripts/github-setup.sh        (needs `gh auth login`)

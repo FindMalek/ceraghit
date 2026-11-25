@@ -1,5 +1,5 @@
 # Daily housekeeping of the homelab bucket (Garage `ceraghit-dev`): files of closed PRs and anything older than two weeks.
-# The production bucket is never touched here, see cleanup-uploads.yml.
+# The production bucket is never touched here, see docs/deploy.md (scheduled jobs).
 name: Cleanup dev bucket
 
 on:

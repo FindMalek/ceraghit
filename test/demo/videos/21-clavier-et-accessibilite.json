@@ -1,0 +1,46 @@
+{
+  "id": "21",
+  "slug": "clavier-et-accessibilite",
+  "title_fr": "Utiliser la boutique au clavier et avec un lecteur d'écran",
+  "devices": ["desktop"],
+  "start": { "app": "web", "path": "/fr/product/lampe-votive-0201", "loggedIn": false },
+  "steps": [
+    { "action": "press", "value": "Tab", "caption_fr": "Tab : le lien Aller au contenu apparaît.", "holdMs": 2200 },
+    { "action": "press", "value": "Tab", "caption_fr": "Le focus reste toujours visible.", "holdMs": 700 },
+    { "action": "press", "value": "Tab", "caption_fr": "Le focus reste toujours visible.", "holdMs": 700 },
+    { "action": "press", "value": "Tab", "caption_fr": "Le focus reste toujours visible.", "holdMs": 700 },
+    { "action": "press", "value": "Tab", "caption_fr": "Le focus reste toujours visible.", "holdMs": 700 },
+    { "action": "press", "value": "Tab", "caption_fr": "Le focus reste toujours visible.", "holdMs": 700 },
+    { "action": "press", "value": "Tab", "caption_fr": "La galerie se commande au clavier.", "holdMs": 700 },
+    { "action": "press", "value": "Tab", "caption_fr": "La galerie se commande au clavier.", "holdMs": 700 },
+    { "action": "press", "value": "Enter", "caption_fr": "La galerie se commande au clavier.", "holdMs": 1500 },
+    { "action": "press", "value": "Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 600 },
+    { "action": "press", "value": "Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 600 },
+    { "action": "press", "value": "Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 600 },
+    { "action": "press", "value": "Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 600 },
+    { "action": "press", "value": "Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 600 },
+    { "action": "press", "value": "Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 600 },
+    { "action": "press", "value": "Shift+Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 1000 },
+    { "action": "press", "value": "Tab", "caption_fr": "Tab avance, Maj+Tab recule.", "holdMs": 600 },
+    { "action": "press", "value": "Enter", "caption_fr": "Entrée augmente la quantité.", "holdMs": 1200 },
+    { "action": "press", "value": "Tab", "caption_fr": "Entrée ajoute la pièce au panier.", "holdMs": 800 },
+    { "action": "press", "value": "Enter", "caption_fr": "Entrée ajoute la pièce au panier.", "holdMs": 2000 },
+    { "action": "press", "value": "Escape", "caption_fr": "Échap referme le panier.", "holdMs": 1200 },
+    {
+      "action": "goto",
+      "value": "/fr/custom",
+      "caption_fr": "Les formulaires aussi se remplissent au clavier.",
+      "holdMs": 1200
+    },
+    { "action": "click", "target": { "label": "Budget" }, "caption_fr": "Chaque champ a son libellé.", "holdMs": 800 },
+    { "action": "press", "value": "Tab", "caption_fr": "Chaque champ a son libellé.", "holdMs": 600 },
+    { "action": "press", "value": "Tab", "caption_fr": "Chaque champ a son libellé.", "holdMs": 600 },
+    { "action": "press", "value": "Tab", "caption_fr": "Chaque champ a son libellé.", "holdMs": 700 },
+    {
+      "action": "press",
+      "value": "Enter",
+      "caption_fr": "Les erreurs sont écrites, pas seulement en rouge.",
+      "holdMs": 2500
+    }
+  ]
+}

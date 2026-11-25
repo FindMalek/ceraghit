@@ -1,0 +1,87 @@
+{
+  "id": "16",
+  "slug": "photos-de-reference",
+  "title_fr": "Joindre des photos à ma demande",
+  "start": { "app": "web", "path": "/fr/custom", "loggedIn": false },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "role": "button", "name": "Ajouter des photos" },
+      "caption_fr": "Joignez jusqu'à trois photos.",
+      "holdMs": 1500
+    },
+    {
+      "action": "network",
+      "value": "slow 3000 **/ceraghit-e2e/**",
+      "caption_fr": "Simulation : une connexion lente.",
+      "holdMs": 300
+    },
+    {
+      "action": "upload",
+      "target": { "label": "Ajouter des photos" },
+      "value": "photo-1.png",
+      "caption_fr": "Choisissez une photo, l'envoi démarre.",
+      "holdMs": 3500
+    },
+    { "action": "network", "value": "reset", "caption_fr": "Retour à une connexion normale.", "holdMs": 300 },
+    {
+      "action": "upload",
+      "target": { "label": "Ajouter des photos" },
+      "value": "photo-2.png",
+      "caption_fr": "Ajoutez-en deux autres.",
+      "holdMs": 1500
+    },
+    {
+      "action": "upload",
+      "target": { "label": "Ajouter des photos" },
+      "value": "photo-3.png",
+      "caption_fr": "Ajoutez-en deux autres.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Retirer la photo", "nth": 0 },
+      "caption_fr": "Trois photos au plus : retirez-en une.",
+      "holdMs": 1800
+    },
+    {
+      "action": "upload",
+      "target": { "label": "Ajouter des photos" },
+      "value": "not-an-image.txt",
+      "caption_fr": "Un fichier qui n'est pas une image est refusé.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Retirer la photo", "nth": -1 },
+      "caption_fr": "Retirez la photo refusée."
+    },
+    {
+      "action": "network",
+      "value": "fail **/ceraghit-e2e/**",
+      "caption_fr": "Simulation : l'envoi est coupé.",
+      "holdMs": 300
+    },
+    {
+      "action": "upload",
+      "target": { "label": "Ajouter des photos" },
+      "value": "photo-1.png",
+      "caption_fr": "Si l'envoi échoue, réessayez.",
+      "holdMs": 2500
+    },
+    { "action": "network", "value": "reset", "caption_fr": "Retour à une connexion normale.", "holdMs": 300 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Retirer la photo", "nth": -1 },
+      "caption_fr": "Retirez-la et recommencez."
+    },
+    { "action": "ip", "value": "198.51.100.17", "caption_fr": "Simulation : trop d'envois.", "holdMs": 300 },
+    {
+      "action": "upload",
+      "target": { "label": "Ajouter des photos" },
+      "value": "photo-2.png",
+      "caption_fr": "Trop d'envois : patientez quelques minutes.",
+      "holdMs": 3000
+    }
+  ]
+}

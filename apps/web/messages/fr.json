@@ -207,6 +207,7 @@
     "bankTitle": "Coordonnées bancaires",
     "holder": "Titulaire",
     "bank": "Banque",
+    "bankAddress": "Adresse de la banque",
     "iban": "IBAN",
     "rib": "RIB",
     "bic": "BIC",
