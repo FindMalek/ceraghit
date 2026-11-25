@@ -495,6 +495,12 @@ export const shopProfile = pgTable("shop_profile", {
   bankRib: text("bank_rib"),
   bankIban: text("bank_iban"),
   bankBic: text("bank_bic"),
+  /** Optional second account, shown on euro transfer orders. */
+  bankEurHolder: text("bank_eur_holder"),
+  bankEurName: text("bank_eur_name"),
+  bankEurIban: text("bank_eur_iban"),
+  bankEurBic: text("bank_eur_bic"),
+  bankEurAddress: text("bank_eur_address"),
   invoiceNote: jsonb("invoice_note").$type<Localized>(),
   shippingConfirmedAt: timestamp("shipping_confirmed_at", { withTimezone: true }),
   skippedSteps: jsonb("skipped_steps").$type<string[]>().notNull().default([]),
@@ -515,7 +521,7 @@ export type InvoiceSeller = {
   phone: string | null
   email: string | null
   invoiceNote: Localized | null
-  bank: { holder: string; bank: string; iban: string; bic: string; rib?: string } | null
+  bank: { holder: string; bank: string; iban: string; bic: string; rib?: string; address?: string } | null
 }
 
 /** Gapless yearly counter: the row is locked by the UPDATE, so two issues never get the same number. */

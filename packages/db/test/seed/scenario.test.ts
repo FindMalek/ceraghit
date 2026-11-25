@@ -1,8 +1,20 @@
 import { expect, test } from "bun:test"
+import { bankForCurrency, DEFAULT_SHIPPING_RATES, studioSettingsSchema } from "@workspace/sdk"
 import { parseDemoRef } from "../../src/demo-ref"
+import { UNGLAZED_VARIANT_REFS } from "../../src/seed"
 import { CATALOGUE } from "../../src/seed/catalogue"
 import { DEMO_MAIN_SECOND_REF, DEMO_MEDIA_BY_REF, DEMO_UNUSED_MEDIA } from "../../src/seed/media"
-import { buildScenario, DEMO_DESCRIPTIONS, DEMO_LOCATIONS, DEMO_TN_CITIES } from "../../src/seed/scenario"
+import {
+  buildDemoProfile,
+  buildScenario,
+  DEMO_DESCRIPTIONS,
+  DEMO_LOCATIONS,
+  DEMO_STOCK_STATES,
+  DEMO_TN_CITIES,
+  demoExtraProducts,
+  demoRequests,
+  demoStudioSettings,
+} from "../../src/seed/scenario"
 
 const products = [
   { id: "a", ref: "0010", title: "Curda Seca", priceTnd: 40_000, priceEur: 1_200 },
@@ -19,6 +31,13 @@ test("the demo shop has both currencies, paid revenue and a pending order", () =
     const lines = items.filter((i) => i.orderId === order.id)
     expect(lines.reduce((sum, i) => sum + i.unitMinor * i.quantity, 0)).toBe(order.totalMinor)
   }
+})
+
+test("the demo profile has a separate euro account, valid and obviously fake", () => {
+  const profile = buildDemoProfile(new Date("2026-10-22T12:00:00Z"))
+  const full = { ...profile, bankEurHolder: profile.bankEurHolder ?? null } as Parameters<typeof bankForCurrency>[0]
+  expect(bankForCurrency(full, "EUR")?.iban).toBe("DE89370400440532013000")
+  expect(bankForCurrency(full, "TND")?.iban).toBe(profile.bankIban!)
 })
 
 test("seeded online orders carry a gateway ref that matches them and none is pending", () => {
@@ -91,10 +110,14 @@ test("the demo shows one late payment on a cancelled online order", () => {
   expect(orders.find((o) => o.id === rows[0]!.orderId)).toMatchObject({ paymentMethod: "online", status: "cancelled" })
 })
 
-test("the demo has one sent and one failed mail on real orders, so the failures page is never empty", () => {
+test("the demo has one sent mail and eight failed ones (every kind but two, every error wording), on real orders", () => {
   const { orders, mail } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
-  expect(mail.map((m) => m.status).sort()).toEqual(["failed", "sent"])
-  const failed = mail.find((m) => m.status === "failed")!
+  expect(mail.filter((m) => m.status === "sent")).toHaveLength(1)
+  const failures = mail.filter((m) => m.status === "failed")
+  expect(failures).toHaveLength(8)
+  expect(new Set(failures.map((m) => m.kind)).size).toBe(8)
+  expect(new Set(failures.map((m) => m.error)).size).toBe(8)
+  const failed = failures[0]!
   expect(failed.error).toBe("resend 503: service unavailable")
   expect(orders.find((o) => o.id === failed.orderId)?.email).toBe(failed.to)
 })
@@ -207,4 +230,70 @@ test("one demo location has a bundled photo so the atelier card shows an image",
   const withPhoto = DEMO_LOCATIONS.filter((l) => l.image)
   expect(withPhoto).toHaveLength(1)
   expect(withPhoto[0]?.image).toStartWith("/catalogue/")
+})
+
+test("the order list passes its 200 row page, the older orders stay out of the default 30 days", () => {
+  const now = new Date("2026-10-22T12:00:00Z")
+  const { orders } = buildScenario(now, products)
+  expect(orders.length).toBeGreaterThan(200)
+  expect(new Set(orders.map((o) => o.number)).size).toBe(orders.length)
+  const older = orders.filter((o) => o.number!.startsWith("CER-11"))
+  expect(older.every((o) => now.getTime() - o.createdAt!.getTime() > 60 * 864e5)).toBe(true)
+  expect(older.every((o) => o.status !== "pending_payment")).toBe(true)
+})
+
+test("CER-10100 shows the gateway mismatch then the automatic cancel, CER-10101 is shipped without a parcel card", () => {
+  const { orders, audit, shipments } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const mismatch = orders.find((o) => o.number === "CER-10100")!
+  expect(audit.filter((a) => a.orderId === mismatch.id).map((a) => a.action)).toEqual([
+    "gateway_mismatch",
+    "hold_expired",
+  ])
+  const shipped = orders.find((o) => o.number === "CER-10101")!
+  expect([shipped.status, shipped.carrier, Boolean(shipped.trackingNumber)]).toEqual(["fulfilled", "rapid-poste", true])
+  expect(shipments.some((s) => s.orderId === shipped.id)).toBe(false)
+})
+
+test("CER-10102 is a refunded order the customer can open", () => {
+  const { orders } = buildScenario(new Date("2026-10-22T12:00:00Z"), products)
+  const refunded = orders.find((o) => o.number === "CER-10102")!
+  expect([refunded.status, refunded.publicToken, refunded.paidAt === null]).toEqual([
+    "refunded",
+    "demo-refunded",
+    false,
+  ])
+})
+
+test("the demo studio settings are valid and fill the footer links", () => {
+  const parsed = studioSettingsSchema.parse(demoStudioSettings(DEFAULT_SHIPPING_RATES))
+  expect([parsed.whatsapp, parsed.instagram].every(Boolean)).toBe(true)
+  expect(
+    DEMO_LOCATIONS.every((l) => l.mapUrl?.endsWith(encodeURIComponent(`${l.address}, ${l.city}`).replace(/'/g, "%27"))),
+  ).toBe(true)
+})
+
+test("demo requests cover every status and the extra products are drafts or archived with unique refs", () => {
+  expect(new Set(demoRequests(new Date()).map((r) => r.status))).toEqual(
+    new Set(["new", "contacted", "done", "declined"]),
+  )
+  const extra = demoExtraProducts(["c1", "c2", "c3"])
+  expect(CATALOGUE.length + extra.length).toBeGreaterThan(40)
+  expect(new Set([...CATALOGUE.map((p) => p.ref), ...extra.map((p) => p.ref)]).size).toBe(
+    CATALOGUE.length + extra.length,
+  )
+  expect(extra.every((p) => p.status !== "published")).toBe(true)
+  expect(new Set(extra.map((p) => p.categoryId)).size).toBe(3)
+})
+
+test("the stock states the storefront videos film are a last piece, a sold out piece without options and a sold out option", () => {
+  const byRef = new Map(CATALOGUE.map((p) => [p.ref, p]))
+  const { last, soldOut, soldOutOption } = DEMO_STOCK_STATES
+  for (const { ref } of [last, soldOut, soldOutOption]) {
+    expect(byRef.get(ref)?.unique).toBe(false)
+    expect(byRef.get(ref)?.quoteOnly).toBe(false)
+  }
+  expect([last.stock, soldOut.stock, soldOutOption.stock]).toEqual([1, 0, 0])
+  expect(UNGLAZED_VARIANT_REFS.has(soldOutOption.ref)).toBe(true)
+  expect(UNGLAZED_VARIANT_REFS.has(soldOut.ref)).toBe(false)
+  expect(UNGLAZED_VARIANT_REFS.has(last.ref)).toBe(false)
 })

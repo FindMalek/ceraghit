@@ -1,0 +1,29 @@
+{
+  "id": "17",
+  "slug": "page-atelier",
+  "title_fr": "La page atelier",
+  "start": { "app": "web", "path": "/fr/atelier", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "L'atelier de Sabri Ghit raconte son histoire.", "holdMs": 2200 },
+    { "action": "scroll", "value": "800", "caption_fr": "Le geste : les étapes du travail.", "holdMs": 1500 },
+    { "action": "scroll", "value": "900", "caption_fr": "Nous trouver : adresse et horaires.", "holdMs": 1800 },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "Voir sur la carte", "nth": 0 },
+      "caption_fr": "Ce lien ouvre la carte.",
+      "holdMs": 1500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "link", "name": "+216", "nth": 0 },
+      "caption_fr": "Touchez le téléphone pour appeler.",
+      "holdMs": 1500
+    },
+    {
+      "action": "scroll",
+      "value": "1400",
+      "caption_fr": "Plus bas, les moyens de contacter l'atelier.",
+      "holdMs": 2200
+    }
+  ]
+}

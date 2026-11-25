@@ -1,0 +1,74 @@
+{
+  "id": "80",
+  "slug": "traduction-auto-reglages",
+  "title_fr": "Réglages de la traduction automatique",
+  "devices": ["desktop"],
+  "start": {
+    "app": "dashboard",
+    "path": "/settings",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "scroll",
+      "value": "4000",
+      "caption_fr": "La traduction automatique est en bas."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Sans clé Groq, rien ne se traduit.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Modèle"
+      },
+      "caption_fr": "Choisissez le modèle."
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Le modèle par défaut convient."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Effort"
+      },
+      "caption_fr": "Choisissez l'effort."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Plus réfléchi"
+      },
+      "caption_fr": "Plus réfléchi coûte plus cher."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Plafond mensuel"
+      },
+      "value": "8",
+      "caption_fr": "Fixez un plafond mensuel."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le plafond se remet à zéro chaque mois.",
+      "holdMs": 2500
+    }
+  ]
+}

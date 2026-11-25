@@ -1,4 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
+import { captureDownload, hideFile, showFile } from "./files"
+import { assertLoopbackUrls, spoofedIp } from "./guard"
+import { applyNetwork, parseNetwork } from "./net"
 import type { Device, Step, Target } from "./steps"
 
 export const DEFAULT_HOLD_MS = 1200
@@ -31,13 +34,17 @@ export function locate(page: Page, target: Target): Locator {
   return target.nth === undefined ? visible : visible.nth(target.nth)
 }
 
-function anyMatch(page: Page, target: Target): Locator {
+/** Visible or not: a file input is hidden behind its button. */
+export function anyMatch(page: Page, target: Target): Locator {
   if (target.testId) return page.getByTestId(target.testId)
   if (target.role) {
-    return page.getByRole(target.role as Parameters<Page["getByRole"]>[0], target.name ? { name: target.name } : {})
+    return page.getByRole(
+      target.role as Parameters<Page["getByRole"]>[0],
+      target.name ? { name: target.name, exact: target.exact } : {},
+    )
   }
-  if (target.label) return page.getByLabel(target.label)
-  if (target.text) return page.getByText(target.text)
+  if (target.label) return page.getByLabel(target.label, { exact: target.exact })
+  if (target.text) return page.getByText(target.text, { exact: target.exact })
   throw new Error("a step target needs role, label, text or testId")
 }
 
@@ -57,6 +64,8 @@ export interface PacerOptions {
   baseUrl: (app: "web" | "dashboard") => string
   app: "web" | "dashboard"
   assetsDir: string
+  /** Where `download` steps keep their files. */
+  downloadsDir?: string
   zoom: boolean
   seed?: number
 }
@@ -65,6 +74,7 @@ export function createPacer(options: PacerOptions): Pacer {
   const { page, device, zoom } = options
   const random = rng(options.seed ?? 2027)
   let at: Point = { x: 20, y: 20 }
+  const extraHeaders: Record<string, string> = {}
 
   async function centerOf(target: Target): Promise<Point> {
     const el = locate(page, target).first()
@@ -133,7 +143,65 @@ export function createPacer(options: PacerOptions): Pacer {
     },
     async run(step, value) {
       const { action, target } = step
+      await hideFile(page)
       switch (action) {
+        case "ip": {
+          assertLoopbackUrls([options.baseUrl("web"), options.baseUrl("dashboard")])
+          extraHeaders["x-forwarded-for"] = spoofedIp(value)
+          await page.context().setExtraHTTPHeaders(extraHeaders)
+          break
+        }
+        case "country": {
+          assertLoopbackUrls([options.baseUrl("web"), options.baseUrl("dashboard")])
+          if (!/^[A-Z]{2}$/.test(value ?? ""))
+            throw new Error(`country takes two capital letters like BE, got "${value ?? ""}"`)
+          extraHeaders["x-vercel-ip-country"] = value as string
+          await page.context().setExtraHTTPHeaders(extraHeaders)
+          break
+        }
+        case "clear-cookies":
+          await page.context().clearCookies()
+          break
+        case "cookie": {
+          const [name = "", ...rest] = (value ?? "").split("=")
+          if (name !== "ceraghit_currency") throw new Error(`cookie steps only set ceraghit_currency, got "${name}"`)
+          await page.context().addCookies([{ name, value: rest.join("="), url: options.baseUrl(options.app) }])
+          break
+        }
+        case "swipe": {
+          if (!target) throw new Error("swipe needs a target")
+          const from = await centerOf(target)
+          const dx = value === "right" ? 140 : -140
+          const cdp = await page.context().newCDPSession(page)
+          const touch = (type: "touchStart" | "touchMove" | "touchEnd", x: number) =>
+            cdp.send("Input.dispatchTouchEvent", {
+              type,
+              touchPoints: type === "touchEnd" ? [] : [{ x, y: from.y }],
+            })
+          await touch("touchStart", from.x)
+          for (let i = 1; i <= 8; i++) {
+            await touch("touchMove", from.x + (dx * i) / 8)
+            await sleep(30)
+          }
+          await touch("touchEnd", from.x + dx)
+          await cdp.detach()
+          break
+        }
+        case "back":
+          await page.goBack()
+          break
+        case "network": {
+          const rule = parseNetwork(value)
+          if (rule.kind === "reason") assertLoopbackUrls([options.baseUrl("web"), options.baseUrl("dashboard")])
+          await applyNetwork(page.context(), rule)
+          break
+        }
+        case "download": {
+          if (!target) throw new Error("download needs a target")
+          const file = await captureDownload(page, options.downloadsDir ?? "out/downloads", () => press(target))
+          await showFile(page, file)
+          break
+        }
         case "goto": {
           await page.goto(new URL(value ?? "/", options.baseUrl(options.app)).toString())
           break
@@ -160,7 +228,7 @@ export function createPacer(options: PacerOptions): Pacer {
           break
         case "upload":
           if (!target) throw new Error("upload needs a target")
-          await locate(page, target)
+          await (target.nth === undefined ? anyMatch(page, target) : anyMatch(page, target).nth(target.nth))
             .first()
             .setInputFiles(`${options.assetsDir}/${value ?? ""}`)
           break
@@ -179,7 +247,8 @@ export function createPacer(options: PacerOptions): Pacer {
           break
         }
         case "press":
-          await page.keyboard.press(value ?? "Enter")
+          if (value?.startsWith("text:")) await typeSlowly(value.slice(5))
+          else await page.keyboard.press(value ?? "Enter")
           break
         case "wait":
           break

@@ -50,7 +50,7 @@ export function buildCsp(options: CspOptions): string {
       "'self'",
       `'nonce-${nonce}'`,
       "'strict-dynamic'",
-      // The dashboard compiles the invoice pdf renderer; the storefront compiles the WebP encoder of the photo upload.
+      // Wasm: the dashboard compiles the invoice pdf renderer, and both apps compile the WebP encoder (Safari upload fallback).
       "'wasm-unsafe-eval'",
       ...(dev ? ["'unsafe-eval'"] : []),
     ],

@@ -1,4 +1,5 @@
 import { type Db, settings } from "@workspace/db"
+import { postcodeProblem } from "@workspace/sdk"
 import { eq } from "drizzle-orm"
 import type { Services } from "../../context"
 import { resolveShipping } from "./resolve"
@@ -126,6 +127,8 @@ export async function checkAddress(
   services: Services,
   address: ShipAddress,
 ): Promise<{ ok: boolean; suggestions: ShipAddress[]; message: string }> {
+  const badPostcode = postcodeProblem(address.country, address.postalCode)
+  if (badPostcode) return { ok: false, suggestions: [], message: badPostcode }
   try {
     const { provider, degraded } = await resolveShipping(services)
     if (degraded || provider.id !== "aramex") {
@@ -137,9 +140,12 @@ export async function checkAddress(
       normaliseCity(s.line1) === normaliseCity(address.line1) &&
       normaliseCity(s.city) === normaliseCity(address.city) &&
       (!s.postalCode || normaliseCity(s.postalCode) === normaliseCity(address.postalCode ?? ""))
-    if (suggestions.length === 0 || suggestions.some(same))
-      return { ok: true, suggestions: [], message: "Adresse reconnue." }
-    return { ok: false, suggestions, message: "Aramex propose une autre adresse." }
+    if (suggestions.length > 0 && !suggestions.some(same))
+      return { ok: false, suggestions, message: "Aramex propose une autre adresse." }
+    // Delivery coverage is only asked for Tunisia (the national product); a failed answer never blocks.
+    const serviced = address.country === "TN" ? await provider.isAddressServiced(address).catch(() => null) : null
+    if (serviced === false) return { ok: false, suggestions: [], message: "Aramex ne livre pas à cette adresse." }
+    return { ok: true, suggestions: [], message: "Adresse reconnue." }
   } catch {
     return { ok: false, suggestions: [], message: "Aramex ne répond pas. Réessayez dans un instant." }
   }
