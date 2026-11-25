@@ -156,3 +156,21 @@ test.each([
   const out = scrubEvent({ message }) as { message: string }
   expect(out.message).not.toMatch(/Amira|Rome|20 123 456|98765432|s3cr3t|hunter2/)
 })
+
+test("kept contexts lose bodies and bearer strings but keep the trace ids", () => {
+  const trace_id = "4bf92f3577b34da6a3ce929d0e0e4736"
+  const out = scrubEvent({
+    contexts: {
+      trace: { trace_id, span_id: "00f067aa0ba902b7", data: { body: "private note", auth: "Bearer abcdefghijklmnop" } },
+    },
+  }) as { contexts: { trace: Record<string, unknown> } }
+  expect(JSON.stringify(out.contexts)).not.toMatch(/private note|abcdefghijklmnop/)
+  expect(out.contexts.trace).toMatchObject({ trace_id, span_id: "00f067aa0ba902b7" })
+})
+
+test("tags lose credentials by value and by name but keep the correlation ids", () => {
+  const ids = { request_id: "0b1f6c7e-4a43-4c1e-9d1e-5d3b7a0a9f11", trace_id: "4bf92f3577b34da6a3ce929d0e0e4736" }
+  const out = scrubEvent({ tags: { ...ids, note: "Bearer abcdefghijklmnop", api_key: "s3cr3t" } })
+  expect(JSON.stringify(out?.tags)).not.toMatch(/abcdefghijklmnop|s3cr3t/)
+  expect(out?.tags).toMatchObject(ids)
+})
