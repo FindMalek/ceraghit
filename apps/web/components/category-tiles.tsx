@@ -1,8 +1,8 @@
 import type { Category } from "@workspace/sdk"
 import { imageSrc, pick } from "@workspace/sdk"
 import { cn } from "@workspace/ui/lib/utils"
+import { CollectionLink } from "@/components/collection-scroll"
 import Image from "@/components/photo"
-import { Link } from "@/i18n/navigation"
 
 /** The shop's collections as photo tiles. On a collection page the current one is highlighted and the tiles are shorter. */
 export function CategoryTiles({
@@ -20,7 +20,7 @@ export function CategoryTiles({
     <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {categories.map((category, i) => (
         <li key={category.id}>
-          <Link
+          <CollectionLink
             href={`/shop/${category.slug}`}
             aria-current={active === category.slug ? "page" : undefined}
             className={cn(
@@ -54,7 +54,7 @@ export function CategoryTiles({
                 {pick(category.name, locale)}
               </span>
             </span>
-          </Link>
+          </CollectionLink>
         </li>
       ))}
     </ul>

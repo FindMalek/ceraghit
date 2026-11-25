@@ -76,3 +76,16 @@ test("a category page lists only that category's pieces", async ({ page, request
     await expect(cards(page)).toHaveCount(expected.length)
   })
 })
+
+test("choosing a collection on a phone scrolls to its pieces", async ({ page, request, home, appLocale }) => {
+  test.skip((page.viewportSize()?.width ?? 0) >= 640, "phones only")
+  const category = (await catalogue(request))[0]?.category
+  if (!category) throw new Error("no category")
+  await page.goto(home("/shop"))
+  await page
+    .getByRole("link", { name: new RegExp(`^${category.name[appLocale] ?? category.name.fr}`) })
+    .first()
+    .click()
+  await expect(page).toHaveURL(home(`/shop/${category.slug}`))
+  await expect(page.getByRole("search")).toBeInViewport()
+})
