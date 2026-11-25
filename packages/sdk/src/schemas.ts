@@ -468,7 +468,7 @@ export function bankForCurrency(profile: ProfileBank & ProfileEurBank, currency:
 }
 
 export const SETUP_REQUIRED_STEPS = ["owner", "profile", "bank", "shipping"] as const
-export const SETUP_OPTIONAL_STEPS = ["konnect", "aramex", "payoneer", "groq", "emailDomain"] as const
+export const SETUP_OPTIONAL_STEPS = ["aramex", "payoneer", "groq", "emailDomain"] as const
 export const setupStepIdSchema = z.enum([...SETUP_REQUIRED_STEPS, ...SETUP_OPTIONAL_STEPS])
 export type SetupStepId = z.infer<typeof setupStepIdSchema>
 export type OptionalSetupStepId = (typeof SETUP_OPTIONAL_STEPS)[number]

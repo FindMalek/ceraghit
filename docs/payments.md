@@ -1,7 +1,8 @@
 # payments
 
-Gateway: **Konnect** (Tunisian payment facilitator, Central Bank of Tunisia licence). The studio has a patente, so it can
-open a merchant account; payout is to a Tunisian bank account in TND.
+No card gateway is integrated. Production takes cash on delivery, bank transfer and Payoneer, all confirmed by the owner,
+and the api refuses to boot there with `ONLINE_PAYMENTS=true`. Local, previews, staging and e2e use the demo gateway
+(`DemoProvider`) for "online" payments.
 
 ## why not the others
 
@@ -12,74 +13,24 @@ open a merchant account; payout is to a Tunisian bank account in TND.
 - **Gumroad**: physical items allowed but hosted checkout only (no cart, stock or dual currency) and Tunisia is absent
   from its official bank-payout list.
 
-## Konnect facts
+## adding a gateway
 
-- Fees (konnect.network/pricing, indicative): Tunisian cards and e-DINAR 1.3%, international cards 2.9%, bank transfer 2 TND.
-  No subscription or setup fee.
-- API: `POST https://api.konnect.network/api/v2/payments/init-payment` (sandbox host `api.preprod.konnect.network`), header
-  `X-Api-Key`. Body: `receiverWalletId`, `amount` (minor units), `token` (currency), `orderId`, `webhook`, `successUrl`,
-  `failUrl`, `acceptedPaymentMethods` (`bank_card`, `wallet`, `e-DINAR`), `lifespan` (minutes), customer fields. Returns
-  `payUrl` and `paymentRef`. Status: `GET /payments/{paymentRef}`.
-- The webhook is `?payment_ref=…`, unsigned. We always re-fetch the payment and compare amount, currency and order number
-  (`packages/orpc/src/lib/orders.ts` `settleOrder`).
-- Accounts: `dashboard.sandbox.konnect.network` (test) and `dashboard.konnect.network` (live), separate keys.
+Implement `PaymentProvider` (`packages/orpc/src/lib/payments.ts`), wire it in `apps/api/src/index.ts`, then open
+`gatewayReady` and the `ONLINE_PAYMENTS` guard of `env.ts` to it in production only. A webhook or return url is only a
+hint: `settleOrder` re-asks the gateway and compares amount, currency and order number.
 
-## to confirm with Konnect (issue #1)
-
-EUR checkout with foreign Visa/Mastercard and settlement currency; settlement delay and minimum payout; KYB documents beyond
-the patente; final rate for international cards; whether the amount field in `GET /payments/{ref}` is minor units (the
-sandbox test decides, `settleOrder` refuses to mark paid on a mismatch).
-
-## sandbox checklist (issue #170)
-
-Run on a preview with `KONNECT_TEST_API_KEY` and `KONNECT_TEST_WALLET_ID`. Record every observed value here.
-
-- [ ] TND order of 12,500 DT: init body `amount` is 12500 (millimes); record what `GET /payments/{ref}` returns in `amount`
-- [ ] EUR order 45,00 EUR: init `amount` 4500, `token` EUR; record returned `amount` and `token`
-- [ ] failed card: order cancelled, stock back
-- [ ] abandoned (no action for `lifespan` 30 min): order cancelled by `releaseExpiredHolds` after 45 min, stock back
-- [ ] webhook received (Dokploy logs) and return page both settle once
-- [ ] if the unit is NOT minor, fix `KonnectProvider.check` conversion and the fixture in one PR
+An order opened with a gateway the api no longer has (`orders.payment_provider`) is never judged by another one: it is
+neither settled nor released when its hold ends (the api logs it). Check the payment at the old provider, then cancel the
+order by hand.
 
 ## current mode (dashboard "Paiements" page)
 
-The owner switches card (Konnect), cash on delivery and bank transfer on or off in the dashboard (`/payments`), stored in
+The owner switches card, cash on delivery, bank transfer and Payoneer on or off in the dashboard (`/payments`), stored in
 the `settings` row `payments` and enforced by `createOrder`. Fixed rules on top: cash on delivery is Tunisia + TND only,
 transfer is abroad only, and the page refuses a save that leaves Tunisia or abroad without any method. Card payment is
-only offered when the gateway can take real money: in production that means Konnect in `live` mode, the demo gateway
-never qualifies (`gatewayReady`). Until the page is saved once, card follows `ONLINE_PAYMENTS` (default `false`), so
-existing deployments keep their behaviour. Transfer orders carry the account from the dashboard settings and the order
-number as the reference; the owner marks the order paid when the money arrives, then shipped.
-
-### konnect keys
-
-The owner enters the API key and wallet id in the "Clés Konnect" block of the same page (`admin.settings.konnect.*`,
-vault provider `konnect`, see `secrets.md`). `resolvePayments` picks the gateway on every checkout and settle: saved keys
-win, then the env-built default (`KONNECT_*` env, else the demo gateway). Saved `live` keys are never used outside
-production, and the dashboard refuses to save `test` keys in production. "Tester la connexion" asks Konnect for a payment
-that cannot exist (401/403 means the key is refused, 404 means accepted) and never calls `init-payment`; it does not
-verify the wallet id. A saved key only counts when its mode matches the
-environment (live in production, test elsewhere); otherwise the env default is used. There is no per-process cache: the
-vault row is read per call.
-
-Keys and pending card payments. Saving different keys or clearing them is refused (`assertKonnectUnlocked`) while an
-online order created through Konnect has been `pending_payment` for less than the 45 minute hold; re-saving identical
-values is allowed. If the keys become unusable anyway (`SECRETS_KEY` lost or rotated, row removed by hand), the code
-fails closed: `settleOrder` never asks another gateway about a Konnect order, and `releaseExpiredHolds` keeps Konnect
-orders past the hold pending (and logs them) instead of cancelling them while no Konnect gateway can be asked. A demo
-order is always checked by the demo gateway, never by Konnect. Nothing marks such an order paid: `markPaidManually`
-refuses online orders. A payment taken while the keys were unusable must be reconciled by hand in the Konnect dashboard
-once the keys are back (the next webhook or order page visit then settles it), otherwise the order stays pending.
-
-#### known limits
-
-- `assertKonnectUnlocked` and the key save are not in one transaction. A checkout that resolved the old gateway and is
-  mid-`init` while the keys change gets a reference from the old account, stays pending and is cancelled by the sweep.
-  The window is a few seconds, it fails closed, and nothing is marked paid.
-- After a `SECRETS_KEY` loss followed by saving different keys, the held Konnect orders are cancelled by the sweep with
-  no further warning (Konnect is resolvable again, so the holds are no longer skipped).
-- An env swap from account A to B (no vault row) makes Konnect resolvable again, but B cannot read A's references: those
-  orders are cancelled after the hold, and a payment taken on A must be reconciled by hand in Konnect.
+never offered in production (`gatewayReady`). Until the page is saved once, card follows `ONLINE_PAYMENTS` (default
+`false`). Transfer orders carry the account from the dashboard settings and the order number as the reference; the owner
+marks the order paid when the money arrives, then shipped.
 
 ### payoneer (manual)
 
@@ -113,7 +64,7 @@ Ex optile / oscato platform.
 - Notifications: `callback.notificationUrl` (https, public IP) plus optional `callback.notificationHeaders`, static
   headers we choose; Payoneer support can also set extra headers for a whole division. The spec has no signature or HMAC
   scheme and no IP allowlist. https://checkoutdocs.payoneer.com/docs serves a JavaScript bot challenge that blocks
-  automated browsers, so its notifications page was not read: treat signing as **not documented**. Same rule as Konnect:
+  automated browsers, so its notifications page was not read: treat signing as **not documented**. Same rule as any gateway:
   the notification is a hint, we re-fetch the LIST or CHARGE and compare amount, currency and `transactionId`.
 - Verdict: **status is server-verifiable**, so a provider behind `PaymentProvider` is possible.
 - Eligibility: **sales-gated**. The FAQ

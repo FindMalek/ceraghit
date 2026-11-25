@@ -104,7 +104,7 @@ function actionsFor(status: Status, method: PaymentMethod): Action[] {
         label: "Rembourser",
         destructive: true,
         confirm:
-          "La commande est marquée remboursée et les pièces retournent en stock. Le remboursement lui-même se fait chez Konnect.",
+          "La commande est marquée remboursée et les pièces retournent en stock. Le remboursement lui-même se fait à la main, chez le prestataire qui a reçu le paiement.",
       },
     ]
   }
@@ -137,10 +137,10 @@ function Line({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 const GATEWAY_AUDIT_LABEL: Record<string, string> = {
-  gateway_mismatch: "Paiement Konnect incohérent : à vérifier dans votre espace Konnect",
+  gateway_mismatch: "Paiement en ligne incohérent : à vérifier chez le prestataire de paiement",
   hold_expired: "Annulée automatiquement : délai de paiement dépassé",
   payment_link_set: "Lien de paiement Payoneer envoyé au client",
-  late_payment: "Paiement Konnect reçu après l'annulation : à rembourser ou restaurer à la main",
+  late_payment: "Paiement en ligne reçu après l'annulation : à rembourser ou restaurer à la main",
 }
 
 function History({ orderId }: { orderId: string }) {

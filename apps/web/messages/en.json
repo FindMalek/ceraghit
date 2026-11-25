@@ -340,7 +340,7 @@
           {
             "title": "4. Payment",
             "body": [
-              "Payment is made by bank card (Tunisian and international cards) through our payment provider Konnect. The studio never sees or keeps your card details.",
+              "Depending on your country, you pay by bank transfer or with Payoneer, among the methods offered when you order. The studio never sees or keeps your card details.",
               "You can also choose cash on delivery (Tunisia only): the order is then confirmed when you place it and you pay the courier on receipt.",
               "If the payment fails or is abandoned, the order is cancelled and the pieces are returned to stock."
             ]
@@ -455,7 +455,7 @@
             "title": "Hosting and technical services",
             "body": [
               "Site hosted by Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, United States (vercel.com).",
-              "Database: Neon. Image storage and delivery: Cloudflare R2. Email delivery: Resend. Card payment: Konnect."
+              "Database: Neon. Image storage and delivery: Cloudflare R2. Email delivery: Resend."
             ]
           },
           {
@@ -509,7 +509,7 @@
             "title": "Who we share it with",
             "body": [
               "Hosting and storage: Vercel (the site), Neon (database) and Cloudflare R2 (images and photos attached to requests).",
-              "Payment: Konnect (card, Tunisia) receives the amount, your name, email and phone. Payoneer only takes part if you choose to pay by Payoneer link.",
+              "Payment: Payoneer only takes part if you choose to pay by Payoneer link, and then receives the details needed to settle the payment.",
               "Order emails: Resend. Delivery: the carrier (Aramex or equivalent) receives your name, address and phone.",
               "Automatic translation: Groq only receives product texts written by the studio, never customer data.",
               "Some providers are located outside the European Union (United States, Tunisia)."

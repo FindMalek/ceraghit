@@ -79,7 +79,7 @@ export async function savePaymentSettings(db: Db, value: PaymentSettings): Promi
  */
 export async function effectivePaymentMethods(services: Services): Promise<PaymentMethodFlags> {
   const { methods } = await getPaymentSettings(services.db, services.config)
-  const online = methods.online && (await gatewayReady(services))
+  const online = methods.online && gatewayReady(services)
   const effective = online
     ? methods
     : {

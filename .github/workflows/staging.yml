@@ -70,8 +70,6 @@ jobs:
           ADMIN_EMAIL: ${{ vars.STAGING_ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.STAGING_ADMIN_PASSWORD }}
           MAIL_REDIRECT_TO: ${{ vars.STAGING_MAIL_REDIRECT_TO }}
-          KONNECT_TEST_API_KEY: ${{ secrets.KONNECT_TEST_API_KEY }}
-          KONNECT_TEST_WALLET_ID: ${{ secrets.KONNECT_TEST_WALLET_ID }}
           S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
           PREVIEW_S3_BUCKET: ${{ vars.PREVIEW_S3_BUCKET }}
           PREVIEW_S3_ACCESS_KEY_ID: ${{ secrets.PREVIEW_S3_ACCESS_KEY_ID }}

@@ -54,9 +54,9 @@ async function show(page: Page, title: string, body: string): Promise<void> {
 
 const REFUSED = [
   {
-    name: "a live Konnect mode outside production",
-    env: () => previewEnv({ KONNECT_MODE: "live" }),
-    message: "live payment keys are only allowed with APP_ENV=production",
+    name: "card payment turned on in production",
+    env: () => productionEnv({ ONLINE_PAYMENTS: "true" }),
+    message: "production has no card gateway",
   },
   {
     name: "demo data seeded in production",

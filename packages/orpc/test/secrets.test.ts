@@ -5,7 +5,7 @@ const K1 = `1:${Buffer.alloc(32, 1).toString("base64")}`
 const K2 = `2:${Buffer.alloc(32, 2).toString("base64")}`
 const ring = (current: string, previous?: string) => parseKeyring(current, previous) as Keyring
 const SENTINEL = "SENTINEL-9f8e7d6c5b4a"
-const AAD = "integration:konnect"
+const AAD = "integration:aramex"
 
 describe("vault crypto", () => {
   test("round trip returns the same object and each write uses a fresh iv", () => {
