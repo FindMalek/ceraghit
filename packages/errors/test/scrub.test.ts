@@ -145,3 +145,14 @@ test("the api route tag marks an admin failure sensitive even without a request 
   }
   expect(out.extra).toBeUndefined()
 })
+
+test.each([
+  ["a failed query", 'Failed query: insert into "orders" values ($1, $2)\nparams: Amira Ben Salah,12 rue de Rome'],
+  ["a local phone number", "delivery refused for 20 123 456 and 98765432"],
+  ["a connection url", "connect failed postgres://app:npg_s3cr3t@db:5432/shop"],
+  ["a url query inside text", "GET https://api.x/orders?customer=Amira failed"],
+  ["escaped json and suffixed keys", 'body {\\"password\\":\\"hunter2\\"} secret_access_key=s3cr3t'],
+])("%s inside a message leaks nothing", (_name, message) => {
+  const out = scrubEvent({ message }) as { message: string }
+  expect(out.message).not.toMatch(/Amira|Rome|20 123 456|98765432|s3cr3t|hunter2/)
+})

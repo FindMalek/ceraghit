@@ -53,7 +53,7 @@ test("with a matching DSN the SDK starts with pii off", async () => {
   expect(initNode(env, "ceraghit-api")).toBe(true)
   const options = Sentry.getClient()?.getOptions()
   expect(options?.environment).toBe("preview")
-  expect((options as { sendDefaultPii?: boolean } | undefined)?.sendDefaultPii).toBe(false)
+  expect(Sentry.getClient()?.getDataCollectionOptions().userInfo).toBe(false)
   expect(errorsEnabled()).toBe(true)
   await Sentry.close(0)
 })

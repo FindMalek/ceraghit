@@ -1,0 +1,61 @@
+{
+  "id": "76",
+  "slug": "cles-konnect",
+  "title_fr": "Enregistrer ses clés Konnect",
+  "devices": ["desktop"],
+  "start": {
+    "app": "dashboard",
+    "path": "/payments",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Les clés Konnect se saisissent ici.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Clé API"
+      },
+      "value": "demo-key-0000",
+      "caption_fr": "Saisissez la clé API. Ici, une fausse clé."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Identifiant du portefeuille"
+      },
+      "value": "demo-wallet-0000",
+      "caption_fr": "Puis l'identifiant du portefeuille."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Tester la connexion"
+      },
+      "caption_fr": "Testez la connexion."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Une clé invalide est refusée.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": 0
+      },
+      "caption_fr": "Enregistrez les clés."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les clés sont chiffrées dans le coffre.",
+      "holdMs": 2500
+    }
+  ]
+}

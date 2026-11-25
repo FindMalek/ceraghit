@@ -21,6 +21,7 @@ export interface EmailCopy {
     bankTitle: string
     holder: string
     bank: string
+    bankAddress: string
     reference: string
     bankMissing: (email: string) => string
   }
@@ -69,6 +70,7 @@ export const EMAIL_COPY = {
       bankTitle: "Coordonnées bancaires",
       holder: "Titulaire",
       bank: "Banque",
+      bankAddress: "Adresse de la banque",
       reference: "Référence à indiquer",
       bankMissing: (email) => `Nos coordonnées bancaires suivent très vite, ou écrivez-nous : ${email}`,
     },
@@ -116,6 +118,7 @@ export const EMAIL_COPY = {
       bankTitle: "Bank details",
       holder: "Account holder",
       bank: "Bank",
+      bankAddress: "Bank address",
       reference: "Reference to write",
       bankMissing: (email) => `Our bank details follow very soon, or write to us: ${email}`,
     },
@@ -163,6 +166,7 @@ export const EMAIL_COPY = {
       bankTitle: "البيانات البنكية",
       holder: "صاحب الحساب",
       bank: "البنك",
+      bankAddress: "عنوان البنك",
       reference: "المرجع المطلوب كتابته",
       bankMissing: (email) => `ستصلك بياناتنا البنكية قريبا، أو راسلنا: ${email}`,
     },

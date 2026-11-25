@@ -1,0 +1,52 @@
+{
+  "id": "13",
+  "slug": "ajouter-au-panier",
+  "title_fr": "Ajouter au panier et ouvrir le panier",
+  "start": { "app": "web", "path": "/fr/product/lampe-votive-0201", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "Voici une pièce de la boutique.", "holdMs": 1500 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Augmenter la quantité" },
+      "caption_fr": "Choisissez la quantité."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Diminuer la quantité" },
+      "caption_fr": "Choisissez la quantité."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter au panier" },
+      "caption_fr": "Ajoutez-la au panier.",
+      "holdMs": 1800
+    },
+    { "action": "wait", "caption_fr": "Le panier montre le sous-total.", "holdMs": 2500 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Augmenter la quantité" },
+      "caption_fr": "Changez la quantité ici.",
+      "holdMs": 1500
+    },
+    { "action": "press", "value": "Escape", "caption_fr": "Fermez le panier." },
+    { "action": "goto", "value": "/fr/product/lampe-votive-0201", "caption_fr": "Même après un rechargement…" },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ouvrir le panier" },
+      "caption_fr": "…le panier garde vos pièces.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Retirer" },
+      "caption_fr": "Retirez une ligne d'un clic.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Parcourir la boutique" },
+      "caption_fr": "Un panier vide mène à la boutique.",
+      "holdMs": 3000
+    }
+  ]
+}

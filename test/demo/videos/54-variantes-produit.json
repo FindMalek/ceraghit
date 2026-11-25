@@ -1,0 +1,144 @@
+{
+  "id": "54",
+  "slug": "variantes-produit",
+  "title_fr": "Ajouter des variantes",
+  "start": {
+    "app": "dashboard",
+    "path": "/products/new",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter une variante"
+      },
+      "caption_fr": "Ajoutez une variante par version de la pièce."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom de la variante",
+        "nth": 0
+      },
+      "value": "Émaillée",
+      "caption_fr": "Nom, prix et stock de chaque variante.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix TND *",
+        "nth": 0
+      },
+      "value": "85",
+      "caption_fr": "Nom, prix et stock de chaque variante."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix EUR *",
+        "nth": 0
+      },
+      "value": "28",
+      "caption_fr": "Nom, prix et stock de chaque variante."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Stock",
+        "nth": 0
+      },
+      "value": "3",
+      "caption_fr": "Nom, prix et stock de chaque variante."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter une variante"
+      },
+      "caption_fr": "Une deuxième version, avec ses propres prix."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom de la variante",
+        "nth": 1
+      },
+      "value": "Non émaillée",
+      "caption_fr": "Une deuxième version, avec ses propres prix."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix TND *",
+        "nth": 1
+      },
+      "value": "70",
+      "caption_fr": "Une deuxième version, avec ses propres prix."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix EUR *",
+        "nth": 1
+      },
+      "value": "23",
+      "caption_fr": "Une deuxième version, avec ses propres prix."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Monter la variante",
+        "nth": 1
+      },
+      "caption_fr": "Montez ou descendez une variante."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Descendre la variante",
+        "nth": 0
+      },
+      "caption_fr": "Montez ou descendez une variante.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer la variante",
+        "nth": 1
+      },
+      "caption_fr": "Supprimez-la si elle ne sert plus.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter une variante"
+      },
+      "caption_fr": "Le nom français est obligatoire.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Créer le produit"
+      },
+      "caption_fr": "Le nom français est obligatoire.",
+      "holdMs": 2200
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/product/lampe-votive-0201",
+      "caption_fr": "Le visiteur choisit sa variante, sur la fiche."
+    }
+  ]
+}
