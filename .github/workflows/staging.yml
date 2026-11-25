@@ -46,7 +46,15 @@ jobs:
           secrets: |
             turbo_token=${{ secrets.TURBO_TOKEN }}
           cache-from: type=local,src=/opt/buildx-cache/${{ matrix.app }}
-          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }},mode=max,ignore-error=true
+          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }}-new,mode=max,ignore-error=true
+      # See preview.yml: swaps in the fresh snapshot instead of merging into the live dir forever.
+      - name: Promote build cache
+        run: |
+          APP="${{ matrix.app }}"
+          if [ -d "/opt/buildx-cache/$APP-new" ]; then
+            rm -rf "/opt/buildx-cache/$APP"
+            mv "/opt/buildx-cache/$APP-new" "/opt/buildx-cache/$APP"
+          fi
 
   deploy:
     needs: build
