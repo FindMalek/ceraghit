@@ -1,0 +1,112 @@
+{
+  "id": "67",
+  "slug": "selecteur-mediatheque",
+  "title_fr": "Choisir une photo depuis la médiathèque",
+  "start": {
+    "app": "dashboard",
+    "path": "/products",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0800",
+      "caption_fr": "Cherchez la pièce."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Modifier"
+      },
+      "caption_fr": "Ouvrez sa fiche."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir dans la médiathèque"
+      },
+      "caption_fr": "Choisissez dans la médiathèque."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "searchbox",
+        "name": "Rechercher une photo"
+      },
+      "value": "lampe",
+      "caption_fr": "Cherchez une photo."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "lampe-votive-0211-1.webp"
+      },
+      "caption_fr": "Cliquez pour choisir."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "lampe-votive-0211-2.webp"
+      },
+      "caption_fr": "Vous pouvez en choisir plusieurs."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "Envoyer"
+      },
+      "caption_fr": "L'onglet Envoyer ajoute de nouvelles photos."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "Bibliothèque"
+      },
+      "caption_fr": "Revenez à la bibliothèque."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le bouton compte vos choix.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir (2)"
+      },
+      "caption_fr": "Validez avec Choisir."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les photos rejoignent la galerie.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir dans la médiathèque"
+      },
+      "caption_fr": "Rouvrez le sélecteur."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Annuler"
+      },
+      "caption_fr": "Annuler ferme sans rien changer."
+    }
+  ]
+}

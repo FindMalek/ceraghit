@@ -1,0 +1,96 @@
+{
+  "id": "69",
+  "slug": "demandes-clients",
+  "title_fr": "Les demandes de pièces uniques",
+  "start": {
+    "app": "dashboard",
+    "path": "/requests",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Voici les demandes de pièces uniques.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Filtrer par statut"
+      },
+      "caption_fr": "Filtrez par statut."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Nouvelle"
+      },
+      "caption_fr": "Filtrez par statut."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Seules les nouvelles restent.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Réinitialiser le filtre"
+      },
+      "caption_fr": "Réinitialisez le filtre."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Élodie Marchand"
+      },
+      "caption_fr": "Ouvrez une demande."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Contact, budget et description.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Statut"
+      },
+      "caption_fr": "Changez le statut."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Contactée"
+      },
+      "caption_fr": "Changez le statut."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Note privée"
+      },
+      "value": "Rappeler jeudi.",
+      "caption_fr": "La note reste privée."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le statut est à jour.",
+      "holdMs": 2000
+    }
+  ]
+}
