@@ -35,6 +35,9 @@ function productionEnv(extra: Record<string, string> = {}): Record<string, strin
     API_PUBLIC_URL: "https://api.ceraghit.example",
     MAILPIT_URL: "",
     MAIL_REDIRECT_TO: "",
+    // the suite's stand-in hosts, refused in production
+    KONNECT_BASE_URL: "",
+    GROQ_BASE_URL: "",
     ...extra,
   })
 }
