@@ -19,7 +19,7 @@ import { invoiceUrl } from "../lib/invoices"
 import { mailColors as c, MAIL_SERIF } from "./brand"
 import type { ConfirmationOrder, MailContext, MailShipment } from "./confirmation"
 import { asLocale, EMAIL_COPY, type Locale } from "./copy"
-import { confirmationIntro, ltr, type MailOrder } from "./layout"
+import { confirmationIntro, ltr, type MailOrder, usdBankRows } from "./layout"
 import { orderUrl } from "./order-url"
 import type { StudioRequest } from "./request"
 
@@ -171,6 +171,25 @@ function Bank({ order, ctx, locale }: { order: ConfirmationOrder; ctx: MailConte
   )
 }
 
+function UsdBank({ order, ctx, locale }: { order: ConfirmationOrder; ctx: MailContext; locale: Locale }) {
+  const copy = EMAIL_COPY[locale]
+  const k = copy.confirmation
+  if (!ctx.bankUsd) return null
+  const rows: [string, string][] = [...usdBankRows(copy, ctx.bankUsd, locale), [k.reference, ltr(order.number, locale)]]
+  return (
+    <Section
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      style={{ backgroundColor: c.inkSoft, padding: "12px 16px", margin: "16px 0" }}
+    >
+      <Text style={{ ...para, color: c.goldTitle, margin: "0 0 8px" }}>{k.usdTitle}</Text>
+      {rows.map(([label, value]) => (
+        <Line key={label} locale={locale} left={label} right={value} wrap={label === k.bankAddress} />
+      ))}
+      <Text style={{ ...para, margin: "8px 0 0" }}>{k.usdNote}</Text>
+    </Section>
+  )
+}
+
 function TrackLink({ href, locale, label }: { href: string; locale: Locale; label?: string }) {
   return (
     <Text style={para}>
@@ -208,6 +227,7 @@ function CustomerOrder({ order, ctx, preview, intro, withBank, invoiceHref, payo
       <Items order={order} locale={locale} />
       <Totals order={order} locale={locale} />
       {withBank ? <Bank order={order} ctx={ctx} locale={locale} /> : null}
+      {withBank ? <UsdBank order={order} ctx={ctx} locale={locale} /> : null}
       {payoneerHref ? (
         <TrackLink
           href={payoneerHref}

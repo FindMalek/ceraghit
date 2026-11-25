@@ -193,6 +193,43 @@ export function OrderStatus({ number, token }: { number: string; token: string }
         </section>
       )}
 
+      {order.bankUsd && (
+        <section className="frame space-y-3 bg-card/70 p-6">
+          <h2 className="text-3xl">{t("usdTitle")}</h2>
+          <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
+            <dt className="text-muted-foreground">{t("holder")}</dt>
+            <dd>{order.bankUsd.holder}</dd>
+            <dt className="text-muted-foreground">{t("bank")}</dt>
+            <dd>{order.bankUsd.bank}</dd>
+            {order.bankUsd.address && (
+              <>
+                <dt className="text-muted-foreground">{t("bankAddress")}</dt>
+                <dd dir="auto">{order.bankUsd.address}</dd>
+              </>
+            )}
+            <dt className="text-muted-foreground">{t("accountNumber")}</dt>
+            <dd className="select-all break-all font-mono" dir="ltr">
+              {order.bankUsd.account}
+            </dd>
+            <dt className="text-muted-foreground">{t("routingNumber")}</dt>
+            <dd className="select-all font-mono" dir="ltr">
+              {order.bankUsd.routing}
+            </dd>
+            <dt className="text-muted-foreground">{t("swift")}</dt>
+            <dd className="select-all font-mono" dir="ltr">
+              {order.bankUsd.swift}
+            </dd>
+            <dt className="text-muted-foreground">{t("accountType")}</dt>
+            <dd>{t(order.bankUsd.accountType)}</dd>
+            <dt className="text-muted-foreground">{t("reference")}</dt>
+            <dd className="select-all font-heading" dir="ltr">
+              {order.number}
+            </dd>
+          </dl>
+          <p className="text-muted-foreground text-sm">{t("usdNote")}</p>
+        </section>
+      )}
+
       {payoneer && (
         <section className="frame space-y-4 bg-card/70 p-6">
           <h2 className="text-3xl">{t("payoneerHeading")}</h2>

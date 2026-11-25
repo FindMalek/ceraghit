@@ -15,6 +15,7 @@ import {
   REQUEST_IMAGE_MAX_SIDE,
   readWebpSize,
   requestUploadInputSchema,
+  usdBankForCurrency,
 } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
 import { z } from "zod"
@@ -84,16 +85,16 @@ export const ordersRouter = {
               order.paymentRef,
             )
           : null
+      const profile =
+        order.paymentMethod === "transfer" && status === "pending_payment" ? await getShopProfile(context.db) : null
       return {
         payBefore: payBefore?.toISOString() ?? null,
         payoneer,
         number: order.number,
         paymentMethod: order.paymentMethod as PaymentMethod,
         status,
-        bank:
-          order.paymentMethod === "transfer" && status === "pending_payment"
-            ? bankForCurrency(await getShopProfile(context.db), order.currency)
-            : null,
+        bank: profile ? bankForCurrency(profile, order.currency) : null,
+        bankUsd: profile ? usdBankForCurrency(profile, order.currency) : null,
         currency: order.currency,
         subtotalMinor: order.subtotalMinor,
         shippingMinor: order.shippingMinor,

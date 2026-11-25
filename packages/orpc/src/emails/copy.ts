@@ -22,6 +22,13 @@ export interface EmailCopy {
     holder: string
     bank: string
     bankAddress: string
+    usdTitle: string
+    accountNumber: string
+    routingNumber: string
+    accountType: string
+    checking: string
+    savings: string
+    usdNote: string
     reference: string
     bankMissing: (email: string) => string
   }
@@ -71,6 +78,13 @@ export const EMAIL_COPY = {
       holder: "Titulaire",
       bank: "Banque",
       bankAddress: "Adresse de la banque",
+      usdTitle: "Compte en dollars (USD)",
+      accountNumber: "Numéro de compte",
+      routingNumber: "Numéro de routage (ABA)",
+      accountType: "Type de compte",
+      checking: "Courant",
+      savings: "Épargne",
+      usdNote: "Paiement en dollars : le montant reçu doit couvrir le total en euros.",
       reference: "Référence à indiquer",
       bankMissing: (email) => `Nos coordonnées bancaires suivent très vite, ou écrivez-nous : ${email}`,
     },
@@ -119,6 +133,13 @@ export const EMAIL_COPY = {
       holder: "Account holder",
       bank: "Bank",
       bankAddress: "Bank address",
+      usdTitle: "US dollar account (USD)",
+      accountNumber: "Account number",
+      routingNumber: "Routing number (ABA)",
+      accountType: "Account type",
+      checking: "Checking",
+      savings: "Savings",
+      usdNote: "Paying in dollars: the amount received must cover the euro total.",
       reference: "Reference to write",
       bankMissing: (email) => `Our bank details follow very soon, or write to us: ${email}`,
     },
@@ -167,6 +188,13 @@ export const EMAIL_COPY = {
       holder: "صاحب الحساب",
       bank: "البنك",
       bankAddress: "عنوان البنك",
+      usdTitle: "الحساب بالدولار (USD)",
+      accountNumber: "رقم الحساب",
+      routingNumber: "رقم التوجيه (ABA)",
+      accountType: "نوع الحساب",
+      checking: "جاري",
+      savings: "ادخار",
+      usdNote: "عند الدفع بالدولار، يجب أن يغطي المبلغ المستلم المجموع باليورو.",
       reference: "المرجع المطلوب كتابته",
       bankMissing: (email) => `ستصلك بياناتنا البنكية قريبا، أو راسلنا: ${email}`,
     },

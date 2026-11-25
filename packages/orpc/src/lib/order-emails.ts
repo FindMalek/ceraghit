@@ -1,5 +1,5 @@
 import { mailLog, orders } from "@workspace/db"
-import { bankForCurrency, type CarrierId } from "@workspace/sdk"
+import { bankForCurrency, type CarrierId, usdBankForCurrency } from "@workspace/sdk"
 import { and, eq } from "drizzle-orm"
 import type { Services } from "../context"
 import {
@@ -27,6 +27,7 @@ async function loadMail(services: Services, orderId: string) {
     ctx: {
       webUrl: config.webUrl,
       bank: bankForCurrency(profile, order.currency),
+      bankUsd: usdBankForCurrency(profile, order.currency),
       contactEmail: profile.email ?? studio ?? "",
       studio,
       payoneerLink:

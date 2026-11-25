@@ -501,6 +501,14 @@ export const shopProfile = pgTable("shop_profile", {
   bankEurIban: text("bank_eur_iban"),
   bankEurBic: text("bank_eur_bic"),
   bankEurAddress: text("bank_eur_address"),
+  /** Optional US account, shown beside the account of euro transfer orders. Not a shop currency. */
+  bankUsdHolder: text("bank_usd_holder"),
+  bankUsdName: text("bank_usd_name"),
+  bankUsdAccount: text("bank_usd_account"),
+  bankUsdRouting: text("bank_usd_routing"),
+  bankUsdSwift: text("bank_usd_swift"),
+  bankUsdAccountType: text("bank_usd_account_type").$type<"checking" | "savings">(),
+  bankUsdAddress: text("bank_usd_address"),
   invoiceNote: jsonb("invoice_note").$type<Localized>(),
   shippingConfirmedAt: timestamp("shipping_confirmed_at", { withTimezone: true }),
   skippedSteps: jsonb("skipped_steps").$type<string[]>().notNull().default([]),
@@ -522,6 +530,16 @@ export type InvoiceSeller = {
   email: string | null
   invoiceNote: Localized | null
   bank: { holder: string; bank: string; iban: string; bic: string; rib?: string; address?: string } | null
+  /** Missing on invoices issued before the US account existed. */
+  bankUsd?: {
+    holder: string
+    bank: string
+    account: string
+    routing: string
+    swift: string
+    accountType: "checking" | "savings"
+    address: string
+  } | null
 }
 
 /** Gapless yearly counter: the row is locked by the UPDATE, so two issues never get the same number. */

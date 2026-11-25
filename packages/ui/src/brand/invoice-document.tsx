@@ -175,6 +175,36 @@ export function InvoiceDocument({ view }: { view: PublicInvoiceView }) {
         </section>
       )}
 
+      {view.paymentMethod === "transfer" && seller.bankUsd && (
+        <section className="invoice-block text-sm">
+          <p className="invoice-label">{t.usdTitle}</p>
+          <p>
+            {t.bankHolder} : {seller.bankUsd.holder}
+          </p>
+          <p>
+            {t.bankName} : {seller.bankUsd.bank}
+          </p>
+          {seller.bankUsd.address && (
+            <p>
+              {t.bankAddress} : <bdi dir="auto">{seller.bankUsd.address}</bdi>
+            </p>
+          )}
+          <p>
+            {t.accountNumber} : <bdi dir="ltr">{seller.bankUsd.account}</bdi>
+          </p>
+          <p>
+            {t.routingNumber} : <bdi dir="ltr">{seller.bankUsd.routing}</bdi>
+          </p>
+          <p dir="ltr" className="text-start">
+            SWIFT / BIC : {seller.bankUsd.swift}
+          </p>
+          <p>
+            {t.accountType} : {t[seller.bankUsd.accountType]}
+          </p>
+          <p>{t.usdNote}</p>
+        </section>
+      )}
+
       {note && <p className="invoice-block whitespace-pre-line text-muted-foreground text-xs">{note}</p>}
     </article>
   )
