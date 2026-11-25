@@ -1,0 +1,113 @@
+{
+  "id": "89",
+  "slug": "commande-expiree-liberation",
+  "title_fr": "Commandes non payées : expiration et stock libéré",
+  "start": {
+    "app": "dashboard",
+    "path": "/orders",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Une commande non payée finit par expirer.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Filtrer par statut"
+      },
+      "caption_fr": "Filtrez les commandes à encaisser."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "En attente de paiement"
+      },
+      "caption_fr": "Filtrez les commandes à encaisser."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Expire le"
+      },
+      "caption_fr": "Le badge donne la date limite.",
+      "holdMs": 2200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Carte : 45 minutes. Virement : 7 jours.",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Espèces et Payoneer : pas de limite.",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Filtrer par statut"
+      },
+      "caption_fr": "Voici une commande non payée à temps.",
+      "holdMs": 300
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Toutes les commandes"
+      },
+      "caption_fr": "Voici une commande non payée à temps.",
+      "holdMs": 300
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Numéro, nom ou email"
+      },
+      "value": "CER-10095",
+      "caption_fr": "Voici une commande non payée à temps."
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "CER-10095"
+      },
+      "caption_fr": "Ouvrez-la."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "heading",
+        "name": "Historique"
+      },
+      "caption_fr": "Annulée toute seule : pièces remises en stock.",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:8066",
+      "caption_fr": "Le client reçoit un email d'annulation.",
+      "holdMs": 2400
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "a été annulée"
+      },
+      "caption_fr": "Il est écrit dans sa langue.",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La tâche tourne chaque heure à cinq minutes.",
+      "holdMs": 2600
+    }
+  ]
+}

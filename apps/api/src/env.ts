@@ -21,6 +21,11 @@ const schema = z
     SEED_DEMO: flag.default(true),
     ADMIN_EMAIL: z.string().optional(),
     ADMIN_PASSWORD: z.string().optional(),
+    /** Bootstrap keeps an existing owner password (they can change it in the dashboard); this makes ADMIN_PASSWORD win. */
+    ADMIN_PASSWORD_ROTATE: z
+      .string()
+      .optional()
+      .transform((v) => v === "1" || v === "true"),
     KONNECT_API_KEY: z.string().optional(),
     KONNECT_WALLET_ID: z.string().optional(),
     KONNECT_MODE: z.enum(["test", "live"]).default("test"),
@@ -29,7 +34,7 @@ const schema = z
      * the dashboard, that row wins. Production still offers card only through live Konnect (gatewayReady).
      */
     ONLINE_PAYMENTS: flag.default(false),
-    /** Lets the daily GitHub job delete files nothing uses any more, see .github/workflows/cleanup-uploads.yml. */
+    /** Lets the daily Trigger.dev job delete files nothing uses any more, see docs/deploy.md (scheduled jobs). */
     CRON_SECRET: z.string().min(24).optional(),
     /** Shared with the web and dashboard proxies so the api trusts the client address they forward. Required in production. */
     PROXY_SECRET: z.string().min(24).optional(),

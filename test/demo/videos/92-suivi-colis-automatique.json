@@ -1,0 +1,52 @@
+{
+  "id": "92",
+  "slug": "suivi-colis-automatique",
+  "title_fr": "Suivi automatique des colis Aramex",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10002",
+      "caption_fr": "Ouvrez une commande expédiée par Aramex."
+    },
+    { "action": "click", "target": { "text": "CER-10002" }, "caption_fr": "Voici la commande." },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Suivi du colis" },
+      "caption_fr": "La chronologie suit le colis étape par étape.",
+      "holdMs": 2600
+    },
+    {
+      "action": "hover",
+      "target": { "testId": "shipment-polled" },
+      "caption_fr": "Une tâche la met à jour toutes les trois heures.",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Actualiser" },
+      "caption_fr": "Pour la mettre à jour tout de suite, actualisez."
+    },
+    { "action": "wait", "caption_fr": "En démo, Aramex ne répond pas : rien ne change.", "holdMs": 2200 },
+    {
+      "action": "goto",
+      "value": "http://localhost:3070/fr/order/CER-10002?t=demo-2",
+      "caption_fr": "Le client voit la même avancée sur sa page.",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3166/orders?q=CER-10005",
+      "caption_fr": "Un colis livré n'a plus besoin de suivi.",
+      "holdMs": 800
+    },
+    { "action": "click", "target": { "text": "CER-10005" }, "caption_fr": "Voici un colis livré." },
+    {
+      "action": "hover",
+      "target": { "text": "Livrée le" },
+      "caption_fr": "Statut Livré : plus de bouton Actualiser.",
+      "holdMs": 2600
+    }
+  ]
+}

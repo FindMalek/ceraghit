@@ -1,0 +1,106 @@
+{
+  "id": "77",
+  "slug": "reglages-payoneer",
+  "title_fr": "Activer Payoneer",
+  "devices": ["desktop"],
+  "start": {
+    "app": "dashboard",
+    "path": "/payments",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "scroll",
+      "value": "500",
+      "caption_fr": "La carte Payoneer est dans Paiements."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Un lien unique pour tous"
+      },
+      "caption_fr": "Choisissez un lien unique."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Il faut alors un lien Payoneer.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien Payoneer"
+      },
+      "value": "http://exemple.test/pay",
+      "caption_fr": "Seuls les liens payoneer.com sont acceptés."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "scroll",
+      "value": "3000",
+      "caption_fr": "Ce lien est refusé."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Ce lien est refusé.",
+      "holdMs": 2200
+    },
+    {
+      "action": "scroll",
+      "value": "-3000",
+      "caption_fr": "Corrigez le lien."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Lien Payoneer"
+      },
+      "value": "https://link.payoneer.com/demo",
+      "caption_fr": "Collez un lien valide."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Email Payoneer de réception"
+      },
+      "value": "demo@example.test",
+      "caption_fr": "Ajoutez votre email Payoneer."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "English"
+      },
+      "caption_fr": "Rédigez la note en trois langues."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "scroll",
+      "value": "3000",
+      "caption_fr": "Payoneer est enregistré."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Payoneer est enregistré.",
+      "holdMs": 2200
+    }
+  ]
+}

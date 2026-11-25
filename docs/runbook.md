@@ -159,6 +159,14 @@ pixel or advertising script (fonts are self-hosted by `next/font`). Under the eP
 Adding analytics, a pixel, an embedded video or any third-party script means adding a consent banner first (nothing may load
 before the visitor accepts), and updating the cookie section of the privacy page in fr, en and ar.
 
+## owner password
+
+The owner changes it in the dashboard (Profil, "Changer mon mot de passe"): current password required, at least 12
+characters, 5 wrong tries per 15 minutes, every other signed-in device is signed out, and the change is recorded as a
+`settings` row `admin-audit:<admin id>:<time>` (never the password). A deploy never overwrites it. If it is lost: set the
+`production` repository variable `ADMIN_PASSWORD_ROTATE` to `1`, update the `ADMIN_PASSWORD` secret, run Deploy, then
+delete the variable. Never paste the password in an issue, a PR or a log.
+
 ## retention
 
 | data | kept | then |
@@ -202,3 +210,20 @@ address on the order or request.
 
 Run these against the production `DATABASE_URL` (Neon, direct connection) with `psql`, after checking the row count with a
 `select` using the same `where`.
+
+## cutover to Dokploy (api only)
+
+The production api is moving from Vercel to Dokploy (Traefik in front, like the previews); web and dashboard stay on Vercel.
+Not implemented yet: `scripts/deploy/dokploy.mjs` has no production mode and `deploy.yml` still ships the api with
+`vercel deploy`. Remaining, in order:
+
+- [ ] `deploy.yml`: replace the api matrix entry with a Dokploy deploy (image build, push, Dokploy app update); keep web and dashboard on Vercel; migrations still run first.
+- [ ] `dokploy.mjs`: a production mode with `APP_ENV=production`, `DEPLOY_ENV=production`, Neon `DATABASE_URL`, live S3 and `SECRETS_KEY` (never the preview helpers); `env.ts` still refuses a mismatch.
+- [ ] `TRUSTED_PROXY_HOPS`: set `API_TRUSTED_PROXY_HOPS` (1 behind Traefik, 2 with the Cloudflare proxy) and check it with the spoofed `x-forwarded-for` probe in "rate limits" of `docs/deploy.md`. Vercel stops setting it for the api once it leaves.
+- [ ] `PROXY_SECRET`: same value on the api (Dokploy) and the web and dashboard Vercel projects.
+- [ ] Web and dashboard `API_URL` points at the new api host; redeploy both.
+- [ ] `API_PUBLIC_URL` and `WEB_URL` on the api, then CORS and CSRF origins (the api allows `WEB_URL` and the dashboard origin): check a login and an order from both sites.
+- [ ] `S3_PUBLIC_URL` and the CSP image sources still match the bucket; uploads and photos load.
+- [ ] Trigger.dev: update `CERAGHIT_API_URL` (prod environment) to the new api URL and keep `CRON_SECRET`; run one job by hand.
+- [ ] `PRODUCTION_API_HOST` (GitHub var) is the new host so the `deploy.yml` smoke and health checks hit the right api; Konnect webhook URL, if online payments are on, points at it too.
+- [ ] After DNS moves: login, order, a cron run, and `docs/release.md` items re-ticked.

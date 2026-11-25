@@ -28,15 +28,50 @@ takes it from `S3_ENDPOINT` and `S3_PUBLIC_URL`, so the dashboard needs both var
 The player sets `crossorigin="anonymous"` because Chromium only loads the French captions with it (measured: without the
 attribute the caption track errors even when the bucket sends CORS headers). The consequence is that the video file is
 fetched in CORS mode too. If the bucket or CDN has no CORS rule for the dashboard origin, **nothing plays at all**
-(`The element has no supported sources`), not only the captions. Add this rule to the production R2 bucket and to the
-preview Garage bucket before uploading videos: allowed origin = the dashboard origin only, methods `GET` and `HEAD`:
+(`The element has no supported sources`), not only the captions.
 
-```json
-{ "AllowedOrigins": ["https://dashboard.ceraghit.com"], "AllowedMethods": ["GET", "HEAD"], "MaxAgeSeconds": 3600 }
+**Production already has it.** Checked on 2026-11-22: `https://cdn.ceraghit.com` answers
+`access-control-allow-origin: https://dashboard.ceraghit.com` for the dashboard origin, its preflight allows `PUT`, `GET`,
+`HEAD` and the `range` header (the web origin is allowed too). Nothing to apply for the videos to play. Re-run the check
+any time, it only sends read-only requests and prints PASS/FAIL:
+
+```sh
+pnpm tutorials:cors --check
 ```
 
+`pnpm tutorials:cors` (no flag) prints the rules below, for rebuilding the configuration (a new bucket, a lost rule) or
+for the preview Garage bucket. The GET/HEAD rule allows the `range` request header and exposes `Content-Range`,
+`Accept-Ranges`, `Content-Length` and `Content-Type`:
+
+```json
+{ "AllowedOrigins": ["https://dashboard.ceraghit.com"], "AllowedMethods": ["GET", "HEAD"], "AllowedHeaders": ["range"],
+  "ExposeHeaders": ["Content-Range", "Accept-Ranges", "Content-Length", "Content-Type"], "MaxAgeSeconds": 3600 }
+```
+
+**Setting CORS replaces the whole configuration of the bucket.** Before any `put`, run
+`wrangler r2 bucket cors list ceraghit-prod` and keep the output (it is your way back to the hand-made rules). The
+generated set carries both rules, `PUT` from the web and dashboard origins (photo uploads, `docs/deploy.md`) and
+`GET`/`HEAD` from the dashboard origin only:
+
+```sh
+wrangler r2 bucket cors list ceraghit-prod                      # FIRST, save the output
+pnpm -s tutorials:cors --format wrangler > /tmp/cors.wrangler.json \
+  && wrangler r2 bucket cors set ceraghit-prod --file /tmp/cors.wrangler.json   # apply with wrangler
+pnpm -s tutorials:cors --format s3 > /tmp/cors.s3.json \
+  && aws s3api put-bucket-cors --bucket ceraghit-prod \
+     --endpoint-url https://<ACCOUNT_ID>.r2.cloudflarestorage.com --cors-configuration file:///tmp/cors.s3.json
+```
+
+Options: `--bucket`, `--dashboard-origin`, `--web-origin`, `--cdn` (default `S3_PUBLIC_URL`, else
+`https://cdn.ceraghit.com`). Origins must be exact `https` origins, no wildcard. The wrangler json shape follows the
+Cloudflare docs and was not run against the real bucket.
+
+The storefront (`apps/web`) has no `crossOrigin` fetch from the CDN: its only cross-origin call is the presigned `PUT`
+of customer photos (`apps/web/lib/photo-upload.ts`), and plain `<img>` loads need no CORS. So the web origin only needs
+`PUT`, and narrowing it to that breaks nothing.
+
 Garage answers a rule that lists several origins with the whole list in `Access-Control-Allow-Origin`, which browsers
-refuse: use one rule per origin.
+refuse: on the preview Garage bucket use one rule per origin.
 
 ## Manifest
 
@@ -57,9 +92,42 @@ Publishing a video needs no deploy: upload its files, then add its line to `mani
 ## Publishing per environment
 
 Environments never mix. Preview uploads go to the homelab Garage bucket, production uploads go to the production R2
-bucket, with the credentials of that environment only. Record in `APP_ENV=local`, then upload the recorder output
-(`mp4`, `vtt`, `jpg`) with the S3 client of the target environment (for example `aws s3 cp --endpoint-url <endpoint>`),
-and upload `manifest.json` last so the page never points at a missing file. Never commit an mp4.
+bucket, with the credentials of that environment only. Never commit an mp4.
+
+Put the recorder output in one folder (`<id>-desktop.mp4`, `<id>-mobile.mp4`, `<id>-desktop.vtt`, `<id>-mobile.vtt`,
+`<id>.jpg`, for example `~/ceraghit-videos/draft`) and run the uploader. It reads the bucket the way the api does
+(`APP_ENV`, `DEPLOY_ENV`, `S3_*`), so the prefix is `pr-<n>/` on a preview, `staging/` on staging and empty otherwise.
+
+```sh
+# dry run first: prints what would be uploaded or skipped, writes nothing
+pnpm tutorials:upload ~/ceraghit-videos/draft --dry-run
+
+# local or preview: export that environment's S3_* (and APP_ENV, DEPLOY_ENV=pr-<n>), then
+pnpm tutorials:upload ~/ceraghit-videos/draft
+
+# production: export the production S3_* in this shell (never from a file in the repo), then
+APP_ENV=production DEPLOY_ENV=production S3_ENDPOINT=... S3_BUCKET=ceraghit-prod S3_ACCESS_KEY_ID=... \
+  S3_SECRET_ACCESS_KEY=... pnpm tutorials:upload:production ~/ceraghit-videos/draft --dry-run
+# same command without --dry-run to publish
+```
+
+What it does:
+
+- Only complete sets are uploaded and listed: a poster plus at least one device that has both its mp4 and its
+  captions. Partial sets, unknown ids, empty files, files that are not really an mp4, WebVTT or jpeg, and files over the
+  size limit (mp4 300 MB, vtt 512 KB, jpg 5 MB) are reported and skipped.
+- Content types are `video/mp4`, `text/vtt`, `image/jpeg`, with `cache-control: public, max-age=86400`.
+- Idempotent and resumable: an object with the same size (and the same md5 when the bucket etag is one) is skipped, so
+  after a crash just run it again. `tutorials/manifest.json` is written last, merged with the videos already listed, and
+  only when something changed. Per video it also records `bytes` and, when `ffprobe` is available (`FFPROBE=/path`),
+  `seconds` per device; the page ignores those extra fields.
+- Production is an allowlist: `--env production --confirm` (the `:production` script passes both and runs
+  `bun --no-env-file`, so only the shell env counts and no env file is read), `APP_ENV=production`,
+  `DEPLOY_ENV=production`, an R2 endpoint (`*.r2.cloudflarestorage.com`) and exactly the bucket `ceraghit-prod`
+  (`TUTORIALS_PROD_BUCKET` if the production bucket has another name). Any other run refuses a bucket named
+  `ceraghit-prod*`, an R2 endpoint or the `cdn.ceraghit.com` host. Secrets are never printed.
+- An existing manifest that cannot be read stops the run before any upload (`--reset-manifest` replaces it). Devices
+  already listed for a video stay listed, so a desktop-only folder does not unlist the mobile version.
 
 ## YouTube override
 
@@ -69,6 +137,8 @@ saved under the old 11 slots (`01` to `11`) are moved to the video that replaced
 
 ## Tests
 
+`packages/orpc/test/tutorial-cors.test.ts` (the printed CORS rules, the `--check` probes),
+`packages/orpc/test/tutorial-upload.test.ts` (uploader and environment guards, with an in-memory S3),
 `packages/sdk/test/tutorials.test.ts` (catalogue, search, manifest), `apps/dashboard/test/tutorial-query.test.ts`
 (url state) and `test/e2e/specs/dashboard/tutorials.e2e.ts`, which uploads a 2 second webm sample (Playwright's Chromium has no H.264) under the `.mp4` keys, from
 `test/e2e/fixtures/tutorials` to the e2e bucket.

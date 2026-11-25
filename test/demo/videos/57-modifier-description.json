@@ -1,0 +1,122 @@
+{
+  "id": "57",
+  "slug": "modifier-description",
+  "title_fr": "Modifier la description d'un produit",
+  "start": {
+    "app": "dashboard",
+    "path": "/products",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0013",
+      "caption_fr": "Ouvrez le produit à modifier.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Modifier",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez le produit à modifier.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0014",
+      "caption_fr": "Ouvrez le produit à modifier.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Modifier",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez le produit à modifier.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Description"
+      },
+      "value": "Plat en céramique émaillé à la main.\nDécor gravé au sgraffito.",
+      "caption_fr": "Les retours à la ligne sont conservés."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "English",
+        "nth": 1
+      },
+      "caption_fr": "Passez à l'anglais et à l'arabe."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Description"
+      },
+      "value": "Hand-glazed ceramic dish.\nSgraffito engraved pattern.",
+      "caption_fr": "Passez à l'anglais et à l'arabe."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "العربية",
+        "nth": 1
+      },
+      "caption_fr": "L'arabe se remplit ou se traduit.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Traduire",
+        "nth": 1
+      },
+      "caption_fr": "L'arabe se remplit ou se traduit.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez : c'est en ligne.",
+      "holdMs": 1800
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/ar/product/curda-seca-0013",
+      "caption_fr": "La fiche s'affiche en arabe, repli en français si vide.",
+      "only": "desktop"
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/ar/product/curda-seca-0014",
+      "caption_fr": "La fiche s'affiche en arabe, repli en français si vide.",
+      "only": "mobile"
+    }
+  ]
+}

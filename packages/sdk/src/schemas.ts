@@ -129,6 +129,17 @@ export const requestStatusSchema = z.enum(["new", "contacted", "done", "declined
 
 export const loginSchema = z.object({ email: z.email(), password: z.string().min(1).max(200) })
 
+/** Same ceiling as the login field, so a new password can always be typed back in. */
+export const PASSWORD_MIN_LENGTH = 12
+export const PASSWORD_MAX_LENGTH = 200
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+    newPassword: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, { path: ["newPassword"], message: "Same password." })
+
 /** Both prices live on the product, so every price is a pair. */
 export const pricesSchema = z.object({ TND: z.number().int().nonnegative(), EUR: z.number().int().nonnegative() })
 
@@ -260,6 +271,8 @@ export const bankDetailsSchema = z.object({
   iban: z.string().trim().max(60),
   bic: z.string().trim().max(20),
   rib: z.string().trim().max(30),
+  /** The bank's postal address, only on the euro account. */
+  address: z.string().trim().max(300).optional(),
 })
 export type BankDetails = z.infer<typeof bankDetailsSchema>
 
@@ -284,6 +297,11 @@ export const shopProfileSchema = z.object({
   bankRib: z.string().nullable(),
   bankIban: z.string().nullable(),
   bankBic: z.string().nullable(),
+  bankEurHolder: z.string().nullable(),
+  bankEurName: z.string().nullable(),
+  bankEurIban: z.string().nullable(),
+  bankEurBic: z.string().nullable(),
+  bankEurAddress: z.string().nullable(),
   invoiceNote: localizedSchema.nullable(),
   shippingConfirmedAt: z.string().nullable(),
   skippedSteps: z.array(z.string()),
@@ -314,41 +332,82 @@ export function ibanChecksumOk(iban: string): boolean {
 }
 
 /** Editable fields only, each optional so the onboarding can save one step at a time. */
-export const shopProfileInputSchema = z.object({
-  legalName: profileText(120),
-  displayName: profileText(120),
-  legalForm: profileText(120),
-  taxId: profileText(40),
-  registryNumber: profileText(40),
-  address: profileText(300),
-  postalCode: profileText(20),
-  city: profileText(120),
-  country: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(/^[A-Z]{2}$/)
-    .optional(),
-  phones: z.array(z.string().trim().min(6).max(30)).max(4).optional(),
-  email: z.email().max(200).nullable().optional(),
-  notifyEmail: z.email().max(200).nullable().optional(),
-  bankHolder: profileText(120),
-  bankName: profileText(120),
-  bankRib: profileCode(/^\d{20}$/),
-  bankIban: z
-    .string()
-    .transform((value) => compact(value).toUpperCase())
-    .pipe(
-      z
-        .string()
-        .regex(/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/)
-        .refine(ibanChecksumOk),
-    )
-    .nullable()
-    .optional(),
-  bankBic: profileCode(/^[A-Z0-9]{8}([A-Z0-9]{3})?$/, true),
-  invoiceNote: localizedSchema.nullable().optional(),
-})
+/** ISO 13616 lengths of the countries the shop deals with; other country codes only get the checksum. */
+const IBAN_LENGTHS: Record<string, number> = {
+  AT: 20,
+  BE: 16,
+  CH: 21,
+  DE: 22,
+  ES: 24,
+  FR: 27,
+  GB: 22,
+  IE: 22,
+  IT: 27,
+  LU: 20,
+  NL: 18,
+  PT: 25,
+  TN: 24,
+}
+const ibanLengthOk = (iban: string): boolean => {
+  const expected = IBAN_LENGTHS[iban.slice(0, 2)]
+  return expected === undefined || iban.length === expected
+}
+
+const profileIban = z
+  .string()
+  .transform((value) => compact(value).toUpperCase())
+  .pipe(
+    z
+      .string()
+      .regex(/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/)
+      .refine(ibanLengthOk)
+      .refine(ibanChecksumOk),
+  )
+  .nullable()
+  .optional()
+const BIC_PATTERN = /^[A-Z0-9]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/
+
+export const shopProfileInputSchema = z
+  .object({
+    legalName: profileText(120),
+    displayName: profileText(120),
+    legalForm: profileText(120),
+    taxId: profileText(40),
+    registryNumber: profileText(40),
+    address: profileText(300),
+    postalCode: profileText(20),
+    city: profileText(120),
+    country: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z]{2}$/)
+      .optional(),
+    phones: z.array(z.string().trim().min(6).max(30)).max(4).optional(),
+    email: z.email().max(200).nullable().optional(),
+    notifyEmail: z.email().max(200).nullable().optional(),
+    bankHolder: profileText(120),
+    bankName: profileText(120),
+    bankRib: profileCode(/^\d{20}$/),
+    bankIban: profileIban,
+    bankBic: profileCode(BIC_PATTERN, true),
+    bankEurHolder: profileText(120),
+    bankEurName: profileText(120),
+    bankEurIban: profileIban,
+    bankEurBic: profileCode(BIC_PATTERN, true),
+    bankEurAddress: profileText(300),
+    invoiceNote: localizedSchema.nullable().optional(),
+  })
+  .superRefine((input, ctx) => {
+    const eur = [input.bankEurHolder, input.bankEurName, input.bankEurIban, input.bankEurBic]
+    if (eur.some((v) => v) && eur.some((v) => v === null || v === "")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["bankEurIban"],
+        message: "Complétez le titulaire, la banque, l'IBAN et le BIC du compte en euros, ou videz-les.",
+      })
+    }
+  })
 export type ShopProfileInput = z.infer<typeof shopProfileInputSchema>
 
 /**
@@ -382,6 +441,30 @@ export function bankFromProfile(profile: ProfileBank): BankDetails | null {
   if ([holder, bank, iban, rib, bic].includes(UNFILLED_BANK_TEXT)) return null
   if (!holder || !bank || !(iban || rib)) return null
   return { holder, bank, iban, rib, bic }
+}
+
+type ProfileEurBank = Pick<
+  ShopProfile,
+  "bankEurHolder" | "bankEurName" | "bankEurIban" | "bankEurBic" | "bankEurAddress"
+>
+
+/** The optional euro account, or null until holder, bank, IBAN and BIC are all filled in. */
+export function eurBankFromProfile(profile: ProfileEurBank): BankDetails | null {
+  const text = (v: string | null) => v?.trim() ?? ""
+  const holder = text(profile.bankEurHolder)
+  const bank = text(profile.bankEurName)
+  const iban = text(profile.bankEurIban)
+  const bic = text(profile.bankEurBic)
+  if (!holder || !bank || !iban || !bic) return null
+  return { holder, bank, iban, bic, rib: "", address: text(profile.bankEurAddress) }
+}
+
+/**
+ * The account a transfer order pays into: the euro account for euro orders, the main (dinar) account otherwise.
+ * A euro order with no euro account keeps the main account, as before the euro account existed.
+ */
+export function bankForCurrency(profile: ProfileBank & ProfileEurBank, currency: string): BankDetails | null {
+  return (currency === "EUR" ? eurBankFromProfile(profile) : null) ?? bankFromProfile(profile)
 }
 
 export const SETUP_REQUIRED_STEPS = ["owner", "profile", "bank", "shipping"] as const

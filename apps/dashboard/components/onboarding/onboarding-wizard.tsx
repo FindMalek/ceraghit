@@ -36,7 +36,8 @@ const COPY: Record<OnboardingStep, { title: string; intro?: string }> = {
   },
   bank: {
     title: "Où recevoir les virements ?",
-    intro: "Ces coordonnées sont envoyées aux clients qui paient par virement.",
+    intro:
+      "Ces coordonnées sont envoyées aux clients qui paient par virement. Le compte en euros est facultatif : il sert aux commandes en EUR réglées par virement.",
   },
   shipping: {
     title: "Frais de livraison",

@@ -26,7 +26,14 @@ const db = createDb(env.DATABASE_URL, env.DB_POOL_MAX, {
 
 if (env.BOOTSTRAP) {
   await runMigrations(db)
-  await seed(db, { demo: env.SEED_DEMO, admin: { email: env.ADMIN_EMAIL ?? "", password: env.ADMIN_PASSWORD ?? "" } })
+  await seed(db, {
+    demo: env.SEED_DEMO,
+    admin: {
+      email: env.ADMIN_EMAIL ?? "",
+      password: env.ADMIN_PASSWORD ?? "",
+      rotatePassword: env.ADMIN_PASSWORD_ROTATE,
+    },
+  })
 }
 
 const secrets = parseKeyring(env.SECRETS_KEY, env.SECRETS_KEY_PREVIOUS)

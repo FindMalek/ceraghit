@@ -1,0 +1,115 @@
+{
+  "id": "68",
+  "slug": "photos-du-site",
+  "title_fr": "Changer les photos du site",
+  "start": {
+    "app": "dashboard",
+    "path": "/site-images",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Les photos du site vitrine se changent ici.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour Photos d'accueil (diaporama) 2"
+      },
+      "caption_fr": "Chaque photo a un menu."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Descendre"
+      },
+      "caption_fr": "Descendre change l'ordre."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour Photos d'accueil (diaporama) 3"
+      },
+      "caption_fr": "Rouvrez le menu."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Masquer"
+      },
+      "caption_fr": "Masquer cache la photo."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour Photos d'accueil (diaporama) 1"
+      },
+      "caption_fr": "Rouvrez le menu."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Texte alternatif"
+      },
+      "caption_fr": "Écrivez le texte alternatif."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Il se rédige en trois langues.",
+      "holdMs": 2200
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Fermez la fenêtre."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": 0
+      },
+      "caption_fr": "Enregistrez pour publier."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le site suit après l'enregistrement.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour Logo 1"
+      },
+      "caption_fr": "Le logo se change aussi."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Remplacer"
+      },
+      "caption_fr": "Remplacez-le."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Choisissez dans la médiathèque.",
+      "holdMs": 2000
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Fermez la fenêtre."
+    }
+  ]
+}

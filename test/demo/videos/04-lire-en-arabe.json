@@ -1,0 +1,68 @@
+{
+  "id": "04",
+  "slug": "lire-en-arabe",
+  "title_fr": "La boutique en arabe",
+  "start": {
+    "app": "web",
+    "path": "/ar",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "En arabe, la page se lit de droite à gauche.",
+      "holdMs": 2500
+    },
+    {
+      "action": "goto",
+      "value": "/ar/product/curda-seca-0013",
+      "caption_fr": "Les références restent de gauche à droite."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "0013"
+      },
+      "caption_fr": "Les références restent de gauche à droite."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "الصورة التالية"
+      },
+      "caption_fr": "Les flèches de la galerie sont inversées."
+    },
+    {
+      "action": "press",
+      "value": "ArrowLeft",
+      "caption_fr": "Au clavier, flèche gauche : photo suivante.",
+      "only": "desktop"
+    },
+    {
+      "action": "swipe",
+      "target": {
+        "role": "img",
+        "nth": 0
+      },
+      "value": "right",
+      "caption_fr": "Sur téléphone, glissez vers la droite.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "أضف إلى السلة"
+      },
+      "caption_fr": "Le panier s'ouvre sur le côté.",
+      "holdMs": 1800
+    },
+    {
+      "action": "goto",
+      "value": "/ar/checkout",
+      "caption_fr": "La commande suit le même sens.",
+      "holdMs": 2500
+    }
+  ]
+}
