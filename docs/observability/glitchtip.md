@@ -38,7 +38,8 @@ The event `environment` tag is `APP_ENV` (`preview` or `production`), the `relea
 
 ## what is sent, and what never is
 
-`packages/errors/src/scrub.ts` runs in `beforeSend` and `beforeBreadcrumb` on every runtime, and `sendDefaultPii` is false.
+`packages/errors/src/scrub.ts` runs in `beforeSend` and `beforeBreadcrumb` on every runtime, and the SDK `dataCollection`
+options are off (user info and ip, cookies, headers, bodies, query params, local variables).
 
 - never sent: user and ip, cookies, any header except `user-agent`, `content-type`, `x-request-id`, `accept-language`;
   request bodies; query strings and fragments (token-like path segments become `:id`); local variables; console, typing
@@ -46,10 +47,14 @@ The event `environment` tag is `APP_ENV` (`preview` or `production`), the `relea
 - on admin, login, vault, upload, session, onboarding and webhook routes, even `extra` and breadcrumbs are dropped
   (detected from the request url or the `route` tag);
 - every string (messages, breadcrumbs, extra at any depth) loses emails, phones, ibans, `Bearer` and `Basic` values,
-  `password=`/`"token":"..."` style fields, and any 32+ character key-shaped value; keys named like a credential or a
+  `password=`/`"token":"..."` style fields, bound values of a failed database query, user and password in connection urls,
+  query strings of urls written inside text, 8 digit local phone numbers, and any 32+ character key-shaped value; keys named like a credential or a
   person's name, email, phone or address are blanked;
 - dropped as noise: `NEXT_REDIRECT`, `NEXT_NOT_FOUND`, rate limits, aborted requests, flaky browser networks, anything
   tagged with a 4xx status. 4xx `ORPCError` answers are never reported at all.
+
+The rules are patterns and key names: a name or street written as free text inside an error message is not detected, so
+never put customer fields in an error message.
 
 Tests: `packages/errors/test/scrub.test.ts` (realistic payloads), `config.test.ts` (no SDK without a DSN), `apps/api/test/env.test.ts`.
 
