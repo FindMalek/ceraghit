@@ -9,7 +9,16 @@ export function baseOptions(config: GlitchtipConfig) {
     release: config.release,
     sampleRate: config.sampleRate,
     tracesSampleRate: 0,
-    sendDefaultPii: false,
+    // SDK 11 collects everything unless told otherwise, and with `userInfo` on the server infers the visitor's ip.
+    dataCollection: {
+      userInfo: false,
+      cookies: false,
+      httpHeaders: false,
+      httpBodies: [],
+      urlQueryParams: false,
+      databaseQueryData: false,
+      stackFrameVariables: false,
+    },
     maxBreadcrumbs: 20,
     beforeSend: scrubEvent,
     beforeBreadcrumb: scrubBreadcrumb,
