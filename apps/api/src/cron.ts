@@ -16,6 +16,8 @@ import {
 export interface CronJob {
   /** Idempotent: running it twice in a row changes nothing the second time. Counts only, no customer data. */
   run: (services: Services, now: Date, options: { dryRun: boolean }) => Promise<JobCounts>
+  /** Puts pieces back on sale: the storefront drops its cached reads after each run. */
+  restocks?: boolean
 }
 
 /** Counts of one cleanup run, plus the log line; file keys only go to the log of a dry run. */
@@ -66,6 +68,7 @@ export const CRON_JOBS: Record<string, CronJob> = {
     },
   },
   "release-holds": {
+    restocks: true,
     async run(services, now) {
       const released = await releaseExpiredHolds(services, now)
       return { released, mailed: await sendExpiryMails(services) }

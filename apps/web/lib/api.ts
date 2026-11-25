@@ -21,19 +21,21 @@ async function soft<T>(call: Promise<T>, fallback: T): Promise<T> {
 
 // Pages are force-dynamic (CSP nonce) and these reads are POSTs the CDN cannot cache, so share them for 10 minutes.
 // Errors are not cached: the fallback is applied outside, in `soft`. The api drops the tag after a write
-// (`/api/revalidate`), so owner edits show at once; the TTL covers what it cannot announce (cron, gateway).
+// (`/api/revalidate`), so owner edits show at once; the TTL covers what it does not announce. Stale entries are served
+// once while they refresh, so it is not a hard maximum age. The deployment id keeps an old shape from outliving a release.
 const TTL = 600
 const OPTIONS = { revalidate: TTL, tags: [CATALOG_TAG] }
+const BUILD = process.env.VERCEL_DEPLOYMENT_ID ?? ""
 
-const cachedCategories = unstable_cache(() => api.public.catalog.categories(), ["api:categories"], OPTIONS)
+const cachedCategories = unstable_cache(() => api.public.catalog.categories(), ["api:categories", BUILD], OPTIONS)
 const cachedProducts = unstable_cache(
   (query: ProductQuery) => api.public.catalog.products(query),
-  ["api:products"],
+  ["api:products", BUILD],
   OPTIONS,
 )
-const cachedLocations = unstable_cache(() => api.public.catalog.locations(), ["api:locations"], OPTIONS)
-const cachedSettings = unstable_cache(() => api.public.catalog.settings(), ["api:settings"], OPTIONS)
-const cachedSiteImages = unstable_cache(() => api.public.site.images(), ["api:site-images"], OPTIONS)
+const cachedLocations = unstable_cache(() => api.public.catalog.locations(), ["api:locations", BUILD], OPTIONS)
+const cachedSettings = unstable_cache(() => api.public.catalog.settings(), ["api:settings", BUILD], OPTIONS)
+const cachedSiteImages = unstable_cache(() => api.public.site.images(), ["api:site-images", BUILD], OPTIONS)
 
 export const getCategories = (): Promise<Category[]> => soft(cachedCategories(), [])
 export const getProducts = (query: ProductQuery): Promise<Product[]> => soft(cachedProducts(query), [])

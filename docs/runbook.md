@@ -81,7 +81,7 @@ Check locally with `node scripts/check-migrations.mjs --base origin/main`.
 | :-- | :-- |
 | `SECRETS_KEY` | `docs/secrets.md`: new key with version + 1, set `SECRETS_KEY_PREVIOUS`, deploy, `pnpm --filter api secrets:rotate`, remove the old one, deploy |
 | `CRON_SECRET` | new random value in Vercel api production, GitHub `production` secret and Trigger.dev `prod`; update staging and local `.env` separately |
-| `PROXY_SECRET` | same new value on the three Vercel projects in one go, redeploy all three (the api also uses it to refresh the shop cache; a mismatch logs `[revalidate] 401` and edits take 10 min to show) |
+| `PROXY_SECRET` | same new value on the three Vercel projects in one go, redeploy all three (the api also uses it to refresh the shop cache; a mismatch logs `[revalidate] 401` after the hourly `release-holds` or any edit, and edits take 10 min or more to show) |
 | Resend, R2, Neon | create the new credential, update Vercel (and GitHub for R2 backup keys), redeploy, revoke the old one |
 | Konnect, Aramex, Groq | the owner saves the new value on "Paiements", "Livraison" or "Réglages" (vault); nothing to deploy |
 | owner password | update `ADMIN_PASSWORD` (GitHub `production` secret), run the Deploy workflow |
@@ -123,7 +123,7 @@ thresholds: `docs/deploy.md` ("scheduled jobs").
 ## monitoring
 
 - `https://api.ceraghit.com/health` answers `{"ok":true,"db":true,"env":"production",...}`; `.github/workflows/uptime.yml` probes
-  it every 10 min and opens a `production down` issue (label `incident`) on failure.
+  it every 30 min and opens a `production down` issue (label `incident`) on failure.
 - OpenObserve dashboards and alerts: `docs/observability/`. Wiring status and what is still to configure:
   `docs/observability/production.md`.
 - "Emails" page of the dashboard for failed sends; Vercel runtime logs per project as the fallback.

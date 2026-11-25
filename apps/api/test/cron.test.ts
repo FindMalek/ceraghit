@@ -17,6 +17,7 @@ describe.skipIf(!url)("cron endpoints", () => {
   const make = (
     cronSecret: string | undefined,
     jobs: Record<string, CronJob> = { [JOB]: CRON_JOBS["release-holds"]! },
+    hooks?: Services["hooks"],
   ) =>
     createServer(
       {
@@ -25,6 +26,7 @@ describe.skipIf(!url)("cron endpoints", () => {
         mailer: new ConsoleMailer(),
         storage: null,
         auth: new AdminAuth(db),
+        hooks,
         now: () => new Date(),
         config: {
           webUrl: "https://web.test",
@@ -68,6 +70,21 @@ describe.skipIf(!url)("cron endpoints", () => {
     )
     expect(unconfigured.status).toBe(404)
     expect(await runs(JOB)).toHaveLength(0)
+  })
+
+  test("a job that restocks tells the storefront", async () => {
+    let changes = 0
+    const name = `${JOB}-restock`
+    const announcing = make(
+      SECRET,
+      { [name]: CRON_JOBS["release-holds"]! },
+      { catalogChanged: async () => void changes++ },
+    )
+    await announcing(
+      new Request(`https://api.test/cron/${name}`, { method: "POST", headers: { authorization: `Bearer ${SECRET}` } }),
+    )
+    expect(changes).toBe(1)
+    await db.delete(jobRuns).where(eq(jobRuns.name, name))
   })
 
   test("release-holds cancels an expired hold, records each run, and the second run releases nothing", async () => {

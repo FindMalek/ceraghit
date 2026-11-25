@@ -139,6 +139,7 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
       }
       const dryRun = url.searchParams.get("dryRun") === "1"
       const outcome = await runJob(services, name, (now) => job.run(services, now, { dryRun }))
+      if (job.restocks) await services.hooks?.catalogChanged?.()
       return Response.json(outcome, { status: outcome.ok ? 200 : 500 })
     }
     if (pathname === "/webhooks/konnect") {
