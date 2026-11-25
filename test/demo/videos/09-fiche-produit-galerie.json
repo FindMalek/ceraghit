@@ -1,0 +1,59 @@
+{
+  "id": "09",
+  "slug": "fiche-produit-galerie",
+  "title_fr": "La fiche produit et sa galerie",
+  "start": { "app": "web", "path": "/product/curda-seca-0013", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "Le nom, la référence et le prix.", "holdMs": 2000 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Photo 2 sur 3" },
+      "caption_fr": "Une vignette affiche sa photo."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Photo suivante" },
+      "caption_fr": "Les flèches font défiler."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Photo précédente" },
+      "caption_fr": "Les flèches font défiler."
+    },
+    {
+      "action": "press",
+      "value": "ArrowRight",
+      "caption_fr": "Au clavier, les flèches aussi.",
+      "only": "desktop"
+    },
+    {
+      "action": "swipe",
+      "target": { "role": "img", "nth": 0 },
+      "value": "left",
+      "caption_fr": "Sur téléphone, glissez le doigt.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Matière" },
+      "caption_fr": "Matière, technique et dimensions."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "Dimensions" },
+      "caption_fr": "Matière, technique et dimensions."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Dans la même collection" },
+      "caption_fr": "Les pièces de la même collection."
+    },
+    {
+      "action": "goto",
+      "value": "/product/inexistante",
+      "caption_fr": "Une pièce inconnue affiche une page introuvable.",
+      "holdMs": 2200
+    }
+  ]
+}

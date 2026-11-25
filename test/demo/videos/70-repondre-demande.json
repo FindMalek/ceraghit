@@ -1,0 +1,75 @@
+{
+  "id": "70",
+  "slug": "repondre-demande",
+  "title_fr": "Répondre à une demande",
+  "start": {
+    "app": "dashboard",
+    "path": "/requests",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Élodie Marchand"
+      },
+      "caption_fr": "Ouvrez la demande."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Répondre par email"
+      },
+      "caption_fr": "Répondre ouvre votre messagerie."
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Copier l'email"
+      },
+      "caption_fr": "Copiez l'adresse."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Copie bloquée ? Sélectionnez l'adresse à la main.",
+      "holdMs": 2600
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Appeler"
+      },
+      "caption_fr": "Appeler lance l'appel."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Statut"
+      },
+      "caption_fr": "Après la réponse, changez le statut."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Contactée"
+      },
+      "caption_fr": "Après la réponse, changez le statut."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Vous répondez depuis votre boîte mail.",
+      "holdMs": 2200
+    }
+  ]
+}

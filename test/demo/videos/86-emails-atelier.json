@@ -1,0 +1,52 @@
+{
+  "id": "86",
+  "slug": "emails-atelier",
+  "title_fr": "Les emails que reçoit l'atelier (nouvelle commande, nouvelle demande)",
+  "devices": ["desktop"],
+  "start": { "app": "dashboard", "path": "/settings/profile", "loggedIn": true },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "label": "Email des notifications" },
+      "caption_fr": "Les emails de l'atelier vont à cette adresse.",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:8066",
+      "caption_fr": "Chaque nouvelle commande vous prévient.",
+      "holdMs": 2400
+    },
+    {
+      "action": "click",
+      "target": { "text": "virement à recevoir" },
+      "caption_fr": "Virement : un paiement est à recevoir.",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "text": "paiement à la livraison", "nth": 0 },
+      "caption_fr": "Espèces : le paiement se fait à la livraison.",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "text": "Nouvelle demande de pièce unique" },
+      "caption_fr": "Une demande de pièce unique arrive aussi.",
+      "holdMs": 3000
+    },
+    { "action": "wait", "caption_fr": "Les liens ouvrent le tableau de bord.", "holdMs": 2400 }
+  ]
+}

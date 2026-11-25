@@ -1,0 +1,86 @@
+{
+  "id": "02",
+  "slug": "naviguer-menu",
+  "title_fr": "Naviguer dans la boutique",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "press",
+      "value": "Tab",
+      "caption_fr": "Tab affiche « Aller au contenu ».",
+      "holdMs": 1800
+    },
+    {
+      "action": "press",
+      "value": "Enter",
+      "caption_fr": "Entrée saute l'en-tête."
+    },
+    {
+      "action": "scroll",
+      "value": "900",
+      "caption_fr": "L'en-tête reste en haut en défilant."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "link",
+        "name": "Boutique",
+        "nth": 0
+      },
+      "caption_fr": "Ces liens mènent aux pages.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Menu"
+      },
+      "caption_fr": "Sur téléphone, le menu s'ouvre à gauche.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Boutique",
+        "nth": 0
+      },
+      "caption_fr": "Un lien ouvre la page."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Ceraghit"
+      },
+      "caption_fr": "Le logo ramène à l'accueil."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "button",
+        "name": "Ouvrir le panier"
+      },
+      "caption_fr": "Le panier est en haut, à droite."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ouvrir le panier"
+      },
+      "caption_fr": "Un clic l'ouvre."
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Échap le referme."
+    }
+  ]
+}

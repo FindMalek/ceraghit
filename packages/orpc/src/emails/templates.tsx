@@ -87,11 +87,13 @@ function Line({
   right,
   locale,
   strong,
+  wrap,
 }: {
   left: ReactNode
   right: ReactNode
   locale: Locale
   strong?: boolean
+  wrap?: boolean
 }) {
   const end = locale === "ar" ? "left" : "right"
   const s = { ...para, margin: "0 0 6px", ...(strong ? { color: c.goldTitle } : {}) }
@@ -100,7 +102,14 @@ function Line({
       <Column style={{ verticalAlign: "top" }}>
         <Text style={s}>{left}</Text>
       </Column>
-      <Column style={{ verticalAlign: "top", textAlign: end, whiteSpace: "nowrap", paddingInlineStart: "12px" }}>
+      <Column
+        style={{
+          verticalAlign: "top",
+          textAlign: end,
+          ...(wrap ? {} : { whiteSpace: "nowrap" }),
+          paddingInlineStart: "12px",
+        }}
+      >
         <Text style={s}>{right}</Text>
       </Column>
     </Row>
@@ -143,6 +152,7 @@ function Bank({ order, ctx, locale }: { order: ConfirmationOrder; ctx: MailConte
   const rows: [string, string][] = [
     [k.holder, bank.holder],
     [k.bank, bank.bank],
+    ...(bank.address ? [[k.bankAddress, ltr(bank.address, locale)] as [string, string]] : []),
     ...(bank.rib ? [["RIB", ltr(bank.rib, locale)] as [string, string]] : []),
     ...(bank.iban ? [["IBAN", ltr(bank.iban, locale)] as [string, string]] : []),
     ...(bank.bic ? [["BIC", ltr(bank.bic, locale)] as [string, string]] : []),
@@ -155,7 +165,7 @@ function Bank({ order, ctx, locale }: { order: ConfirmationOrder; ctx: MailConte
     >
       <Text style={{ ...para, color: c.goldTitle, margin: "0 0 8px" }}>{k.bankTitle}</Text>
       {rows.map(([label, value]) => (
-        <Line key={label} locale={locale} left={label} right={value} />
+        <Line key={label} locale={locale} left={label} right={value} wrap={label === k.bankAddress} />
       ))}
     </Section>
   )

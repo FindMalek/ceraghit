@@ -1,0 +1,115 @@
+{
+  "id": "23",
+  "slug": "commander-especes-tunisie",
+  "title_fr": "Commander en Tunisie, payer en espèces à la livraison",
+  "start": { "app": "web", "path": "/fr/product/lampe-votive-0203", "loggedIn": false },
+  "steps": [
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter au panier" },
+      "caption_fr": "Ajoutez la pièce au panier.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Passer commande" },
+      "caption_fr": "Cliquez sur Passer commande.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "radio", "name": "Espèces à la livraison" },
+      "caption_fr": "Choisissez Espèces à la livraison.",
+      "holdMs": 1200
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Confirmer la commande" },
+      "caption_fr": "Un formulaire vide signale chaque erreur.",
+      "holdMs": 500
+    },
+    { "action": "scroll", "value": "-1200", "caption_fr": "Un formulaire vide signale chaque erreur.", "holdMs": 2200 },
+    {
+      "action": "fill",
+      "target": { "label": "Nom complet" },
+      "value": "Amel Ben Salah",
+      "caption_fr": "Renseignez vos coordonnées."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse e-mail" },
+      "value": "amel@example.test",
+      "caption_fr": "Renseignez vos coordonnées."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Téléphone" },
+      "value": "+216 20 123 456",
+      "caption_fr": "Renseignez vos coordonnées."
+    },
+    { "action": "hover", "target": { "label": "Pays" }, "caption_fr": "La Tunisie est déjà choisie.", "holdMs": 1200 },
+    {
+      "action": "fill",
+      "target": { "label": "Ville" },
+      "value": "Zzzz",
+      "caption_fr": "Choisissez une ville de la liste.",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Ville" },
+      "value": "Tunis",
+      "caption_fr": "Choisissez une ville de la liste.",
+      "holdMs": 800
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse", "nth": -1 },
+      "value": "12 rue des Jasmins",
+      "caption_fr": "Indiquez l'adresse de livraison."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Code postal" },
+      "value": "1000",
+      "caption_fr": "Indiquez l'adresse de livraison."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Note pour l'atelier" },
+      "value": "Sonnez deux fois, merci.",
+      "caption_fr": "Une note peut aider le livreur."
+    },
+    {
+      "action": "hover",
+      "target": { "text": "pour la livraison offerte" },
+      "caption_fr": "Le récapitulatif montre la livraison.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "checkbox" },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "holdMs": 1000
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Confirmer la commande" },
+      "caption_fr": "Confirmez la commande.",
+      "holdMs": 3000
+    },
+    { "action": "wait", "caption_fr": "Commande confirmée, numéro reçu.", "holdMs": 3000 },
+    {
+      "action": "goto",
+      "value": "{{MAILPIT_URL}}",
+      "caption_fr": "Un email de confirmation arrive aussi.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": { "text": "Votre commande", "nth": 0 },
+      "caption_fr": "Un email de confirmation arrive aussi.",
+      "holdMs": 3000
+    }
+  ]
+}
