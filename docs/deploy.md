@@ -324,14 +324,18 @@ runs do not open the issue, only scheduled ones.
 
 ## vercel free-tier cpu
 
-The Hobby team has 4 h/month of Fluid Active CPU; going over pauses every project, shop included. The big levers, in order:
+The Hobby team has 4 h/month of Fluid Active CPU, **shared by every project of the team**; going over pauses them all, shop
+included. Measured 26 Oct to 25 Nov: 3 h 36 used, `ceraghit-api` 47 min, `ceraghit-web` 47 min, `ceraghit-dashboard` 4 min.
 
-- the storefront pages are `force-dynamic` (CSP nonce), so each page view, bots included, re-renders and calls the api. The
-  five public reads in `apps/web/lib/api.ts` go through `unstable_cache` (120 s, shared data cache, errors not cached): an
-  admin edit shows on the storefront within 2 minutes. Checkout re-validates every piece server-side, so a stale list
-  cannot sell something gone.
-- bots: in the Vercel dashboard, web project, Firewall: turn on Bot Protection, add a rate limit on `/shop/*` and
-  `/product/*` (for example 60 requests per minute per IP) and a rule that denies unknown paths early. Not in code.
+- the storefront pages are `force-dynamic` (CSP nonce), so each page view, bots included, re-renders. The five public reads
+  in `apps/web/lib/api.ts` go through `unstable_cache` (600 s, shared data cache, errors not cached). After an admin write or
+  a new order the api calls `POST /api/revalidate` on the shop (bearer `PROXY_SECRET`), so edits show at once. Checkout
+  re-validates every piece server-side, so a stale list cannot sell something gone.
+- api cold starts: `build:vercel` splits the bundle, and react-email, the AI SDK and the telemetry SDK are imported only
+  when used (about half the CPU of a cold start). Keep heavy, rarely used libraries behind `await import()` of a module of
+  ours (split chunks do not give named exports for a CommonJS package imported directly).
 - polling and probes: dashboard polls every 2 to 5 min, uptime every 30 min, `retry-mail` every 30 min.
-- check: Team usage, Fluid Active CPU by project, and the runtime logs of `ceraghit-api`: the
-  `POST /rpc/public/{site/images,catalog/*}` bursts should drop to about one per read per 2 minutes.
+- bots (not in code): in the Vercel dashboard, web project, Firewall: turn on Bot Protection and the AI bots rule, and add a
+  rate limit on `/shop/*` and `/product/*` (for example 60 requests per minute per IP).
+- check: Team usage, Fluid Active CPU by project, daily bars. Runtime logs of `ceraghit-api` (Hobby keeps 1 h): the
+  `POST /rpc/public/{site/images,catalog/*}` bursts should be about one per read per 10 minutes.

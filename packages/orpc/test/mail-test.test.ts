@@ -91,4 +91,14 @@ describe.skipIf(!url)("admin.mail.test", () => {
     expect(res.state).toBe("not_configured")
     expect(JSON.stringify(res)).not.toContain("re_")
   })
+
+  test("an admin write announces a catalog change, a read does not", async () => {
+    let changes = 0
+    base.hooks = { catalogChanged: async () => void changes++ }
+    const profile = await owner.profile.get()
+    expect(changes).toBe(0)
+    await owner.profile.update({ notifyEmail: profile.shop.notifyEmail })
+    expect(changes).toBe(1)
+    base.hooks = undefined
+  })
 })

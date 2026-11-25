@@ -13,7 +13,7 @@ import type { Services } from "../../context"
 import { getSecret } from "../integrations"
 import { recordAiRequest, recordAiTokens } from "../metrics"
 import { getAiSettings } from "../settings"
-import { groqTranslate, type TranslateFn } from "./eval"
+import type { TranslateFn } from "./eval"
 import { AI_MODELS, type AiModelId, costUsd, DEFAULT_AI_MODEL, FALLBACK_AI_MODEL } from "./models"
 import { buildTranslatePrompt, type Lang, type TranslateRequest, translationSchema } from "./prompt"
 import { lengthRatio, scoreArabicScript } from "./score"
@@ -154,7 +154,7 @@ export async function translateField(
     })
   }
 
-  const translate = deps.translate ?? groqTranslate(apiKey, services.config.groqBaseUrl)
+  const translate = deps.translate ?? (await import("./eval")).groqTranslate(apiKey, services.config.groqBaseUrl)
   const request: TranslateRequest = {
     field: input.field,
     maxLength,

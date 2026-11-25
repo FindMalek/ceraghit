@@ -31,7 +31,7 @@ import { parcelOf, toShipping } from "../../lib/shipping-events"
 import { getShopProfile, studioInbox } from "../../lib/shop-profile"
 import { TOO_LARGE } from "../../lib/storage"
 import { reserveUpload } from "../../lib/uploads"
-import { publicProcedure } from "../../procedures"
+import { announceChange, publicProcedure } from "../../procedures"
 
 const TAG = ["orders"]
 
@@ -47,6 +47,7 @@ function payoneerView(settings: PayoneerSettings, locale: string, orderLink: str
 
 export const ordersRouter = {
   create: publicProcedure
+    .use(announceChange)
     .route({ method: "POST", path: "/orders", summary: "Place an order and get the payment link", tags: TAG })
     .input(orderInputSchema)
     .output(checkoutSchema)
