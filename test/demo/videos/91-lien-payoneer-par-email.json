@@ -1,0 +1,81 @@
+{
+  "id": "91",
+  "slug": "lien-payoneer-par-email",
+  "title_fr": "Envoyer le lien Payoneer à un client",
+  "start": { "app": "dashboard", "path": "/orders", "loggedIn": true },
+  "steps": [
+    {
+      "action": "fill",
+      "target": { "role": "textbox", "name": "Numéro, nom ou email" },
+      "value": "CER-10098",
+      "caption_fr": "Cherchez la commande Payoneer."
+    },
+    { "action": "click", "target": { "text": "CER-10098" }, "caption_fr": "Ouvrez-la." },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Lien de paiement Payoneer" },
+      "caption_fr": "Ce bloc gère le lien de paiement.",
+      "holdMs": 2400
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Lien Payoneer" },
+      "value": "http://exemple.com/payer",
+      "caption_fr": "Un lien qui n'est pas Payoneer."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer au client" },
+      "caption_fr": "Cliquez sur Envoyer au client."
+    },
+    { "action": "wait", "caption_fr": "Seul un lien payoneer.com passe.", "holdMs": 2400 },
+    {
+      "action": "fill",
+      "target": { "label": "Lien Payoneer" },
+      "value": "https://link.payoneer.com/pay/demo-cer-10098",
+      "caption_fr": "Collez le vrai lien."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer au client" },
+      "caption_fr": "Cliquez sur Envoyer au client."
+    },
+    { "action": "wait", "caption_fr": "Le client reçoit un email.", "holdMs": 2200 },
+    {
+      "action": "goto",
+      "value": "http://localhost:8066",
+      "caption_fr": "Voici l'email dans la boîte de test.",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3070/fr/order/CER-10098?t=demo-CER-10098",
+      "caption_fr": "Le client voit le bouton sur sa commande.",
+      "holdMs": 3000
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3166/orders?q=CER-10098",
+      "caption_fr": "Pour changer le lien, rouvrez la commande.",
+      "holdMs": 800
+    },
+    { "action": "click", "target": { "text": "CER-10098" }, "caption_fr": "Ouvrez-la." },
+    {
+      "action": "fill",
+      "target": { "label": "Lien Payoneer" },
+      "value": "https://link.payoneer.com/pay/demo-cer-10098-bis",
+      "caption_fr": "Collez le nouveau lien."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Remplacer le lien" },
+      "caption_fr": "Remplacer le lien prévient le client."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "heading", "name": "Historique" },
+      "caption_fr": "Chaque changement est gardé dans l'historique.",
+      "holdMs": 2600
+    }
+  ]
+}

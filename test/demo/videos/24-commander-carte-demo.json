@@ -1,0 +1,99 @@
+{
+  "id": "24",
+  "slug": "commander-carte-demo",
+  "title_fr": "Payer par carte (passerelle de démonstration)",
+  "start": { "app": "web", "path": "/fr/product/lampe-votive-0204", "loggedIn": false },
+  "steps": [
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ajouter au panier" },
+      "caption_fr": "Ajoutez la pièce au panier.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Passer commande" },
+      "caption_fr": "Cliquez sur Passer commande.",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Nom complet" },
+      "value": "Karim Ayari",
+      "caption_fr": "Renseignez vos coordonnées."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse e-mail" },
+      "value": "karim@example.test",
+      "caption_fr": "Renseignez vos coordonnées."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Téléphone" },
+      "value": "+216 20 654 321",
+      "caption_fr": "Renseignez vos coordonnées."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Ville" },
+      "value": "Sfax",
+      "caption_fr": "Indiquez l'adresse de livraison."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse", "nth": -1 },
+      "value": "8 avenue de la République",
+      "caption_fr": "Indiquez l'adresse de livraison."
+    },
+    {
+      "action": "hover",
+      "target": { "role": "radio", "name": "Carte bancaire ou e-DINAR" },
+      "caption_fr": "Choisissez Carte bancaire ou e-DINAR.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "checkbox" },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "holdMs": 1000
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Payer" },
+      "caption_fr": "Cliquez sur Payer : vous êtes redirigé.",
+      "holdMs": 3500
+    },
+    {
+      "action": "hover",
+      "target": { "role": "button", "name": "Simuler un échec" },
+      "caption_fr": "Page de test : aucun argent n'est débité.",
+      "holdMs": 1800
+    },
+    {
+      "action": "hover",
+      "target": { "role": "button", "name": "Montant incorrect" },
+      "caption_fr": "Trois résultats possibles pour tester.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Simuler un paiement réussi" },
+      "caption_fr": "Simulez un paiement réussi.",
+      "holdMs": 4000
+    },
+    { "action": "wait", "caption_fr": "La commande passe à Payée.", "holdMs": 2500 },
+    {
+      "action": "goto",
+      "value": "{{MAILPIT_URL}}",
+      "caption_fr": "Le client reçoit aussi un email.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": { "text": "Votre commande", "nth": 0 },
+      "caption_fr": "Le client reçoit aussi un email.",
+      "holdMs": 3000
+    }
+  ]
+}

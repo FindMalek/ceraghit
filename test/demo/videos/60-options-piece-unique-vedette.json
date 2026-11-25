@@ -1,0 +1,51 @@
+{
+  "id": "60",
+  "slug": "options-piece-unique-vedette",
+  "title_fr": "Pièce unique, sur devis, mis en avant",
+  "start": {
+    "app": "dashboard",
+    "path": "/products/new",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Pièce unique"
+      },
+      "caption_fr": "Pièce unique : un seul exemplaire."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Sur devis (pas de panier)"
+      },
+      "caption_fr": "Sur devis : le panier laisse place au devis."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Mis en avant"
+      },
+      "caption_fr": "Mis en avant : affiché en premier."
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/product/fontaine-andalouse-0002",
+      "caption_fr": "Côté boutique : Demander un devis."
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/",
+      "caption_fr": "Les pièces mises en avant ouvrent l'accueil."
+    },
+    {
+      "action": "goto",
+      "value": "/",
+      "caption_fr": "La vue d'ensemble compte les pièces uniques à traiter."
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "id": "15",
+  "slug": "demande-piece-unique",
+  "title_fr": "Envoyer une demande de pièce unique",
+  "start": { "app": "web", "path": "/fr/custom", "loggedIn": false },
+  "steps": [
+    { "action": "wait", "caption_fr": "Racontez votre idée à l'atelier.", "holdMs": 1800 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer ma demande" },
+      "caption_fr": "Un formulaire vide signale les erreurs.",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Nom complet" },
+      "value": "Amel Ben",
+      "caption_fr": "Indiquez vos coordonnées."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse e-mail" },
+      "value": "a@example.test",
+      "caption_fr": "Indiquez vos coordonnées."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Téléphone" },
+      "value": "+216 20 000 000",
+      "caption_fr": "Indiquez vos coordonnées."
+    },
+    { "action": "fill", "target": { "label": "Pays" }, "value": "Tunisie", "caption_fr": "Indiquez vos coordonnées." },
+    {
+      "action": "fill",
+      "target": { "label": "Votre projet" },
+      "value": "Une lampe bleue.",
+      "caption_fr": "Décrivez la pièce rêvée."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Dimensions souhaitées" },
+      "value": "30 cm",
+      "caption_fr": "Dimensions, budget et inspirations aident."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Budget" },
+      "value": "500 DT",
+      "caption_fr": "Dimensions, budget et inspirations aident."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Liens d'inspiration" },
+      "value": "exemple.test/idee",
+      "caption_fr": "Dimensions, budget et inspirations aident."
+    },
+    {
+      "action": "network",
+      "value": "fail **/api/rpc/public/requests/**",
+      "caption_fr": "Simulation : le réseau est coupé.",
+      "holdMs": 300
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer ma demande" },
+      "caption_fr": "Sans réseau, un message vous prévient.",
+      "holdMs": 500
+    },
+    { "action": "scroll", "value": "-2500", "caption_fr": "Sans réseau, un message vous prévient.", "holdMs": 1800 },
+    { "action": "network", "value": "reset", "caption_fr": "Le réseau revient.", "holdMs": 300 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer ma demande" },
+      "caption_fr": "Envoyez votre demande.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Faire une autre demande" },
+      "caption_fr": "Vous pouvez en faire une autre."
+    },
+    {
+      "action": "ip",
+      "value": "198.51.100.15",
+      "caption_fr": "Simulation : trop de demandes envoyées.",
+      "holdMs": 300
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Nom complet" },
+      "value": "Amel Ben",
+      "caption_fr": "Trop de demandes en une heure."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse e-mail" },
+      "value": "a@example.test",
+      "caption_fr": "Trop de demandes en une heure."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Votre projet" },
+      "value": "Une lampe verte.",
+      "caption_fr": "Trop de demandes en une heure."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Envoyer ma demande" },
+      "caption_fr": "Trop de demandes en une heure.",
+      "holdMs": 500
+    },
+    { "action": "scroll", "value": "-2500", "caption_fr": "Trop de demandes en une heure.", "holdMs": 1800 },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Confidentialité" },
+      "caption_fr": "Le lien Confidentialité explique l'usage."
+    }
+  ]
+}

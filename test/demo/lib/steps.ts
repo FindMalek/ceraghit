@@ -8,6 +8,8 @@ const target = z.object({
   testId: z.string().optional(),
   /** Which visible match to use, from 0; -1 is the last. For twins like the two Annuler buttons of a confirmation. */
   nth: z.number().int().optional(),
+  /** Whole text or name must match, not a part of it (an option labelled "Émaillée" next to "non émaillée"). */
+  exact: z.boolean().optional(),
 })
 
 export const ACTIONS = [
@@ -25,6 +27,8 @@ export const ACTIONS = [
   "drag",
   /** Changes the address the visit claims (`203.0.113.7`), to film the lockouts without locking the recorder out. */
   "ip",
+  /** Claims the visitor's country (`BE`) the way the host does, so a first visit is priced in euros. Use after `clear-cookies`, the currency is remembered. */
+  "country",
   /** Drops the session cookies: the next request is a signed out visitor (session expired, back after logout). */
   "clear-cookies",
   "back",
@@ -32,6 +36,10 @@ export const ACTIONS = [
   "network",
   /** Clicks the target, keeps the downloaded file and shows it over the page (CSV table, first PDF page). */
   "download",
+  /** Sets a cookie on the current app (`ceraghit_currency=EUR`), to film what a cookie decides. */
+  "cookie",
+  /** Slides a finger across the target (`left` or `right`), for galleries that listen to touch events. Phone only. */
+  "swipe",
 ] as const
 
 const step = z.object({

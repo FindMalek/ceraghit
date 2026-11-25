@@ -124,6 +124,18 @@ the socket address (one shared bucket when the host gives none). The web and das
 | preview (homelab Traefik via Dokploy) | appends the peer it saw to `x-forwarded-for`, so the left entries are the client's | `PROXY_SECRET`, `TRUSTED_PROXY_HOPS=1` (the deploy script sets both) | `PROXY_SECRET`, default hops 1; set 2 if another proxy such as Cloudflare sits in front of Traefik |
 | local, e2e, demo recorder | none | `APP_ENV=local` honours the rightmost `x-forwarded-for` entry, so fixtures and the recorder `ip` step pick their own address | no secret needed |
 
+Choosing `TRUSTED_PROXY_HOPS` for an api behind Dokploy (`scripts/deploy/dokploy.mjs` reads `API_TRUSTED_PROXY_HOPS`, default 1):
+Traefik alone in front of the api is 1, Cloudflare proxy (orange cloud) plus Traefik is 2. To check, call the api through its
+public hostname from a known address with a forged header, `curl -H 'x-forwarded-for: 1.2.3.4' https://<api>/health`, then
+read the client address the api logs or rate-limits on (a `rate_limits` row key, `select key from rate_limits order by 1 desc limit 5`
+after a failed login). With the right count it is your real address and never `1.2.3.4`; if it is `1.2.3.4` the count is too low,
+if it is a Cloudflare or Traefik address it is too high. Direct api callers depend on this number; calls through the web and
+dashboard `/api` proxies carry the signed `x-ceraghit-client-ip` (`PROXY_SECRET`) and do not.
+
+At the production cutover (api moves from Vercel to Dokploy, web and dashboard stay on Vercel with their default hops 1):
+the proxies keep forwarding the signed header, so the api path with `PROXY_SECRET` is unaffected by hops, and only direct api
+callers (Trigger.dev crons, health checks, webhooks) depend on it. Checklist in "cutover to Dokploy" in `docs/runbook.md`.
+
 Outside `APP_ENV=local` a spoofed `x-forwarded-for` therefore changes nothing. The daily cleanup also deletes counters older than a day. To unlock the owner right away:
 `delete from rate_limits where key like 'login:%'`. Optional on top: Vercel WAF rate limiting rules.
 

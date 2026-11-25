@@ -1,0 +1,112 @@
+{
+  "id": "65",
+  "slug": "mediatheque-fiche-photo",
+  "title_fr": "La fiche d'une photo",
+  "start": {
+    "app": "dashboard",
+    "path": "/media",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "atelier-inutilise.webp, ouvrir",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez la fiche d'une photo.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "texture.webp, ouvrir",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez la fiche d'une photo.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom du fichier"
+      },
+      "value": "atelier-vue-generale",
+      "caption_fr": "Le nom sert à retrouver la photo."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Texte alternatif"
+      },
+      "value": "Vue générale de l'atelier",
+      "caption_fr": "Écrivez son texte alternatif."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "English",
+        "nth": 0
+      },
+      "caption_fr": "Il se traduit en anglais et en arabe.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Texte alternatif"
+      },
+      "value": "General view of the studio",
+      "caption_fr": "Il se traduit en anglais et en arabe.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Mots-clés",
+        "nth": -1
+      },
+      "value": "four,",
+      "caption_fr": "Un mot-clé s'ajoute avec Entrée ou une virgule."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Retirer le mot-clé four"
+      },
+      "caption_fr": "Retirez-en un d'un clic.",
+      "only": "desktop"
+    },
+    {
+      "action": "hover",
+      "target": {
+        "role": "heading",
+        "name": "Utilisée sur"
+      },
+      "caption_fr": "Voyez où la photo est utilisée."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "switch",
+        "name": "Garder même si elle n'est plus utilisée"
+      },
+      "caption_fr": "Gardez-la même sans usage."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez la fiche.",
+      "holdMs": 3500
+    }
+  ]
+}

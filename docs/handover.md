@@ -75,9 +75,11 @@ refusée : reformulez plutôt que d'ajouter du remplissage.
 | type | qui paie comment | ce que vous faites |
 | :-- | :-- | :-- |
 | Paiement à la livraison (Tunisie, en DT) | le client paie le livreur | marquer expédiée, puis marquer payée quand l'argent est reçu |
-| Virement (étranger, en EUR) | le client vire sur votre compte, le numéro de commande sert de référence | vérifier la banque, puis **marquer payée** |
+| Virement (étranger, en EUR) | le client vire sur le compte en euros (ou, s'il n'est pas renseigné, sur votre compte principal), le numéro de commande sert de référence | vérifier la banque, puis **marquer payée** |
 | Paiement en ligne (carte, via Konnect) | le client paie sur la page de Konnect | rien : la commande passe payée toute seule quand Konnect confirme |
 | Lien Payoneer | vous envoyez un lien de paiement, le client paie | coller le lien sur la commande, puis **marquer payée** à la réception |
+
+Comptes bancaires : dans « Profil de l'atelier », la carte « Compte bancaire » contient votre compte principal (commandes en DT) et, plus bas, un « Compte en euros » facultatif (titulaire, banque, IBAN, BIC, adresse de la banque). Une commande par virement affiche le compte de sa devise : DT sur le compte principal, EUR sur le compte en euros. Les quatre premiers champs du compte en euros vont ensemble : remplis tous, ou vides.
 
 - **Marquer payée** est la seule façon de valider un paiement à la main. L'action est enregistrée (qui, quand).
 - **Marquer expédiée** : choisissez le transporteur et saisissez le numéro de suivi, ou créez l'expédition Aramex. Le client reçoit un

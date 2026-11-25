@@ -1,0 +1,50 @@
+{
+  "id": "19",
+  "slug": "pages-legales",
+  "title_fr": "Pages légales (CGV, livraison, mentions, confidentialité)",
+  "start": { "app": "web", "path": "/fr", "loggedIn": false },
+  "steps": [
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Conditions générales de vente" },
+      "caption_fr": "Les conditions de vente sont dans le pied de page.",
+      "holdMs": 2500
+    },
+    {
+      "action": "scroll",
+      "value": "700",
+      "caption_fr": "Lisez les règles qui s'appliquent à vos commandes.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Livraison" },
+      "caption_fr": "Les pages légales se parcourent d'un lien à l'autre.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Mentions légales" },
+      "caption_fr": "Les pages légales se parcourent d'un lien à l'autre.",
+      "holdMs": 2000
+    },
+    {
+      "action": "click",
+      "target": { "role": "link", "name": "Confidentialité" },
+      "caption_fr": "La confidentialité explique l'usage des données.",
+      "holdMs": 2200
+    },
+    {
+      "action": "scroll",
+      "value": "900",
+      "caption_fr": "Elle liste aussi les cookies : aucun bandeau à accepter.",
+      "holdMs": 2500
+    },
+    {
+      "action": "goto",
+      "value": "/fr/legal/inconnu",
+      "caption_fr": "Un document inconnu mène à une page introuvable.",
+      "holdMs": 2200
+    }
+  ]
+}

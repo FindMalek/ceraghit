@@ -67,7 +67,7 @@
         "role": "button",
         "name": "Confirmer l'expédition"
       },
-      "caption_fr": "Sans nom, un message vous prévient."
+      "caption_fr": "Sans nom, le bouton reste grisé."
     },
     {
       "action": "click",

@@ -218,3 +218,20 @@ address on the order or request.
 
 Run these against the production `DATABASE_URL` (Neon, direct connection) with `psql`, after checking the row count with a
 `select` using the same `where`.
+
+## cutover to Dokploy (api only)
+
+The production api is moving from Vercel to Dokploy (Traefik in front, like the previews); web and dashboard stay on Vercel.
+Not implemented yet: `scripts/deploy/dokploy.mjs` has no production mode and `deploy.yml` still ships the api with
+`vercel deploy`. Remaining, in order:
+
+- [ ] `deploy.yml`: replace the api matrix entry with a Dokploy deploy (image build, push, Dokploy app update); keep web and dashboard on Vercel; migrations still run first.
+- [ ] `dokploy.mjs`: a production mode with `APP_ENV=production`, `DEPLOY_ENV=production`, Neon `DATABASE_URL`, live S3 and `SECRETS_KEY` (never the preview helpers); `env.ts` still refuses a mismatch.
+- [ ] `TRUSTED_PROXY_HOPS`: set `API_TRUSTED_PROXY_HOPS` (1 behind Traefik, 2 with the Cloudflare proxy) and check it with the spoofed `x-forwarded-for` probe in "rate limits" of `docs/deploy.md`. Vercel stops setting it for the api once it leaves.
+- [ ] `PROXY_SECRET`: same value on the api (Dokploy) and the web and dashboard Vercel projects.
+- [ ] Web and dashboard `API_URL` points at the new api host; redeploy both.
+- [ ] `API_PUBLIC_URL` and `WEB_URL` on the api, then CORS and CSRF origins (the api allows `WEB_URL` and the dashboard origin): check a login and an order from both sites.
+- [ ] `S3_PUBLIC_URL` and the CSP image sources still match the bucket; uploads and photos load.
+- [ ] Trigger.dev: update `CERAGHIT_API_URL` (prod environment) to the new api URL and keep `CRON_SECRET`; run one job by hand.
+- [ ] `PRODUCTION_API_HOST` (GitHub var) is the new host so the `deploy.yml` smoke and health checks hit the right api; Konnect webhook URL, if online payments are on, points at it too.
+- [ ] After DNS moves: login, order, a cron run, and `docs/release.md` items re-ticked.

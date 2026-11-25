@@ -17,10 +17,10 @@
       "caption_fr": "Un fichier par devise, sans mélange."
     },
     {
-      "action": "click",
+      "action": "download",
       "target": { "role": "button", "name": "Exporter les ventes" },
-      "caption_fr": "Cliquez sur Exporter les ventes."
-    },
-    { "action": "wait", "caption_fr": "Le fichier s'ouvre dans votre tableur.", "holdMs": 2000 }
+      "caption_fr": "Exportez les ventes : le fichier s'ouvre dans votre tableur.",
+      "holdMs": 3200
+    }
   ]
 }

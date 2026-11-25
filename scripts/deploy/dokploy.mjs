@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Per-PR previews and the permanent staging on the-keep through the Dokploy API, see docs/deploy.md. Production is Vercel, not here.
+// Per-PR previews and the permanent staging on the-keep through the Dokploy API, see docs/deploy.md. Production is still Vercel; the api moves here at the cutover (docs/runbook.md).
 import { randomBytes } from "node:crypto"
 
 const MODE = process.argv[2]
@@ -230,7 +230,8 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
       WEB_URL: urls.web,
       API_PUBLIC_URL: urls.api,
       PROXY_SECRET: proxySecret,
-      TRUSTED_PROXY_HOPS: "1",
+      // 1 = Traefik alone in front; 2 = Cloudflare proxy + Traefik. How to pick: "rate limits" in docs/deploy.md.
+      TRUSTED_PROXY_HOPS: process.env.API_TRUSTED_PROXY_HOPS || "1",
       MAILPIT_URL: mail ? `http://${mail.appName}:8025` : undefined,
       ...telemetryEnv(),
       ...apiEnv,
