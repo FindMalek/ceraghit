@@ -77,7 +77,7 @@ test("a category page lists only that category's pieces", async ({ page, request
   })
 })
 
-test("choosing a collection on a phone scrolls to its pieces", async ({ page, request, home, appLocale }) => {
+test("choosing a collection on a phone scrolls to its pieces", async ({ page, request, home }) => {
   test.skip((page.viewportSize()?.width ?? 0) >= 640, "phones only")
   const category = (await catalogue(request))[0]?.category
   if (!category) throw new Error("no category")
