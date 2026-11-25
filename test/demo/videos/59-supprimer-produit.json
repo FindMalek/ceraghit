@@ -1,0 +1,125 @@
+{
+  "id": "59",
+  "slug": "supprimer-produit",
+  "title_fr": "Supprimer ou archiver un produit",
+  "start": {
+    "app": "dashboard",
+    "path": "/products",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0800",
+      "caption_fr": "Supprimer une pièce jamais commandée.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0801",
+      "caption_fr": "Supprimer une pièce jamais commandée.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": 0
+      },
+      "caption_fr": "Une confirmation s'ouvre, lisez-la."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": -1
+      },
+      "caption_fr": "La ligne disparaît du catalogue.",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0010",
+      "caption_fr": "Une pièce déjà commandée est archivée.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0011",
+      "caption_fr": "Une pièce déjà commandée est archivée.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": 0
+      },
+      "caption_fr": "Une pièce déjà commandée est archivée."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Supprimer",
+        "nth": -1
+      },
+      "caption_fr": "Elle garde l'historique des commandes.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Filtrer par statut"
+      },
+      "caption_fr": "Le badge Archivé la distingue."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Archivé"
+      },
+      "caption_fr": "Le badge Archivé la distingue.",
+      "holdMs": 1800
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/product/curda-seca-0010",
+      "caption_fr": "Sa fiche publique n'existe plus : page introuvable.",
+      "holdMs": 3000,
+      "only": "desktop"
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/product/curda-seca-0011",
+      "caption_fr": "Sa fiche publique n'existe plus : page introuvable.",
+      "holdMs": 3000,
+      "only": "mobile"
+    }
+  ]
+}

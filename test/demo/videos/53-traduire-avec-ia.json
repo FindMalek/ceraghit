@@ -1,0 +1,168 @@
+{
+  "id": "53",
+  "slug": "traduire-avec-ia",
+  "title_fr": "Traduire un produit avec l'IA",
+  "devices": ["desktop"],
+  "start": {
+    "app": "dashboard",
+    "path": "/products/new",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "label": "Titre"
+      },
+      "value": "Plat bleu à motifs",
+      "caption_fr": "Écrivez d'abord le titre en français."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Traduire",
+        "nth": 0
+      },
+      "caption_fr": "Traduire propose l'anglais et l'arabe.",
+      "holdMs": 2200
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "العربية",
+        "nth": 0
+      },
+      "caption_fr": "L'arabe se relit aussi.",
+      "only": "desktop"
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Traduction automatique, relisez avant d'enregistrer."
+      },
+      "caption_fr": "Relisez toujours avant d'enregistrer."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Annuler la traduction"
+      },
+      "caption_fr": "Annuler la traduction rétablit le texte."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "Français",
+        "nth": 0
+      },
+      "caption_fr": "Essayez un titre très court.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Titre"
+      },
+      "value": "Vase",
+      "caption_fr": "Un avertissement signale une longueur douteuse."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Traduire",
+        "nth": 0
+      },
+      "caption_fr": "Un avertissement signale une longueur douteuse.",
+      "holdMs": 2500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Annuler la traduction"
+      },
+      "caption_fr": "Annuler la traduction rétablit le texte.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "tab",
+        "name": "Français",
+        "nth": 0
+      },
+      "caption_fr": "Un titre arabe en lettres latines.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Titre"
+      },
+      "value": "Bol Nabeul",
+      "caption_fr": "Un arabe en lettres latines est signalé.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Traduire",
+        "nth": 0
+      },
+      "caption_fr": "Un arabe en lettres latines est signalé.",
+      "holdMs": 2500,
+      "only": "desktop"
+    },
+    {
+      "action": "goto",
+      "value": "/categories",
+      "caption_fr": "Même bouton pour les catégories et les ateliers."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Nouvelle catégorie"
+      },
+      "caption_fr": "Même bouton pour les catégories et les ateliers.",
+      "holdMs": 1800
+    },
+    {
+      "action": "goto",
+      "value": "/settings",
+      "caption_fr": "Un plafond mensuel limite la dépense."
+    },
+    {
+      "action": "hover",
+      "target": {
+        "text": "Clé Groq configurée"
+      },
+      "caption_fr": "La clé Groq reste dans le coffre, masquée.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Plafond mensuel (USD)"
+      },
+      "value": "0",
+      "caption_fr": "Un plafond mensuel limite la dépense."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Plafond atteint : traduction bloquée jusqu'au mois suivant.",
+      "holdMs": 2500
+    }
+  ]
+}

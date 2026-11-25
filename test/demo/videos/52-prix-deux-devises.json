@@ -1,0 +1,129 @@
+{
+  "id": "52",
+  "slug": "prix-deux-devises",
+  "title_fr": "Fixer les deux prix et le stock",
+  "start": {
+    "app": "dashboard",
+    "path": "/products/new",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix TND *"
+      },
+      "value": "10,5",
+      "caption_fr": "Le prix en dinars accepte la virgule ou le point."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix EUR *"
+      },
+      "value": "34.5",
+      "caption_fr": "Le prix en euros se fixe à part, sans conversion."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix TND *"
+      },
+      "value": "10,1234",
+      "caption_fr": "Trop de décimales : le prix est refusé."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix EUR *"
+      },
+      "value": "34,567",
+      "caption_fr": "Trop de décimales : le prix est refusé."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Stock"
+      },
+      "value": "2,5",
+      "caption_fr": "Le stock doit être un nombre entier."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Créer le produit"
+      },
+      "caption_fr": "Chaque erreur s'affiche sous son champ.",
+      "holdMs": 2500
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix TND *"
+      },
+      "value": "0",
+      "caption_fr": "Zéro est refusé, sauf pour une pièce sur devis."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prix EUR *"
+      },
+      "value": "0",
+      "caption_fr": "Zéro est refusé, sauf pour une pièce sur devis."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Stock"
+      },
+      "value": "3",
+      "caption_fr": "Zéro est refusé, sauf pour une pièce sur devis."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Créer le produit"
+      },
+      "caption_fr": "Zéro est refusé, sauf pour une pièce sur devis.",
+      "holdMs": 2500
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/product/haut-relief-0001",
+      "caption_fr": "Le visiteur voit le prix de sa devise, jamais converti."
+    },
+    {
+      "action": "goto",
+      "value": "/products",
+      "caption_fr": "Le stock se règle aussi dans la liste."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0001",
+      "caption_fr": "Le stock se règle aussi dans la liste."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter une pièce au stock"
+      },
+      "caption_fr": "Le stock se règle aussi dans la liste."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Retirer une pièce du stock"
+      },
+      "caption_fr": "Le stock se règle aussi dans la liste."
+    }
+  ]
+}
