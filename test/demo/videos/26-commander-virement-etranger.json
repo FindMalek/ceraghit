@@ -1,0 +1,406 @@
+{
+  "id": "26",
+  "slug": "commander-virement-etranger",
+  "title_fr": "Commander depuis l'étranger, payer par virement",
+  "start": {
+    "app": "web",
+    "path": "/",
+    "loggedIn": false
+  },
+  "steps": [
+    {
+      "action": "wait",
+      "caption_fr": "Depuis la Belgique ou la France, on paie en euros, par virement bancaire.",
+      "holdMs": 4000
+    },
+    {
+      "action": "clear-cookies",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "desktop",
+      "holdMs": 4000
+    },
+    {
+      "action": "clear-cookies",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "mobile"
+    },
+    {
+      "action": "country",
+      "value": "BE",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "desktop"
+    },
+    {
+      "action": "country",
+      "value": "BE",
+      "caption_fr": "Visite depuis l'étranger : les prix passent en euros.",
+      "only": "mobile"
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0011",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0011",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Claire Dupont",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Nom complet"
+      },
+      "value": "Claire Dupont",
+      "caption_fr": "Indiquez votre nom.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "claire@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse e-mail"
+      },
+      "value": "claire@example.com",
+      "caption_fr": "Indiquez votre email.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+32 470 00 00 00",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Téléphone"
+      },
+      "value": "+32 470 00 00 00",
+      "caption_fr": "Indiquez votre téléphone.",
+      "only": "mobile"
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Belgique",
+      "caption_fr": "Choisissez votre pays.",
+      "only": "desktop"
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Belgique",
+      "caption_fr": "Choisissez votre pays.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Bruxelles",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Ville",
+        "exact": true
+      },
+      "value": "Bruxelles",
+      "caption_fr": "Indiquez votre ville.",
+      "only": "mobile"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "8 rue Neuve",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Adresse",
+        "exact": true
+      },
+      "value": "8 rue Neuve",
+      "caption_fr": "Indiquez votre adresse.",
+      "only": "mobile"
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les euros et le virement sont proposés, pas les espèces.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les euros et le virement sont proposés, pas les espèces.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "radio",
+        "name": "Virement bancaire"
+      },
+      "caption_fr": "Choisissez le virement bancaire."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "checkbox",
+        "name": "J'accepte"
+      },
+      "caption_fr": "Acceptez les conditions de vente.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Confirmer la commande"
+      },
+      "caption_fr": "Confirmez la commande."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "La commande est réservée : payez avant la date indiquée.",
+      "holdMs": 3000
+    },
+    {
+      "action": "scroll",
+      "value": "450",
+      "caption_fr": "Les coordonnées bancaires et la référence à indiquer.",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "scroll",
+      "value": "450",
+      "caption_fr": "Les coordonnées bancaires et la référence à indiquer.",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "{{MAILPIT_URL}}/",
+      "caption_fr": "Vous recevez aussi un email avec l'IBAN.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "{{MAILPIT_URL}}/",
+      "caption_fr": "Vous recevez aussi un email avec l'IBAN.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Votre commande CER-",
+        "nth": 0
+      },
+      "caption_fr": "L'email reprend le RIB, l'IBAN et la référence.",
+      "only": "desktop",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": {
+        "text": "Votre commande CER-",
+        "nth": 0
+      },
+      "caption_fr": "L'email reprend le RIB, l'IBAN et la référence.",
+      "only": "mobile",
+      "holdMs": 3000
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0011",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "desktop",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "/product/curda-seca-0011",
+      "caption_fr": "Ouvrez une pièce.",
+      "only": "mobile",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter au panier"
+      },
+      "caption_fr": "Ajoutez-la au panier.",
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Passer commande"
+      },
+      "caption_fr": "Passez commande.",
+      "only": "mobile"
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Tunisie",
+      "caption_fr": "Choisissez la Tunisie, toujours en euros.",
+      "only": "desktop",
+      "holdMs": 1500
+    },
+    {
+      "action": "select",
+      "target": {
+        "label": "Pays",
+        "exact": true
+      },
+      "value": "Tunisie",
+      "caption_fr": "Choisissez la Tunisie, toujours en euros.",
+      "only": "mobile",
+      "holdMs": 1500
+    },
+    {
+      "action": "scroll",
+      "value": "700",
+      "caption_fr": "Descendez jusqu'au mode de paiement.",
+      "only": "desktop",
+      "holdMs": 1200
+    },
+    {
+      "action": "scroll",
+      "value": "700",
+      "caption_fr": "Descendez jusqu'au mode de paiement.",
+      "only": "mobile",
+      "holdMs": 1200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "En Tunisie, le virement n'est pas proposé : seule la carte l'est.",
+      "only": "desktop",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "En Tunisie, le virement n'est pas proposé : seule la carte l'est.",
+      "only": "mobile",
+      "holdMs": 3200
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le virement est réservé aux commandes depuis l'étranger.",
+      "holdMs": 3000
+    }
+  ]
+}

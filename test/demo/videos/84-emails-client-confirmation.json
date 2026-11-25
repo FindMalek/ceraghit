@@ -1,0 +1,76 @@
+{
+  "id": "84",
+  "slug": "emails-client-confirmation",
+  "title_fr": "L'email de confirmation de commande (selon le mode de paiement)",
+  "devices": ["desktop"],
+  "start": { "app": "dashboard", "path": "/login", "loggedIn": false },
+  "steps": [
+    {
+      "action": "goto",
+      "value": "http://localhost:8066",
+      "caption_fr": "Dans la boîte de test, voici les emails des clients.",
+      "holdMs": 2600
+    },
+    {
+      "action": "click",
+      "target": { "text": "chez Ceraghit", "nth": -1 },
+      "caption_fr": "Carte : le paiement est déjà confirmé.",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "text": "chez Ceraghit", "nth": 1 },
+      "caption_fr": "Espèces : on règle à la livraison.",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "text": "Your Ceraghit order" },
+      "caption_fr": "Virement : les coordonnées bancaires y sont.",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": { "role": "tab", "name": "Text" },
+      "caption_fr": "L'onglet Texte montre tout, sans mise en page.",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "text": "طلبك" },
+      "caption_fr": "La langue suit celle de la commande.",
+      "holdMs": 3000
+    },
+    {
+      "action": "click",
+      "target": { "text": "Return to inbox" },
+      "caption_fr": "Retournez à la boîte de réception.",
+      "holdMs": 400
+    },
+    {
+      "action": "click",
+      "target": { "text": "chez Ceraghit", "nth": 0 },
+      "caption_fr": "Payoneer : le lien arrive ensuite.",
+      "holdMs": 3000
+    },
+    { "action": "wait", "caption_fr": "Chaque email dit pourquoi vous le recevez.", "holdMs": 2400 }
+  ]
+}

@@ -7,3 +7,34 @@ test("an IBAN with a wrong checksum is refused, a correct one is compacted", () 
     "TN5910006035183598478831",
   )
 })
+
+test("the euro account gets the same IBAN checksum and a 8 or 11 character BIC", () => {
+  expect(shopProfileInputSchema.safeParse({ bankEurIban: "DE89 3704 0044 0532 0130 01" }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse({ bankEurBic: "DEMOD" }).success).toBe(false)
+  expect(
+    shopProfileInputSchema.parse({ bankEurIban: "de89 3704 0044 0532 0130 00", bankEurBic: "demodeff" }),
+  ).toMatchObject({
+    bankEurIban: "DE89370400440532013000",
+    bankEurBic: "DEMODEFF",
+  })
+})
+
+test("a half filled euro account is refused, a full or an empty one passes", () => {
+  const full = {
+    bankEurHolder: "Atelier",
+    bankEurName: "Demo Bank AG",
+    bankEurIban: "DE89 3704 0044 0532 0130 00",
+    bankEurBic: "DEMODEFF",
+  }
+  expect(shopProfileInputSchema.safeParse({ ...full, bankEurBic: null }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse(full).success).toBe(true)
+  expect(
+    shopProfileInputSchema.safeParse({ bankEurHolder: null, bankEurName: null, bankEurIban: null, bankEurBic: null })
+      .success,
+  ).toBe(true)
+})
+
+test("an IBAN with the wrong length for its country and a BIC without a country code are refused", () => {
+  expect(shopProfileInputSchema.safeParse({ bankEurIban: "DE36 0000 0000 00" }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse({ bankBic: "12345678" }).success).toBe(false)
+})

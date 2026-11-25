@@ -8,6 +8,13 @@ test("network rules parse, and a pattern that could hit every site is refused", 
   expect(parseNetwork("slow 4000 **/api/admin/**")).toEqual({ kind: "slow", ms: 4000, pattern: "**/api/admin/**" })
   expect(parseNetwork("status 500 **/api/**")).toEqual({ kind: "status", code: 500, pattern: "**/api/**" })
   expect(parseNetwork("fail **/api/**")).toEqual({ kind: "fail", pattern: "**/api/**" })
+  expect(parseNetwork("reason 409 out_of_stock **/api/**")).toEqual({
+    kind: "reason",
+    code: 409,
+    reason: "out_of_stock",
+    pattern: "**/api/**",
+  })
+  expect(() => parseNetwork("reason 409 Out-Of-Stock **/api/**")).toThrow("public error reason")
   expect(parseNetwork("reset")).toEqual({ kind: "reset" })
   expect(() => parseNetwork("fail **")).toThrow("must start with")
   expect(() => parseNetwork("slow 999999 **/api/**")).toThrow()

@@ -88,6 +88,11 @@ describe.skipIf(!url)("transfer needs a real bank account", () => {
       bankIban: saved.bankIban,
       bankRib: saved.bankRib,
       bankBic: saved.bankBic,
+      bankEurHolder: saved.bankEurHolder,
+      bankEurName: saved.bankEurName,
+      bankEurIban: saved.bankEurIban,
+      bankEurBic: saved.bankEurBic,
+      bankEurAddress: saved.bankEurAddress,
     })
     await db.delete(orders).where(eq(orders.email, email))
     await db.delete(products).where(eq(products.categoryId, categoryId))
@@ -125,5 +130,39 @@ describe.skipIf(!url)("transfer needs a real bank account", () => {
     await setBank({ bankIban: null, bankRib: null })
     const later = await guest.public.orders.get({ number: placed.number, token: placed.token })
     expect(later.bank).toBeNull()
+  })
+
+  test("an euro order shows the euro account, a dinar order the main one", async () => {
+    await setBank({ bankIban: "TN5910006035183598478831", bankRib: "10006035183598478831" })
+    await updateShopProfile(db, {
+      bankEurHolder: "Atelier EUR",
+      bankEurName: "Demo Bank AG",
+      bankEurIban: "DE89370400440532013000",
+      bankEurBic: "DEMODEFF",
+      bankEurAddress: "1 Demo Strasse, Berlin",
+    })
+    const placed = await guest.public.orders.create({ ...buyer, items: items() })
+    const eur = await guest.public.orders.get({ number: placed.number, token: placed.token })
+    expect(eur.bank).toMatchObject({ iban: "DE89370400440532013000", address: "1 Demo Strasse, Berlin" })
+    const mail = sent.find((m) => m.to === email && m.text.includes(placed.number) && m.text.includes("DE89"))
+    expect(mail?.text).toContain("DE89370400440532013000")
+    expect(mail?.text).toContain("1 Demo Strasse, Berlin")
+
+    await db.update(orders).set({ currency: "TND" }).where(eq(orders.number, placed.number))
+    const tnd = await guest.public.orders.get({ number: placed.number, token: placed.token })
+    expect(tnd.bank).toMatchObject({ iban: "TN5910006035183598478831" })
+  })
+
+  test("without a euro account an euro order keeps the main account", async () => {
+    await updateShopProfile(db, {
+      bankEurHolder: null,
+      bankEurName: null,
+      bankEurIban: null,
+      bankEurBic: null,
+      bankEurAddress: null,
+    })
+    const placed = await guest.public.orders.create({ ...buyer, items: items() })
+    const order = await guest.public.orders.get({ number: placed.number, token: placed.token })
+    expect(order.bank).toMatchObject({ iban: "TN5910006035183598478831" })
   })
 })

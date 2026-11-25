@@ -1,0 +1,124 @@
+{
+  "id": "94",
+  "slug": "assistant-atelier-banque",
+  "title_fr": "Assistant : l'atelier et le compte bancaire",
+  "start": { "app": "dashboard", "path": "/onboarding?step=profile", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "L'atelier alimente vos factures.", "holdMs": 1500 },
+    {
+      "action": "wait",
+      "caption_fr": "Sur téléphone, les champs sont hauts et les boutons pleine largeur.",
+      "only": "mobile",
+      "holdMs": 1800
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Raison sociale" },
+      "value": "Ceraghit Creation",
+      "caption_fr": "Remplissez les champs de l'atelier."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Matricule fiscal" },
+      "value": "1234567/A/M/000",
+      "caption_fr": "Remplissez les champs de l'atelier."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Adresse", "nth": 0 },
+      "value": "1 rue de l'Atelier",
+      "caption_fr": "Remplissez les champs de l'atelier."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Code postal" },
+      "value": "8000",
+      "caption_fr": "Remplissez les champs de l'atelier."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Ville" },
+      "value": "Nabeul",
+      "caption_fr": "Remplissez les champs de l'atelier."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Téléphone 1" },
+      "value": "abc",
+      "caption_fr": "Un numéro et un email faux."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Email de contact" },
+      "value": "pas-un-email",
+      "caption_fr": "Un numéro et un email faux."
+    },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "Les champs fautifs sont signalés.", "holdMs": 2200 },
+    { "action": "fill", "target": { "label": "Téléphone 1" }, "value": "20 000 000", "caption_fr": "On corrige." },
+    {
+      "action": "fill",
+      "target": { "label": "Email de contact" },
+      "value": "contact@ceraghit.example",
+      "caption_fr": "On corrige."
+    },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "Place au compte bancaire.", "holdMs": 1800 },
+    {
+      "action": "fill",
+      "target": { "label": "Titulaire du compte" },
+      "value": "Ceraghit Creation",
+      "caption_fr": "Titulaire et banque."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "Banque", "nth": 0 },
+      "value": "Banque de démonstration",
+      "caption_fr": "Titulaire et banque."
+    },
+    { "action": "fill", "target": { "label": "RIB" }, "value": "123", "caption_fr": "Des valeurs fausses, pour voir." },
+    {
+      "action": "fill",
+      "target": { "label": "IBAN" },
+      "value": "TN59 0000",
+      "caption_fr": "Des valeurs fausses, pour voir."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "BIC / SWIFT" },
+      "value": "ABC",
+      "caption_fr": "Des valeurs fausses, pour voir."
+    },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "RIB, IBAN et BIC sont contrôlés.", "holdMs": 2400 },
+    {
+      "action": "fill",
+      "target": { "label": "RIB" },
+      "value": "10006035183598478831",
+      "caption_fr": "Les vraies valeurs."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "IBAN" },
+      "value": "TN5910006035183598478831",
+      "caption_fr": "Les vraies valeurs."
+    },
+    {
+      "action": "fill",
+      "target": { "label": "BIC / SWIFT" },
+      "value": "BIATTNTT",
+      "caption_fr": "Les vraies valeurs."
+    },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "Enregistré : les frais de livraison suivent.", "holdMs": 1800 },
+    { "action": "click", "target": { "role": "button", "name": "Retour" }, "caption_fr": "Retour revient en arrière." },
+    { "action": "wait", "caption_fr": "Vos valeurs sont gardées.", "holdMs": 1500 },
+    {
+      "action": "goto",
+      "value": "/onboarding?step=done",
+      "caption_fr": "On ne peut pas sauter une étape.",
+      "holdMs": 800
+    },
+    { "action": "wait", "caption_fr": "La liste dit ce qu'il reste.", "holdMs": 2400 }
+  ]
+}

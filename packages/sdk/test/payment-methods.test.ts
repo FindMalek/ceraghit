@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import {
+  bankForCurrency,
   bankFromProfile,
   DEFAULT_PAYONEER,
   isPayoneerUrl,
@@ -83,5 +84,33 @@ describe("bankFromProfile", () => {
 
   test("the old placeholder is not an account", () => {
     expect(bankFromProfile({ ...profile, bankIban: "À compléter" })).toBeNull()
+  })
+})
+
+describe("bankForCurrency", () => {
+  const profile = {
+    bankHolder: "Atelier",
+    bankName: "Banque",
+    bankIban: "TN5910006035183598478831",
+    bankRib: null,
+    bankBic: null,
+    bankEurHolder: "Atelier EUR",
+    bankEurName: "Demo Bank AG",
+    bankEurIban: "DE89370400440532013000",
+    bankEurBic: "DEMODEFF",
+    bankEurAddress: "1 Demo Strasse, Berlin",
+  }
+
+  test("euro orders get the euro account, dinar orders the main one", () => {
+    expect(bankForCurrency(profile, "EUR")).toMatchObject({
+      holder: "Atelier EUR",
+      iban: "DE89370400440532013000",
+      address: "1 Demo Strasse, Berlin",
+    })
+    expect(bankForCurrency(profile, "TND")).toMatchObject({ holder: "Atelier", iban: "TN5910006035183598478831" })
+  })
+
+  test("an incomplete euro account is ignored and euro orders keep the main account", () => {
+    expect(bankForCurrency({ ...profile, bankEurBic: null }, "EUR")).toMatchObject({ holder: "Atelier" })
   })
 })

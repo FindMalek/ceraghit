@@ -207,6 +207,7 @@
     "bankTitle": "البيانات البنكية",
     "holder": "صاحب الحساب",
     "bank": "البنك",
+    "bankAddress": "عنوان البنك",
     "iban": "IBAN",
     "rib": "RIB",
     "bic": "BIC",

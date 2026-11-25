@@ -1,0 +1,50 @@
+{
+  "id": "96",
+  "slug": "etapes-optionnelles-progression",
+  "title_fr": "Étapes optionnelles et carte de progression",
+  "start": { "app": "dashboard", "path": "/onboarding?step=integrations", "loggedIn": true },
+  "steps": [
+    { "action": "wait", "caption_fr": "Ces étapes sont facultatives.", "holdMs": 2200 },
+    {
+      "action": "wait",
+      "caption_fr": "Certaines affichent Bientôt disponible.",
+      "holdMs": 1800
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Plus tard", "nth": 0 },
+      "caption_fr": "Plus tard : l'étape est ignorée."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Plus tard", "nth": 0 },
+      "caption_fr": "Plus tard : l'étape est ignorée."
+    },
+    { "action": "wait", "caption_fr": "Son état passe à Ignoré.", "holdMs": 1800 },
+    { "action": "click", "target": { "role": "button", "name": "Continuer" }, "caption_fr": "Cliquez sur Continuer." },
+    { "action": "wait", "caption_fr": "Fait, ignoré ou à faire plus tard.", "holdMs": 2200 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ouvrir mon tableau de bord" },
+      "caption_fr": "Ouvrez votre tableau de bord."
+    },
+    { "action": "wait", "caption_fr": "La carte montre l'avancement.", "holdMs": 2200 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
+      "caption_fr": "Ignorez une étape ici aussi."
+    },
+    { "action": "wait", "caption_fr": "Le compteur du menu baisse.", "holdMs": 2200 },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
+      "caption_fr": "Ignorez les autres."
+    },
+    {
+      "action": "click",
+      "target": { "role": "button", "name": "Ignorer", "nth": 0 },
+      "caption_fr": "Ignorez les autres."
+    },
+    { "action": "wait", "caption_fr": "Plus rien à terminer : la carte disparaît.", "holdMs": 2400 }
+  ]
+}
