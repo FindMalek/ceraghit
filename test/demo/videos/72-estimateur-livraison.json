@@ -1,0 +1,105 @@
+{
+  "id": "72",
+  "slug": "estimateur-livraison",
+  "title_fr": "Simuler le prix de livraison",
+  "start": {
+    "app": "dashboard",
+    "path": "/shipping",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "scroll",
+      "value": "1300",
+      "caption_fr": "Voici le simulateur de colis."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Pas encore de colis, pas de prix.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Chercher une pièce par nom ou référence"
+      },
+      "value": "0010",
+      "caption_fr": "Cherchez une pièce."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter",
+        "nth": 0
+      },
+      "caption_fr": "Ajoutez-la au colis."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Zone, poids emballé, volumétrique et facturé.",
+      "holdMs": 2800
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Pays de livraison"
+      },
+      "caption_fr": "Choisissez le pays."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Belgique"
+      },
+      "caption_fr": "Choisissez le pays."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "combobox",
+        "name": "Devise du client"
+      },
+      "caption_fr": "Et la devise du client."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "option",
+        "name": "Euros"
+      },
+      "caption_fr": "Et la devise du client."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Le prix change avec le pays.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Chercher une pièce par nom ou référence"
+      },
+      "value": "0003",
+      "caption_fr": "Ajoutez une pièce très lourde."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Ajouter",
+        "nth": 0
+      },
+      "caption_fr": "Ajoutez une pièce très lourde."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Trop lourd : livraison sur devis.",
+      "holdMs": 2800
+    }
+  ]
+}

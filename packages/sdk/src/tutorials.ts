@@ -44,9 +44,8 @@ export type Tutorial = z.infer<typeof tutorialSchema>
 
 /**
  * The catalogue of tutorial videos, from the feature inventory. Files live in the bucket, never in git.
- * Videos marked `status: "soon"` wait for their feature, remove the status when it ships:
- * 27, 48, 77, 91 Payoneer (#330, link per order #169), 49 and 92 Aramex shipping and
- * tracking (#192, #195), 68 site photos page (#200, #201).
+ * Videos marked `status: "soon"` wait for their feature or a new take, remove the status when it ships:
+ * 98 keys vault (filmed on the removed card gateway keys block).
  */
 export const TUTORIALS: readonly Tutorial[] = [
   {
@@ -804,7 +803,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 90,
     tags: ["photos du site", "hero", "accueil", "logo", "image de partage"],
     description: "Changer les photos de l'accueil, de l'atelier, le logo et l'image de partage.",
-    status: "soon",
   },
   {
     id: "69-demandes-clients",
@@ -896,7 +894,6 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 75,
     tags: ["payoneer", "lien statique", "par commande", "note", "activer"],
     description: "Activer Payoneer et choisir entre un lien unique ou un lien par commande.",
-    status: "soon",
   },
   {
     id: "78-gerer-ateliers",
@@ -1136,6 +1133,7 @@ export const TUTORIALS: readonly Tutorial[] = [
     lengthSeconds: 75,
     tags: ["clés", "secrets", "coffre", "groq", "resend", "aramex", "remplacer", "effacer"],
     description: "Où sont rangées les clés des services, chiffrées, et comment les remplacer.",
+    status: "soon",
   },
   {
     id: "99-securite-donnees-sauvegardes",

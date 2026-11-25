@@ -27,7 +27,7 @@ test("search narrows the library without accents or case, and an empty result of
   await step("the library lists every video", async () => {
     await page.goto(help)
     await expect(cards).toHaveCount(98)
-    await expect(page.getByText("99 vidéos")).toBeVisible()
+    await expect(page.getByText("98 vidéos")).toBeVisible()
   })
   await step("a search without accents or capitals finds the video and keeps the query in the url", async () => {
     await search.fill("RECHERCHER piece")

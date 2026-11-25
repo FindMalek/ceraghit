@@ -32,7 +32,7 @@ test("the catalogue is valid: unique ids, slugs matching ids, lengths within 30 
   expect(new Set(TUTORIALS.map((t) => t.id)).size).toBe(TUTORIALS.length)
   expect(TUTORIALS.length).toBe(98)
   for (const t of TUTORIALS) expect(t.id).toBe(`${t.id.slice(0, 2)}-${t.slug}`)
-  expect(TUTORIALS.filter((t) => t.status === "soon").map((t) => t.id.slice(0, 2))).toEqual(["68", "77"])
+  expect(TUTORIALS.filter((t) => t.status === "soon").map((t) => t.id.slice(0, 2))).toEqual(["98"])
 })
 
 test("the schema refuses a bad tag, a length out of range and an unknown device", () => {
@@ -136,7 +136,7 @@ test("a video plays from the owner's link first, then the hosted file, on its de
 })
 
 test("a video marked soon never plays, even with files or links", () => {
-  const soon = TUTORIALS.find((t) => t.status === "soon")!
+  const soon = { ...TUTORIALS[0]!, status: "soon" as const }
   const files = { desktop: true, mobile: true, captions: true, poster: true }
   expect(playableSources(soon, files, { desktop: "dQw4w9WgXcQ", mobile: null })).toEqual({})
 })
