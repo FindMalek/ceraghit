@@ -13,20 +13,30 @@ const BEARER = /Bearer\s+[A-Za-z0-9._~+/=-]+/gi
 const IBAN = /\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/g
 const PHONE = /\+?\d[\d\s().-]{7,}\d/g
 const BASIC = /Basic\s+[A-Za-z0-9+/=]{6,}/gi
-/** `"password":"x"`, `password=x`, `'token': 'x'`: the key stays, the value goes. */
+/** `"password":"x"`, `access_token=x`, also inside escaped json: the key stays, the value goes. */
 const CREDENTIAL_FIELD =
-  /(["']?(?:pass(?:word|wd)?|secret|token|authorization|cookie|api[-_]?key|credential|session|dsn)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;&}]+)/gi
+  /((?:pass(?:word|wd)?|secret|token|authorization|cookie|api[-_]?key|credential|session|dsn)[\w-]*(?:\\*["'])?\s*[:=]\s*)(?:\\+"[^"\\]*\\+"|"(?:\\.|[^"\\])*"|'[^']*'|[^\s,;&}]+)/gi
+/** Drizzle puts every bound value (names, addresses, hashes) in the message of a failed query. */
+const QUERY_PARAMS = /(Failed query:[\s\S]*?\nparams:)[\s\S]*/
+const URL_USERINFO = /\b([a-z][a-z0-9+.-]*:\/\/)[^\s/"']+@/gi
+const URL_QUERY = /\b(https?:\/\/[^\s"'<>?#]*)[?#][^\s"'<>]*/gi
+/** A Tunisian number written without +216: 8 digits, grouped 2-3-3 or not at all. */
+const LOCAL_PHONE = /(?<![\w.-])[2-9]\d(?:[ .]?\d{3}){2}(?![\w-]|\.\d)/g
 const LONG_SECRET = /\b[A-Za-z0-9_-]{32,}\b/g
 
 /** A message or url keeps its meaning but loses emails, phones, ibans, bearer tokens and anything key-shaped. */
 export function scrubString(value: string): string {
-  const masked = redact(value) as string
-  return masked
+  const stripped = value
+    .replace(QUERY_PARAMS, "$1 [redacted]")
+    .replace(URL_USERINFO, "$1[redacted]@")
+    .replace(URL_QUERY, "$1")
+  return (redact(stripped) as string)
     .replace(BEARER, "Bearer [redacted]")
     .replace(BASIC, "Basic [redacted]")
     .replace(CREDENTIAL_FIELD, "$1[redacted]")
     .replace(IBAN, "[iban]")
     .replace(PHONE, (match) => (match.replace(/\D/g, "").length >= 9 ? "[phone]" : match))
+    .replace(LOCAL_PHONE, "[phone]")
     .replace(LONG_SECRET, "[redacted]")
 }
 
@@ -57,7 +67,9 @@ function deepScrub(value: unknown, depth = 0): unknown {
   for (const [key, item] of Object.entries(value)) {
     if (BODY_KEYS.includes(key)) continue
     out[key] =
-      ["url", "from", "to"].includes(key) && typeof item === "string" ? scrubUrl(item) : deepScrub(item, depth + 1)
+      ["url", "from", "to"].includes(key) && typeof item === "string"
+        ? scrubString(scrubUrl(item))
+        : deepScrub(item, depth + 1)
   }
   return out
 }

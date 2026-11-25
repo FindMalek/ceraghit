@@ -22,6 +22,11 @@ type NewJobRun = typeof jobRuns.$inferInsert
 type NewLocation = typeof locations.$inferInsert
 type NewProfile = typeof shopProfile.$inferInsert
 
+/** The studio settings of the demo: WhatsApp and Instagram shown in the footer. Rates stay the defaults. */
+export function demoStudioSettings(rates: unknown) {
+  return { whatsapp: "+216 20 000 000", instagram: "@ceraghit_demo", shippingRates: rates, shippingNote: null }
+}
+
 export interface ScenarioProduct {
   id: string
   ref: string
@@ -110,6 +115,11 @@ export function buildDemoProfile(now: Date): NewProfile {
     bankRib: "00000000000000000000",
     bankIban: "TN5900000000000000000000",
     bankBic: "DEMOTNTT",
+    bankEurHolder: "Ceraghit Creation (démo)",
+    bankEurName: "Demo Bank AG",
+    bankEurIban: "DE89370400440532013000",
+    bankEurBic: "DEMODEFF",
+    bankEurAddress: "1 Demo Strasse, 10115 Berlin",
     invoiceNote: {
       fr: "TVA non applicable (démo).",
       en: "VAT not applicable (demo).",
@@ -132,6 +142,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     city: "Nabeul",
     country: "Tunisie",
     image: "/catalogue/studio-interior.webp",
+    mapUrl: "https://www.openstreetmap.org/search?query=Avenue%20Habib%20Bourguiba%2C%20Nabeul",
     phone: "+216 20 000 000",
     hours: {
       fr: "Du mardi au samedi, 10h à 18h",
@@ -150,6 +161,7 @@ export const DEMO_LOCATIONS: NewLocation[] = [
     address: "Rue Haute 120",
     city: "Bruxelles",
     country: "Belgique",
+    mapUrl: "https://www.openstreetmap.org/search?query=Rue%20Haute%20120%2C%20Bruxelles",
     phone: "+32 470 00 00 00",
     hours: {
       fr: "Du mercredi au samedi, 11h à 19h",
@@ -290,6 +302,13 @@ export function demoRequests(now: Date): (typeof customRequests.$inferInsert)[] 
     },
   ]
 }
+
+/** Storefront stock states the videos film: a last piece, a sold out piece, and a sold out option on a piece with options. */
+export const DEMO_STOCK_STATES = {
+  last: { ref: "0015", stock: 1 },
+  soldOut: { ref: "0210", stock: 0 },
+  soldOutOption: { ref: "0209", stock: 0 },
+} as const
 
 /** Draft and archived pieces, so the product list passes its 40 row page and the status filters have rows. Refs 08xx, the journeys create 09xx. */
 export function demoExtraProducts(categoryIds: string[]): (typeof products.$inferInsert)[] {
@@ -583,6 +602,7 @@ export function buildScenario(
   }
   addGatewayAlert(out, now, waiting)
   addCorrectableShipment(out, now, products[1] ?? waiting)
+  addRefundedOrder(out, now, products[2] ?? waiting)
   addOlderHistory(out, now, products)
   out.shipments = demoShipments(out.orders, now)
   const confirmed = out.orders.filter((o) => o.status === "paid" || o.status === "fulfilled")
@@ -608,7 +628,40 @@ export function buildScenario(
       sentAt: ok ? at : null,
     })
   }
+  addMailFailures(out, now, confirmed.slice(2))
   return out
+}
+
+/** Seven more failed mails, one per kind but the first and one per error the failures page words in French. */
+const MAIL_FAILURES: [kind: NewMail["kind"], error: string | null, attempts: number][] = [
+  ["order_studio", "resend 403: domain is not verified", 3],
+  ["request_studio", "resend 401: invalid api key", 1],
+  ["payment_received", "resend 429: rate limit exceeded", 3],
+  ["shipped", "resend 422: invalid to address", 1],
+  ["order_expired", "network error: fetch failed", 3],
+  ["payment_link", null, 1],
+  ["test", "resend 400: bad request", 1],
+]
+
+function addMailFailures(out: Built, now: Date, orders: Built["orders"]): void {
+  for (const [i, [kind, error, attempts]] of MAIL_FAILURES.entries()) {
+    const order = orders[i]
+    if (!order) continue
+    const at = new Date(now.getTime() - (4 + i) * 3600e3)
+    out.mail.push({
+      kind,
+      orderId: kind === "test" ? null : order.id,
+      to: order.email,
+      subject: `Message de démonstration ${order.number}`,
+      text: `Bonjour ${order.customerName},\n\nMessage de démonstration.\n\nCeraghit Creation`,
+      status: "failed",
+      providerId: null,
+      error,
+      attempts,
+      createdAt: at,
+      sentAt: null,
+    })
+  }
 }
 
 type Built = ReturnType<typeof buildScenario>
@@ -781,6 +834,57 @@ function addCorrectableShipment(out: Built, now: Date, product: ScenarioProduct)
     title: product.title,
     unitMinor: product.priceTnd,
     quantity: 1,
+  })
+}
+
+/** CER-10102: a shipped order the owner refunded, so the customer page and the dashboard show the "Remboursée" state. */
+function addRefundedOrder(out: Built, now: Date, product: ScenarioProduct): void {
+  const id = crypto.randomUUID()
+  const paidAt = new Date(now.getTime() - 9 * 864e5)
+  out.orders.push({
+    id,
+    number: "CER-10102",
+    publicToken: "demo-refunded",
+    status: "refunded",
+    currency: "TND",
+    subtotalMinor: product.priceTnd,
+    shippingMinor: 0,
+    totalMinor: product.priceTnd,
+    customerName: "Hela Mansouri",
+    email: "hela.mansouri.refund@example.com",
+    phone: "+216 20 000 000",
+    country: "TN",
+    city: "Monastir",
+    address: "8 avenue Habib Bourguiba",
+    locale: "fr",
+    paymentMethod: "online",
+    paymentProvider: "demo",
+    paymentRef: demoRef({
+      outcome: "paid",
+      orderNumber: "CER-10102",
+      amountMinor: product.priceTnd,
+      currency: "TND",
+      nonce: "c".padStart(32, "0"),
+    }),
+    paidAt,
+    createdAt: new Date(paidAt.getTime() - 5 * 60_000),
+  })
+  out.items.push({
+    orderId: id,
+    productId: product.id,
+    ref: product.ref,
+    title: product.title,
+    unitMinor: product.priceTnd,
+    quantity: 1,
+  })
+  out.audit.push({
+    orderId: id,
+    adminId: null,
+    action: "set_status",
+    fromStatus: "paid",
+    toStatus: "refunded",
+    note: "remboursement (démo)",
+    createdAt: new Date(paidAt.getTime() + 2 * 864e5),
   })
 }
 

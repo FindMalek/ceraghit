@@ -1,0 +1,45 @@
+{
+  "id": "97",
+  "slug": "demo-test-production",
+  "title_fr": "Démo, aperçu et production : ne jamais mélanger",
+  "devices": ["desktop"],
+  "start": { "app": "dashboard", "path": "/payments", "loggedIn": true },
+  "steps": [
+    {
+      "action": "hover",
+      "target": { "text": "Mode test (démo)" },
+      "caption_fr": "En démo, le paiement est un simulateur.",
+      "holdMs": 2600
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3067/health",
+      "caption_fr": "L'API annonce son environnement et sa passerelle.",
+      "holdMs": 3600
+    },
+    {
+      "action": "goto",
+      "value": "{{DEMO_PAY_URL}}",
+      "caption_fr": "Cette page de test n'existe qu'avec la démo.",
+      "holdMs": 3200
+    },
+    {
+      "action": "goto",
+      "value": "http://localhost:3166/orders?q=CER-10097",
+      "caption_fr": "Retour aux commandes.",
+      "holdMs": 600
+    },
+    { "action": "click", "target": { "text": "CER-10097" }, "caption_fr": "Ouvrez une commande de démo." },
+    {
+      "action": "hover",
+      "target": { "text": "Démo" },
+      "caption_fr": "Démo remplace le nom d'un administrateur.",
+      "holdMs": 2600
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Les vraies clés, la vraie base et le vrai stockage n'existent qu'en production.",
+      "holdMs": 3600
+    }
+  ]
+}

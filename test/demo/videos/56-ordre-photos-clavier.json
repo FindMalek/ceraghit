@@ -1,0 +1,121 @@
+{
+  "id": "56",
+  "slug": "ordre-photos-clavier",
+  "title_fr": "Réordonner les photos",
+  "start": {
+    "app": "dashboard",
+    "path": "/products",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0013",
+      "caption_fr": "Ouvrez le produit à réordonner."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Modifier",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez le produit à réordonner."
+    },
+    {
+      "action": "drag",
+      "target": {
+        "role": "button",
+        "name": "Déplacer la photo 3"
+      },
+      "to": {
+        "role": "button",
+        "name": "Déplacer la photo 1"
+      },
+      "caption_fr": "Glissez la poignée pour changer l'ordre.",
+      "holdMs": 1800,
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Déplacer la photo 2"
+      },
+      "caption_fr": "Au clavier : espace pour saisir.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": " ",
+      "caption_fr": "Au clavier : espace pour saisir.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "ArrowLeft",
+      "caption_fr": "Les flèches déplacent la photo.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": " ",
+      "caption_fr": "Espace dépose la photo.",
+      "holdMs": 1800,
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": " ",
+      "caption_fr": "Échap annule le déplacement.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "ArrowRight",
+      "caption_fr": "Échap annule le déplacement.",
+      "only": "desktop"
+    },
+    {
+      "action": "press",
+      "value": "Escape",
+      "caption_fr": "Échap annule le déplacement.",
+      "holdMs": 1800,
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour la photo 2"
+      },
+      "caption_fr": "Le menu Monter et Descendre évite le glisser."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Monter"
+      },
+      "caption_fr": "Le menu Monter et Descendre évite le glisser."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez, puis vérifiez l'ordre sur la boutique.",
+      "holdMs": 1800
+    },
+    {
+      "action": "goto",
+      "value": "{{WEB_URL}}/product/curda-seca-0013",
+      "caption_fr": "Enregistrez, puis vérifiez l'ordre sur la boutique."
+    }
+  ]
+}

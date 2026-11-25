@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { type Db, type InvoiceSeller, invoiceCounters, invoices, orders } from "@workspace/db"
-import { bankFromProfile, type InvoiceLocale, type InvoiceView, type PaymentMethod } from "@workspace/sdk"
+import { bankForCurrency, type InvoiceLocale, type InvoiceView, type PaymentMethod } from "@workspace/sdk"
 import { eq, sql } from "drizzle-orm"
 import { getShopProfile, type ShopProfileRow } from "./shop-profile"
 
@@ -19,7 +19,7 @@ const tunisYear = (date: Date): number =>
 
 export const formatInvoiceNumber = (year: number, seq: number): string => `${year}-${String(seq).padStart(4, "0")}`
 
-export function sellerFromProfile(profile: ShopProfileRow): InvoiceSeller {
+export function sellerFromProfile(profile: ShopProfileRow, currency: string): InvoiceSeller {
   return {
     displayName: profile.displayName,
     legalName: profile.legalName,
@@ -33,7 +33,7 @@ export function sellerFromProfile(profile: ShopProfileRow): InvoiceSeller {
     phone: profile.phones[0] ?? null,
     email: profile.email,
     invoiceNote: profile.invoiceNote,
-    bank: bankFromProfile(profile),
+    bank: bankForCurrency(profile, currency),
   }
 }
 
@@ -64,7 +64,7 @@ export async function issueInvoice(db: Db, orderId: string, now: Date): Promise<
   if (!isIssuable(order.status)) {
     throw new ORPCError("PRECONDITION_FAILED", { message: "Only paid orders get an invoice." })
   }
-  const seller = sellerFromProfile(await getShopProfile(db))
+  const seller = sellerFromProfile(await getShopProfile(db), order.currency)
   const year = tunisYear(now)
 
   try {
@@ -142,7 +142,7 @@ export function invoiceView(
       city: order.city,
       country: order.country,
     },
-    seller: sellerView(invoice?.seller ?? sellerFromProfile(profile)),
+    seller: sellerView(invoice?.seller ?? sellerFromProfile(profile, order.currency)),
   }
 }
 

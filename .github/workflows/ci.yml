@@ -98,6 +98,8 @@ jobs:
       - name: Install chromium system dependencies
         if: steps.browsers.outputs.cache-hit == 'true'
         run: pnpm --filter @workspace/demo exec playwright install-deps chromium
+      - name: Install ffmpeg (recorder tests encode a video)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: pnpm test
 
   build:

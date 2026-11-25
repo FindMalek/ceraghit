@@ -1,0 +1,265 @@
+{
+  "id": "55",
+  "slug": "photos-produit",
+  "title_fr": "Gérer les photos d'un produit",
+  "start": {
+    "app": "dashboard",
+    "path": "/products",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0210",
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Modifier",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "desktop",
+      "voice": true
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0211",
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "link",
+        "name": "Modifier",
+        "nth": 0
+      },
+      "caption_fr": "Ouvrez le produit à illustrer.",
+      "only": "mobile",
+      "voice": true
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir comme photo principale",
+        "nth": 0
+      },
+      "caption_fr": "Une seule photo est la photo principale."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour la photo 2"
+      },
+      "caption_fr": "Chaque photo a son menu d'actions."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Texte alternatif…"
+      },
+      "caption_fr": "Décrivez la photo pour les personnes qui ne la voient pas."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Texte alternatif"
+      },
+      "value": "Plat bleu vu de dessus",
+      "caption_fr": "Décrivez la photo pour les personnes qui ne la voient pas."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Vide, le texte de la médiathèque est utilisé."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour la photo 3"
+      },
+      "caption_fr": "Retirer une photo ne la supprime pas."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Retirer"
+      },
+      "caption_fr": "Retirer une photo ne la supprime pas."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour la photo 2"
+      },
+      "caption_fr": "Retirez-les toutes : il faut au moins une photo.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Retirer"
+      },
+      "caption_fr": "Retirez-les toutes : il faut au moins une photo.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Actions pour la photo 1"
+      },
+      "caption_fr": "Retirez-les toutes : il faut au moins une photo.",
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "menuitem",
+        "name": "Retirer"
+      },
+      "caption_fr": "Retirez-les toutes : il faut au moins une photo.",
+      "holdMs": 2000,
+      "only": "desktop"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "heading",
+        "name": "Modifier le produit"
+      },
+      "caption_fr": "Choisissez dans la médiathèque."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir dans la médiathèque"
+      },
+      "caption_fr": "Choisissez dans la médiathèque."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "bas-relief-en-ceramique-0601-1.webp"
+      },
+      "caption_fr": "Choisissez dans la médiathèque.",
+      "holdMs": 1500
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Choisir (1)"
+      },
+      "caption_fr": "Choisissez dans la médiathèque."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Envoyer des photos"
+      },
+      "caption_fr": "Ou envoyez de nouvelles photos."
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "banner-1.png",
+      "caption_fr": "Ou envoyez de nouvelles photos.",
+      "holdMs": 2500,
+      "only": "desktop"
+    },
+    {
+      "action": "upload",
+      "target": {
+        "label": "Choisir des photos"
+      },
+      "value": "banner-1.webp",
+      "caption_fr": "Ou envoyez de nouvelles photos.",
+      "holdMs": 2500,
+      "only": "mobile"
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Fermer"
+      },
+      "caption_fr": "Elles s'ajoutent à la médiathèque et au produit."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "heading",
+        "name": "Modifier le produit"
+      },
+      "caption_fr": "Enregistrez : photos et texte alternatif sont sauvés."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer"
+      },
+      "caption_fr": "Enregistrez : photos et texte alternatif sont sauvés.",
+      "holdMs": 1500
+    },
+    {
+      "action": "goto",
+      "value": "/products",
+      "caption_fr": "La liste montre la nouvelle photo."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0210",
+      "caption_fr": "La liste montre la nouvelle photo.",
+      "holdMs": 2500,
+      "only": "desktop"
+    },
+    {
+      "action": "fill",
+      "target": {
+        "role": "textbox",
+        "name": "Référence ou nom"
+      },
+      "value": "0211",
+      "caption_fr": "La liste montre la nouvelle photo.",
+      "holdMs": 2500,
+      "only": "mobile"
+    }
+  ]
+}

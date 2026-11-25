@@ -1,0 +1,91 @@
+{
+  "id": "75",
+  "slug": "delai-annulation-commandes",
+  "title_fr": "Délai avant annulation",
+  "start": {
+    "app": "dashboard",
+    "path": "/payments",
+    "loggedIn": true
+  },
+  "steps": [
+    {
+      "action": "scroll",
+      "value": "900",
+      "caption_fr": "Voici le délai de paiement."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Virement : annuler après"
+      },
+      "value": "90",
+      "caption_fr": "Un délai de 1 à 60 jours."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Un délai trop long est refusé.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Virement : annuler après"
+      },
+      "value": "7",
+      "caption_fr": "Sept jours, par exemple."
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prévenir (jours avant)"
+      },
+      "value": "20",
+      "caption_fr": "Le préavis va de 0 à 14 jours."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Un préavis trop long est refusé.",
+      "holdMs": 2200
+    },
+    {
+      "action": "fill",
+      "target": {
+        "label": "Prévenir (jours avant)"
+      },
+      "value": "2",
+      "caption_fr": "Deux jours, par exemple."
+    },
+    {
+      "action": "click",
+      "target": {
+        "role": "button",
+        "name": "Enregistrer",
+        "nth": -1
+      },
+      "caption_fr": "Enregistrez."
+    },
+    {
+      "action": "wait",
+      "caption_fr": "Un badge Expire le apparaît dans les commandes.",
+      "holdMs": 2500
+    }
+  ]
+}
