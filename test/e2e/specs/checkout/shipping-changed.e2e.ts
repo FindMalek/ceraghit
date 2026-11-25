@@ -1,5 +1,5 @@
 import { expect, test } from "../../fixtures"
-import { fillCheckout, openCheckout } from "../../helpers/checkout"
+import { BUYER, fillCheckout, openCheckout } from "../../helpers/checkout"
 import { t } from "../../helpers/messages"
 import { pieceFor } from "../../support/catalogue"
 
@@ -24,8 +24,13 @@ test(
           // the page moved on while the answer was in flight
         }
       })
+      // the city is a second question, answered after a pause: its price must be on screen before the real one is allowed
+      const quotedForCity = page.waitForResponse(
+        (r) => r.url().includes("shippingQuote") && (r.request().postData() ?? "").includes(BUYER.city),
+      )
       await openCheckout(page, { locale: appLocale, slug: piece.slug })
       await fillCheckout(page, { locale: appLocale, country: "TN", method: "cod" })
+      await quotedForCity
       await expect(submit).toBeEnabled()
     })
 
