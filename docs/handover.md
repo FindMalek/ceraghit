@@ -105,6 +105,8 @@ carte reste coupé et le site propose uniquement la livraison payée à la réce
 - **Étiquettes** : depuis la commande, « Créer l'expédition Aramex » ouvre une fenêtre dont le bouton « Créer l'expédition et l'étiquette » produit l'étiquette PDF, à imprimer et coller sur le colis.
   Les étiquettes sont privées : seul le tableau de bord les ouvre.
 - **Suivi** : il se met à jour toutes les 3 heures, ou tout de suite avec « Actualiser » sur la carte de l'envoi.
+  La liste « Commandes » affiche aussi l'état du colis et se filtre par expédition (en cours, livrée, problème). Sur la
+  « Vue d'ensemble », « Colis en cours » ouvre la liste filtrée.
 - **Enlèvement** : une fois l'étiquette créée, « Demander l'enlèvement » sur la carte de l'envoi réserve le passage du livreur à l'atelier (du lundi au samedi) ; vous pouvez l'annuler depuis la même carte.
 - **Frais de livraison** : un montant fixe par monnaie, dans « Réglages ». Les céramiques sont lourdes et fragiles : si un
   montant fixe ne suffit pas, prévenez l'opérateur pour des tarifs par pays.
