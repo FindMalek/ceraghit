@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
 import { CategoryHeading } from "@/components/category-heading"
 import { CategoryTiles } from "@/components/category-tiles"
+import { CollectionResults } from "@/components/collection-scroll"
 import { EmptyState } from "@/components/empty-state"
 import { JsonLd } from "@/components/json-ld"
 import { ProductGrid } from "@/components/product-card"
@@ -62,12 +63,14 @@ export default async function CategoryPage({
       <h1 className="sr-only">{pick(category.name, locale)}</h1>
       <CategoryHeading category={category} index={index} />
       <CategoryTiles categories={categories} locale={locale} active={slug} compact />
-      <ShopFilters />
-      {products.length === 0 ? (
-        <EmptyState message={t("empty")} cta={t("emptyCta")} />
-      ) : (
-        <ProductGrid products={products} currency={currency} priorityCount={2} />
-      )}
+      <CollectionResults key={slug}>
+        <ShopFilters />
+        {products.length === 0 ? (
+          <EmptyState message={t("empty")} cta={t("emptyCta")} />
+        ) : (
+          <ProductGrid products={products} currency={currency} priorityCount={2} />
+        )}
+      </CollectionResults>
     </div>
   )
 }
