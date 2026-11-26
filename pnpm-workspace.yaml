@@ -59,7 +59,7 @@ catalog:
   "@types/react-dom": ^19.2.3
   drizzle-orm: 0.45.4
   next: 16.4.5
-  postgres: 3.4.9
+  postgres: 4.1.1
   react: 19.3.0
   react-dom: 19.3.0
   typescript: ^5.9.3
