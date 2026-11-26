@@ -53,6 +53,8 @@ export const E2E = {
   mailpitUrl: `http://localhost:${mailUiPort}`,
   ownerState: fileURLToPath(new URL("./artifacts/.auth/owner.json", import.meta.url)),
   artifacts: fileURLToPath(new URL("./artifacts/", import.meta.url)),
+  /** Everything the api prints while the suite runs: the log scan in `secrets-at-rest.e2e.ts` reads it. */
+  apiLog: fileURLToPath(new URL("./artifacts/api.log", import.meta.url)),
 } as const
 
 // support/mailpit.ts reads MAILPIT_URL, so the helper talks to the e2e catcher and never the dev one.

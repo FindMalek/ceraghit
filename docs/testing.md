@@ -42,6 +42,7 @@ bucket. Playwright then starts the api (3001), the storefront (3000) and the das
   `too_long`, `hang`). Konnect keys saved in the dashboard (stub key `e2e-konnect-key`) switch checkout from the demo
   gateway to the stub, so those specs live in `specs/dashboard/` and remove the keys when done.
 - Demo payments live in the api's memory: never restart the api mid-run.
+- The api's stdout and stderr go to `test/e2e/artifacts/api.log` (`E2E.apiLog`), so a spec can scan it for leaks.
 - Seeded pending online orders auto-cancel when opened: a spec creates its own orders.
 - iPhone 14 runs webkit, so fonts and `-webkit-text-stroke` differ from chromium.
 
