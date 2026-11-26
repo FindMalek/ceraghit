@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "catalog:",
-    "intl-messageformat": "^11.2.15",
+    "intl-messageformat": "^12.2.1",
     "zod": "catalog:"
   },
   "devDependencies": {
