@@ -60,6 +60,12 @@ Tests: `packages/errors/test/scrub.test.ts` (realistic payloads), `config.test.t
 
 ## deploy GlitchTip (operator, once)
 
+Done on the-keep: https://errors-ceraghit.findmalek.engineer, files and `.env` in `~/ceraghit-glitchtip` (a
+`docker-compose.override.yml` there routes it through Traefik). The name is one level deep on purpose, so the
+`*.findmalek.engineer` wildcard certificate covers it (Let's Encrypt's weekly limit). Organization `ceraghit` and both
+projects exist and the variables below are set. Left: the first superuser (step 3), SMTP (`EMAIL_URL` is
+`consolemail://`, so no alert mails yet) and backups (step 6). The steps stay for a rebuild.
+
 Nothing here is run by the repo. The compose file is `deploy/glitchtip/docker-compose.yml` (GlitchTip 6.2.6, Postgres
 17.12, Redis 7.4.12, all pinned): `web`, `worker` (celery and beat), `migrate`, `postgres`, `redis`.
 
