@@ -58,6 +58,10 @@ export const SENSITIVE_ROUTE =
 
 const isBag = (value: unknown): value is Bag => typeof value === "object" && value !== null && !Array.isArray(value)
 
+/** Ids that link an event to its trace and logs: long enough to look like secrets, so they are put back untouched. */
+const TRACE_IDS = ["trace_id", "span_id", "parent_span_id"]
+const CORRELATION_TAGS = new Set(["request_id", "trace_id"])
+
 /** Every depth, arrays included: bodies removed, strings scrubbed, urls cut to their path. */
 function deepScrub(value: unknown, depth = 0): unknown {
   if (typeof value === "string") return scrubString(value)
@@ -77,6 +81,27 @@ function deepScrub(value: unknown, depth = 0): unknown {
 function scrubData(data: unknown): Bag | undefined {
   if (!isBag(data)) return undefined
   return deepScrub(redact(data)) as Bag
+}
+
+function scrubContexts(contexts: Bag): Bag {
+  const kept = Object.fromEntries(Object.entries(contexts).filter(([name]) => KEPT_CONTEXTS.has(name)))
+  const out = scrubData(kept) ?? {}
+  const trace = kept.trace
+  if (isBag(trace)) {
+    const ids = Object.entries(trace).filter(([name]) => TRACE_IDS.includes(name))
+    out.trace = { ...(out.trace as Bag), ...Object.fromEntries(ids) }
+  }
+  return out
+}
+
+/** A tag named like a credential or a person loses its value; the others are scrubbed like any string. */
+function scrubTags(tags: Bag): Bag {
+  return Object.fromEntries(
+    Object.entries(redact(tags) as Bag).map(([name, value]) => [
+      name,
+      typeof value === "string" && !CORRELATION_TAGS.has(name) ? scrubString(value) : value,
+    ]),
+  )
 }
 
 interface BreadcrumbLike {
@@ -154,19 +179,8 @@ export function scrubEvent<T>(input: T): T | null {
   }
 
   next.extra = sensitive ? undefined : scrubData(event.extra)
-  if (event.contexts) {
-    next.contexts = redact(
-      Object.fromEntries(Object.entries(event.contexts).filter(([name]) => KEPT_CONTEXTS.has(name))),
-    ) as Bag
-  }
-  if (event.tags) {
-    next.tags = Object.fromEntries(
-      Object.entries(event.tags).map(([name, value]) => [
-        name,
-        typeof value === "string" ? (redact(value) as string) : value,
-      ]),
-    )
-  }
+  if (event.contexts) next.contexts = scrubContexts(event.contexts)
+  if (event.tags) next.tags = scrubTags(event.tags)
   if (event.breadcrumbs) {
     next.breadcrumbs = sensitive
       ? []
