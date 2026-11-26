@@ -21,9 +21,7 @@ export { releaseExpiredHolds, sendExpiryMails, settleOrder } from "./lib/orders"
 export {
   assertNoDemoInProduction,
   DemoProvider,
-  KonnectProvider,
   type PaymentProvider,
-  resolvePayments,
 } from "./lib/payments"
 export { sweepRateLimits } from "./lib/rate-limit"
 export { effectivePaymentMethods } from "./lib/settings"

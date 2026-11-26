@@ -13,7 +13,7 @@ Operator notes for the production shop. The owner's guide is `docs/handover.md` 
 | photos `cdn.ceraghit.com` | Cloudflare R2 bucket `ceraghit-prod` (backup bucket `ceraghit-backup`) | studio Cloudflare account |
 | DNS | Cloudflare zone `ceraghit.com`, records DNS only (Vercel terminates TLS) | studio |
 | mail | Resend, `EMAIL_FROM` on `ceraghit.com` | operator |
-| card payments | Konnect (live keys saved by the owner in the dashboard vault) | studio |
+| card payments | none (cash on delivery, bank transfer, Payoneer) | studio |
 | shipping | Aramex (credentials saved by the owner in the dashboard vault) | studio |
 | translation | Groq (key in the vault) | operator |
 | scheduler | Trigger.dev on `trigger.findmalek.engineer` (project `ceraghit`) | operator |
@@ -39,7 +39,7 @@ the production names and `docs/deploy.md` ("one-time setup") has the per-app tab
 | `SECRETS_KEY` (api only) | yes | no | no | provider keys cannot be saved or read, see `docs/secrets.md` |
 | `S3_*`, `S3_PUBLIC_URL` | all | endpoint and public url only | same | no uploads, CSP blocks photos |
 | `RESEND_API_KEY`, `EMAIL_FROM` | yes | no | no | no customer emails (they land in the failure page) |
-| `ONLINE_PAYMENTS`, `KONNECT_*` | optional | no | no | card payment stays off |
+| `ONLINE_PAYMENTS=false` | optional | no | no | nothing; `true` stops the api from booting |
 | `OPENOBSERVE_*`, `LOG_LEVEL` | yes | yes | yes | nothing exported, boot unaffected |
 | `GLITCHTIP_DSN`, `GLITCHTIP_ENV=production` | yes | yes | yes | no error tracking, boot unaffected (a mismatch with `APP_ENV` refuses to boot) |
 | `NEXT_PUBLIC_GLITCHTIP_DSN`, `NEXT_PUBLIC_GLITCHTIP_ENV=production` | no | build time | build time | no browser errors; redeploy after changing |
@@ -86,7 +86,7 @@ Check locally with `node scripts/check-migrations.mjs --base origin/main`.
 | `CRON_SECRET` | new random value in Vercel api production, GitHub `production` secret and Trigger.dev `prod`; update staging and local `.env` separately |
 | `PROXY_SECRET` | same new value on the three Vercel projects in one go, redeploy all three |
 | Resend, R2, Neon | create the new credential, update Vercel (and GitHub for R2 backup keys), redeploy, revoke the old one |
-| Konnect, Aramex, Groq | the owner saves the new value on "Paiements", "Livraison" or "Réglages" (vault); nothing to deploy |
+| Aramex, Groq | the owner saves the new value on "Livraison" or "Réglages" (vault); nothing to deploy |
 | owner password | update `ADMIN_PASSWORD` (GitHub `production` secret), run the Deploy workflow |
 | `TRIGGER_ACCESS_TOKEN` | `docs/jobs.md` |
 
@@ -140,8 +140,8 @@ thresholds: `docs/deploy.md` ("scheduled jobs").
    still down: the uptime workflow and `/health`.
 1. Site down: `curl -s https://api.ceraghit.com/health`; if `db` is false check Neon status and the connection string; if
    the deployment is bad, roll back (above); check the latest Deploy run.
-2. Payments failing: "Paiements" page, the `payments` field of `/health`, Konnect status. Orders never turn paid from request
-   data: a webhook is only a hint and `settleOrder` re-asks Konnect. Stuck order: confirm with Konnect, then the owner uses "Marquer payée".
+2. Payments: "Paiements" page and the `payments` field of `/health`. There is no card gateway: the owner checks the bank or
+   Payoneer, then uses "Marquer payée".
 3. Emails failing: "Emails" page, Resend dashboard (domain verified, quota), `retry-mail` job run.
 4. Bucket full: "Réglages" usage vs the 2.5 GB plan, run `cleanup-uploads` by hand (dry run first), ask the owner to delete unused photos.
 5. Owner locked out: unlock query above; forgotten password: rotation row "owner password".
@@ -233,5 +233,5 @@ Not implemented yet: `scripts/deploy/dokploy.mjs` has no production mode and `de
 - [ ] `API_PUBLIC_URL` and `WEB_URL` on the api, then CORS and CSRF origins (the api allows `WEB_URL` and the dashboard origin): check a login and an order from both sites.
 - [ ] `S3_PUBLIC_URL` and the CSP image sources still match the bucket; uploads and photos load.
 - [ ] Trigger.dev: update `CERAGHIT_API_URL` (prod environment) to the new api URL and keep `CRON_SECRET`; run one job by hand.
-- [ ] `PRODUCTION_API_HOST` (GitHub var) is the new host so the `deploy.yml` smoke and health checks hit the right api; Konnect webhook URL, if online payments are on, points at it too.
+- [ ] `PRODUCTION_API_HOST` (GitHub var) is the new host so the `deploy.yml` smoke and health checks hit the right api.
 - [ ] After DNS moves: login, order, a cron run, and `docs/release.md` items re-ticked.

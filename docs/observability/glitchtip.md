@@ -12,7 +12,7 @@ independent: with no DSN the apps run exactly as before. Issue #423, tied to #30
 | api | `apps/api/src/index.ts`, `server.ts`, `logger.ts` | starts when `GLITCHTIP_DSN` is set and `APP_ENV` is not `local`; reports thrown requests and handler 5xx |
 | web, dashboard (server) | `instrumentation.ts` | `register()` starts it, `onRequestError` reports with route, digest and `request_id`. The edge runtime (only the proxy) is not instrumented |
 | web, dashboard (browser) | `instrumentation-client.ts`, error boundaries | only when `NEXT_PUBLIC_GLITCHTIP_DSN` was set at **build** time |
-| events | `runJob`, `deliverMail`, `settleOrder`, Konnect webhook, lazy hold sweep, mail purge | tags `job`, `mail_kind`, `order` (number), `provider`, `reason`; never a customer field |
+| events | `runJob`, `deliverMail`, `settleOrder`, lazy hold sweep, mail purge | tags `job`, `mail_kind`, `attempts`, `order_id`, `order` (number), `provider`, `reason`; never a customer field |
 | CSP | `packages/sdk/src/security.ts` | `connect-src` gains the GlitchTip origin only when `NEXT_PUBLIC_GLITCHTIP_DSN` is set and `APP_ENV` is not `local` |
 
 ## variables
@@ -43,7 +43,7 @@ options are off (user info and ip, cookies, headers, bodies, query params, local
 
 - never sent: user and ip, cookies, any header except `user-agent`, `content-type`, `x-request-id`, `accept-language`;
   request bodies; query strings and fragments (token-like path segments become `:id`); local variables; console, typing
-  and navigation breadcrumbs; contexts other than os, runtime, browser, device;
+  and navigation breadcrumbs; contexts other than os, runtime, browser, device, culture and trace;
 - on admin, login, vault, upload, session, onboarding and webhook routes, even `extra` and breadcrumbs are dropped
   (detected from the request url or the `route` tag);
 - every string (messages, breadcrumbs, extra at any depth) loses emails, phones, ibans, `Bearer` and `Basic` values,
@@ -116,7 +116,7 @@ operator-only rule).
 
 - every GlitchTip event carries tags `request_id` and `trace_id`, the same fields as the OpenObserve log line. From an issue:
   search the logs stream `ceraghit` for `request_id = '<tag>'` (or open the trace by `trace_id`); the api also logs
-  `glitchtip_event_id` on its `request failed` line, so the other way round works too;
+  `glitchtip_event_id` on its `request failed` and `procedure failed` lines, so the other way round works too;
 - OpenObserve keeps the volume view: dashboard `Ceraghit` panels "Requests by status class" (api error rate) and "p95 latency per
   route" (`http.server.duration`), the alerts `ceraghit-api-error-logs`, `ceraghit-mail-failures`, `ceraghit-payment-mismatch`,
   `ceraghit-cron-missed`. They stay: GlitchTip has no metric alerts. Rule of thumb: OpenObserve pages on rates and silence

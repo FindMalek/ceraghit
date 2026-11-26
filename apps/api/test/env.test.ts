@@ -19,12 +19,7 @@ const production = {
   S3_SECRET_ACCESS_KEY: "s",
 }
 
-test("live payment keys are refused outside production", () => {
-  expect(() => loadEnv({ ...base, APP_ENV: "preview", KONNECT_MODE: "live" })).toThrow(/APP_ENV=production/)
-})
-
-test("production refuses test mode, demo seed and a missing bucket", () => {
-  expect(() => loadEnv({ ...production, ONLINE_PAYMENTS: "true", KONNECT_MODE: "test" })).toThrow(/live/)
+test("production refuses demo seed and a missing bucket", () => {
   expect(() => loadEnv({ ...production, BOOTSTRAP: "true", SEED_DEMO: "true" })).toThrow(/demo/)
   expect(() => loadEnv({ ...production, S3_BUCKET: "" })).toThrow(/S3_/)
 })
@@ -41,9 +36,10 @@ test("a complete production env boots without bootstrapping", () => {
   expect(env.BOOTSTRAP).toBe(false)
 })
 
-test("production runs without gateway keys while online payment is off, and asks for them once it is on", () => {
-  expect(loadEnv(production).ONLINE_PAYMENTS).toBe(false)
-  expect(() => loadEnv({ ...production, ONLINE_PAYMENTS: "true", KONNECT_MODE: "live" })).toThrow(/KONNECT_API_KEY/)
+test("production has no card gateway: it refuses online payment and still boots with stale gateway variables", () => {
+  const stale = { KONNECT_API_KEY: "k", KONNECT_WALLET_ID: "w", KONNECT_MODE: "live" }
+  expect(loadEnv({ ...production, ...stale, ONLINE_PAYMENTS: "false" }).ONLINE_PAYMENTS).toBe(false)
+  expect(() => loadEnv({ ...production, ...stale, ONLINE_PAYMENTS: "true" })).toThrow(/no card gateway/)
 })
 
 test("production refuses MAIL_REDIRECT_TO", () => {
@@ -96,10 +92,7 @@ test("ARAMEX_FAKE is refused in production and allowed elsewhere", () => {
   expect(loadEnv({ ...base, ARAMEX_FAKE: "true" }).ARAMEX_FAKE).toBe(true)
 })
 
-test("KONNECT_BASE_URL and GROQ_BASE_URL stubs are refused in production and allowed elsewhere", () => {
-  expect(() => loadEnv({ ...production, KONNECT_BASE_URL: "http://localhost:9300/konnect" })).toThrow(
-    /KONNECT_BASE_URL/,
-  )
+test("the GROQ_BASE_URL stub is refused in production and allowed elsewhere", () => {
   expect(() => loadEnv({ ...production, GROQ_BASE_URL: "http://localhost:9300/groq" })).toThrow(/GROQ_BASE_URL/)
   expect(loadEnv({ ...base, GROQ_BASE_URL: "http://localhost:9300/groq" }).GROQ_BASE_URL).toBe(
     "http://localhost:9300/groq",
@@ -111,4 +104,17 @@ test("TRUSTED_PROXY_HOPS defaults to trusting no forwarded header and is bounded
   expect(loadEnv({ ...production, TRUSTED_PROXY_HOPS: "1" }).TRUSTED_PROXY_HOPS).toBe(1)
   expect(() => loadEnv({ ...production, TRUSTED_PROXY_HOPS: "-1" })).toThrow(/TRUSTED_PROXY_HOPS/)
   expect(() => loadEnv({ ...production, TRUSTED_PROXY_HOPS: "9" })).toThrow(/TRUSTED_PROXY_HOPS/)
+})
+
+test("a GlitchTip project is tied to its environment", () => {
+  const dsn = "https://key@errors.example.com/3"
+  expect(() => loadEnv({ ...base, APP_ENV: "preview", GLITCHTIP_DSN: dsn, GLITCHTIP_ENV: "production" })).toThrow(
+    /only allowed with APP_ENV=production/,
+  )
+  expect(() => loadEnv({ ...production, GLITCHTIP_DSN: dsn, GLITCHTIP_ENV: "preview" })).toThrow(
+    /needs GLITCHTIP_ENV=production/,
+  )
+  expect(() => loadEnv({ ...production, GLITCHTIP_DSN: dsn })).toThrow(/GLITCHTIP_ENV/)
+  expect(loadEnv({ ...production, GLITCHTIP_DSN: dsn, GLITCHTIP_ENV: "production" }).GLITCHTIP_DSN).toBe(dsn)
+  expect(loadEnv({ ...base, GLITCHTIP_DSN: dsn }).GLITCHTIP_DSN).toBe(dsn)
 })

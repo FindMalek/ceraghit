@@ -27,6 +27,7 @@
     "@orpc/zod": "catalog:",
     "@vercel/functions": "catalog:",
     "@workspace/db": "workspace:*",
+    "@workspace/errors": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/orpc": "workspace:*",
     "@workspace/sdk": "workspace:*",

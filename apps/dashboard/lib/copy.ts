@@ -57,7 +57,6 @@ export const PAYMENT_TEXT = {
 } as const
 
 export const PAYMENT_PROVIDER: Record<string, string> = {
-  konnect: "Konnect",
   demo: "Démo",
   cod: "Espèces",
   transfer: "Virement",

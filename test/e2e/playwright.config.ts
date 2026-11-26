@@ -144,7 +144,7 @@ export default defineConfig<E2EOptions>({
     },
     {
       ...server,
-      command: "bun src/index.ts",
+      command: `mkdir -p "${E2E.artifacts}" && exec bun src/index.ts > "${E2E.apiLog}" 2>&1`,
       cwd: `${E2E.repoRoot}apps/api`,
       url: `${E2E.apiUrl}/health`,
       env: apiEnv(),

@@ -53,12 +53,14 @@ export const E2E = {
   mailpitUrl: `http://localhost:${mailUiPort}`,
   ownerState: fileURLToPath(new URL("./artifacts/.auth/owner.json", import.meta.url)),
   artifacts: fileURLToPath(new URL("./artifacts/", import.meta.url)),
+  /** Everything the api prints while the suite runs: the log scan in `secrets-at-rest.e2e.ts` reads it. */
+  apiLog: fileURLToPath(new URL("./artifacts/api.log", import.meta.url)),
 } as const
 
 // support/mailpit.ts reads MAILPIT_URL, so the helper talks to the e2e catcher and never the dev one.
 process.env.MAILPIT_URL = E2E.mailpitUrl
 
-/** Environment of the api process. Konnect and Resend stay empty so the demo gateway and the Mailpit catcher are used. */
+/** Environment of the api process. Resend stays empty so the Mailpit catcher is used. */
 export function apiEnv(): Record<string, string> {
   return {
     APP_ENV: "local",
@@ -73,8 +75,6 @@ export function apiEnv(): Record<string, string> {
     ADMIN_PASSWORD: E2E.adminPassword,
     CRON_SECRET: E2E.cronSecret,
     SECRETS_KEY: `1:${Buffer.alloc(32, 7).toString("base64")}`,
-    KONNECT_API_KEY: "",
-    KONNECT_WALLET_ID: "",
     RESEND_API_KEY: "",
     MAIL_REDIRECT_TO: "",
     MAILPIT_URL: `http://localhost:${E2E.ports.mailUi}`,
@@ -85,7 +85,6 @@ export function apiEnv(): Record<string, string> {
     S3_SECRET_ACCESS_KEY: E2E.s3.secretAccessKey,
     S3_PUBLIC_URL: "",
     ARAMEX_FAKE: "true",
-    KONNECT_BASE_URL: `http://localhost:${stubPort}/konnect`,
     GROQ_BASE_URL: `http://localhost:${stubPort}/groq/openai/v1`,
   }
 }

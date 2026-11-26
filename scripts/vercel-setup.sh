@@ -21,7 +21,7 @@ val() { grep -E "^$1=" "$ENV_FILE" | head -1 | cut -d= -f2-; }
 require() { [ -n "$(val "$1")" ] || { echo "$1 is empty in $ENV_FILE" >&2; exit 1; }; }
 
 # ALLOW_MISSING_S3=1: run before the R2 keys exist, empty S3_* values are skipped (re-run once they are filled in).
-SECRET_NAMES=" DATABASE_URL RESEND_API_KEY CRON_SECRET PROXY_SECRET KONNECT_API_KEY S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY OPENOBSERVE_USER OPENOBSERVE_PASSWORD "
+SECRET_NAMES=" DATABASE_URL RESEND_API_KEY CRON_SECRET PROXY_SECRET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY OPENOBSERVE_USER OPENOBSERVE_PASSWORD "
 S3_NAMES=" S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_PUBLIC_URL "
 
 push() { # app NAME VALUE
@@ -72,12 +72,6 @@ if [ -n "$(val GLITCHTIP_DSN)" ]; then
     push "$app" GLITCHTIP_DSN "$(val GLITCHTIP_DSN)"
     push "$app" GLITCHTIP_ENV production
   done
-fi
-# Online payment is off, so Konnect is not needed. To turn it on later: ONLINE_PAYMENTS=true, KONNECT_MODE=live and the two keys.
-if [ -n "$(val KONNECT_API_KEY)" ] && [ -n "$(val KONNECT_WALLET_ID)" ]; then
-  push api KONNECT_API_KEY "$(val KONNECT_API_KEY)"
-  push api KONNECT_WALLET_ID "$(val KONNECT_WALLET_ID)"
-  push api KONNECT_MODE live
 fi
 for app in web dashboard; do
   push "$app" APP_ENV production

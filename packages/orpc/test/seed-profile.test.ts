@@ -9,7 +9,7 @@ import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
 
 const url = process.env.DATABASE_URL
 const admin = { email: "owner@test.local", password: "clay-test-pass" }
-const noIntegrations = { konnect: false, aramex: false, payoneer: false, groq: false, emailDomain: false }
+const noIntegrations = { aramex: false, payoneer: false, groq: false, emailDomain: false }
 
 describe.skipIf(!url)("demo seed states", () => {
   const cleanups: (() => Promise<void>)[] = []

@@ -1,6 +1,6 @@
 # Vercel-style previews on the-keep (Dokploy): three images per PR, three Dokploy apps + a Postgres, a sticky PR
 # comment with the links, and a GitHub deployment so the PR shows "View deployment". Previews never touch production:
-# own database, own bucket, demo payments or Konnect sandbox keys. Only same-repo PRs get one.
+# own database, own bucket, demo payments. Only same-repo PRs get one.
 # Apps a PR does not change reuse the `main` image (images-main.yml keeps it fresh), retagged to `pr-<n>`.
 # Skipped until vars.PREVIEW_ENABLED is "true", see docs/deploy.md.
 
@@ -103,7 +103,7 @@ jobs:
           secrets: |
             turbo_token=${{ secrets.TURBO_TOKEN }}
           cache-from: type=local,src=/opt/buildx-cache/${{ matrix.app }}
-          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }},mode=max,ignore-error=true
+          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }}-new,mode=max,ignore-error=true
       - name: Retry the build
         if: steps.reuse.outputs.reused != 'true' && steps.build.outcome == 'failure'
         uses: docker/setup-buildx-action@v4
@@ -121,7 +121,18 @@ jobs:
           secrets: |
             turbo_token=${{ secrets.TURBO_TOKEN }}
           cache-from: type=local,src=/opt/buildx-cache/${{ matrix.app }}
-          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }},mode=max,ignore-error=true
+          cache-to: type=local,dest=/opt/buildx-cache/${{ matrix.app }}-new,mode=max,ignore-error=true
+      # cache-to writes a fresh snapshot to `-new` instead of merging into the live dir, so this swap
+      # keeps the cache capped at "what the latest build actually used" instead of growing forever
+      # (the old shared static dest just accumulated every historical layer, unbounded).
+      - name: Promote build cache
+        if: steps.reuse.outputs.reused != 'true'
+        run: |
+          APP="${{ matrix.app }}"
+          if [ -d "/opt/buildx-cache/$APP-new" ]; then
+            rm -rf "/opt/buildx-cache/$APP"
+            mv "/opt/buildx-cache/$APP-new" "/opt/buildx-cache/$APP"
+          fi
       - name: Mark failed
         if: failure()
         run: node scripts/deploy/dokploy.mjs comment-failed
@@ -144,8 +155,6 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.PREVIEW_ADMIN_PASSWORD }}
           MAIL_REDIRECT_TO: ${{ vars.PREVIEW_MAIL_REDIRECT_TO }}
           PREVIEW_MAILPIT_AUTH: ${{ secrets.PREVIEW_MAILPIT_AUTH }}
-          KONNECT_TEST_API_KEY: ${{ secrets.KONNECT_TEST_API_KEY }}
-          KONNECT_TEST_WALLET_ID: ${{ secrets.KONNECT_TEST_WALLET_ID }}
           S3_ENDPOINT: ${{ vars.S3_ENDPOINT }}
           PREVIEW_S3_BUCKET: ${{ vars.PREVIEW_S3_BUCKET }}
           PREVIEW_S3_ACCESS_KEY_ID: ${{ secrets.PREVIEW_S3_ACCESS_KEY_ID }}
@@ -182,3 +191,8 @@ jobs:
           PREVIEW_S3_ACCESS_KEY_ID: ${{ secrets.PREVIEW_S3_ACCESS_KEY_ID }}
           PREVIEW_S3_SECRET_ACCESS_KEY: ${{ secrets.PREVIEW_S3_SECRET_ACCESS_KEY }}
         run: bun scripts/deploy/preview-storage-cleanup.ts
+      # Don't wait on keep-tidy's 7-day-unused sweep: this PR's images are dead the moment it closes.
+      - name: Delete this PR's local images
+        run: |
+          images=$(docker images --filter "reference=ghcr.io/findmalek/ceraghit-*:pr-${{ env.PR_NUMBER }}" -q)
+          [ -n "$images" ] && docker rmi -f $images || true

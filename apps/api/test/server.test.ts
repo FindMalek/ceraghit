@@ -1,4 +1,6 @@
-import { expect, test } from "bun:test"
+import { expect, spyOn, test } from "bun:test"
+import { setReporter } from "@workspace/errors"
+import { logger } from "@workspace/logger"
 import type { Services } from "@workspace/orpc"
 import { withRequestLogging } from "../src/logger"
 import { createServer } from "../src/server"
@@ -36,6 +38,47 @@ test("production sends HSTS and hides the api docs and spec", async () => {
     const res = await fetch(get(path))
     expect(res.status).toBe(404)
     expect(res.headers.get("strict-transport-security")).toContain("max-age=63072000")
+  }
+})
+
+test("a procedure that blows up is reported to GlitchTip with its route, and the client still gets a 500", async () => {
+  const seen: { tags: Record<string, string> }[] = []
+  setReporter((_error, context) => {
+    seen.push(context)
+    return "evt"
+  })
+  try {
+    const res = await serverFor("preview")(get("/v1/site/images"))
+    expect(res.status).toBe(500)
+    expect(seen).toHaveLength(1)
+    expect(seen[0]?.tags.route).toContain("/site/images")
+  } finally {
+    setReporter(null)
+  }
+})
+
+test("on Vercel a converted 500 is flushed and its event id logged before the response returns", async () => {
+  let flushed = false
+  setReporter(
+    () => "evt-1",
+    async () => {
+      await Bun.sleep(5)
+      flushed = true
+    },
+  )
+  const log = spyOn(logger, "error")
+  const vercel = process.env.VERCEL
+  process.env.VERCEL = "1"
+  try {
+    const res = await serverFor("preview")(get("/v1/site/images"))
+    expect(res.status).toBe(500)
+    expect(flushed).toBe(true)
+    expect(log).toHaveBeenCalledWith("procedure failed", expect.objectContaining({ glitchtip_event_id: "evt-1" }))
+  } finally {
+    if (vercel === undefined) delete process.env.VERCEL
+    else process.env.VERCEL = vercel
+    log.mockRestore()
+    setReporter(null)
   }
 })
 

@@ -82,7 +82,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
   [/^Les clés enregistrées sont illisibles/, (m) => m.input ?? ""],
   [/^Réglage invalide\.?$/, (m) => m.input ?? ""],
   [
-    /^(Renseignez |Le mode réel Aramex|Confirmez les types|Les identifiants enregistrés ne peuvent|Trop d'essais|Les clés Konnect réelles|La production exige les clés|Saisissez la clé API|Des commandes en ligne attendent)/,
+    /^(Renseignez |Le mode réel Aramex|Confirmez les types|Les identifiants enregistrés ne peuvent|Trop d'essais)/,
     (m) => m.input ?? "",
   ],
   [/^Le coffre des clés n'est pas configuré/, (m) => m.input ?? ""],
@@ -91,7 +91,7 @@ const KNOWN: [RegExp, (match: RegExpMatchArray) => string][] = [
     /^(Ajoutez une clé Groq|Écrivez d'abord le texte|Toutes les langues sont déjà|Limite mensuelle de traduction|Le service de traduction)/,
     (m) => m.input ?? "",
   ],
-  [/^Card payment needs the Konnect live keys/, () => "Ajoutez d'abord vos clés Konnect pour activer la carte."],
+  [/^Card payment is not available/, () => "Le paiement par carte n'est pas disponible."],
   [/^Cash on delivery is only available/, () => "Le paiement à la livraison n'est disponible qu'en Tunisie."],
 ]
 
