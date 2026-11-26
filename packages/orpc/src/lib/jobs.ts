@@ -1,4 +1,5 @@
 import { jobRuns } from "@workspace/db"
+import { reportError } from "@workspace/errors"
 import { JOBS, type JobStatus } from "@workspace/sdk"
 import { and, desc, eq, lt, sql } from "drizzle-orm"
 import type { Services } from "../context"
@@ -45,6 +46,7 @@ export async function runJob(
       outcome = { ok: true, ...counts }
     } catch (error) {
       console.error(`[cron] ${name}`, describe(error))
+      reportError(error, { tags: { job: name } })
       recordCronRun(name, "failed", performance.now() - started)
       await db
         .update(jobRuns)

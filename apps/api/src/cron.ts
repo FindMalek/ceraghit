@@ -1,3 +1,4 @@
+import { reportError } from "@workspace/errors"
 import {
   cleanupUploads,
   type JobCounts,
@@ -60,6 +61,7 @@ export const CRON_JOBS: Record<string, CronJob> = {
       const rateLimits = await sweepRateLimits(services.db, now)
       const mailsPurged = await purgeMailLog(services).catch((error) => {
         console.error("[cron] mail purge", error instanceof Error ? error.message : "failed")
+        reportError(error, { tags: { job: "cleanup-uploads", step: "mail-purge" } })
         return -1
       })
       return { rateLimits, mailsPurged, ...(await mediaCleanup(services, now, dryRun)) }

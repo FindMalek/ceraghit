@@ -22,7 +22,13 @@ export function redact(value: unknown, depth = 0, seen = new WeakSet<object>()):
   if (value instanceof Error) {
     const extra = redact({ ...value }, depth + 1, seen) as Record<string, unknown>
     const cause = value.cause === undefined ? {} : { cause: redact(value.cause, depth + 1, seen) }
-    return { name: value.name, message: maskEmail(value.message), stack: value.stack, ...cause, ...extra }
+    return {
+      name: value.name,
+      message: maskEmail(value.message),
+      stack: value.stack ? maskEmail(value.stack) : value.stack,
+      ...cause,
+      ...extra,
+    }
   }
   if (value === null || typeof value !== "object") {
     if (typeof value === "bigint") return value.toString()

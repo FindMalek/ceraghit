@@ -169,7 +169,11 @@ test("kept contexts lose bodies and bearer strings but keep the trace ids", () =
 })
 
 test("tags lose credentials by value and by name but keep the correlation ids", () => {
-  const ids = { request_id: "0b1f6c7e-4a43-4c1e-9d1e-5d3b7a0a9f11", trace_id: "4bf92f3577b34da6a3ce929d0e0e4736" }
+  const ids = {
+    request_id: "0b1f6c7e-4a43-4c1e-9d1e-5d3b7a0a9f11",
+    trace_id: "4bf92f3577b34da6a3ce929d0e0e4736",
+    order_id: "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  }
   const out = scrubEvent({ tags: { ...ids, note: "Bearer abcdefghijklmnop", api_key: "s3cr3t" } })
   expect(JSON.stringify(out?.tags)).not.toMatch(/abcdefghijklmnop|s3cr3t/)
   expect(out?.tags).toMatchObject(ids)

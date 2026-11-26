@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { type Db, mailLog, orderAudit, orderItems, orders, products, productVariants } from "@workspace/db"
+import { reportError } from "@workspace/errors"
 import {
   type Currency,
   holdDays,
@@ -201,9 +202,10 @@ let lastSweep = 0
 export async function sweepExpiredHolds(services: Services, now: Date): Promise<void> {
   if (now.getTime() - lastSweep < 60_000) return
   lastSweep = now.getTime()
-  await releaseExpiredHolds(services, now, { limit: LAZY_SWEEP_LIMIT }).catch((error) =>
-    console.error("[holds] sweep failed", error),
-  )
+  await releaseExpiredHolds(services, now, { limit: LAZY_SWEEP_LIMIT }).catch((error) => {
+    console.error("[holds] sweep failed", error)
+    reportError(error, { tags: { job: "holds-lazy-sweep" } })
+  })
 }
 
 function newNumber(): string {
@@ -582,6 +584,10 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
   const { payments } = services
   if (order.paymentProvider && order.paymentProvider !== payments.name) {
     console.error(`[settle ${order.number}] order of another gateway: left unchanged`)
+    reportError(new Error("order of another gateway settled"), {
+      tags: { order: order.number, provider: order.paymentProvider, reason: "other_gateway" },
+      level: "warning",
+    })
     return { number: order.number, status: order.status }
   }
   if (order.status === "cancelled" && order.paymentMethod === "online") {
@@ -618,6 +624,9 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
     if (!paymentMatches(order, check)) {
       recordPaymentSettle("mismatch")
       console.error(`[settle ${order.number}] payment does not match the order`)
+      reportError(new Error("gateway payment does not match the order"), {
+        tags: { order: order.number, provider: order.paymentProvider ?? undefined, reason: "mismatch" },
+      })
       await recordAuditOnce(db, {
         orderId: order.id,
         adminId: null,
