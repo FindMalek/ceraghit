@@ -1,9 +1,12 @@
 import { timingSafeEqual } from "node:crypto"
 import { OpenAPIHandler } from "@orpc/openapi/fetch"
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins"
+import { ORPCError } from "@orpc/server"
 import { RPCHandler } from "@orpc/server/fetch"
 import { ResponseHeadersPlugin, SimpleCsrfProtectionHandlerPlugin } from "@orpc/server/plugins"
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4"
+import { flushErrors, reportError } from "@workspace/errors"
+import { logger } from "@workspace/logger"
 import {
   appRouter,
   createContext,
@@ -15,6 +18,7 @@ import {
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
 import { CRON_JOBS, type CronJob } from "./cron"
+import { routeTemplate } from "./logger"
 
 const DOCS_REDIRECTS = ["/", "/docs"]
 const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron"]
@@ -45,12 +49,36 @@ export function rememberPeer(request: Request, address: string | undefined): voi
   if (address) peers.set(request, address)
 }
 
+/**
+ * oRPC turns a handler failure into a 500 answer before the request wrapper sees it, so GlitchTip would never hear of it.
+ * This interceptor reports the failures that are ours (unexpected errors and explicit 5xx) and rethrows unchanged: the
+ * client response does not change, and 4xx answers stay out. Vercel freezes the instance once that response is sent, so
+ * the event is flushed here.
+ */
+const reportHandlerErrors = {
+  async interceptor<T>(options: { request: { url: URL; method: string }; next: () => Promise<T> }): Promise<T> {
+    try {
+      return await options.next()
+    } catch (error) {
+      if (!(error instanceof ORPCError) || error.status >= 500) {
+        const route = routeTemplate(options.request.url.pathname)
+        const eventId = reportError(error, { tags: { route, method: options.request.method } })
+        logger.error("procedure failed", { route, method: options.request.method, glitchtip_event_id: eventId })
+        if (process.env.VERCEL) await flushErrors()
+      }
+      throw error
+    }
+  },
+}
+
 export function createServer(services: Services, jobs: Record<string, CronJob> = CRON_JOBS) {
   const rpc = new RPCHandler(appRouter, {
+    interceptors: [reportHandlerErrors.interceptor],
     plugins: [new ResponseHeadersPlugin(), new SimpleCsrfProtectionHandlerPlugin()],
   })
   const production = services.config.appEnv === "production"
   const rest = new OpenAPIHandler(appRouter, {
+    interceptors: [reportHandlerErrors.interceptor],
     plugins: [
       new ResponseHeadersPlugin(),
       ...(production

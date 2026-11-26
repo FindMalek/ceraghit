@@ -105,3 +105,16 @@ test("TRUSTED_PROXY_HOPS defaults to trusting no forwarded header and is bounded
   expect(() => loadEnv({ ...production, TRUSTED_PROXY_HOPS: "-1" })).toThrow(/TRUSTED_PROXY_HOPS/)
   expect(() => loadEnv({ ...production, TRUSTED_PROXY_HOPS: "9" })).toThrow(/TRUSTED_PROXY_HOPS/)
 })
+
+test("a GlitchTip project is tied to its environment", () => {
+  const dsn = "https://key@errors.example.com/3"
+  expect(() => loadEnv({ ...base, APP_ENV: "preview", GLITCHTIP_DSN: dsn, GLITCHTIP_ENV: "production" })).toThrow(
+    /only allowed with APP_ENV=production/,
+  )
+  expect(() => loadEnv({ ...production, GLITCHTIP_DSN: dsn, GLITCHTIP_ENV: "preview" })).toThrow(
+    /needs GLITCHTIP_ENV=production/,
+  )
+  expect(() => loadEnv({ ...production, GLITCHTIP_DSN: dsn })).toThrow(/GLITCHTIP_ENV/)
+  expect(loadEnv({ ...production, GLITCHTIP_DSN: dsn, GLITCHTIP_ENV: "production" }).GLITCHTIP_DSN).toBe(dsn)
+  expect(loadEnv({ ...base, GLITCHTIP_DSN: dsn }).GLITCHTIP_DSN).toBe(dsn)
+})
