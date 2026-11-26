@@ -6,8 +6,6 @@ import {
 } from "@workspace/sdk"
 import { z } from "zod"
 import { clearIntegration, describeIntegration, saveIntegration } from "../../lib/integrations"
-import { assertKonnectUnlocked } from "../../lib/orders"
-import { assertKonnectMode } from "../../lib/payments"
 import { adminProcedure } from "../../procedures"
 
 const TAG = ["admin"]
@@ -42,16 +40,6 @@ export const integrationsRouter = {
     .input(saveIntegrationInputSchema)
     .output(maskedIntegrationSchema)
     .handler(async ({ context, input }) => {
-      const mode = input.provider === "konnect" ? input.config?.mode : undefined
-      if (mode === "test" || mode === "live") assertKonnectMode(context.config.appEnv, mode)
-      if (input.provider === "konnect") {
-        const walletId = input.config?.walletId
-        await assertKonnectUnlocked(context, {
-          ...(input.secrets && "apiKey" in input.secrets ? { apiKey: input.secrets.apiKey ?? null } : {}),
-          ...(typeof walletId === "string" ? { walletId } : {}),
-          ...(mode === "test" || mode === "live" ? { mode } : {}),
-        })
-      }
       await saveIntegration(context, context.admin.id, input.provider, { config: input.config, secrets: input.secrets })
       return describeIntegration(context, input.provider)
     }),
@@ -61,7 +49,6 @@ export const integrationsRouter = {
     .input(providerInput)
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      if (input.provider === "konnect") await assertKonnectUnlocked(context, "clear")
       await clearIntegration(context.db, input.provider, context.admin.id, context.now())
       return { ok: true as const }
     }),

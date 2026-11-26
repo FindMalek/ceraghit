@@ -263,7 +263,7 @@ async function deployAll(environment, { tag, hosts, apiEnv, mailAuth }) {
   return mail ? [web, dashboard, api, mail] : [web, dashboard, api]
 }
 
-/** Previews never get live keys: the gateway is the demo checkout unless Konnect sandbox keys are provided. */
+/** Previews never get live keys: the gateway is always the demo checkout. */
 function previewApiEnv() {
   return {
     APP_ENV: "preview",
@@ -272,9 +272,6 @@ function previewApiEnv() {
     // Demo environments: the secret stays the source of truth. Production never sets this, see docs/deploy.md.
     ADMIN_PASSWORD_ROTATE: "true",
     MAIL_REDIRECT_TO: process.env.MAIL_REDIRECT_TO,
-    KONNECT_API_KEY: process.env.KONNECT_TEST_API_KEY,
-    KONNECT_WALLET_ID: process.env.KONNECT_TEST_WALLET_ID,
-    KONNECT_MODE: "test",
     S3_ENDPOINT: process.env.S3_ENDPOINT,
     S3_REGION: process.env.S3_REGION || "garage",
     S3_BUCKET: process.env.PREVIEW_S3_BUCKET,
@@ -437,7 +434,7 @@ async function previewUp() {
     apiHost: hosts.api,
     dashboardHost: hosts.dashboard,
     mailHost: hosts.mail,
-    payments: process.env.KONNECT_TEST_API_KEY ? "Konnect sandbox" : "demo gateway (pick paid or failed)",
+    payments: "demo gateway (pick paid or failed)",
   }
   const deployed = await deployAll(environment, {
     tag,

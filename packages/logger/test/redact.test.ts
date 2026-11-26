@@ -6,7 +6,7 @@ test("a customer's details never reach a log line", () => {
     customer: { email: "someone@example.com", phone: "+216 20 123 456", address: "12 rue de Rome" },
     email: "buyer@example.com",
     authorization: "Bearer sk_live_123",
-    payUrl: "https://pay.konnect.network/xyz",
+    payUrl: "https://pay.gateway.test/xyz",
     iban: "TN5910006035183598478831",
   }) as Record<string, unknown>
 

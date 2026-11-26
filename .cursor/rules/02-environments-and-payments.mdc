@@ -10,17 +10,16 @@ alwaysApply: true
 | host | your machine | Dokploy on the-keep | Vercel (api, web, dashboard) |
 | database | `pnpm db:up` Postgres :5435 | Postgres per PR on the homelab | Neon |
 | files | optional Garage | Garage bucket `ceraghit-dev`, prefix `pr-<n>/` | Cloudflare R2 + public CDN url |
-| payments | demo gateway | demo gateway, or Konnect **sandbox** | Konnect **live** |
+| payments | demo gateway | demo gateway | no card gateway |
 | data | `pnpm db:seed` | seeded on start (catalogue + demo orders) | real catalogue via `pnpm db:seed:catalog`, never demo |
 | `APP_ENV` | local | preview | production |
 
-- `apps/api/src/env.ts` enforces this: production requires live Konnect + R2 + `DEPLOY_ENV=production` and forbids demo
-  seed; every other env forbids `KONNECT_MODE=live`. `apps/api/test/env.test.ts` covers it.
-- Aramex follows the same separation as Konnect: previews use the test host (or `ARAMEX_FAKE`), live only in production
-  (`docs/aramex.md`).
+- `apps/api/src/env.ts` enforces this: production requires R2 + `DEPLOY_ENV=production` and forbids demo seed and
+  `ONLINE_PAYMENTS=true`. `apps/api/test/env.test.ts` covers it.
+- Aramex: previews use the test host (or `ARAMEX_FAKE`), live only in production (`docs/aramex.md`).
 - Outside production every email goes to `MAIL_REDIRECT_TO`, production refuses it.
-- Secrets are scoped by GitHub Environment (`preview`, `production`). Production secrets (`DATABASE_URL`, Konnect live,
-  R2, Vercel token) must not be readable from preview workflows.
+- Secrets are scoped by GitHub Environment (`preview`, `production`). Production secrets (`DATABASE_URL`, R2,
+  Vercel token) must not be readable from preview workflows.
 - Production migrations run in `.github/workflows/deploy.yml` before the deploy. `BOOTSTRAP` (migrate + seed on boot) is
   on for local/preview and off in production.
 
@@ -28,22 +27,23 @@ Staging is a fifth case: `main` redeployed on every merge on the-keep at fixed h
 (`APP_ENV=preview`, `DEPLOY_ENV=staging`, demo payments, bucket prefix `staging/`). It is not production and never
 holds live keys.
 
-# Payments (Konnect)
+# Payments
 
-- Flow: `orders.create` holds stock (45 min), calls `payments.init`, returns `payUrl`; the customer pays at Konnect, comes
-  back to `/order/<number>?t=<token>`; `orders.get` and the webhook both call `settleOrder`.
-- `settleOrder` re-fetches `GET /payments/{ref}` and only marks paid when status is completed **and** amount, currency and
-  order number match. Webhook is unsigned: never trust its payload.
+- No card gateway is integrated. Production offers cash on delivery, transfer and Payoneer only (`gatewayReady`); local,
+  preview and e2e use the demo gateway for "online".
+- Flow: `orders.create` holds stock (45 min), calls `payments.init`, returns `payUrl`; the customer comes back to
+  `/order/<number>?t=<token>` and `orders.get` calls `settleOrder`.
+- `settleOrder` asks the gateway and only marks paid when status is completed **and** amount, currency and order number
+  match. It never judges an order opened with another gateway.
 - The only other way to paid is `markPaidManually` (admin only, audited in `order_audit`), for transfers and Payoneer links
   the gateway never sees. It refuses card orders and an amount or currency the owner did not see. Each call stores who,
-  when, method and note; only the owner can call it, never customer or webhook data.
-- Konnect: `POST /api/v2/payments/init-payment`, header `X-Api-Key`, sandbox host `api.preprod.konnect.network`. Amount in
-  minor units, currency in `token`. Keep new gateways behind `PaymentProvider`.
+  when, method and note; only the owner can call it, never customer or gateway data.
+- Keep new gateways behind `PaymentProvider` (`docs/payments.md`).
 - Pieces are `quoteOnly` (no cart, "ask for a quote") when they are commissions or too expensive for card checkout.
 
 # Provider secrets
 
-- Gateway and carrier keys saved in the dashboard live AES-256-GCM encrypted in `integration_credentials`, master key
+- Provider keys saved in the dashboard live AES-256-GCM encrypted in `integration_credentials`, master key
   `SECRETS_KEY` (differs per environment, api only, optional until a provider reads the vault). They are never returned to a client or logged: read them server side
   with `getSecret(services, provider)`, show only `admin.integrations.*` masks. Details in `docs/secrets.md`.
 

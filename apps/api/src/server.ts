@@ -8,40 +8,25 @@ import {
   appRouter,
   createContext,
   effectivePaymentMethods,
-  resolvePayments,
   runJob,
   type Services,
-  settleOrder,
   shippingHealth,
 } from "@workspace/orpc"
 import { HSTS } from "@workspace/sdk/security"
 import { sql } from "drizzle-orm"
 import { CRON_JOBS, type CronJob } from "./cron"
 
-async function paymentsHealth(services: Services, db: boolean): Promise<string> {
-  const payments = db
-    ? await resolvePayments(services).catch((error) => {
-        console.error("[health] payments fallback", error instanceof Error ? error.message : "resolve failed")
-        return services.payments
-      })
-    : services.payments
-  return `${payments.name}:${payments.mode}`
-}
-
 const DOCS_REDIRECTS = ["/", "/docs"]
-const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron", "/webhooks"]
+const NO_STORE_PREFIXES = ["/rpc", "/v1", "/health", "/cron"]
 
 /**
  * Routes:
  *   /rpc/*              oRPC, used by web + dashboard through their /api proxy (needs `x-csrf-token: orpc`)
  *   /v1/*               the same procedures as REST (OpenAPI), docs at /v1/docs, spec at /v1/openapi.json (not in production)
- *   /webhooks/konnect   payment gateway callback, only a hint: the order is settled by re-asking the gateway
  *   /cron/<name>        scheduled job from `cron.ts` (bearer CRON_SECRET), each run recorded in `job_runs`
  *   /files/<key>        redirect to the CDN or a signed url for an uploaded image
  *   /health             db + payment mode, for Dokploy and uptime checks
  */
-const PAYMENT_REF = /^[A-Za-z0-9_-]{1,100}$/
-
 /** Letters, digits, dot, dash and underscore in `/`-separated segments: every key the app creates fits. */
 const SAFE_KEY = /^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/
 
@@ -119,7 +104,7 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
         {
           ok: db,
           db,
-          payments: await paymentsHealth(services, db),
+          payments: `${services.payments.name}:${services.payments.mode}`,
           shipping: db ? await shippingHealth(services) : null,
           onlinePayments: db ? (await effectivePaymentMethods(services)).online : null,
           env: services.config.deployEnv,
@@ -140,14 +125,6 @@ export function createServer(services: Services, jobs: Record<string, CronJob> =
       const dryRun = url.searchParams.get("dryRun") === "1"
       const outcome = await runJob(services, name, (now) => job.run(services, now, { dryRun }))
       return Response.json(outcome, { status: outcome.ok ? 200 : 500 })
-    }
-    if (pathname === "/webhooks/konnect") {
-      const ref = url.searchParams.get("payment_ref")
-      if (ref && PAYMENT_REF.test(ref))
-        await settleOrder(services, ref).catch((error) =>
-          console.error("[webhook]", error instanceof Error ? error.message : "settle failed"),
-        )
-      return Response.json({ ok: true })
     }
     if (pathname.startsWith("/files/")) {
       if (!services.storage) return Response.json({ message: "Storage is not configured." }, { status: 404 })

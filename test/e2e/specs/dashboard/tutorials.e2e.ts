@@ -26,8 +26,8 @@ test("search narrows the library without accents or case, and an empty result of
 
   await step("the library lists every video", async () => {
     await page.goto(help)
-    await expect(cards).toHaveCount(99)
-    await expect(page.getByText("99 vidéos")).toBeVisible()
+    await expect(cards).toHaveCount(98)
+    await expect(page.getByText("98 vidéos")).toBeVisible()
   })
   await step("a search without accents or capitals finds the video and keeps the query in the url", async () => {
     await search.fill("RECHERCHER piece")
@@ -42,7 +42,7 @@ test("search narrows the library without accents or case, and an empty result of
     await expect(cards).toHaveCount(0)
     await page.getByRole("button", { name: "Voir toutes les vidéos" }).click()
     await expect(search).toHaveValue("")
-    await expect(cards).toHaveCount(99)
+    await expect(cards).toHaveCount(98)
     await expect(page).not.toHaveURL(/q=/)
   })
 })
@@ -53,14 +53,14 @@ test("the area chips narrow the list and the reset button brings it back", { tag
 
   await step("the emails area keeps only its videos", async () => {
     await page.goto(help)
-    await expect(cards).toHaveCount(99)
+    await expect(cards).toHaveCount(98)
     await page.getByRole("button", { name: "Emails et automatismes" }).click()
     await expect(cards).toHaveCount(9)
     await expect(page).toHaveURL(/area=emails/)
   })
   await step("reset shows everything again", async () => {
     await page.getByRole("button", { name: "Réinitialiser les filtres" }).click()
-    await expect(cards).toHaveCount(99)
+    await expect(cards).toHaveCount(98)
     await expect(page).not.toHaveURL(/area=/)
   })
 })
@@ -198,7 +198,7 @@ test("the tag filter keeps only videos carrying that tag, and Back restores the 
 
   await step("choosing a tag narrows the list and lands in the url", async () => {
     await page.goto(help)
-    await expect(cards).toHaveCount(99)
+    await expect(cards).toHaveCount(98)
     await page.getByRole("combobox", { name: "Filtrer par mot-clé" }).click()
     await page.getByRole("option", { name: "panier", exact: true }).click()
     await expect(page).toHaveURL(/tag=panier/)
@@ -207,7 +207,7 @@ test("the tag filter keeps only videos carrying that tag, and Back restores the 
   })
   await step("reset clears the tag", async () => {
     await page.getByRole("button", { name: "Réinitialiser les filtres" }).click()
-    await expect(cards).toHaveCount(99)
+    await expect(cards).toHaveCount(98)
     await expect(page).not.toHaveURL(/tag=/)
   })
   await step("Back puts the earlier search back in the box", async () => {
