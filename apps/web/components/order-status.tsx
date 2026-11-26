@@ -221,10 +221,6 @@ export function OrderStatus({ number, token }: { number: string; token: string }
             </dd>
             <dt className="text-muted-foreground">{t("accountType")}</dt>
             <dd>{t(order.bankUsd.accountType)}</dd>
-            <dt className="text-muted-foreground">{t("reference")}</dt>
-            <dd className="select-all font-heading" dir="ltr">
-              {order.number}
-            </dd>
           </dl>
           <p className="text-muted-foreground text-sm">{t("usdNote")}</p>
         </section>

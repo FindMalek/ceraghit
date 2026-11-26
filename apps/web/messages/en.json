@@ -215,7 +215,7 @@
     "checking": "Checking",
     "savings": "Savings",
     "swift": "SWIFT / BIC",
-    "usdNote": "Paying in dollars: the amount received must cover the euro total.",
+    "usdNote": "Paying in dollars: the amount received must cover the euro total. Write the same reference.",
     "iban": "IBAN",
     "rib": "RIB",
     "bic": "BIC",

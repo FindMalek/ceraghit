@@ -215,7 +215,7 @@
     "checking": "Courant",
     "savings": "Épargne",
     "swift": "SWIFT / BIC",
-    "usdNote": "Paiement en dollars : le montant reçu doit couvrir le total en euros.",
+    "usdNote": "Paiement en dollars : le montant reçu doit couvrir le total en euros. Indiquez la même référence.",
     "iban": "IBAN",
     "rib": "RIB",
     "bic": "BIC",
