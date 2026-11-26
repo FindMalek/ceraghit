@@ -6,11 +6,13 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useState } from "react"
 import { detectLocale, errorCopy } from "@/lib/error-copy"
 import { FONT_VARIABLES } from "@/lib/fonts"
+import { reportClientError } from "@/lib/report-error"
 
 export default function GlobalError({ error, retry }: { error: unknown; retry: () => void }) {
   const [locale, setLocale] = useState(detectLocale("", ""))
   useEffect(() => {
     console.error("[global-error]", error)
+    reportClientError(error)
     setLocale(detectLocale(window.location.pathname, document.documentElement.lang))
   }, [error])
   const copy = errorCopy(locale)

@@ -3,10 +3,12 @@
 import { Button } from "@workspace/ui/components/button"
 import { useEffect } from "react"
 import { StatusPage } from "@/components/status-page"
+import { reportClientError } from "@/lib/report-error"
 
 export default function ErrorPage({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     console.error("[error]", error)
+    reportClientError(error)
   }, [error])
   return (
     <StatusPage

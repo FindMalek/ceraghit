@@ -6,10 +6,12 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useEffect } from "react"
 import { StatusPage } from "@/components/status-page"
 import { FONT_VARIABLES } from "@/lib/fonts"
+import { reportClientError } from "@/lib/report-error"
 
 export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     console.error("[global-error]", error)
+    reportClientError(error)
   }, [error])
   return (
     <html lang="fr" className={cn(FONT_VARIABLES)}>

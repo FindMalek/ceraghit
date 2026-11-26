@@ -3,11 +3,13 @@
 import { Button } from "@workspace/ui/components/button"
 import { useTranslations } from "next-intl"
 import { useEffect } from "react"
+import { reportClientError } from "@/lib/report-error"
 
 export default function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
   const t = useTranslations("error")
   useEffect(() => {
     console.error("[error]", error)
+    reportClientError(error)
   }, [error])
   return (
     <section className="mx-auto flex max-w-xl flex-col items-center gap-6 px-4 py-24 text-center">

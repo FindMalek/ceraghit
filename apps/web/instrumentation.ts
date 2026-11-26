@@ -6,6 +6,8 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return
   const { startServerTelemetry } = await import("./lib/telemetry")
   startServerTelemetry("ceraghit-web")
+  const { startNextErrors } = await import("@workspace/errors/next")
+  startNextErrors("ceraghit-web")
 }
 
 export async function onRequestError(
@@ -15,5 +17,7 @@ export async function onRequestError(
 ) {
   if (process.env.NEXT_RUNTIME !== "nodejs") return
   const { logRequestError } = await import("@workspace/logger/next")
-  logRequestError(error, request, context)
+  const requestId = logRequestError(error, request, context)
+  const { reportRequestError } = await import("@workspace/errors/next")
+  reportRequestError(error, request, context, requestId)
 }

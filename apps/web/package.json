@@ -19,6 +19,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "@tanstack/react-query": "catalog:",
     "@vercel/otel": "catalog:",
+    "@workspace/errors": "workspace:*",
     "@workspace/logger": "workspace:*",
     "@workspace/orpc": "workspace:*",
     "@workspace/sdk": "workspace:*",
