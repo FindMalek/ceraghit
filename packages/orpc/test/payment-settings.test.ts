@@ -103,7 +103,7 @@ describe.skipIf(!url)("payment settings", () => {
     expect((await prod.admin.settings.getPayments()).gatewayReady).toBe(false)
     await expect(
       prod.admin.settings.savePayments({ methods: { online: true, cod: true, transfer: true } }),
-    ).rejects.toMatchObject({ code: "BAD_REQUEST", message: "Card payment needs the Konnect live keys." })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST", message: "Card payment is not available." })
   })
 
   test("saving without holds (an older dashboard tab) keeps the stored windows", async () => {

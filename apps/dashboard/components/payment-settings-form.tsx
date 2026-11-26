@@ -23,7 +23,6 @@ import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group
 import { Spinner } from "@workspace/ui/components/spinner"
 import { Switch } from "@workspace/ui/components/switch"
 import { type FormEvent, useState } from "react"
-import { KonnectKeysCard } from "@/components/konnect-keys-card"
 import { LocalizedField } from "@/components/localized-field"
 import { ErrorState, LoadingRows } from "@/components/query-state"
 import { errorMessage } from "@/lib/errors"
@@ -32,7 +31,7 @@ import { fromLocalizedDraft, type LocalizedDraft, toLocalizedDraft } from "@/lib
 const METHODS: { key: keyof PaymentMethodFlags; title: string; description: string }[] = [
   {
     key: "online",
-    title: "Carte bancaire (Konnect)",
+    title: "Carte bancaire",
     description: "Le client paie en ligne par carte ou e-DINAR. Le paiement est confirmé automatiquement.",
   },
   {
@@ -136,9 +135,7 @@ function PaymentSettingsBody({
                 <FieldDescription>{description}</FieldDescription>
                 {locked && (
                   <FieldDescription className="text-foreground">
-                    {initial.online
-                      ? "Carte enregistrée mais clés Konnect absentes : livraison et virement sont proposés à la place."
-                      : "Ajoutez d'abord vos clés Konnect."}
+                    Aucun prestataire de paiement par carte n'est disponible.
                   </FieldDescription>
                 )}
               </FieldContent>
@@ -285,16 +282,13 @@ export function PaymentSettingsForm() {
   }
   const { settings, gatewayReady, appEnv } = payments.data
   return (
-    <>
-      <KonnectKeysCard production={appEnv === "production"} />
-      <PaymentSettingsBody
-        key={String(gatewayReady)}
-        initial={settings.methods}
-        initialPayoneer={settings.payoneer}
-        initialHolds={settings.holds}
-        gatewayReady={gatewayReady}
-        production={appEnv === "production"}
-      />
-    </>
+    <PaymentSettingsBody
+      key={String(gatewayReady)}
+      initial={settings.methods}
+      initialPayoneer={settings.payoneer}
+      initialHolds={settings.holds}
+      gatewayReady={gatewayReady}
+      production={appEnv === "production"}
+    />
   )
 }

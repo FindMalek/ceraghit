@@ -118,9 +118,7 @@ jobs:
             out=$(curl -fsS "https://${{ vars.PRODUCTION_API_HOST }}/health") && {
               echo "$out"
               echo "$out" | grep -q '"env":"production"' || { echo "::error::api is not the production deploy"; exit 1; }
-              if echo "$out" | grep -q '"onlinePayments":true'; then
-                echo "$out" | grep -q '"payments":"konnect:live"' || { echo "::error::online payments are on without live keys"; exit 1; }
-              fi
+              echo "$out" | grep -q '"onlinePayments":true' && { echo "::error::production has no card gateway"; exit 1; }
               exit 0
             }
             sleep 10

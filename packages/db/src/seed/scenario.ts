@@ -736,7 +736,7 @@ function addOlderHistory(out: Built, now: Date, products: ScenarioProduct[]): vo
 
 /**
  * CER-10100: a payment the gateway reported with another amount (the order stayed pending, then the 45 minute hold
- * cancelled it). Shows the "Paiement Konnect incohérent" and the "Annulée automatiquement" lines of the history.
+ * cancelled it). Shows the "Paiement en ligne incohérent" and the "Annulée automatiquement" lines of the history.
  */
 function addGatewayAlert(out: Built, now: Date, product: ScenarioProduct): void {
   const id = crypto.randomUUID()

@@ -294,8 +294,8 @@ describe.skipIf(!url)("shipping settings", () => {
       return new Response("real", { status: 202 })
     }) as typeof fetch
     const fake = createFakeAramexFetch(real)
-    const res = await fake("https://api.konnect.network/api/v2/payments/init-payment", { method: "POST", body: "{}" })
+    const res = await fake("https://api.other.test/v1/pay", { method: "POST", body: "{}" })
     expect([res.status, await res.text()]).toEqual([202, "real"])
-    expect(seen).toEqual(["https://api.konnect.network/api/v2/payments/init-payment"])
+    expect(seen).toEqual(["https://api.other.test/v1/pay"])
   })
 })

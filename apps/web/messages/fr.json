@@ -348,7 +348,7 @@
           {
             "title": "4. Paiement",
             "body": [
-              "Le paiement s'effectue par carte bancaire (cartes tunisiennes et internationales) via notre prestataire de paiement Konnect. L'atelier ne voit et ne conserve jamais vos données de carte.",
+              "Selon votre pays, vous payez par virement bancaire ou avec Payoneer, parmi les moyens proposés au moment de la commande. L'atelier ne voit et ne conserve jamais vos données de carte.",
               "Vous pouvez aussi choisir le paiement en espèces à la livraison (Tunisie uniquement) : dans ce cas la commande est confirmée à sa création et vous réglez le livreur à la réception.",
               "Si le paiement échoue ou est abandonné, la commande est annulée et les pièces sont remises en stock."
             ]
@@ -463,7 +463,7 @@
             "title": "Hébergement et services techniques",
             "body": [
               "Site hébergé par Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis (vercel.com).",
-              "Base de données : Neon. Stockage et diffusion des images : Cloudflare R2. Envoi des e-mails : Resend. Paiement par carte : Konnect."
+              "Base de données : Neon. Stockage et diffusion des images : Cloudflare R2. Envoi des e-mails : Resend."
             ]
           },
           {
@@ -517,7 +517,7 @@
             "title": "Avec qui nous les partageons",
             "body": [
               "Hébergement et stockage : Vercel (site), Neon (base de données) et Cloudflare R2 (images et photos jointes aux demandes).",
-              "Paiement : Konnect (carte bancaire, Tunisie) reçoit le montant, votre nom, votre e-mail et votre téléphone. Payoneer n'intervient que si vous choisissez de payer par lien Payoneer.",
+              "Paiement : Payoneer n'intervient que si vous choisissez de payer par lien Payoneer, et reçoit alors les informations nécessaires au règlement.",
               "E-mails de commande : Resend. Livraison : le transporteur (Aramex ou équivalent) reçoit votre nom, votre adresse et votre téléphone.",
               "Traduction automatique : Groq ne reçoit que les textes des produits rédigés par l'atelier, jamais de donnée client.",
               "Certains prestataires sont situés hors de l'Union européenne (États-Unis, Tunisie)."

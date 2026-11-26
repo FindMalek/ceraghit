@@ -24,7 +24,7 @@ const order = (over: Partial<CsvOrder> = {}): CsvOrder => ({
   shippingMinor: 11_000,
   totalMinor: 91_000,
   paymentMethod: "online",
-  paymentProvider: "konnect",
+  paymentProvider: "demo",
   paymentReference: null,
   paymentRef: "ref1",
   ...over,

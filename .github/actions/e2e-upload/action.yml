@@ -21,6 +21,7 @@ runs:
           test/e2e/artifacts/
           !test/e2e/artifacts/.auth/**
           !test/e2e/artifacts/blob/**
+          !test/e2e/artifacts/api.log
         retention-days: 14
         if-no-files-found: warn
     - name: Stop services

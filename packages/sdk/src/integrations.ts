@@ -2,7 +2,6 @@ import { z } from "zod"
 
 /** Field lists only, never values: the dashboard renders a mask per secret field. */
 export const INTEGRATIONS = {
-  konnect: { secretFields: ["apiKey"], configFields: ["walletId", "mode"] },
   aramex: {
     secretFields: ["password", "accountPin"],
     configFields: ["userName", "accountNumber", "accountEntity", "accountCountryCode", "mode"],
@@ -12,12 +11,8 @@ export const INTEGRATIONS = {
 
 export type IntegrationProvider = keyof typeof INTEGRATIONS
 export const INTEGRATION_PROVIDERS = Object.keys(INTEGRATIONS) as IntegrationProvider[]
-export const integrationProviderSchema = z.enum(["konnect", "aramex", "groq"])
+export const integrationProviderSchema = z.enum(["aramex", "groq"])
 
-/** Strict: only known non-secret keys, so nothing secret can be parked in `config` in clear. Owning issues extend them. */
-export const konnectConfigSchema = z
-  .object({ walletId: z.string().max(200).optional(), mode: z.enum(["test", "live"]).optional() })
-  .strict()
 const aramexShipperSchema = z
   .object({
     companyName: z.string().trim().min(2).max(60),
@@ -30,6 +25,7 @@ const aramexShipperSchema = z
     postalCode: z.string().trim().max(10).optional(),
   })
   .strict()
+/** Strict: only known non-secret keys, so nothing secret can be parked in `config` in clear. Owning issues extend them. */
 export const aramexConfigSchema = z
   .object({
     userName: z.string().trim().max(200).optional(),
@@ -81,7 +77,6 @@ export const aramexSecretsInputSchema = z.object({
 })
 export const groqConfigSchema = z.object({}).strict()
 export const INTEGRATION_CONFIG_SCHEMAS = {
-  konnect: konnectConfigSchema,
   aramex: aramexConfigSchema,
   groq: groqConfigSchema,
 } as const

@@ -35,13 +35,11 @@ bucket. Playwright then starts the api (3001), the storefront (3000) and the das
   already running instead, `E2E_SKIP_PREPARE=1` keeps the current database. Every port can be changed with
   `E2E_WEB_PORT`, `E2E_DASHBOARD_PORT`, `E2E_API_PORT`, `E2E_DB_PORT`, `E2E_S3_PORT`, `E2E_MAILPIT_UI_PORT`,
   `E2E_MAILPIT_SMTP_PORT` and `E2E_COMPOSE_PROJECT` (must start with `ceraghit-e2e`, it is torn down with `-v`; see `test/e2e/env.ts`).
-- Konnect and Groq are never called for real: the stack starts a stand-in (`support/stubs/server.ts`, port
-  `E2E_STUB_PORT`, 9300) and the api reaches it through `KONNECT_BASE_URL` and `GROQ_BASE_URL`. Both are refused in
-  production by `apps/api/src/env.ts`, like `ARAMEX_FAKE`. Specs steer it with `support/stubs.ts` (Konnect pay page with
-  Pay / Payment failed / Cancel, `setKonnectPayment`; `setGroqMode` for `ok`, `rate_limit`, `down`, `malformed`,
-  `too_long`, `hang`). Konnect keys saved in the dashboard (stub key `e2e-konnect-key`) switch checkout from the demo
-  gateway to the stub, so those specs live in `specs/dashboard/` and remove the keys when done.
+- Groq is never called for real: the stack starts a stand-in (`support/stubs/server.ts`, port `E2E_STUB_PORT`, 9300)
+  and the api reaches it through `GROQ_BASE_URL`, refused in production by `apps/api/src/env.ts` like `ARAMEX_FAKE`.
+  Specs steer it with `support/stubs.ts` (`setGroqMode` for `ok`, `rate_limit`, `down`, `malformed`, `too_long`, `hang`).
 - Demo payments live in the api's memory: never restart the api mid-run.
+- The api's stdout and stderr go to `test/e2e/artifacts/api.log` (`E2E.apiLog`), so a spec can scan it for leaks.
 - Seeded pending online orders auto-cancel when opened: a spec creates its own orders.
 - iPhone 14 runs webkit, so fonts and `-webkit-text-stroke` differ from chromium.
 
