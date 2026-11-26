@@ -81,6 +81,8 @@ export interface OgCard {
   footer?: string
   /** Absolute url of a photo (png, jpeg or webp). */
   image?: string
+  /** A read or a photo failed: the card must not stay cached once the api is back. */
+  degraded?: boolean
 }
 
 function titleSize(text: string, withImage: boolean): number {
@@ -190,6 +192,14 @@ export async function ogImage(card: OgCard): Promise<ImageResponse> {
         ) : null}
       </div>
     </div>,
-    { ...OG_SIZE, fonts: await loadFonts() },
+    {
+      ...OG_SIZE,
+      fonts: await loadFonts(),
+      headers: {
+        "cache-control": card.degraded
+          ? "no-store"
+          : "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
+      },
+    },
   )
 }

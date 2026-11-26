@@ -72,21 +72,6 @@ describe.skipIf(!url)("cron endpoints", () => {
     expect(await runs(JOB)).toHaveLength(0)
   })
 
-  test("a job that restocks tells the storefront", async () => {
-    let changes = 0
-    const name = `${JOB}-restock`
-    const announcing = make(
-      SECRET,
-      { [name]: CRON_JOBS["release-holds"]! },
-      { catalogChanged: async () => void changes++ },
-    )
-    await announcing(
-      new Request(`https://api.test/cron/${name}`, { method: "POST", headers: { authorization: `Bearer ${SECRET}` } }),
-    )
-    expect(changes).toBe(1)
-    await db.delete(jobRuns).where(eq(jobRuns.name, name))
-  })
-
   test("release-holds cancels an expired hold, records each run, and the second run releases nothing", async () => {
     await db.insert(orders).values({
       number: holdNumber,
@@ -127,14 +112,26 @@ describe.skipIf(!url)("cron endpoints", () => {
       )
     const mailed = Math.min(unmailed, 50)
 
-    const first = await call(`/cron/${JOB}`, { bearer: SECRET })
+    let changes = 0
+    const announcing = make(SECRET, undefined, { catalogChanged: async () => void changes++ })
+    const run = () =>
+      announcing(
+        new Request(`https://api.test/cron/${JOB}`, {
+          method: "POST",
+          headers: { authorization: `Bearer ${SECRET}` },
+        }),
+      )
+    const first = await run()
     expect(first.status).toBe(200)
     expect(await first.json()).toEqual({ ok: true, released: expired, mailed })
     const [order] = await db.select().from(orders).where(eq(orders.number, holdNumber))
     expect(order!.status).toBe("cancelled")
 
-    const second = await call(`/cron/${JOB}`, { bearer: SECRET })
+    expect(changes).toBe(1)
+    const second = await run()
     expect(await second.json()).toEqual({ ok: true, released: 0, mailed: 0 })
+    // nothing released, so the storefront keeps its cache
+    expect(changes).toBe(1)
     const rows = await runs(JOB)
     expect(rows.map((r) => [r.ok, r.counts])).toEqual([
       [true, { released: expired, mailed }],

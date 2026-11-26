@@ -337,18 +337,22 @@ runs do not open the issue, only scheduled ones.
 The Hobby team has 4 h/month of Fluid Active CPU, **shared by every project of the team**; going over pauses them all, shop
 included. Measured 26 Oct to 25 Nov: 3 h 36 used, `ceraghit-api` 47 min, `ceraghit-web` 47 min, `ceraghit-dashboard` 4 min.
 
-- the storefront pages are `force-dynamic` (CSP nonce), so each page view, bots included, re-renders. The five public reads
-  in `apps/web/lib/api.ts` go through `unstable_cache` (600 s, shared data cache, errors not cached). After an admin write or
-  a new order (and after each `release-holds` run) the api calls `POST /api/revalidate` on the shop (bearer `PROXY_SECRET`), so edits show at once. Checkout
+- the storefront pages are `force-dynamic` (CSP nonce), so each page view, bots included, re-renders. The public reads
+  in `apps/web/lib/api.ts` (product pages included) go through `unstable_cache` (1 h, shared data cache, errors not cached). After an admin write or
+  a new order (a released hold included) the api calls `POST /api/revalidate` on the shop (bearer `PROXY_SECRET`), so edits show at once. Checkout
   re-validates every piece server-side, so a stale list cannot sell something gone. An expired entry is still served once
   while it refreshes, so a change nothing announced (an edit made straight in the database) can show late after a quiet spell.
 - api cold starts: `build:vercel` splits the bundle, and react-email, the AI SDK and the telemetry SDK are imported only
   when used (about half the CPU of a cold start). Keep heavy, rarely used libraries behind `await import()` of a module of
   ours (split chunks do not give named exports for a CommonJS package imported directly).
+- links do not prefetch (`Link` in `apps/web/i18n/navigation.ts`): every page is rendered per request, so one `/shop` view
+  used to run about 50 functions. Opt a link back in with `prefetch` only if its target is static.
+- share cards (`opengraph-image`) are cached by the CDN for a day; the proxy strips their cookie so it can.
 - polling and probes: dashboard polls every 2 to 5 min, uptime every 30 min, `retry-mail` every 30 min.
 - bots (not in code, set on the web project's Firewall): AI Crawlers deny, AI Assistants log, Bot Protection log, and a
   rate limit of 300 requests per minute per IP on `^(/(en|ar|fr))?/(shop|product)(/.*)?$` (Next prefetches product
   pages, so keep it generous). Bot Protection stays on log: set to challenge it would fail `uptime.yml`, which curls the
-  shop.
+  shop. Two more rules: deny paths ending `.php` or starting `/wp-` and the SemrushBot agent; challenge AS50300 and
+  AS132203 (datacentre crawlers seen posing as browsers).
 - check: Team usage, Fluid Active CPU by project, daily bars. Runtime logs of `ceraghit-api` (Hobby keeps 1 h): the
-  `POST /rpc/public/{site/images,catalog/*}` bursts should be about one per read per 10 minutes.
+  `POST /rpc/public/{site/images,catalog/*}` bursts should be about one per read per hour (more after a deploy or an edit).

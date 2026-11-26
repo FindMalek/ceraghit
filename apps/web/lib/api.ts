@@ -19,11 +19,11 @@ async function soft<T>(call: Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-// Pages are force-dynamic (CSP nonce) and these reads are POSTs the CDN cannot cache, so share them for 10 minutes.
+// Pages are force-dynamic (CSP nonce) and these reads are POSTs the CDN cannot cache, so share them for an hour.
 // Errors are not cached: the fallback is applied outside, in `soft`. The api drops the tag after a write
 // (`/api/revalidate`), so owner edits show at once; the TTL covers what it does not announce. Stale entries are served
 // once while they refresh, so it is not a hard maximum age. The deployment id keeps an old shape from outliving a release.
-const TTL = 600
+const TTL = 3600
 const OPTIONS = { revalidate: TTL, tags: [CATALOG_TAG] }
 const BUILD = process.env.VERCEL_DEPLOYMENT_ID ?? ""
 
@@ -31,6 +31,11 @@ const cachedCategories = unstable_cache(() => api.public.catalog.categories(), [
 const cachedProducts = unstable_cache(
   (query: ProductQuery) => api.public.catalog.products(query),
   ["api:products", BUILD],
+  OPTIONS,
+)
+const cachedProduct = unstable_cache(
+  (slug: string) => api.public.catalog.product({ slug }),
+  ["api:product", BUILD],
   OPTIONS,
 )
 const cachedLocations = unstable_cache(() => api.public.catalog.locations(), ["api:locations", BUILD], OPTIONS)
@@ -48,7 +53,7 @@ export const getSiteImages = cache(
 
 export const getProduct = cache(async (slug: string): Promise<Product | null> => {
   try {
-    return await api.public.catalog.product({ slug })
+    return await cachedProduct(slug)
   } catch {
     return null
   }

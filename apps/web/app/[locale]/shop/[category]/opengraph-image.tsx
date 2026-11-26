@@ -15,11 +15,13 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
     getCategories(),
   ])
   const category = categories.find((c) => c.slug === slug)
+  const photo = category?.image ? await ogPhoto(category.image) : undefined
   return ogImage({
     locale,
     eyebrow: nav("shop"),
     title: category ? pick(category.name, locale) : t("title"),
     subtitle: category ? t("results", { count: category.productCount }) : undefined,
-    image: category?.image ? await ogPhoto(category.image) : undefined,
+    image: photo,
+    degraded: !category || (Boolean(category.image) && !photo),
   })
 }
