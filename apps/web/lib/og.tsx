@@ -190,6 +190,10 @@ export async function ogImage(card: OgCard): Promise<ImageResponse> {
         ) : null}
       </div>
     </div>,
-    { ...OG_SIZE, fonts: await loadFonts() },
+    {
+      ...OG_SIZE,
+      fonts: await loadFonts(),
+      headers: { "cache-control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800" },
+    },
   )
 }

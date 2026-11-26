@@ -20,6 +20,8 @@ export default function proxy(request: NextRequest) {
   for (const [name, value] of Object.entries(security.request)) headers.set(name, value)
   const response = intl(new NextRequest(request, { headers }))
   for (const [name, value] of Object.entries(security.response)) response.headers.set(name, value)
+  // The CDN never caches a response that sets a cookie, and a share card needs no language cookie.
+  if (request.nextUrl.pathname.includes("/opengraph-image")) response.headers.delete("set-cookie")
   return response
 }
 
