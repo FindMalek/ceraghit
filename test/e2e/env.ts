@@ -60,6 +60,8 @@ export const E2E = {
 // support/mailpit.ts reads MAILPIT_URL, so the helper talks to the e2e catcher and never the dev one.
 process.env.MAILPIT_URL = E2E.mailpitUrl
 
+const PROXY_SECRET = "e2e-proxy-secret-0123456789abcdef"
+
 /** Environment of the api process. Resend stays empty so the Mailpit catcher is used. */
 export function apiEnv(): Record<string, string> {
   return {
@@ -74,6 +76,7 @@ export function apiEnv(): Record<string, string> {
     ADMIN_EMAIL: E2E.adminEmail,
     ADMIN_PASSWORD: E2E.adminPassword,
     CRON_SECRET: E2E.cronSecret,
+    PROXY_SECRET,
     SECRETS_KEY: `1:${Buffer.alloc(32, 7).toString("base64")}`,
     RESEND_API_KEY: "",
     MAIL_REDIRECT_TO: "",
@@ -95,6 +98,7 @@ export function nextEnv(): Record<string, string> {
     APP_ENV: "local",
     API_URL: E2E.apiUrl,
     WEB_URL: E2E.webUrl,
+    PROXY_SECRET,
     S3_ENDPOINT: E2E.s3.endpoint,
     NEXT_TELEMETRY_DISABLED: "1",
   }

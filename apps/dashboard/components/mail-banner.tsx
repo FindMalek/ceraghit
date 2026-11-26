@@ -6,7 +6,7 @@ import Link from "next/link"
 
 /** Same query as the tab bar and the sidebar, so one resend clears all three. */
 export function useFailedMails(): number {
-  const stats = useQuery(orpc.admin.overview.queryOptions({ input: { days: 30 }, refetchInterval: 60_000 }))
+  const stats = useQuery(orpc.admin.overview.queryOptions({ input: { days: 30 }, refetchInterval: 120_000 }))
   return stats.data?.failedMails ?? 0
 }
 

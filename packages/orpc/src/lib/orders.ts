@@ -172,6 +172,8 @@ export async function releaseExpiredHolds(
       if (released) offline++
     }
   }
+  // Every caller restocks, some from reads or from a checkout that then fails: announce it here.
+  if (online + offline > 0) await services.hooks?.catalogChanged?.()
   return online + offline
 }
 
@@ -653,7 +655,7 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
   }
   if (check.status === "failed") {
     recordPaymentSettle("failed")
-    await cancelOrder(db, order.id)
+    if (await cancelOrder(db, order.id)) await services.hooks?.catalogChanged?.()
     return { number: order.number, status: "cancelled" }
   }
   recordPaymentSettle("pending")

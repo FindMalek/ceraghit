@@ -8,7 +8,7 @@ details: `docs/deploy.md` ("uptime and backups"). Nothing below is run by an age
 
 | item | exists in the repo | observed in production | to do |
 | :-- | :-- | :-- | :-- |
-| uptime probe | `.github/workflows/uptime.yml`, every 10 min, api `/health` (`env:production`, `db:true`), storefront `/` and `/shop`, dashboard `/login`, certificate expiry over 14 days, opens and closes a `production down` issue | runs green every 10 minutes (latest runs success); no incident issue ever opened | run it once against a wrong host to see the issue open and close (see below) |
+| uptime probe | `.github/workflows/uptime.yml`, every 30 min, api `/health` (`env:production`, `db:true`), storefront `/` and `/shop`, dashboard `/login`, certificate expiry over 14 days, opens and closes a `production down` issue | scheduled runs green (latest runs success); no incident issue ever opened | run it once against a wrong host to see the issue open and close (see below) |
 | `/health` | api route, `Cache-Control: no-store` | `{"ok":true,"db":true,"payments":"demo:test","shipping":"manual:production","onlinePayments":false,"env":"production"}` | none |
 | database backup | `.github/workflows/backup.yml`, Sundays 02:30 UTC: `pg_dump` custom format, `age` encrypted, to `ceraghit-backup/db/YYYY-MM-DD.dump.age` | **not working**: the only run (2026-11-22) failed at "Dump and encrypt the database", `age: unknown recipient type ""`, because `BACKUP_AGE_RECIPIENT` is not set | create the age key pair, set the variable and the `BACKUP_*` secrets, run once |
 | media backup | same workflow: `rclone sync` of `ceraghit-prod` to `ceraghit-backup/media`, deletions moved to `media-deleted/<date>/` | never ran past the dump step | same as above |

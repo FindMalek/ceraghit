@@ -151,7 +151,7 @@ scheduler can change without touching the api.
 | `media-cleanup` (the same cleanup without the aliases) | daily 03:30 | 26 h |
 | `release-holds` (stock held by abandoned checkouts) | hourly :05 | 2 h |
 | `track-shipments` (Aramex poll) | every 3 h | 4 h |
-| `retry-mail` (failed Resend sends) | every 10 min | 30 min |
+| `retry-mail` (failed Resend sends) | every 30 min | 90 min |
 | `ai-usage-rollover` (closes the AI quota, monthly) | 1st, 00:05 | 32 days |
 
 The schedule still calls `cleanup-uploads` and not `media-cleanup`, because the alias is what also sweeps `rate_limits`
@@ -301,7 +301,7 @@ days (bodies hold customer details).
 
 ## uptime and backups
 
-- **uptime** (`.github/workflows/uptime.yml`, every 10 min, GitHub-hosted so it never depends on the-keep): api `/health`
+- **uptime** (`.github/workflows/uptime.yml`, every 30 min, GitHub-hosted so it never depends on the-keep): api `/health`
   must answer `"env":"production"` and `"db":true`, the storefront `/` and `/shop` and the dashboard `/login` must be 200,
   and every certificate must have more than 14 days left. A failure opens or comments on one issue titled `production down`
   with the `incident` label; the next green run closes it. Skipped unless `vars.DEPLOY_ENABLED` is `true`.
@@ -330,3 +330,23 @@ missing setting by name and fails before dumping anything. Add these in GitHub, 
 
 Then run the workflow once with "Run workflow" and check that `db/<date>.dump.age` exists in the backup bucket. Manual
 runs do not open the issue, only scheduled ones.
+
+## vercel free-tier cpu
+
+The Hobby team has 4 h/month of Fluid Active CPU, **shared by every project of the team**; going over pauses them all, shop
+included. Measured 26 Oct to 25 Nov: 3 h 36 used, `ceraghit-api` 47 min, `ceraghit-web` 47 min, `ceraghit-dashboard` 4 min.
+
+- the storefront pages are `force-dynamic` (CSP nonce), so each page view, bots included, re-renders. The five public reads
+  in `apps/web/lib/api.ts` go through `unstable_cache` (600 s, shared data cache, errors not cached). After an admin write or
+  a new order (and after each `release-holds` run) the api calls `POST /api/revalidate` on the shop (bearer `PROXY_SECRET`), so edits show at once. Checkout
+  re-validates every piece server-side, so a stale list cannot sell something gone. An expired entry is still served once
+  while it refreshes, so a change nothing announced (an edit made straight in the database) can show late after a quiet spell.
+- api cold starts: `build:vercel` splits the bundle, and react-email, the AI SDK and the telemetry SDK are imported only
+  when used (about half the CPU of a cold start). Keep heavy, rarely used libraries behind `await import()` of a module of
+  ours (split chunks do not give named exports for a CommonJS package imported directly).
+- polling and probes: dashboard polls every 2 to 5 min, uptime every 30 min, `retry-mail` every 30 min.
+- bots (not in code): in the Vercel dashboard, web project, Firewall: turn on Bot Protection and the AI bots rule, and add a
+  rate limit on the shop and product paths, with and without a locale prefix: request path matching
+  `^(/(en|ar|fr))?/(shop|product)(/.*)?$` (for example 60 requests per minute per IP).
+- check: Team usage, Fluid Active CPU by project, daily bars. Runtime logs of `ceraghit-api` (Hobby keeps 1 h): the
+  `POST /rpc/public/{site/images,catalog/*}` bursts should be about one per read per 10 minutes.

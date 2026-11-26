@@ -138,7 +138,10 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     const old = new Date(Date.now() - 2 * 3_600_000)
     const foreign = await order({ createdAt: old, paymentProvider: "konnect" })
     const own = await order({ createdAt: old })
-    await releaseExpiredHolds(services, new Date(), { only: [foreign.id, own.id] })
+    let changes = 0
+    const announcing = { ...services, hooks: { catalogChanged: async () => void changes++ } }
+    await releaseExpiredHolds(announcing, new Date(), { only: [foreign.id, own.id] })
+    expect(changes).toBe(1)
     expect(await statusOf(foreign.id)).toBe("pending_payment")
     expect(await statusOf(own.id)).toBe("cancelled")
   })
@@ -207,7 +210,10 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     const o = await order()
     const [before] = await db.select().from(products).where(eq(products.id, productId))
     answer = gatewayAnswer({ orderId: o.number }, "failed")
-    expect(await settleOrder(services, o.paymentRef!)).toMatchObject({ status: "cancelled" })
+    let changes = 0
+    const announcing = { ...services, hooks: { catalogChanged: async () => void changes++ } }
+    expect(await settleOrder(announcing, o.paymentRef!)).toMatchObject({ status: "cancelled" })
+    expect(changes).toBe(1)
     const [after] = await db.select().from(products).where(eq(products.id, productId))
     expect(after!.stock).toBe(before!.stock + 1)
   })

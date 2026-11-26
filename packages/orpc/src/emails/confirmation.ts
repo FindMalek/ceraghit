@@ -16,14 +16,9 @@ import {
   usdBankBlock,
 } from "./layout"
 import { orderUrl } from "./order-url"
-import {
-  confirmationHtml,
-  orderExpiredHtml,
-  paymentLinkHtml,
-  paymentReceivedHtml,
-  shippedHtml,
-  studioOrderHtml,
-} from "./templates"
+
+// react-email (react-dom, prettier) is most of a cold start's work and only mails need it: load it when one is built.
+const templates = () => import("./templates")
 
 export interface ConfirmationOrder extends MailOrder {
   locale: string
@@ -61,7 +56,7 @@ export async function renderOrderConfirmation(order: ConfirmationOrder, ctx: Mai
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
     subject: k.subject(order.number),
-    html: await confirmationHtml(order, ctx),
+    html: await (await templates()).confirmationHtml(order, ctx),
     text: join(
       [
         ...greeting(c, order.customerName),
@@ -100,7 +95,12 @@ export async function renderStudioNewOrder(order: ConfirmationOrder, ctx: MailCo
     to: studio,
     replyTo: order.email,
     subject,
-    html: await studioOrderHtml(order, { ...ctx, contactEmail: ctx.contactEmail || studio }, subject, status),
+    html: await (await templates()).studioOrderHtml(
+      order,
+      { ...ctx, contactEmail: ctx.contactEmail || studio },
+      subject,
+      status,
+    ),
     text: join([
       `${order.customerName} <${order.email}> ${order.phone}`,
       `${order.address}, ${[order.postalCode, order.city].filter(Boolean).join(" ")}, ${order.country}`,
@@ -122,7 +122,7 @@ export async function renderPaymentReceived(order: ConfirmationOrder, ctx: MailC
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
     subject: c.paymentReceived.subject(order.number),
-    html: await paymentReceivedHtml(order, ctx),
+    html: await (await templates()).paymentReceivedHtml(order, ctx),
     text: join(
       [
         ...greeting(c, order.customerName),
@@ -146,7 +146,7 @@ export async function renderPaymentLink(order: ConfirmationOrder, ctx: MailConte
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
     subject: c.paymentLink.subject(order.number),
-    html: await paymentLinkHtml(order, ctx, link),
+    html: await (await templates()).paymentLinkHtml(order, ctx, link),
     text: join(
       [
         ...greeting(c, order.customerName),
@@ -173,7 +173,7 @@ export async function renderOrderExpired(order: ConfirmationOrder, ctx: MailCont
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
     subject: c.expired.subject(order.number),
-    html: await orderExpiredHtml(order, ctx, days),
+    html: await (await templates()).orderExpiredHtml(order, ctx, days),
     text: join(
       [
         ...greeting(c, order.customerName),
@@ -206,7 +206,7 @@ export async function renderShipped(order: ConfirmationOrder, shipment: MailShip
     to: order.email,
     replyTo: ctx.contactEmail || undefined,
     subject: k.subject(order.number),
-    html: await shippedHtml(order, shipment, ctx),
+    html: await (await templates()).shippedHtml(order, shipment, ctx),
     text: join(
       [
         ...greeting(c, order.customerName),

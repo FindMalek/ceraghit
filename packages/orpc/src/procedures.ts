@@ -42,6 +42,13 @@ const logErrors = o.middleware(async ({ next, path }) => {
 
 export const publicProcedure = o.use(traceCall).use(logErrors)
 
+/** After a successful write (any route that is not a GET), before answering, so the next page view is fresh. */
+export const announceChange = o.middleware(async ({ context, next, procedure }) => {
+  const result = await next()
+  if (procedure["~orpc"].route.method !== "GET") await context.hooks?.catalogChanged?.()
+  return result
+})
+
 /**
  * The admin session is an http-only cookie, so admin calls also need the `x-csrf-token: orpc` header, which the
  * oRPC link sends and a cross-site form can't. That covers the REST (OpenAPI) routes too, not just RPC.
@@ -65,4 +72,4 @@ export const mediaFkGuard = o.middleware(async ({ next }) => {
   }
 })
 
-export const adminProcedure = publicProcedure.use(requireAdmin)
+export const adminProcedure = publicProcedure.use(requireAdmin).use(announceChange)

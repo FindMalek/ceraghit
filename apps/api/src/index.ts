@@ -1,7 +1,6 @@
 import { createDb } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
-import { initNode } from "@workspace/errors/node"
 import { logger } from "@workspace/logger"
 import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider } from "@workspace/orpc"
 import { createFakeAramexFetch } from "@workspace/orpc/fake-aramex"
@@ -11,13 +10,18 @@ import { CRON_JOBS } from "./cron"
 import { loadEnv } from "./env"
 import { startLogger, withRequestLogging } from "./logger"
 import { createMailer, mailTransport } from "./mailer"
+import { storefrontRevalidator } from "./revalidate"
 import { createServer, rememberPeer } from "./server"
 import { flushAfter, startTelemetry } from "./telemetry"
 
 const env = loadEnv()
 startLogger(env)
-const telemetry = startTelemetry(env)
-initNode(env as unknown as Record<string, string | undefined>, "ceraghit-api")
+const telemetry = await startTelemetry(env)
+// Loaded only with a DSN: the Sentry SDK is a lot of cold start work to import for nothing.
+if (env.GLITCHTIP_DSN) {
+  const { initNode } = await import("@workspace/errors/node")
+  initNode(env as unknown as Record<string, string | undefined>, "ceraghit-api")
+}
 if (!telemetry.enabled && env.APP_ENV === "production") {
   logger.warn("telemetry off: set OPENOBSERVE_URL, OPENOBSERVE_USER and OPENOBSERVE_PASSWORD to ship")
 }
@@ -65,6 +69,7 @@ const fetch = flushAfter(
       secrets,
       ...(env.ARAMEX_FAKE ? { http: createFakeAramexFetch() } : {}),
       now: () => new Date(),
+      hooks: { catalogChanged: storefrontRevalidator(env.WEB_URL, env.PROXY_SECRET) },
       config: {
         webUrl: env.WEB_URL,
         apiPublicUrl: env.API_PUBLIC_URL,

@@ -23,6 +23,8 @@ export interface Services {
     orderShipped?: (orderId: string) => Promise<void>
     shipmentDelivered?: (shipmentId: string) => Promise<void>
     shipmentException?: (shipmentId: string) => Promise<void>
+    /** The storefront caches public reads: tell it they changed. */
+    catalogChanged?: () => Promise<void>
   }
   /** Tests pass a fake for the Resend domains api. */
   http?: typeof fetch
