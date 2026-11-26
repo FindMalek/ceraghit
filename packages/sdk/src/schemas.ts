@@ -276,6 +276,20 @@ export const bankDetailsSchema = z.object({
 })
 export type BankDetails = z.infer<typeof bankDetailsSchema>
 
+export const usdAccountTypeSchema = z.enum(["checking", "savings"])
+export type UsdAccountType = z.infer<typeof usdAccountTypeSchema>
+
+export const usdBankDetailsSchema = z.object({
+  holder: z.string().trim().max(120),
+  bank: z.string().trim().max(120),
+  account: z.string().trim().max(17),
+  routing: z.string().trim().max(9),
+  swift: z.string().trim().max(11),
+  accountType: usdAccountTypeSchema,
+  address: z.string().trim().max(300),
+})
+export type UsdBankDetails = z.infer<typeof usdBankDetailsSchema>
+
 /** What the old settings stored while the account was not filled in; it never counts as a real account. */
 export const UNFILLED_BANK_TEXT = "À compléter"
 
@@ -302,6 +316,13 @@ export const shopProfileSchema = z.object({
   bankEurIban: z.string().nullable(),
   bankEurBic: z.string().nullable(),
   bankEurAddress: z.string().nullable(),
+  bankUsdHolder: z.string().nullable(),
+  bankUsdName: z.string().nullable(),
+  bankUsdAccount: z.string().nullable(),
+  bankUsdRouting: z.string().nullable(),
+  bankUsdSwift: z.string().nullable(),
+  bankUsdAccountType: usdAccountTypeSchema.nullable(),
+  bankUsdAddress: z.string().nullable(),
   invoiceNote: localizedSchema.nullable(),
   shippingConfirmedAt: z.string().nullable(),
   skippedSteps: z.array(z.string()),
@@ -329,6 +350,12 @@ export function ibanChecksumOk(iban: string): boolean {
     for (const digit of digits) remainder = (remainder * 10 + Number(digit)) % 97
   }
   return remainder === 1
+}
+
+/** ABA routing number check: weights 3, 7, 1 repeated over the 9 digits, the sum is a multiple of 10. */
+export function abaChecksumOk(routing: string): boolean {
+  const sum = [...routing].reduce((total, digit, i) => total + Number(digit) * [3, 7, 1][i % 3]!, 0)
+  return /^\d{9}$/.test(routing) && sum % 10 === 0
 }
 
 /** Editable fields only, each optional so the onboarding can save one step at a time. */
@@ -396,6 +423,13 @@ export const shopProfileInputSchema = z
     bankEurIban: profileIban,
     bankEurBic: profileCode(BIC_PATTERN, true),
     bankEurAddress: profileText(300),
+    bankUsdHolder: profileText(120),
+    bankUsdName: profileText(120),
+    bankUsdAccount: profileCode(/^\d{1,17}$/),
+    bankUsdRouting: z.string().transform(compact).pipe(z.string().refine(abaChecksumOk)).nullable().optional(),
+    bankUsdSwift: profileCode(BIC_PATTERN, true),
+    bankUsdAccountType: usdAccountTypeSchema.nullable().optional(),
+    bankUsdAddress: profileText(300),
     invoiceNote: localizedSchema.nullable().optional(),
   })
   .superRefine((input, ctx) => {
@@ -405,6 +439,21 @@ export const shopProfileInputSchema = z
         code: "custom",
         path: ["bankEurIban"],
         message: "Complétez le titulaire, la banque, l'IBAN et le BIC du compte en euros, ou videz-les.",
+      })
+    }
+    const usd = [
+      input.bankUsdHolder,
+      input.bankUsdName,
+      input.bankUsdAccount,
+      input.bankUsdRouting,
+      input.bankUsdSwift,
+      input.bankUsdAccountType,
+    ]
+    if (usd.some((v) => v) && usd.some((v) => v === null || v === "")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["bankUsd"],
+        message: "Complétez tous les champs du compte en dollars (l'adresse est facultative), ou videz-les.",
       })
     }
   })
@@ -465,6 +514,41 @@ export function eurBankFromProfile(profile: ProfileEurBank): BankDetails | null 
  */
 export function bankForCurrency(profile: ProfileBank & ProfileEurBank, currency: string): BankDetails | null {
   return (currency === "EUR" ? eurBankFromProfile(profile) : null) ?? bankFromProfile(profile)
+}
+
+type ProfileUsdBank = Pick<
+  ShopProfile,
+  | "bankUsdHolder"
+  | "bankUsdName"
+  | "bankUsdAccount"
+  | "bankUsdRouting"
+  | "bankUsdSwift"
+  | "bankUsdAccountType"
+  | "bankUsdAddress"
+>
+
+/** The optional US account, or null until everything but the address is filled in. */
+export function usdBankFromProfile(profile: ProfileUsdBank): UsdBankDetails | null {
+  const text = (v: string | null) => v?.trim() ?? ""
+  const holder = text(profile.bankUsdHolder)
+  const bank = text(profile.bankUsdName)
+  const account = text(profile.bankUsdAccount)
+  const routing = text(profile.bankUsdRouting)
+  const swift = text(profile.bankUsdSwift)
+  const accountType = profile.bankUsdAccountType
+  if (!holder || !bank || !account || !routing || !swift || !accountType) return null
+  return { holder, bank, account, routing, swift, accountType, address: text(profile.bankUsdAddress) }
+}
+
+/**
+ * The US account offered beside `bankForCurrency` on euro orders. Never on dinar orders, and never on its own:
+ * without a main or euro account there is nothing to put it beside.
+ */
+export function usdBankForCurrency(
+  profile: ProfileBank & ProfileEurBank & ProfileUsdBank,
+  currency: string,
+): UsdBankDetails | null {
+  return currency === "EUR" && bankForCurrency(profile, currency) ? usdBankFromProfile(profile) : null
 }
 
 export const SETUP_REQUIRED_STEPS = ["owner", "profile", "bank", "shipping"] as const
@@ -579,6 +663,8 @@ export const orderSchema = z.object({
 /** What the customer sees on their order page: the bank account only while a transfer is still expected. */
 export const publicOrderSchema = orderSchema.extend({
   bank: bankDetailsSchema.nullable(),
+  /** The US account beside `bank`, euro orders only. */
+  bankUsd: usdBankDetailsSchema.nullable(),
   /** Only once the order is shipped. */
   shipping: orderShippingSchema.nullable(),
   /** ISO instant an unpaid transfer or cash order is released, null when it never is. */

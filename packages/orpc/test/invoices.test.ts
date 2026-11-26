@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import { createDb, invoiceCounters, invoices, orders, shopProfile } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
+import { publicInvoiceViewSchema } from "@workspace/sdk"
 import { eq, inArray, like } from "drizzle-orm"
-import { issueInvoice } from "../src/lib/invoices"
+import { type InvoiceRow, invoiceView, issueInvoice, sellerFromProfile } from "../src/lib/invoices"
 import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
 
 const url = process.env.DATABASE_URL
@@ -117,5 +118,29 @@ describe.skipIf(!url)("invoices", () => {
       await db.delete(shopProfile)
       await db.insert(shopProfile).values(original)
     }
+  })
+
+  test("an euro invoice snapshots the US account, and one issued before it existed still renders", async () => {
+    const profile = {
+      ...(await getShopProfile(db)),
+      bankHolder: "Atelier",
+      bankName: "Banque",
+      bankIban: "TN5910006035183598478831",
+      bankUsdHolder: "Atelier USD",
+      bankUsdName: "Demo Bank US",
+      bankUsdAccount: "000123456789",
+      bankUsdRouting: "111000025",
+      bankUsdSwift: "DEMOUS33",
+      bankUsdAccountType: "checking" as const,
+    }
+    const seller = sellerFromProfile(profile, "EUR")
+    expect(seller.bankUsd).toMatchObject({ account: "000123456789" })
+
+    const { bankUsd: _, ...old } = seller
+    const row = { ...(await order()), items: [] }
+    const invoice = { number: "2090-0001", issuedAt: at("2090-01-01T10:00:00Z"), seller: old } as unknown as InvoiceRow
+    const view = publicInvoiceViewSchema.parse(invoiceView(row, invoice, profile))
+    expect(view.seller.bank?.holder).toBe("Atelier")
+    expect(view.seller.bankUsd).toBeUndefined()
   })
 })

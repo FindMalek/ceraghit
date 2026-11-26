@@ -1,6 +1,12 @@
 import { ORPCError } from "@orpc/server"
 import { type Db, type InvoiceSeller, invoiceCounters, invoices, orders } from "@workspace/db"
-import { bankForCurrency, type InvoiceLocale, type InvoiceView, type PaymentMethod } from "@workspace/sdk"
+import {
+  bankForCurrency,
+  type InvoiceLocale,
+  type InvoiceView,
+  type PaymentMethod,
+  usdBankForCurrency,
+} from "@workspace/sdk"
 import { eq, sql } from "drizzle-orm"
 import { getShopProfile, type ShopProfileRow } from "./shop-profile"
 
@@ -34,6 +40,7 @@ export function sellerFromProfile(profile: ShopProfileRow, currency: string): In
     email: profile.email,
     invoiceNote: profile.invoiceNote,
     bank: bankForCurrency(profile, currency),
+    bankUsd: usdBankForCurrency(profile, currency),
   }
 }
 

@@ -1,5 +1,5 @@
 import type { CarrierId } from "@workspace/sdk"
-import { type BankDetails, type Currency, carrierDisplayName, formatMoney } from "@workspace/sdk"
+import { type BankDetails, type Currency, carrierDisplayName, formatMoney, type UsdBankDetails } from "@workspace/sdk"
 import { invoiceUrl } from "../lib/invoices"
 import type { Mail } from "../lib/mailer"
 import { asLocale, EMAIL_COPY } from "./copy"
@@ -13,6 +13,7 @@ import {
   type MailOrder,
   orderFooter,
   totalLines,
+  usdBankBlock,
 } from "./layout"
 import { orderUrl } from "./order-url"
 import {
@@ -41,6 +42,8 @@ export interface ConfirmationOrder extends MailOrder {
 export interface MailContext {
   webUrl: string
   bank: BankDetails | null
+  /** The US account beside `bank`, euro orders only. */
+  bankUsd?: UsdBankDetails | null
   /** Shown to the customer while the bank details are missing, and used for replies. */
   contactEmail: string
   studio: string | null
@@ -68,6 +71,7 @@ export async function renderOrderConfirmation(order: ConfirmationOrder, ctx: Mai
         "",
         ...totalLines(order, locale, c),
         ...(transfer ? bankBlock(c, ctx.bank, order.number, ctx.contactEmail, locale) : []),
+        ...(transfer && ctx.bankUsd ? usdBankBlock(c, ctx.bankUsd, order.number, locale) : []),
         ...(payoneer && ctx.payoneerLink
           ? ["", ltr(ctx.payoneerLink, locale), `${k.reference}: ${ltr(order.number, locale)}`]
           : []),

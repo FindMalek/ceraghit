@@ -134,6 +134,13 @@
       "when": 1795511759674,
       "tag": "0018_secret_riptide",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795648502123,
+      "tag": "0019_flowery_master_chief",
+      "breakpoints": true
     }
   ]
 }

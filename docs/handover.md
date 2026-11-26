@@ -80,6 +80,8 @@ refusée : reformulez plutôt que d'ajouter du remplissage.
 
 Comptes bancaires : dans « Profil de l'atelier », la carte « Compte bancaire » contient votre compte principal (commandes en DT) et, plus bas, un « Compte en euros » facultatif (titulaire, banque, IBAN, BIC, adresse de la banque). Une commande par virement affiche le compte de sa devise : DT sur le compte principal, EUR sur le compte en euros. Les quatre premiers champs du compte en euros vont ensemble : remplis tous, ou vides.
 
+Compte en dollars (facultatif) : sur la même carte, un compte aux États-Unis (titulaire, banque, numéro de compte, numéro de routage ABA, SWIFT/BIC, type courant ou épargne, adresse facultative). Tout sauf l'adresse va ensemble. Il s'affiche en plus du compte en euros (ou du compte principal s'il n'y a pas de compte en euros) sur les commandes en EUR par virement : page de commande, e-mail de confirmation et facture. Jamais sur les commandes en DT. La boutique ne vend pas en dollars : le total reste en euros et le montant reçu doit le couvrir, vérifiez-le avant de **marquer payée**.
+
 - **Marquer payée** est la seule façon de valider un paiement à la main. L'action est enregistrée (qui, quand).
 - **Marquer expédiée** : choisissez le transporteur et saisissez le numéro de suivi, ou créez l'expédition Aramex. Le client reçoit un
   e-mail avec le suivi.
