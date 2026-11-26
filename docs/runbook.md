@@ -18,6 +18,7 @@ Operator notes for the production shop. The owner's guide is `docs/handover.md` 
 | translation | Groq (key in the vault) | operator |
 | scheduler | Trigger.dev on `trigger.findmalek.engineer` (project `ceraghit`) | operator |
 | logs, traces, metrics | OpenObserve `o2.findmalek.engineer` | operator |
+| error tracking (optional) | GlitchTip on the homelab, projects `ceraghit-preview` and `ceraghit-production` | operator |
 | previews, staging | Dokploy on the-keep, Garage bucket `ceraghit-dev` | operator |
 
 Real names, logins and who pays each account go in the operator's password manager, never in this repo.
@@ -40,6 +41,8 @@ the production names and `docs/deploy.md` ("one-time setup") has the per-app tab
 | `RESEND_API_KEY`, `EMAIL_FROM` | yes | no | no | no customer emails (they land in the failure page) |
 | `ONLINE_PAYMENTS=false` | optional | no | no | nothing; `true` stops the api from booting |
 | `OPENOBSERVE_*`, `LOG_LEVEL` | yes | yes | yes | nothing exported, boot unaffected |
+| `GLITCHTIP_DSN`, `GLITCHTIP_ENV=production` | yes | yes | yes | no error tracking, boot unaffected (a mismatch with `APP_ENV` refuses to boot) |
+| `NEXT_PUBLIC_GLITCHTIP_DSN`, `NEXT_PUBLIC_GLITCHTIP_ENV=production` | no | build time | build time | no browser errors; redeploy after changing |
 | `MAIL_REDIRECT_TO` | never | never | never | production refuses to boot with it |
 
 GitHub `production` environment: secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API|WEB|DASHBOARD`,
@@ -126,10 +129,15 @@ thresholds: `docs/deploy.md` ("scheduled jobs").
   it every 10 min and opens a `production down` issue (label `incident`) on failure.
 - OpenObserve dashboards and alerts: `docs/observability/`. Wiring status and what is still to configure:
   `docs/observability/production.md`.
+- GlitchTip (`docs/observability/glitchtip.md`): grouped errors with stack, alerts on new issue, regression and spike.
 - "Emails" page of the dashboard for failed sends; Vercel runtime logs per project as the fallback.
 
 ## incident checklist
 
+0. Where to look first: GlitchTip for "what broke" (new issue, spike; the `request_id` and `trace_id` tags are the same ids as the
+   logs), then OpenObserve for the context (search the logs stream by `request_id`, open the trace by `trace_id`, check the
+   dashboard "Requests by status class"), then Vercel runtime logs if neither has it. No error in either and the site is
+   still down: the uptime workflow and `/health`.
 1. Site down: `curl -s https://api.ceraghit.com/health`; if `db` is false check Neon status and the connection string; if
    the deployment is bad, roll back (above); check the latest Deploy run.
 2. Payments: "Paiements" page and the `payments` field of `/health`. There is no card gateway: the owner checks the bank or
