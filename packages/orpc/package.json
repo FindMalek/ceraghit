@@ -21,11 +21,11 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@ai-sdk/groq": "4.0.84",
+    "@ai-sdk/groq": "4.0.86",
     "@opentelemetry/api": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",
-    "ai": "7.0.173",
+    "ai": "7.0.179",
     "aws4fetch": "1.0.20",
     "@workspace/errors": "workspace:*",
     "@workspace/db": "workspace:*",

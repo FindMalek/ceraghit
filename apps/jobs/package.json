@@ -7,13 +7,13 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@trigger.dev/sdk": "4.7.3",
+    "@trigger.dev/sdk": "4.8.8",
     "@workspace/sdk": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "@workspace/typescript-config": "workspace:*",
-    "trigger.dev": "4.7.3",
+    "trigger.dev": "4.8.8",
     "typescript": "catalog:"
   }
 }
