@@ -36,7 +36,12 @@ interface ErrorContext {
 }
 
 /** Next's `onRequestError`: a failed render or route handler, with the route it happened in and no params. */
-export function logRequestError(error: unknown, request: Readonly<RequestInfo>, context: Readonly<ErrorContext>) {
+export function logRequestError(
+  error: unknown,
+  request: Readonly<RequestInfo>,
+  context: Readonly<ErrorContext>,
+): string {
+  const requestId = resolveRequestId(inboundId(request.headers))
   const digest =
     typeof error === "object" && error !== null && "digest" in error
       ? String((error as { digest: unknown }).digest)
@@ -48,8 +53,9 @@ export function logRequestError(error: unknown, request: Readonly<RequestInfo>, 
     path: request.path.split("?")[0],
     route: context.routePath,
     routeType: context.routeType,
-    request_id: resolveRequestId(inboundId(request.headers)),
+    request_id: requestId,
   })
+  return requestId
 }
 
 function inboundId(headers: RequestInfo["headers"]): string | undefined {

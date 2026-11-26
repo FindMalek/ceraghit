@@ -3,6 +3,8 @@ import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
+const release = process.env.NEXT_PUBLIC_GLITCHTIP_RELEASE ?? process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GIT_SHA
+
 /** Public host of the bucket (R2 custom domain): set where the build runs, empty on the homelab (signed urls). */
 const filesUrl = process.env.S3_PUBLIC_URL ? new URL(process.env.S3_PUBLIC_URL) : null
 
@@ -13,8 +15,12 @@ if (filesUrl) console.info(`[next.config] uploaded photos are optimised from ${f
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
-  transpilePackages: ["@workspace/ui", "@workspace/sdk"],
-  env: { NEXT_PUBLIC_FILES_URL: filesUrl?.origin ?? "" },
+  transpilePackages: ["@workspace/ui", "@workspace/sdk", "@workspace/errors", "@workspace/logger"],
+  // The browser reports to GlitchTip only when NEXT_PUBLIC_GLITCHTIP_DSN is set at build time; the release is the commit.
+  env: {
+    NEXT_PUBLIC_FILES_URL: filesUrl?.origin ?? "",
+    ...(release ? { NEXT_PUBLIC_GLITCHTIP_RELEASE: release } : {}),
+  },
   // Catalogue photos and uploads from the public bucket host are resized per device, see components/photo.tsx.
   images: {
     formats: ["image/webp"],

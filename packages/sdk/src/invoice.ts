@@ -6,6 +6,7 @@ import {
   orderItemSchema,
   orderStatusSchema,
   paymentMethodSchema,
+  usdBankDetailsSchema,
 } from "./schemas"
 
 export const invoiceLocaleSchema = z.enum(["fr", "en", "ar"])
@@ -32,6 +33,13 @@ export const INVOICE_COPY = {
     bankHolder: "Titulaire",
     bankName: "Banque",
     bankAddress: "Adresse de la banque",
+    usdTitle: "Compte en dollars (USD)",
+    accountNumber: "Numéro de compte",
+    routingNumber: "Numéro de routage (ABA)",
+    accountType: "Type de compte",
+    checking: "Courant",
+    savings: "Épargne",
+    usdNote: "Paiement en dollars : le montant reçu doit couvrir le total en euros.",
     paidOn: "Payée le",
     notPaid: "Non encore payée",
     codDue: "À régler à la livraison",
@@ -63,6 +71,13 @@ export const INVOICE_COPY = {
     bankHolder: "Account holder",
     bankName: "Bank",
     bankAddress: "Bank address",
+    usdTitle: "US dollar account (USD)",
+    accountNumber: "Account number",
+    routingNumber: "Routing number (ABA)",
+    accountType: "Account type",
+    checking: "Checking",
+    savings: "Savings",
+    usdNote: "Paying in dollars: the amount received must cover the euro total.",
     paidOn: "Paid on",
     notPaid: "Not paid yet",
     codDue: "Due on delivery",
@@ -94,6 +109,13 @@ export const INVOICE_COPY = {
     bankHolder: "صاحب الحساب",
     bankName: "البنك",
     bankAddress: "عنوان البنك",
+    usdTitle: "الحساب بالدولار (USD)",
+    accountNumber: "رقم الحساب",
+    routingNumber: "رقم التوجيه (ABA)",
+    accountType: "نوع الحساب",
+    checking: "جاري",
+    savings: "ادخار",
+    usdNote: "عند الدفع بالدولار، يجب أن يغطي المبلغ المستلم المجموع باليورو.",
     paidOn: "تم الدفع في",
     notPaid: "لم تدفع بعد",
     codDue: "تدفع عند الاستلام",
@@ -123,6 +145,8 @@ export const invoiceSellerSchema = z.object({
   email: z.string().nullable(),
   invoiceNote: localizedSchema.nullable(),
   bank: bankDetailsSchema.nullable(),
+  /** Optional: invoices issued before the US account existed have no such key in their snapshot. */
+  bankUsd: usdBankDetailsSchema.nullable().optional(),
 })
 export type InvoiceSellerView = z.infer<typeof invoiceSellerSchema>
 

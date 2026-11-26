@@ -38,3 +38,26 @@ test("an IBAN with the wrong length for its country and a BIC without a country 
   expect(shopProfileInputSchema.safeParse({ bankEurIban: "DE36 0000 0000 00" }).success).toBe(false)
   expect(shopProfileInputSchema.safeParse({ bankBic: "12345678" }).success).toBe(false)
 })
+
+const usd = {
+  bankUsdHolder: "Atelier",
+  bankUsdName: "Demo Bank US",
+  bankUsdAccount: "0001 2345 6789",
+  bankUsdRouting: "111000025",
+  bankUsdSwift: "demous33",
+  bankUsdAccountType: "checking",
+}
+
+test("a US routing number with a wrong checksum and a too long account number are refused", () => {
+  expect(shopProfileInputSchema.safeParse({ bankUsdRouting: "111000026" }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse({ bankUsdAccount: "1".repeat(18) }).success).toBe(false)
+  expect(shopProfileInputSchema.parse(usd)).toMatchObject({
+    bankUsdAccount: "000123456789",
+    bankUsdSwift: "DEMOUS33",
+  })
+})
+
+test("a half filled US account is refused, one without an address passes", () => {
+  expect(shopProfileInputSchema.safeParse({ ...usd, bankUsdAccountType: null }).success).toBe(false)
+  expect(shopProfileInputSchema.safeParse({ ...usd, bankUsdAddress: null }).success).toBe(true)
+})

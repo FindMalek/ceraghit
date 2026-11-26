@@ -3,6 +3,7 @@ import { createRouterClient } from "@orpc/server"
 import { categories, createDb, mailLog, orders, products } from "@workspace/db"
 import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
+import { setReporter } from "@workspace/errors"
 import { eq, like } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
 import { AdminAuth } from "../src/lib/auth"
@@ -69,6 +70,25 @@ describe.skipIf(!url)("mail log", () => {
   afterAll(async () => {
     await clearVisitorLimits(db)
     await db.delete(mailLog).where(like(mailLog.subject, `${tag}%`))
+  })
+
+  test("a mail that ends up failed is reported with its kind, never its recipient", async () => {
+    const seen: { tags: Record<string, string> }[] = []
+    const errors: unknown[] = []
+    setReporter((error, context) => {
+      errors.push(error)
+      seen.push(context)
+      return "evt"
+    })
+    try {
+      const { mailer } = scripted([new MailError("resend 422: bad address buyer@example.com", false, 422)])
+      expect(await deliverMail({ ...base, mailer }, "test", mail(9))).toBe(false)
+    } finally {
+      setReporter(null)
+    }
+    expect(seen).toHaveLength(1)
+    expect(seen[0]?.tags).toMatchObject({ mail_kind: "test", attempts: "1" })
+    expect(JSON.stringify(seen)).not.toContain(mail(9).to)
   })
 
   test("a 503 then success is one sent row with two attempts and a pause in between", async () => {

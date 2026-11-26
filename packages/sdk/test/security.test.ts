@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { buildCsp, HSTS, securityHeaders } from "../src/security"
+import { buildCsp, HSTS, securityFromEnv, securityHeaders } from "../src/security"
 
 const base = {
   nonce: "abc",
@@ -57,4 +57,16 @@ test("report only mode swaps the header name", () => {
   const headers = securityHeaders({ ...base, app: "web", reportOnly: true })
   expect(Object.keys(headers)).toContain("Content-Security-Policy-Report-Only")
   expect(Object.keys(headers)).not.toContain("Content-Security-Policy")
+})
+
+test("connect-src opens to the GlitchTip origin only when a DSN is set, and never on local", () => {
+  const dsn = "https://publickey@errors.example.com/7"
+  const withDsn = buildCsp({ ...base, app: "web", glitchtipDsn: dsn })
+  expect(withDsn).toContain("connect-src 'self' https://s3.example.net https://errors.example.com;")
+  expect(withDsn).not.toContain("publickey")
+  expect(buildCsp({ ...base, app: "web" })).not.toContain("errors.example.com")
+  const fromEnv = (env: Record<string, string>) => securityFromEnv("web", env).request["content-security-policy"]
+  expect(fromEnv({ APP_ENV: "production", NEXT_PUBLIC_GLITCHTIP_DSN: dsn })).toContain("https://errors.example.com")
+  expect(fromEnv({ APP_ENV: "local", NEXT_PUBLIC_GLITCHTIP_DSN: dsn })).not.toContain("errors.example.com")
+  expect(fromEnv({ APP_ENV: "production" })).not.toContain("errors.example.com")
 })

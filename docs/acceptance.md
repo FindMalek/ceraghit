@@ -37,6 +37,7 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 - [ ] première ouverture : les étapes se suivent, les étapes facultatives se passent
 - [ ] profil de la boutique : nom légal, adresse, téléphone, e-mail, matricule fiscal enregistrés et visibles sur la facture
 - [ ] compte en euros (facultatif) rempli : une commande en EUR par virement affiche ce compte, une commande en DT affiche le compte principal
+- [ ] compte en dollars (facultatif) rempli : une commande en EUR par virement l'affiche à côté du compte en euros, avec la note sur le total en euros ; une commande en DT ne l'affiche pas
 - [ ] banque : titulaire, RIB, IBAN, BIC remplis, plus aucun « À compléter » dans l'e-mail de virement, la page de commande et la facture
 
 ## 4. Produits et photos

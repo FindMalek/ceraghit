@@ -1,4 +1,4 @@
-import { type BankDetails, type Currency, formatMoney } from "@workspace/sdk"
+import { type BankDetails, type Currency, formatMoney, type UsdBankDetails } from "@workspace/sdk"
 import type { EmailCopy, Locale } from "./copy"
 
 const LRI = "⁦"
@@ -68,6 +68,31 @@ export function bankBlock(
     ...(bank.iban ? [`IBAN: ${ltr(bank.iban, locale)}`] : []),
     ...(bank.bic ? [`BIC: ${ltr(bank.bic, locale)}`] : []),
     `${k.reference}: ${ltr(orderNumber, locale)}`,
+  ]
+}
+
+/** The US account rows, shared by the text and HTML mails. */
+export function usdBankRows(c: EmailCopy, bank: UsdBankDetails, locale: Locale): [string, string][] {
+  const k = c.confirmation
+  return [
+    [k.holder, bank.holder],
+    [k.bank, bank.bank],
+    ...(bank.address ? [[k.bankAddress, ltr(bank.address, locale)] as [string, string]] : []),
+    [k.accountNumber, ltr(bank.account, locale)],
+    [k.routingNumber, ltr(bank.routing, locale)],
+    ["SWIFT / BIC", ltr(bank.swift, locale)],
+    [k.accountType, k[bank.accountType]],
+  ]
+}
+
+export function usdBankBlock(c: EmailCopy, bank: UsdBankDetails, orderNumber: string, locale: Locale): string[] {
+  const k = c.confirmation
+  return [
+    "",
+    `${k.usdTitle}:`,
+    ...usdBankRows(c, bank, locale).map(([label, value]) => `${label}: ${value}`),
+    `${k.reference}: ${ltr(orderNumber, locale)}`,
+    k.usdNote,
   ]
 }
 

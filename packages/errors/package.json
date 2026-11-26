@@ -8,6 +8,7 @@
     "./config": "./src/config.ts",
     "./scrub": "./src/scrub.ts",
     "./node": "./src/node.ts",
+    "./next": "./src/next.ts",
     "./browser": "./src/browser.ts"
   },
   "scripts": {

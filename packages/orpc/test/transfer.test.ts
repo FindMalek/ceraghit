@@ -5,6 +5,7 @@ import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { eq } from "drizzle-orm"
 import { type Context, createContext, type Services } from "../src/context"
+import { EMAIL_COPY } from "../src/emails/copy"
 import { AdminAuth } from "../src/lib/auth"
 import { DemoProvider } from "../src/lib/payments"
 import { getShopProfile, updateShopProfile } from "../src/lib/shop-profile"
@@ -15,11 +16,11 @@ const url = process.env.DATABASE_URL
 
 describe.skipIf(!url)("transfer needs a real bank account", () => {
   const db = createDb(url!)
-  const sent: { to: string; text: string }[] = []
+  const sent: { to: string; text: string; html?: string }[] = []
   const services: Services = {
     db,
     payments: new DemoProvider("https://web.test"),
-    mailer: { send: async (mail) => void sent.push({ to: mail.to, text: mail.text }) },
+    mailer: { send: async (mail) => void sent.push({ to: mail.to, text: mail.text, html: mail.html }) },
     storage: null,
     auth: new AdminAuth(db),
     now: () => new Date(),
@@ -93,6 +94,13 @@ describe.skipIf(!url)("transfer needs a real bank account", () => {
       bankEurIban: saved.bankEurIban,
       bankEurBic: saved.bankEurBic,
       bankEurAddress: saved.bankEurAddress,
+      bankUsdHolder: saved.bankUsdHolder,
+      bankUsdName: saved.bankUsdName,
+      bankUsdAccount: saved.bankUsdAccount,
+      bankUsdRouting: saved.bankUsdRouting,
+      bankUsdSwift: saved.bankUsdSwift,
+      bankUsdAccountType: saved.bankUsdAccountType,
+      bankUsdAddress: saved.bankUsdAddress,
     })
     await db.delete(orders).where(eq(orders.email, email))
     await db.delete(products).where(eq(products.categoryId, categoryId))
@@ -164,5 +172,31 @@ describe.skipIf(!url)("transfer needs a real bank account", () => {
     const placed = await guest.public.orders.create({ ...buyer, items: items() })
     const order = await guest.public.orders.get({ number: placed.number, token: placed.token })
     expect(order.bank).toMatchObject({ iban: "TN5910006035183598478831" })
+  })
+
+  test("a US account is shown beside the account of an euro order, never on a dinar order", async () => {
+    await setBank({ bankIban: "TN5910006035183598478831", bankRib: "10006035183598478831" })
+    await updateShopProfile(db, {
+      bankUsdHolder: "Atelier USD",
+      bankUsdName: "Demo Bank US",
+      bankUsdAccount: "000123456789",
+      bankUsdRouting: "111000025",
+      bankUsdSwift: "DEMOUS33",
+      bankUsdAccountType: "savings",
+      bankUsdAddress: null,
+    })
+    const placed = await guest.public.orders.create({ ...buyer, items: items() })
+    const eur = await guest.public.orders.get({ number: placed.number, token: placed.token })
+    expect(eur.bank).toMatchObject({ iban: "TN5910006035183598478831" })
+    expect(eur.bankUsd).toMatchObject({ account: "000123456789", accountType: "savings" })
+    const mail = sent.find((m) => m.to === email && m.text.includes(placed.number))
+    for (const part of ["TN5910006035183598478831", "000123456789", "111000025", EMAIL_COPY.fr.confirmation.usdNote]) {
+      expect(mail?.text).toContain(part)
+      expect(mail?.html).toContain(part)
+    }
+
+    await db.update(orders).set({ currency: "TND" }).where(eq(orders.number, placed.number))
+    const tnd = await guest.public.orders.get({ number: placed.number, token: placed.token })
+    expect(tnd.bankUsd).toBeNull()
   })
 })

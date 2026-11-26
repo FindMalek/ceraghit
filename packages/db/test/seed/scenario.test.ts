@@ -1,5 +1,11 @@
 import { expect, test } from "bun:test"
-import { bankForCurrency, DEFAULT_SHIPPING_RATES, studioSettingsSchema } from "@workspace/sdk"
+import {
+  abaChecksumOk,
+  bankForCurrency,
+  DEFAULT_SHIPPING_RATES,
+  studioSettingsSchema,
+  usdBankForCurrency,
+} from "@workspace/sdk"
 import { parseDemoRef } from "../../src/demo-ref"
 import { UNGLAZED_VARIANT_REFS } from "../../src/seed"
 import { CATALOGUE } from "../../src/seed/catalogue"
@@ -38,6 +44,13 @@ test("the demo profile has a separate euro account, valid and obviously fake", (
   const full = { ...profile, bankEurHolder: profile.bankEurHolder ?? null } as Parameters<typeof bankForCurrency>[0]
   expect(bankForCurrency(full, "EUR")?.iban).toBe("DE89370400440532013000")
   expect(bankForCurrency(full, "TND")?.iban).toBe(profile.bankIban!)
+})
+
+test("the demo profile has an obviously fake US account for euro orders", () => {
+  const profile = buildDemoProfile(new Date("2026-10-22T12:00:00Z")) as Parameters<typeof usdBankForCurrency>[0]
+  const usd = usdBankForCurrency(profile, "EUR")
+  expect(usd?.account).toBe("00000000000000000")
+  expect(abaChecksumOk(usd?.routing ?? "")).toBe(true)
 })
 
 test("seeded online orders carry a gateway ref that matches them and none is pending", () => {
