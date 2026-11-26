@@ -330,7 +330,7 @@ included. Measured 26 Oct to 25 Nov: 3 h 36 used, `ceraghit-api` 47 min, `ceragh
   in `apps/web/lib/api.ts` go through `unstable_cache` (600 s, shared data cache, errors not cached). After an admin write or
   a new order (and after each `release-holds` run) the api calls `POST /api/revalidate` on the shop (bearer `PROXY_SECRET`), so edits show at once. Checkout
   re-validates every piece server-side, so a stale list cannot sell something gone. An expired entry is still served once
-  while it refreshes, so a change nothing announced (an expired hold swept on read) can show late after a quiet spell.
+  while it refreshes, so a change nothing announced (an edit made straight in the database) can show late after a quiet spell.
 - api cold starts: `build:vercel` splits the bundle, and react-email, the AI SDK and the telemetry SDK are imported only
   when used (about half the CPU of a cold start). Keep heavy, rarely used libraries behind `await import()` of a module of
   ours (split chunks do not give named exports for a CommonJS package imported directly).
