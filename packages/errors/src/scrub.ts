@@ -60,7 +60,7 @@ const isBag = (value: unknown): value is Bag => typeof value === "object" && val
 
 /** Ids that link an event to its trace and logs: long enough to look like secrets, so they are put back untouched. */
 const TRACE_IDS = ["trace_id", "span_id", "parent_span_id"]
-const CORRELATION_TAGS = new Set(["request_id", "trace_id"])
+const CORRELATION_TAGS = new Set(["request_id", "trace_id", "order_id"])
 
 /** Every depth, arrays included: bodies removed, strings scrubbed, urls cut to their path. */
 function deepScrub(value: unknown, depth = 0): unknown {

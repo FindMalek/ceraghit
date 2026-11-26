@@ -1,3 +1,4 @@
+import { SHIPMENT_STATUS_LABELS, type ShipmentStatus } from "@workspace/sdk"
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
 import { formatDay, ORDER_STATUS, PRODUCT_STATUS, REQUEST_STATUS } from "@/lib/copy"
@@ -44,4 +45,18 @@ export function HoldBadge({ order }: { order: { holdExpiresAt: string | null; ho
 export function LinkBadge({ order }: { order: { status: string; paymentMethod: string; paymentLink: string | null } }) {
   if (order.status !== "pending_payment" || order.paymentMethod !== "payoneer" || order.paymentLink) return null
   return <Tone tone="info">Lien à envoyer</Tone>
+}
+
+const SHIPMENT_TONE: Partial<Record<ShipmentStatus, keyof typeof TONE>> = {
+  delivered: "good",
+  exception: "bad",
+  returned: "bad",
+  cancelled: "quiet",
+  on_hold: "warn",
+}
+
+/** Where the Aramex parcel of an order stands, shown next to the order status. */
+export function ShipmentBadge({ status }: { status: ShipmentStatus | null }) {
+  if (!status) return null
+  return <Tone tone={SHIPMENT_TONE[status] ?? "info"}>{SHIPMENT_STATUS_LABELS[status]}</Tone>
 }

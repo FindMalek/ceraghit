@@ -468,7 +468,7 @@ export function bankForCurrency(profile: ProfileBank & ProfileEurBank, currency:
 }
 
 export const SETUP_REQUIRED_STEPS = ["owner", "profile", "bank", "shipping"] as const
-export const SETUP_OPTIONAL_STEPS = ["konnect", "aramex", "payoneer", "groq", "emailDomain"] as const
+export const SETUP_OPTIONAL_STEPS = ["aramex", "payoneer", "groq", "emailDomain"] as const
 export const setupStepIdSchema = z.enum([...SETUP_REQUIRED_STEPS, ...SETUP_OPTIONAL_STEPS])
 export type SetupStepId = z.infer<typeof setupStepIdSchema>
 export type OptionalSetupStepId = (typeof SETUP_OPTIONAL_STEPS)[number]
@@ -609,6 +609,27 @@ export const orderAuditSchema = z.object({
   createdAt: z.string(),
 })
 
+export const shipmentStatusSchema = z.enum([
+  "created",
+  "picked_up",
+  "in_transit",
+  "out_for_delivery",
+  "delivered",
+  "exception",
+  "returned",
+  "on_hold",
+  "cancelled",
+])
+
+/** Orders list filter on the latest parcel: on its way, delivered, or in trouble. */
+export const shipmentFilterSchema = z.enum(["open", "delivered", "problem"])
+export type ShipmentFilter = z.infer<typeof shipmentFilterSchema>
+export const SHIPMENT_FILTER_STATUSES: Record<ShipmentFilter, z.infer<typeof shipmentStatusSchema>[]> = {
+  open: ["created", "picked_up", "in_transit", "out_for_delivery", "on_hold"],
+  delivered: ["delivered"],
+  problem: ["exception", "returned"],
+}
+
 export const adminOrderSchema = orderSchema.extend({
   id: z.string(),
   /** ISO instant the unpaid order is released; null when paid, cancelled or never released. */
@@ -633,6 +654,8 @@ export const adminOrderSchema = orderSchema.extend({
   /** Reference typed by the owner when he confirmed a manual payment (latest audit row). */
   paymentReference: z.string().nullable(),
   shipping: orderShippingSchema.nullable(),
+  /** Status of the newest carrier parcel; null when the order has none. */
+  shipmentStatus: shipmentStatusSchema.nullable(),
 })
 
 /** Dates are studio days (Africa/Tunis), `YYYY-MM-DD`, both ends included. Filters on the payment date, like the overview. */
@@ -747,6 +770,7 @@ export const locationInputSchema = z.object({
 export const orderListQuerySchema = z.object({
   status: orderStatusSchema.optional(),
   q: z.string().trim().max(80).optional(),
+  shipment: shipmentFilterSchema.optional(),
   limit: z.number().int().min(1).max(1000).default(100),
 })
 
@@ -766,6 +790,8 @@ export const statsSchema = z.object({
   lowStock: z.array(z.object({ id: z.string(), ref: z.string(), title: z.string(), stock: z.number().int() })),
   /** Mails that could not be sent and are still waiting for the owner. */
   failedMails: z.number().int(),
+  /** Parcels handed to the carrier and not delivered yet. */
+  openShipments: z.number().int(),
 })
 
 export const mailLogItemSchema = z.object({

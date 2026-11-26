@@ -25,7 +25,7 @@
       "action": "click",
       "target": {
         "role": "switch",
-        "name": "Carte bancaire (Konnect)"
+        "name": "Carte bancaire"
       },
       "caption_fr": "Carte, espèces ou virement."
     },
@@ -92,7 +92,7 @@
       "action": "click",
       "target": {
         "role": "switch",
-        "name": "Carte bancaire (Konnect)"
+        "name": "Carte bancaire"
       },
       "caption_fr": "Carte, espèces ou virement."
     },

@@ -3,7 +3,7 @@ import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { initNode } from "@workspace/errors/node"
 import { logger } from "@workspace/logger"
-import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider, KonnectProvider } from "@workspace/orpc"
+import { AdminAuth, assertNoDemoInProduction, createStorage, DemoProvider } from "@workspace/orpc"
 import { createFakeAramexFetch } from "@workspace/orpc/fake-aramex"
 import { assertVaultKeyForRows } from "@workspace/orpc/rotate"
 import { parseKeyring } from "@workspace/orpc/secrets"
@@ -41,10 +41,7 @@ if (env.BOOTSTRAP) {
 const secrets = parseKeyring(env.SECRETS_KEY, env.SECRETS_KEY_PREVIOUS)
 await assertVaultKeyForRows(db, secrets)
 
-const payments =
-  env.KONNECT_API_KEY && env.KONNECT_WALLET_ID
-    ? new KonnectProvider(env.KONNECT_API_KEY, env.KONNECT_WALLET_ID, env.KONNECT_MODE, undefined, env.KONNECT_BASE_URL)
-    : new DemoProvider(env.WEB_URL)
+const payments = new DemoProvider(env.WEB_URL)
 
 assertNoDemoInProduction({ appEnv: env.APP_ENV, onlinePayments: env.ONLINE_PAYMENTS }, payments)
 
@@ -76,7 +73,6 @@ const fetch = flushAfter(
         secureCookies: env.APP_ENV !== "local",
         onlinePayments: env.ONLINE_PAYMENTS,
         aramexFake: env.ARAMEX_FAKE,
-        konnectBaseUrl: env.KONNECT_BASE_URL,
         groqBaseUrl: env.GROQ_BASE_URL,
         cronSecret: env.CRON_SECRET,
         cronJobs: Object.keys(CRON_JOBS),
@@ -93,7 +89,6 @@ const fetch = flushAfter(
             accountEntity: env.ARAMEX_ACCOUNT_ENTITY,
             accountCountryCode: env.ARAMEX_ACCOUNT_COUNTRY_CODE,
           },
-          konnect: { apiKey: env.KONNECT_API_KEY, walletId: env.KONNECT_WALLET_ID, mode: env.KONNECT_MODE },
         },
       },
     }),

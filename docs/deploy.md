@@ -37,7 +37,7 @@ keep lint, types, test and build parallel. Node, pnpm and Bun come from the setu
    seeds the catalogue and demo orders
 3. a sticky PR comment (Vercel style) with status, visit links, dashboard login, database url and API docs, plus a GitHub
    deployment (`preview-pr-<n>`) so the PR shows "View deployment"
-4. payments use the demo gateway, or the Konnect **sandbox** when `KONNECT_TEST_*` secrets exist
+4. payments use the demo gateway
 5. a Mailpit app `ceraghit-mail-pr-<n>` on `mail-pr-<n>.ceraghit.findmalek.engineer`, behind basic auth
    (`PREVIEW_MAILPIT_AUTH`, `user:password`), linked in the PR comment. The api reaches it over the internal network
    (`MAILPIT_URL=http://<app name>:8025`, its send endpoint accepts any caller, the UI and read api need the login), so
@@ -52,8 +52,8 @@ Closing the PR deletes the apps, database, uploads (`pr-<n>/` in `ceraghit-dev`)
 
 `.github/workflows/staging.yml` redeploys `main` to fixed hosts, **by hand only** (Actions → Staging → Run workflow; a merge to `main` ships to Vercel, not here), in the Dokploy project `ceraghit-staging`
 with its own Postgres: web https://ceraghit.findmalek.engineer, dashboard https://dashboard.ceraghit.findmalek.engineer,
-api https://api.ceraghit.findmalek.engineer (docs at `/v1/docs`). It is a preview-grade environment: demo payments (or
-Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Variables: `STAGING_WEB_HOST`,
+api https://api.ceraghit.findmalek.engineer (docs at `/v1/docs`). It is a preview-grade environment: demo payments,
+demo data, the dev bucket under `staging/`, `noindex`. Variables: `STAGING_WEB_HOST`,
 `STAGING_DASHBOARD_HOST`, `STAGING_API_HOST`, `STAGING_ADMIN_EMAIL`, `STAGING_MAIL_REDIRECT_TO`; secret `STAGING_ADMIN_PASSWORD`.
 
 ## production (merge to main)
@@ -67,7 +67,7 @@ Konnect sandbox keys), demo data, the dev bucket under `staging/`, `noindex`. Va
    Previews and staging always rotate (`ADMIN_PASSWORD_ROTATE=true` in `scripts/deploy/dokploy.mjs`): their secret stays the source of truth.
 2. `deploy`: `vercel pull`, `vercel build --prod` and `vercel deploy --prebuilt --prod` for `apps/api`, `apps/web`, `apps/dashboard` (Vercel's Git
    integration is **disconnected**, so Vercel posts no preview comments; deploys come only from this workflow)
-3. `smoke`: `/health` must report `env:production` (and `konnect:live` if `onlinePayments` is true), storefront and dashboard must answer
+3. `smoke`: `/health` must report `env:production` and `onlinePayments: false`, storefront and dashboard must answer
 
 Git integration stays disconnected and each `apps/<app>/vercel.json` also sets `git.deploymentEnabled` (`"**": false, "main": true`),
 so only `main` could ever build, even if Git is reconnected by mistake. `migrate` only runs on `refs/heads/main`, so a manual
@@ -134,7 +134,7 @@ dashboard `/api` proxies carry the signed `x-ceraghit-client-ip` (`PROXY_SECRET`
 
 At the production cutover (api moves from Vercel to Dokploy, web and dashboard stay on Vercel with their default hops 1):
 the proxies keep forwarding the signed header, so the api path with `PROXY_SECRET` is unaffected by hops, and only direct api
-callers (Trigger.dev crons, health checks, webhooks) depend on it. Checklist in "cutover to Dokploy" in `docs/runbook.md`.
+callers (Trigger.dev crons, health checks) depend on it. Checklist in "cutover to Dokploy" in `docs/runbook.md`.
 
 Outside `APP_ENV=local` a spoofed `x-forwarded-for` therefore changes nothing. The daily cleanup also deletes counters older than a day. To unlock the owner right away:
 `delete from rate_limits where key like 'login:%'`. Optional on top: Vercel WAF rate limiting rules.
@@ -210,7 +210,7 @@ write by hand. Resend needs its SPF/DKIM records on the same zone, and `commande
 
 | project | env (Production only) |
 | :-- | :-- |
-| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (card payment off: Tunisia pays cash on delivery, the rest by bank transfer; turning it on needs `KONNECT_API_KEY`, `KONNECT_WALLET_ID`, `KONNECT_MODE=live`), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it, `PROXY_SECRET` (required, 24+ random characters), `SECRETS_KEY` (optional until a provider reads the vault, then required; vault master key, api only, see `docs/secrets.md`), `OPENOBSERVE_URL`, `OPENOBSERVE_ORG=default`, `OPENOBSERVE_USER`, `OPENOBSERVE_PASSWORD`, `OPENOBSERVE_STREAM=ceraghit`, `LOG_LEVEL=info` (telemetry, see below) |
+| api | `APP_ENV=production`, `DEPLOY_ENV=production`, `DATABASE_URL` (Neon **pooled** url), `DB_POOL_MAX=5`, `WEB_URL`, `API_PUBLIC_URL`, `ONLINE_PAYMENTS=false` (no card gateway: `true` is refused at boot), `SEED_DEMO=false`, `BOOTSTRAP=false`, `S3_ENDPOINT`, `S3_REGION=auto`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL`, `RESEND_API_KEY`, `EMAIL_FROM` (an address on a domain verified in Resend, `onboarding@resend.dev` is refused). `MAIL_REDIRECT_TO` stays unset, production refuses it, `PROXY_SECRET` (required, 24+ random characters), `SECRETS_KEY` (optional until a provider reads the vault, then required; vault master key, api only, see `docs/secrets.md`), `OPENOBSERVE_URL`, `OPENOBSERVE_ORG=default`, `OPENOBSERVE_USER`, `OPENOBSERVE_PASSWORD`, `OPENOBSERVE_STREAM=ceraghit`, `LOG_LEVEL=info` (telemetry, see below) |
 | web | `APP_ENV=production`, `DEPLOY_ENV=production`, `API_URL` (api origin), `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL` (same values as the api: no keys; the CSP reads them at runtime, and `S3_PUBLIC_URL` must also be set at **build** time: `next.config.ts` turns it into `images.remotePatterns` so uploaded photos are resized by Next from the CDN host instead of served full size), `PROXY_SECRET` (same value as the api), `OPENOBSERVE_*` and `LOG_LEVEL` (same values as the api) |
 | dashboard | `APP_ENV=production`, `DEPLOY_ENV=production`, `API_URL`, `WEB_URL`, `S3_ENDPOINT`, `S3_PUBLIC_URL`, `PROXY_SECRET` (same value as the api), `OPENOBSERVE_*` and `LOG_LEVEL` (same values as the api) |
 
@@ -252,7 +252,7 @@ in `Access-Control-Allow-Origin` when a rule has several, which browsers refuse)
 `PREVIEW_DB_HOST` (the-keep tailnet ip), `S3_ENDPOINT`, `PREVIEW_S3_BUCKET=ceraghit-dev`, `PREVIEW_ADMIN_EMAIL`, `PREVIEW_MAIL_REDIRECT_TO` (inbox that gets every preview email, still also kept in the preview's Mailpit),
 `TURBO_API=https://turbo.findmalek.engineer`, `TURBO_TEAM=ceraghit`.
 Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_PASSWORD`, `PREVIEW_MAILPIT_AUTH` (`user:password` for the preview mail UI), `PREVIEW_S3_ACCESS_KEY_ID`,
-`PREVIEW_S3_SECRET_ACCESS_KEY`, optional `KONNECT_TEST_API_KEY` / `KONNECT_TEST_WALLET_ID`, optional `GHCR_READ_TOKEN`
+`PREVIEW_S3_SECRET_ACCESS_KEY`, optional `GHCR_READ_TOKEN`
 (classic PAT `read:packages`), `PROJECT_TOKEN` (classic PAT `project`, for `project.yml`).
 `production` environment variables: `PRODUCTION_WEB_HOST`,
 `PRODUCTION_API_HOST`, `PRODUCTION_DASHBOARD_HOST`, `ADMIN_EMAIL`, `TRIGGER_PROJECT_REF` (see "scheduled jobs"). `production` environment secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API|WEB|DASHBOARD`, `CRON_SECRET`,
@@ -262,7 +262,6 @@ Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_P
 
 - api on Vercel: `apps/api/api/index.ts` re-exports the fetch handler and `vercel.json` rewrites every path to it. Verify
   `/health` and a `/rpc` call on the first deploy; if the function entry needs another shape, only `apps/api/api` changes.
-- Konnect live keys and the answers in issue #1 (EUR with foreign cards, settlement, fees).
 
 ## security headers
 
@@ -271,12 +270,12 @@ Repo secrets (preview scope): `DOKPLOY_API_KEY`, `TURBO_TOKEN`, `PREVIEW_ADMIN_P
   `object-src 'none'`), `Cross-Origin-Opener-Policy: same-origin`, and HSTS (`max-age=63072000; includeSubDomains; preload`)
   only when `APP_ENV=production`. The bucket hosts come from `S3_ENDPOINT` and `S3_PUBLIC_URL` (images and the presigned
   PUT), the dashboard also allows the storefront origin for catalogue photos (`WEB_URL`), `https://www.youtube-nocookie.com`
-  frames and `https://i.ytimg.com` thumbnails (Aide page); the storefront allows `https://*.konnect.network` as form target.
+  frames and `https://i.ytimg.com` thumbnails (Aide page); forms may only target the app itself.
   Pages must stay dynamic (a prerendered page has no nonce).
 - `CSP_REPORT_ONLY=true` on a web or dashboard app turns the policy into `Content-Security-Policy-Report-Only`
   (use it to try a new third party before enforcing).
 - **api**: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, HSTS in production, `Cache-Control: no-store`
-  on `/rpc`, `/v1`, `/health`, `/cron`, `/webhooks`. No `Access-Control-Allow-Origin` is ever sent: browsers only call the
+  on `/rpc`, `/v1`, `/health`, `/cron`. No `Access-Control-Allow-Origin` is ever sent: browsers only call the
   `/api` proxy of their own app. `/v1/docs`, `/v1/openapi.json` (and `/`, `/docs`) answer 404 in production, they stay on
   local and previews.
 - **cookies**: the admin cookie is `HttpOnly; SameSite=Lax; Priority=High`, `Secure` outside local. It stays `Lax` and not

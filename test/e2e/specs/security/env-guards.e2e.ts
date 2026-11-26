@@ -35,6 +35,9 @@ function productionEnv(extra: Record<string, string> = {}): Record<string, strin
     API_PUBLIC_URL: "https://api.ceraghit.example",
     MAILPIT_URL: "",
     MAIL_REDIRECT_TO: "",
+    // the suite's stand-in hosts, refused in production
+    KONNECT_BASE_URL: "",
+    GROQ_BASE_URL: "",
     ...extra,
   })
 }
@@ -54,9 +57,9 @@ async function show(page: Page, title: string, body: string): Promise<void> {
 
 const REFUSED = [
   {
-    name: "a live Konnect mode outside production",
-    env: () => previewEnv({ KONNECT_MODE: "live" }),
-    message: "live payment keys are only allowed with APP_ENV=production",
+    name: "card payment turned on in production",
+    env: () => productionEnv({ ONLINE_PAYMENTS: "true" }),
+    message: "production has no card gateway",
   },
   {
     name: "demo data seeded in production",
@@ -87,6 +90,16 @@ const REFUSED = [
     name: "the fake Aramex in production",
     env: () => productionEnv({ ARAMEX_FAKE: "true" }),
     message: "ARAMEX_FAKE is only allowed outside production",
+  },
+  {
+    name: "a malformed SECRETS_KEY in production",
+    env: () => productionEnv({ SECRETS_KEY: "1:not-a-32-byte-key" }),
+    message: "SECRETS_KEY must be",
+  },
+  {
+    name: "SECRETS_KEY_PREVIOUS without SECRETS_KEY in production",
+    env: () => productionEnv({ SECRETS_KEY: "", SECRETS_KEY_PREVIOUS: `1:${Buffer.alloc(32, 3).toString("base64")}` }),
+    message: "SECRETS_KEY_PREVIOUS needs SECRETS_KEY",
   },
   {
     name: "a real Resend key without a redirect outside production",
@@ -124,3 +137,27 @@ test("a valid preview environment boots and answers /health", ONCE, async ({ pag
     child?.kill("SIGTERM")
   }
 })
+
+test(
+  "production without SECRETS_KEY still boots, the key is optional by design",
+  ONCE,
+  async ({ page, request, step }) => {
+    let child: ChildProcess | undefined
+    const api = `http://localhost:${SPARE_PORT}`
+    try {
+      await step("the api starts in production mode with no vault key", async () => {
+        child = spawn("bun", ["src/index.ts"], {
+          cwd: API_DIR,
+          env: productionEnv({ SECRETS_KEY: "", ARAMEX_FAKE: "" }),
+          stdio: "ignore",
+        })
+        await expect
+          .poll(async () => (await request.get(`${api}/health`).catch(() => null))?.status(), { timeout: 15_000 })
+          .toBe(200)
+        await show(page, "production without SECRETS_KEY: /health", "200 OK")
+      })
+    } finally {
+      child?.kill("SIGTERM")
+    }
+  },
+)

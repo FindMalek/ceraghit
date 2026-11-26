@@ -15,7 +15,7 @@ test("a non local database and a missing mail redirect are refused", async () =>
 })
 
 test("a live payment gateway is refused", async () => {
-  const live = (async () => Response.json({ payments: "konnect:live" })) as unknown as typeof fetch
+  const live = (async () => Response.json({ payments: "gateway:live" })) as unknown as typeof fetch
   await expect(assertSafe(local, live)).rejects.toThrow("not the demo gateway")
   const demo = (async () => Response.json({ payments: "demo:test" })) as unknown as typeof fetch
   await expect(assertSafe(local, demo)).resolves.toBeUndefined()

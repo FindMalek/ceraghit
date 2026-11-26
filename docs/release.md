@@ -1,6 +1,6 @@
 # release
 
-The exact sequence to take the shop from "deployed" to "taking real orders and real card payments". Read it with
+The exact sequence to take the shop from "deployed" to "taking real orders". Read it with
 `docs/runbook.md` (rollback, rotation) and `docs/deploy.md` (workflows).
 
 State when this was written (2026-11-22, read from the live endpoints and `gh`, nothing changed):
@@ -11,7 +11,7 @@ State when this was written (2026-11-22, read from the live endpoints and `gh`, 
 | `https://api.ceraghit.com/health` | `ok`, `db: true`, `env: production`, `payments: demo:test`, `shipping: manual:production`, `onlinePayments: false` |
 | `ceraghit.com`, `dashboard.ceraghit.com/login` | 200; `www.ceraghit.com` answers 308 |
 | `cdn.ceraghit.com` | serves CORS for the dashboard origin |
-| card payments | off (`ONLINE_PAYMENTS=false`), the demo gateway is wired, no live Konnect keys |
+| card payments | off (`ONLINE_PAYMENTS=false`), no card gateway integrated |
 | shipping | manual, no Aramex credentials |
 | GitHub `production` environment | has Vercel, Neon, `CRON_SECRET`, admin login; no `BACKUP_*`, no `BACKUP_AGE_RECIPIENT`, no `OPENOBSERVE_*` |
 | GitHub release `v1.0.0` | does not exist |
@@ -20,7 +20,7 @@ So there is no big-bang switch left: the release is a series of owner-driven swi
 
 ## 0. Before anything
 
-- [ ] every issue of the delivery is closed or consciously deferred; the open ones that remain are client dependent (#1, #6, #7, #8, #14, #20, #102)
+- [ ] every issue of the delivery is closed or consciously deferred; the open ones that remain are client dependent (#7, #8, #14, #20, #102)
 - [ ] latest `main` Deploy run green, `curl -s https://api.ceraghit.com/health` as above
 - [ ] backups and uptime wired (`docs/observability/production.md`): a release without a restorable database is not a release
 - [ ] `docs/handover.md` read with the owner, the operator contact filled in
@@ -42,16 +42,9 @@ So there is no big-bang switch left: the release is a series of owner-driven swi
 - [ ] `http://` redirects to `https://`; HSTS present on the three hosts
 - [ ] old site URLs from the client, if any, redirected: `apps/web/next.config.ts` has no `redirects()` yet, so add a `redirects()` block there (or extend `apps/web/proxy.ts`, which already does the `www` 308)
 
-## 3. Konnect live switch (needs the client's keys, #1 then #6)
+## 3. Card payments
 
-1. [ ] the answers of #1 are pasted in the issue (EUR with foreign cards, settlement currency and delay, KYB, rate)
-2. [ ] the sandbox flow passed on a preview (#5): pending then paid through the webhook and the return page, failed and abandoned payments return the stock, the `GET /payments/{ref}` amount unit is known
-3. [ ] the owner saves the live API key and wallet id on "Paiements", "Clés Konnect" (vault, mode `live`), then "Tester la connexion"
-4. [ ] set `ONLINE_PAYMENTS=true` on the api and redeploy; `/health` must now say `payments: konnect:live` (the Deploy `smoke` job fails otherwise)
-5. [ ] the owner enables card on "Paiements"
-6. [ ] one real small payment from a Tunisian card and one from a foreign card; the order turns paid by itself and the payout reaches the bank in TND (days later)
-
-Rollback: disable card on "Paiements" or `ONLINE_PAYMENTS=false`. The webhook is only a hint, nothing changes status from request data.
+None: no gateway is integrated and the api refuses `ONLINE_PAYMENTS=true` in production (`docs/payments.md`).
 
 ## 4. Aramex live switch (needs the client's contract and keys, #198)
 
@@ -99,5 +92,5 @@ or `ONLINE_PAYMENTS=false`; leaked secret, rotate. A failed `migrate` job stops 
 ## 8. Release notes
 
 Draft a GitHub release `v1.0.0` (the operator publishes it) with the merged PR list
-(`gh pr list --state merged --json number,title`) and the known limits at that date: Konnect pending the client's keys (#1,
-#6), Aramex pending credentials (#198), Payoneer manual, backups and OpenObserve wiring (#301) if still open.
+(`gh pr list --state merged --json number,title`) and the known limits at that date: no card payment,
+Aramex pending credentials (#198), Payoneer manual, backups and OpenObserve wiring (#301) if still open.

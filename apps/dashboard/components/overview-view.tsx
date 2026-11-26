@@ -100,6 +100,14 @@ export function OverviewView() {
               <Stat label="En attente de paiement" value={String(data.pendingOrders)} href="/orders" />
               <Stat label="Panier moyen (DT)" value={formatMoney(data.averageOrder.TND, "TND", "fr")} />
               <Stat label="Panier moyen (€)" value={formatMoney(data.averageOrder.EUR, "EUR", "fr")} />
+              {data.openShipments > 0 && (
+                <Stat
+                  label="Colis en cours"
+                  value={String(data.openShipments)}
+                  hint="Remis à Aramex, pas encore livrés"
+                  href="/orders?shipment=open"
+                />
+              )}
               <Stat
                 label="Nouvelles demandes"
                 value={String(data.newRequests)}
