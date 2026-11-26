@@ -207,7 +207,10 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     const o = await order()
     const [before] = await db.select().from(products).where(eq(products.id, productId))
     answer = gatewayAnswer({ orderId: o.number }, "failed")
-    expect(await settleOrder(services, o.paymentRef!)).toMatchObject({ status: "cancelled" })
+    let changes = 0
+    const announcing = { ...services, hooks: { catalogChanged: async () => void changes++ } }
+    expect(await settleOrder(announcing, o.paymentRef!)).toMatchObject({ status: "cancelled" })
+    expect(changes).toBe(1)
     const [after] = await db.select().from(products).where(eq(products.id, productId))
     expect(after!.stock).toBe(before!.stock + 1)
   })

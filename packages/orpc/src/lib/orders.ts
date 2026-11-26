@@ -644,7 +644,7 @@ export async function settleOrder(services: Services, ref: string): Promise<{ nu
   }
   if (check.status === "failed") {
     recordPaymentSettle("failed")
-    await cancelOrder(db, order.id)
+    if (await cancelOrder(db, order.id)) await services.hooks?.catalogChanged?.()
     return { number: order.number, status: "cancelled" }
   }
   recordPaymentSettle("pending")
