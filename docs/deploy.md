@@ -253,7 +253,8 @@ the dashboard, customer photos on `/custom` by the storefront, both straight to 
 ```
 
 **Garage** (the-keep): bucket `ceraghit-dev` with key `ceraghit-dev-key` (previews and local), CORS allowing `PUT` from
-`*.ceraghit.findmalek.engineer`, and `GET` from the dashboard preview origins (one rule per origin: Garage sends the whole list
+`*.ceraghit.findmalek.engineer` and `PUT`/`GET`/`HEAD` from `https://ceraghit.findmalek.engineer` (the wildcard does
+not cover the staging storefront), and `GET` from the dashboard preview origins (one rule per origin: Garage sends the whole list
 in `Access-Control-Allow-Origin` when a rule has several, which browsers refuse).
 
 **DNS** (Vercel DNS, `findmalek.engineer`): `ceraghit` and `*.ceraghit` CNAME → `home.findmalek.engineer`.
@@ -345,8 +346,9 @@ included. Measured 26 Oct to 25 Nov: 3 h 36 used, `ceraghit-api` 47 min, `ceragh
   when used (about half the CPU of a cold start). Keep heavy, rarely used libraries behind `await import()` of a module of
   ours (split chunks do not give named exports for a CommonJS package imported directly).
 - polling and probes: dashboard polls every 2 to 5 min, uptime every 30 min, `retry-mail` every 30 min.
-- bots (not in code): in the Vercel dashboard, web project, Firewall: turn on Bot Protection and the AI bots rule, and add a
-  rate limit on the shop and product paths, with and without a locale prefix: request path matching
-  `^(/(en|ar|fr))?/(shop|product)(/.*)?$` (for example 60 requests per minute per IP).
+- bots (not in code, set on the web project's Firewall): AI Crawlers deny, AI Assistants log, Bot Protection log, and a
+  rate limit of 300 requests per minute per IP on `^(/(en|ar|fr))?/(shop|product)(/.*)?$` (Next prefetches product
+  pages, so keep it generous). Bot Protection stays on log: set to challenge it would fail `uptime.yml`, which curls the
+  shop.
 - check: Team usage, Fluid Active CPU by project, daily bars. Runtime logs of `ceraghit-api` (Hobby keeps 1 h): the
   `POST /rpc/public/{site/images,catalog/*}` bursts should be about one per read per 10 minutes.

@@ -15,8 +15,7 @@ Working document so nothing gets forgotten. Legal names, addresses, tax ids and 
 | WhatsApp / Telegram integration | 200 | not included, out of scope |
 | Live visitor statistics (Databuddy): who, from where, top pieces | 100 | not included, out of scope |
 
-Konnect's transaction fees (1.3% Tunisian cards, 2.9% international cards, see `docs/payments.md`) are paid by the studio
-out of its sales, not by the provider. The 135 TND yearly line covers the domain and keeping the production deployment
+Bank and Payoneer fees on the money received are paid by the studio out of its sales, not by the provider. The 135 TND yearly line covers the domain and keeping the production deployment
 running; to confirm: whether it covers only those or also any usage above the free tiers of the hosting services.
 
 ## scope (included in the 800 TND)
@@ -24,7 +23,8 @@ running; to confirm: whether it covers only those or also any usage above the fr
 1. Web shop for mobile and desktop: catalogue by category, product pages (photo gallery, variants such as glazed and
    unglazed), cart, checkout, order tracking page, search and sorting.
 2. Prices in TND and EUR: the owner sets both for every product, customers choose their currency.
-3. Online payment by card through Konnect (Tunisian and international cards).
+3. Payment without a card gateway: cash on delivery in Tunisia, bank transfer or Payoneer from abroad (in euros, with the
+   dollar account shown beside the euro one). The owner confirms each payment in the dashboard.
 4. Delivery price computed from each piece's weight and box size, per zone (Tunisia, Europe, rest of the world), with a
    free-delivery threshold, a rate card the owner edits and an estimator page. The rates start as estimates and are
    replaced by the studio's real carrier price list.
