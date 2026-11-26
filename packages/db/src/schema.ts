@@ -259,7 +259,7 @@ export const orders = pgTable(
 
 /** One row per provider. Secrets are AES-256-GCM encrypted (packages/orpc/src/lib/secrets.ts), never plaintext. */
 export const integrationCredentials = pgTable("integration_credentials", {
-  /** "konnect" | "aramex" | "groq" | ...; one row per provider. */
+  /** "aramex" | "groq" | ...; one row per provider. */
   provider: text("provider").primaryKey(),
   /** Non-secret settings (wallet id, mode, account number...). Safe to show. */
   config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),

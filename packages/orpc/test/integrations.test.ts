@@ -65,20 +65,19 @@ describe.skipIf(!url)("integrations vault", () => {
     await reset()
     const key = `${SENTINEL}-long-key-1234`
     const saved = await owner.integrations.save({
-      provider: "konnect",
-      config: { walletId: "w1" },
+      provider: "groq",
       secrets: { apiKey: key },
     })
     expect(saved.secrets.apiKey).toEqual({ configured: true, hint: "••••1234" })
     expect(saved.source).toBe("db")
     const outputs = JSON.stringify([
       saved,
-      await owner.integrations.get({ provider: "konnect" }),
+      await owner.integrations.get({ provider: "groq" }),
       await owner.integrations.list({}),
     ])
     expect(outputs).not.toContain(SENTINEL)
 
-    const row = await rawRow("konnect")
+    const row = await rawRow("groq")
     expect(JSON.stringify(row)).not.toContain(SENTINEL)
     expect(row?.secretsEnc?.startsWith("v1.")).toBe(true)
     expect(row?.keyVersion).toBe(1)
@@ -114,21 +113,21 @@ describe.skipIf(!url)("integrations vault", () => {
       secrets: null,
       config: {
         ...base.config,
-        envCredentials: { konnect: { apiKey: `${SENTINEL}-env-key-5678`, walletId: "w9", mode: "test" } },
+        envCredentials: { groq: { apiKey: `${SENTINEL}-env-key-5678` } },
       },
     }
     const client = as(noVault, token)
     await expect(client.integrations.save({ provider: "groq", secrets: { apiKey: "x" } })).rejects.toThrow(
       "Le coffre des clés n'est pas configuré sur ce serveur.",
     )
-    const got = await client.integrations.get({ provider: "konnect" })
+    const got = await client.integrations.get({ provider: "groq" })
     expect(got).toMatchObject({
       source: "env",
       vaultAvailable: false,
       secrets: { apiKey: { configured: true, hint: "••••5678" } },
     })
     expect(JSON.stringify(got)).not.toContain(SENTINEL)
-    expect((await getIntegration(noVault, "konnect"))?.secrets.apiKey).toContain(SENTINEL)
+    expect((await getIntegration(noVault, "groq"))?.secrets.apiKey).toContain(SENTINEL)
   })
 
   test("a DB row wins over the env as a whole, clear brings the env back", async () => {
@@ -137,22 +136,22 @@ describe.skipIf(!url)("integrations vault", () => {
       ...base,
       config: {
         ...base.config,
-        envCredentials: { konnect: { apiKey: "env-key-env-key-0000", walletId: "env-wallet" } },
+        envCredentials: { aramex: { password: "env-password", userName: "env-user" } },
       },
     }
     const client = as(withEnv, token)
-    await client.integrations.save({ provider: "konnect", secrets: { apiKey: "db-key-db-key-db-key" } })
-    expect(await getIntegration(withEnv, "konnect")).toMatchObject({
+    await client.integrations.save({ provider: "aramex", secrets: { password: "db-password" } })
+    expect(await getIntegration(withEnv, "aramex")).toMatchObject({
       source: "db",
       config: {},
-      secrets: { apiKey: "db-key-db-key-db-key" },
+      secrets: { password: "db-password" },
     })
-    await client.integrations.clear({ provider: "konnect" })
-    expect((await rawRow("konnect"))?.secretsEnc).toBeNull()
-    expect((await rawRow("konnect"))?.updatedBy).not.toBeNull()
-    expect(await getIntegration(withEnv, "konnect")).toMatchObject({
+    await client.integrations.clear({ provider: "aramex" })
+    expect((await rawRow("aramex"))?.secretsEnc).toBeNull()
+    expect((await rawRow("aramex"))?.updatedBy).not.toBeNull()
+    expect(await getIntegration(withEnv, "aramex")).toMatchObject({
       source: "env",
-      config: { walletId: "env-wallet" },
+      config: { userName: "env-user" },
     })
   })
 
@@ -160,15 +159,15 @@ describe.skipIf(!url)("integrations vault", () => {
     await reset()
     await owner.integrations.save({ provider: "groq", secrets: { apiKey: SENTINEL } })
     const row = (await rawRow("groq"))!
-    await db.insert(integrationCredentials).values({ ...row, provider: "konnect" })
-    expect(await getIntegration(base, "konnect")).toBeNull()
-    await expect(owner.integrations.save({ provider: "konnect", secrets: { apiKey: "x" } })).rejects.toThrow(
+    await db.insert(integrationCredentials).values({ ...row, provider: "aramex" })
+    expect(await getIntegration(base, "aramex")).toBeNull()
+    await expect(owner.integrations.save({ provider: "aramex", secrets: { password: "x" } })).rejects.toThrow(
       "illisibles",
     )
     const lost: Services = { ...base, secrets: parseKeyring(K2) }
     expect(await getIntegration(lost, "groq")).toBeNull()
     // the masked view of an unreadable row still answers and leaks nothing
-    expect(JSON.stringify(await owner.integrations.get({ provider: "konnect" }))).not.toContain(SENTINEL)
+    expect(JSON.stringify(await owner.integrations.get({ provider: "aramex" }))).not.toContain(SENTINEL)
   })
 
   test("rotation re-encrypts to the current key and the old one can go", async () => {

@@ -55,7 +55,6 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 - [ ] « Marquer expédiée » une commande avec un numéro de suivi : l'e-mail d'expédition le contient
 - [ ] ouvrir la facture PDF : bonne langue, une seule monnaie, coordonnées et banque, impression A4 propre
 - [ ] le client ouvre sa facture depuis le lien de sa commande
-- [ ] paiement par carte (client) : un vrai petit paiement depuis une carte tunisienne et une carte étrangère, la commande passe payée toute seule
 - [ ] lien Payoneer (client) : coller le lien sur la commande, le client le voit, marquer payée à la réception
 
 ## 6. Livraison
@@ -94,7 +93,7 @@ Date : ____ / ____ / ________    Testeur : ______________________    Appareil : 
 - [ ] frais de livraison pour la Tunisie et pour l'étranger, ou devis après commande
 - [ ] dénomination légale, adresse, matricule fiscal, registre de commerce, patente, RIB, IBAN, BIC, régime de TVA
 - [ ] politique de retour, délai pour signaler un colis abîmé
-- [ ] compte Konnect (clés réelles), accès Aramex, compte Payoneer
+- [ ] accès Aramex, compte Payoneer
 - [ ] propriétaire du nom de domaine et anciens liens à rediriger
 
 ## Remarques

@@ -56,7 +56,7 @@
     },
     {
       "name": "ceraghit-payment-mismatch",
-      "description": "The gateway answered paid but the amount, currency or order number did not match: never mark such an order paid by hand without checking Konnect.",
+      "description": "The gateway answered paid but the amount, currency or order number did not match: never mark such an order paid by hand without checking with the payment provider.",
       "stream_type": "metrics",
       "stream_name": "ceraghit_payments_settle",
       "is_real_time": false,

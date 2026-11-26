@@ -24,7 +24,7 @@ import { publicError } from "../../errors"
 import { invoiceView, issueInvoice } from "../../lib/invoices"
 import { deliverMail } from "../../lib/mail-log"
 import { createOrder, paymentReferences, settleOrder } from "../../lib/orders"
-import { DemoProvider, resolvePayments } from "../../lib/payments"
+import { DemoProvider } from "../../lib/payments"
 import { enforceLimit } from "../../lib/rate-limit"
 import { getPaymentSettings } from "../../lib/settings"
 import { parcelOf, toShipping } from "../../lib/shipping-events"
@@ -67,7 +67,7 @@ export const ordersRouter = {
         with: { items: true },
       })
       if (!order) throw publicError("NOT_FOUND", "order_not_found", "Order not found.")
-      // The customer lands here right after paying, often before the webhook: ask the gateway now.
+      // The customer lands here right after paying: ask the gateway now.
       const settled =
         order.status === "pending_payment" && order.paymentMethod === "online" && order.paymentRef
           ? await settleOrder(context, order.paymentRef)
@@ -140,13 +140,13 @@ export const ordersRouter = {
       return view
     }),
 
-  /** Only exists with the demo provider (local and preview without gateway keys). */
+  /** Only exists with the demo provider (local and preview). */
   demoResolve: publicProcedure
     .route({ method: "POST", path: "/orders/demo-resolve", summary: "Demo checkout outcome", tags: TAG })
     .input(z.object({ ref: z.string(), outcome: z.enum(["paid", "failed", "mismatch"]) }))
     .output(z.object({ ok: z.literal(true) }))
     .handler(async ({ context, input }) => {
-      const payments = await resolvePayments(context)
+      const { payments } = context
       if (!(payments instanceof DemoProvider) || context.config.appEnv === "production") {
         throw publicError("NOT_FOUND", "payment_not_found", "Not found.")
       }

@@ -23,7 +23,7 @@ paiement. Vous pouvez passer les étapes facultatives et y revenir plus tard : l
 
 - « Profil » : nom légal, adresse, téléphone, e-mail, matricule fiscal. Ils apparaissent sur les factures et les pages légales.
   Renseignez aussi l'e-mail qui reçoit les nouvelles commandes.
-- « Paiements » : activer ou couper chaque moyen de paiement (voir section 7) et saisir les clés Konnect.
+- « Paiements » : activer ou couper chaque moyen de paiement (voir section 7).
 - « Livraison » : choisir Manuel ou Aramex, saisir les clés Aramex (voir section 8).
 - « Réglages » : coordonnées affichées sur le site, frais de livraison, lien Instagram, usage de l'espace photo.
 
@@ -76,7 +76,6 @@ refusée : reformulez plutôt que d'ajouter du remplissage.
 | :-- | :-- | :-- |
 | Paiement à la livraison (Tunisie, en DT) | le client paie le livreur | marquer expédiée, puis marquer payée quand l'argent est reçu |
 | Virement (étranger, en EUR) | le client vire sur le compte en euros (ou, s'il n'est pas renseigné, sur votre compte principal), le numéro de commande sert de référence | vérifier la banque, puis **marquer payée** |
-| Paiement en ligne (carte, via Konnect) | le client paie sur la page de Konnect | rien : la commande passe payée toute seule quand Konnect confirme |
 | Lien Payoneer | vous envoyez un lien de paiement, le client paie | coller le lien sur la commande, puis **marquer payée** à la réception |
 
 Comptes bancaires : dans « Profil de l'atelier », la carte « Compte bancaire » contient votre compte principal (commandes en DT) et, plus bas, un « Compte en euros » facultatif (titulaire, banque, IBAN, BIC, adresse de la banque). Une commande par virement affiche le compte de sa devise : DT sur le compte principal, EUR sur le compte en euros. Les quatre premiers champs du compte en euros vont ensemble : remplis tous, ou vides.
@@ -85,14 +84,10 @@ Comptes bancaires : dans « Profil de l'atelier », la carte « Compte bancaire 
 - **Marquer expédiée** : choisissez le transporteur et saisissez le numéro de suivi, ou créez l'expédition Aramex. Le client reçoit un
   e-mail avec le suivi.
 - **Annuler** ou **rembourser** : la boîte de confirmation indique l'effet sur le stock. Un remboursement s'effectue chez
-  vous (banque, Konnect, Payoneer), le site ne rend pas l'argent tout seul.
-- Un paiement en ligne abandonné est annulé automatiquement après 45 minutes et le stock revient.
+  vous (banque, Payoneer), le site ne rend pas l'argent tout seul.
 
-### Clés Konnect (carte bancaire)
-
-« Paiements » → « Clés Konnect » : clé d'API et identifiant du portefeuille, donnés par Konnect quand votre compte est validé.
-« Tester la connexion » vérifie la clé sans créer de paiement. Tant que les clés réelles ne sont pas saisies, le paiement par
-carte reste coupé et le site propose uniquement la livraison payée à la réception ou le virement.
+Le paiement par carte sur le site n'est pas disponible : aucun prestataire n'est branché. Les clients paient à la livraison,
+par virement ou avec Payoneer.
 
 ## 8. Livraison
 
@@ -138,7 +133,6 @@ depuis votre boîte habituelle. Les demandes terminées depuis plus de 12 mois s
 | symptôme | à faire | à qui |
 | :-- | :-- | :-- |
 | le site ne s'ouvre pas | attendre 5 minutes, essayer en 4G, puis écrire à l'opérateur ; le site se surveille tout seul | opérateur |
-| un client dit avoir payé par carte mais la commande reste en attente | ne pas l'expédier, ouvrir la commande et regarder son statut ; si le paiement est confirmé côté Konnect, écrire à l'opérateur avec le numéro de commande | opérateur |
 | un virement ou un lien Payoneer est arrivé | « Marquer payée » sur la commande | vous |
 | un e-mail n'est pas arrivé | page « Emails » : « Renvoyer » ; vérifier les indésirables du client | vous, puis opérateur |
 | une photo ne s'envoie pas | réessayer ; vérifier l'usage de l'espace dans « Réglages » (limite 2,5 Go) ; supprimer les photos inutiles | vous, puis opérateur |
@@ -151,5 +145,5 @@ de vous confirmer à la remise qu'elle tourne et la date du dernier test de rest
 l'opérateur restaure, vous n'avez rien à faire.
 
 **Qui appeler** : l'opérateur de la boutique (nom, téléphone et e-mail à compléter à la remise, voir « Contact » du contrat).
-Pour un problème de paiement carte : le support Konnect. Pour un colis : votre conseiller Aramex. Ne communiquez jamais un
+Pour un colis : votre conseiller Aramex. Ne communiquez jamais un
 mot de passe ou une clé par message : l'opérateur n'en a pas besoin pour vous aider.
