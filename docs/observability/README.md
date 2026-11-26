@@ -15,6 +15,9 @@ over OTLP/HTTP with basic auth. Names and endpoints follow the owner's other pro
 
 Endpoints derived from the url: `${url}/api/${org}/v1/{traces,logs,metrics}`, header `Authorization: Basic base64(user:password)`.
 
+Grouped error tracking with stack traces and alerts lives in GlitchTip, see `docs/observability/glitchtip.md`; the two share
+`request_id` and `trace_id`.
+
 ## what lands in OpenObserve
 
 | signal | service names | where it comes from |

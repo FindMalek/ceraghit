@@ -33,6 +33,7 @@ push() { # app NAME VALUE
   echo "  $1: $2"
 }
 
+# Optional: GLITCHTIP_* (error tracking, plain env vars: a DSN is semi-public, and the NEXT_PUBLIC pair must be readable at build).
 # Optional: without OPENOBSERVE_* the apps boot and export nothing, they only log one warning in production.
 for v in WEB_URL API_PUBLIC_URL API_URL DATABASE_URL RESEND_API_KEY EMAIL_FROM CRON_SECRET PROXY_SECRET \
   S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_PUBLIC_URL; do
@@ -65,6 +66,13 @@ push api LOG_LEVEL info
 push api TRUSTED_PROXY_HOPS 1
 for n in DATABASE_URL WEB_URL API_PUBLIC_URL CRON_SECRET PROXY_SECRET RESEND_API_KEY EMAIL_FROM S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID \
   S3_SECRET_ACCESS_KEY S3_PUBLIC_URL OPENOBSERVE_URL OPENOBSERVE_USER OPENOBSERVE_PASSWORD; do push api "$n" "$(val "$n")"; done
+# GlitchTip is optional: only pushed when a DSN is filled in. Values are never echoed (push prints the name only).
+if [ -n "$(val GLITCHTIP_DSN)" ]; then
+  for app in api web dashboard; do
+    push "$app" GLITCHTIP_DSN "$(val GLITCHTIP_DSN)"
+    push "$app" GLITCHTIP_ENV production
+  done
+fi
 for app in web dashboard; do
   push "$app" APP_ENV production
   push "$app" DEPLOY_ENV production
@@ -79,6 +87,10 @@ for app in web dashboard; do
   push "$app" S3_ENDPOINT "$(val S3_ENDPOINT)"
   push "$app" S3_PUBLIC_URL "$(val S3_PUBLIC_URL)"
   for n in OPENOBSERVE_URL OPENOBSERVE_USER OPENOBSERVE_PASSWORD; do push "$app" "$n" "$(val "$n")"; done
+  if [ -n "$(val NEXT_PUBLIC_GLITCHTIP_DSN)" ]; then
+    push "$app" NEXT_PUBLIC_GLITCHTIP_DSN "$(val NEXT_PUBLIC_GLITCHTIP_DSN)"
+    push "$app" NEXT_PUBLIC_GLITCHTIP_ENV production
+  fi
 done
 
 echo

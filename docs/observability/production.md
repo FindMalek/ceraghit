@@ -15,6 +15,7 @@ details: `docs/deploy.md` ("uptime and backups"). Nothing below is run by an age
 | Neon point-in-time restore | none (a Neon feature) | not checked | owner or operator confirms the retention window of the plan in the Neon console |
 | R2 versioning | none | not checked | decide: the media sync already keeps deleted files 90 days; versioning on `ceraghit-prod` is optional |
 | OpenObserve export | `apps/*/instrumentation.ts`, dashboard `dashboard.json`, alerts `alerts.json` | the `production` GitHub environment has no `OPENOBSERVE_*` (they belong to the Vercel projects, not checked here) | see "OpenObserve" |
+| GlitchTip error tracking | `packages/errors`, compose in `deploy/glitchtip/`, `docs/observability/glitchtip.md` (#423) | not deployed, no DSN anywhere | deploy it, create the two projects, set the DSNs, create the alert rules (see `glitchtip.md`, last section) |
 | alert routes | alerts target the `owner-mail` destination | not verified | create the destination, import the alerts |
 | scheduler | `apps/jobs` on Trigger.dev | schedules active (#302) | see `docs/jobs.md` |
 
@@ -32,6 +33,14 @@ checks the Backup run in the Actions tab every Monday, or sets a GitHub notifica
 5. Verify with one real checkout on production (cash on delivery, cancelled afterwards): one trace `ceraghit-web` to
    `ceraghit-api`, logs with the same `trace_id`, and `ceraghit.orders.created` in metrics. Search the exported logs for an
    email, a phone, an IBAN and `Bearer`: none may appear.
+
+## GlitchTip (what the operator configures)
+
+Errors with a stack trace, new-issue/regression/spike mails. Optional and independent of OpenObserve; the full setup, privacy
+rules and variable table are in `docs/observability/glitchtip.md`. Summary: deploy `deploy/glitchtip/docker-compose.yml`, create
+projects `ceraghit-preview` and `ceraghit-production`, set `GLITCHTIP_DSN` + `GLITCHTIP_ENV=production` (and the `NEXT_PUBLIC_`
+pair on web and dashboard) on the Vercel projects, redeploy. A production DSN is refused on any other `APP_ENV`. Check after the
+first real error that the event has no email, phone, cookie or request body.
 
 ## backups (what the owner or operator configures)
 
