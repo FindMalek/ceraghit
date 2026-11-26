@@ -10,11 +10,13 @@ export const contentType = OG_CONTENT_TYPE
 export default async function Image({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: "home" })
+  const photo = await ogPhoto(siteImages("og-home", await getSiteImages(), locale)[0]?.src)
   return ogImage({
     locale,
     eyebrow: t("kicker"),
     title: "Ceraghit Creation",
     subtitle: t("subtitle"),
-    image: await ogPhoto(siteImages("og-home", await getSiteImages(), locale)[0]?.src),
+    image: photo,
+    degraded: !photo,
   })
 }
