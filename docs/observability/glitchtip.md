@@ -58,32 +58,12 @@ never put customer fields in an error message.
 
 Tests: `packages/errors/test/scrub.test.ts` (realistic payloads), `config.test.ts` (no SDK without a DSN), `apps/api/test/env.test.ts`.
 
-## deploy GlitchTip (operator, once)
+## where it runs
 
-Done on the-keep: https://errors-ceraghit.findmalek.engineer, files and `.env` in `~/ceraghit-glitchtip` (a
-`docker-compose.override.yml` there routes it through Traefik). The name is one level deep on purpose, so the
-`*.findmalek.engineer` wildcard certificate covers it (Let's Encrypt's weekly limit). Organization `ceraghit` and both
-projects exist and the variables below are set. Left: the first superuser (step 3), SMTP (`EMAIL_URL` is
-`consolemail://`, so no alert mails yet) and backups (step 6). The steps stay for a rebuild.
-
-Nothing here is run by the repo. The compose file is `deploy/glitchtip/docker-compose.yml` (GlitchTip 6.2.6, Postgres
-17.12, Redis 7.4.12, all pinned): `web`, `worker` (celery and beat), `migrate`, `postgres`, `redis`.
-
-1. On the homelab (or as a Dokploy "Compose" app pointing at that file), copy `deploy/glitchtip/.env.example` to `.env` and fill:
-   `POSTGRES_PASSWORD`, `SECRET_KEY` (`openssl rand -base64 48`), `GLITCHTIP_DOMAIN` (public https url), `DEFAULT_FROM_EMAIL`,
-   `EMAIL_URL` (SMTP, e.g. the same provider that sends the shop mails, a dedicated sender address).
-2. `docker compose up -d`. `migrate` runs first and exits. Route the domain through Traefik/Dokploy to the `web` port 8000
-   with TLS (drop the `127.0.0.1` port mapping then).
-3. Create the first superuser: `docker compose exec web ./manage.py createsuperuser`. Registration and organization
-   creation are off in the compose file, so this is the only way in; invite the owner by email afterwards.
-4. In the UI: create the organization `ceraghit`, then two projects (platform "Node.js" or "JavaScript"):
-   `ceraghit-preview` and `ceraghit-production`. Copy each DSN from Project, Settings, Client Keys. Note which is which.
-5. Set the variables (next section). Use the preview DSN everywhere that is not production.
-6. Backups: the data is the `pgdata` volume. Nightly `docker compose exec -T postgres pg_dump -U glitchtip -Fc glitchtip > glitchtip-$(date +%F).dump`
-   from cron, age-encrypted like `.github/workflows/backup.yml` does, kept off the host. Errors are disposable after 90 days
-   (`GLITCHTIP_MAX_EVENT_LIFE_DAYS`), so a weekly dump is enough; the settings (projects, DSNs, alert rules) are what matters.
-   Restore: `pg_restore --clean -d glitchtip` into a fresh `postgres`, then `docker compose up -d`.
-7. Upgrades: change one image tag, read the GlitchTip release notes, `docker compose pull && docker compose up -d`.
+The shared instance https://errors.findmalek.engineer, organization `findmalek`, projects `ceraghit-preview` and
+`ceraghit-production`. Never deploy another GlitchTip for this repo: a new need is a new project there. The stack, its
+mail settings, backups and upgrades belong to the instance, not to ceraghit. DSNs are under Project, Settings, Client
+Keys.
 
 ## set the variables
 
@@ -100,7 +80,7 @@ minute with `environment: preview`, the right release, no user, no cookies.
 
 Not wired and never mandatory: without them the browser stack traces of the minified bundle are unreadable, the server
 ones are fine. To add them later: a CI step after `next build` with `@sentry/cli` (`SENTRY_URL=<glitchtip url>`,
-`SENTRY_AUTH_TOKEN`, `SENTRY_ORG=ceraghit`, `SENTRY_PROJECT=ceraghit-production`) running
+`SENTRY_AUTH_TOKEN`, `SENTRY_ORG=findmalek`, `SENTRY_PROJECT=ceraghit-production`) running
 `sentry-cli sourcemaps inject` and `upload` on `.next/static`, with `--release $GIT_SHA` matching `NEXT_PUBLIC_GLITCHTIP_RELEASE`,
 guarded by `if: secrets.SENTRY_AUTH_TOKEN != ''` so a fork or a missing token skips it. Remove the maps from the deployed output after
 upload (`productionBrowserSourceMaps` stays off).
@@ -115,7 +95,7 @@ In each project, Alerts:
 | regression | "An issue changes state from resolved to unresolved" | same |
 | spike | "Number of events in an issue is more than 20 in 5 minutes" (tune after a week) | same, plus a Slack/webhook recipient (GlitchTip supports webhook and Slack-compatible recipients) if the operator wants a push |
 
-Mail needs the SMTP settings above; send one test alert from the UI. The preview project gets no alerts (or a muted
+Mail needs SMTP on the instance; send one test alert from the UI. The preview project gets no alerts (or a muted
 operator-only rule).
 
 ## how it ties to OpenObserve
@@ -131,7 +111,7 @@ operator-only rule).
 
 ## steps for the owner and operator, in order
 
-1. Deploy the compose file (section "deploy GlitchTip"), create the superuser, organization and the two projects.
+1. Find the two projects on the shared instance (section "where it runs"); both exist.
 2. Put the preview DSN in the repository secret `GLITCHTIP_DSN`; open or update a PR and check the event arrives in `ceraghit-preview`.
 3. Fill the four `GLITCHTIP_*` / `NEXT_PUBLIC_GLITCHTIP_*` values for production in `.env.production.local`, run `scripts/vercel-setup.sh`, redeploy the three apps.
 4. Create the alert rules and send a test mail.
