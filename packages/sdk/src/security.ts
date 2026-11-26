@@ -19,7 +19,6 @@ export interface CspOptions {
 
 export const YOUTUBE_EMBED_ORIGIN = "https://www.youtube-nocookie.com"
 export const YOUTUBE_THUMBNAIL_ORIGIN = "https://i.ytimg.com"
-export const KONNECT_FORM_ORIGIN = "https://*.konnect.network"
 
 export const HSTS = "max-age=63072000; includeSubDomains; preload"
 
@@ -78,7 +77,7 @@ export function buildCsp(options: CspOptions): string {
     ],
     "frame-src": dashboard ? [YOUTUBE_EMBED_ORIGIN] : ["'none'"],
     "frame-ancestors": ["'none'"],
-    "form-action": dashboard ? ["'self'"] : ["'self'", KONNECT_FORM_ORIGIN],
+    "form-action": ["'self'"],
     "base-uri": ["'self'"],
     "object-src": ["'none'"],
   }

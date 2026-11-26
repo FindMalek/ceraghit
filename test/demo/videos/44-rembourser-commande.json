@@ -26,7 +26,7 @@
       "target": { "role": "button", "name": "Rembourser" },
       "caption_fr": "Cliquez sur Rembourser."
     },
-    { "action": "wait", "caption_fr": "Le remboursement se fait chez Konnect.", "holdMs": 2500 },
+    { "action": "wait", "caption_fr": "Le remboursement se fait à part, à la main.", "holdMs": 2500 },
     {
       "action": "click",
       "target": { "role": "button", "name": "Rembourser", "nth": -1 },

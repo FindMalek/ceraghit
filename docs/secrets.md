@@ -1,10 +1,10 @@
 # Provider secrets (vault)
 
-Konnect, Aramex and Groq credentials the owner enters in the dashboard are stored in `integration_credentials`
+Aramex and Groq credentials the owner enters in the dashboard are stored in `integration_credentials`
 (`packages/db/src/schema.ts`). Secret fields are one JSON object encrypted with AES-256-GCM
 (`packages/orpc/src/lib/secrets.ts`): a random 12-byte IV per write, the 16-byte tag, the key version in the row and
 `integration:<provider>` as authenticated data, so a ciphertext copied to another provider fails to decrypt. Non-secret
-settings (wallet id, mode) sit in the `config` column in clear. The row also keeps `updated_by` (admin) and `updated_at`.
+settings (account number, mode) sit in the `config` column in clear. The row also keeps `updated_by` (admin) and `updated_at`.
 
 - Secrets are write-only. `admin.integrations.get|list|save` return `{ configured, hint }` per field (hint = `••••` plus the
   last 4 characters, only for values of 16+ characters). Nothing returns a value, and no log line or error message holds one.

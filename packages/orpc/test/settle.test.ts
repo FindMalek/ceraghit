@@ -1,14 +1,10 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
 import {
-  admins,
   categories,
   createDb,
-  demoRef,
-  integrationCredentials,
   invoiceCounters,
   invoices,
   mailLog,
-  newDemoNonce,
   orderAudit,
   orderItems,
   orders,
@@ -18,13 +14,10 @@ import { runMigrations } from "@workspace/db/migrate"
 import { seed } from "@workspace/db/seed"
 import { eq, inArray, like } from "drizzle-orm"
 import type { Services } from "../src/context"
-import { clearIntegration, saveIntegration } from "../src/lib/integrations"
 import type { Mail } from "../src/lib/mailer"
 import { releaseExpiredHolds, settleOrder } from "../src/lib/orders"
 import type { PaymentCheck, PaymentProvider } from "../src/lib/payments"
 import { DemoProvider } from "../src/lib/payments"
-import { parseKeyring } from "../src/lib/secrets"
-import { getPaymentResponse } from "./fixtures/konnect"
 
 const url = process.env.DATABASE_URL
 
@@ -34,7 +27,7 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
   let answer: PaymentCheck = { status: "pending", amountMinor: 0, currency: null, orderNumber: null }
   let checks = 0
   const payments: PaymentProvider = {
-    name: "konnect",
+    name: "test-gateway",
     mode: "test",
     init: async () => ({ payUrl: "x", ref: "x" }),
     check: async () => {
@@ -54,18 +47,15 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
   let seq = 0
   let productId = ""
 
-  const konnectAnswer = (
-    over: Parameters<typeof getPaymentResponse>[0],
+  const gatewayAnswer = (
+    over: { orderId: string; amount?: number; token?: "EUR" | "TND" },
     status: PaymentCheck["status"],
-  ): PaymentCheck => {
-    const { payment } = getPaymentResponse(over)
-    return {
-      status,
-      amountMinor: payment.amount,
-      currency: payment.token as "EUR",
-      orderNumber: payment.orderId,
-    }
-  }
+  ): PaymentCheck => ({
+    status,
+    amountMinor: over.amount ?? 3_400,
+    currency: over.token ?? "EUR",
+    orderNumber: over.orderId,
+  })
 
   const order = async (over: Partial<typeof orders.$inferInsert> = {}) => {
     const n = `TST-ST-${Date.now()}-${seq++}`
@@ -76,7 +66,7 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
         publicToken: "t",
         status: "pending_payment",
         paymentMethod: "online",
-        paymentProvider: "konnect",
+        paymentProvider: "test-gateway",
         paymentRef: `ref-${n}`,
         currency: "EUR",
         subtotalMinor: 3_400,
@@ -132,73 +122,30 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
     await db.delete(invoiceCounters).where(eq(invoiceCounters.year, 2096))
     await db.delete(products).where(eq(products.id, productId))
     await db.delete(categories).where(eq(categories.slug, "tst-st"))
-    await db.delete(integrationCredentials).where(eq(integrationCredentials.provider, "konnect"))
   })
 
-  test("a demo order is never checked by the konnect gateway", async () => {
-    const ref = demoRef({
-      outcome: "pending",
-      orderNumber: "TST-ST-demo",
-      amountMinor: 3_400,
-      currency: "EUR",
-      nonce: newDemoNonce(),
-    })
-    const o = await order({ paymentProvider: "demo", paymentRef: ref })
+  test("a stored konnect order is never judged by the current gateway", async () => {
+    const o = await order({ paymentProvider: "konnect" })
+    const demoOnly = { ...services, payments: new DemoProvider("https://web.test") } as Services
     const before = checks
-    await settleOrder(services, ref)
+    await settleOrder(demoOnly, o.paymentRef!)
+    await settleOrder(services, o.paymentRef!)
     expect(checks).toBe(before)
     expect(await statusOf(o.id)).toBe("pending_payment")
   })
 
-  test("past the hold, a konnect order stays pending while no konnect keys can be used", async () => {
+  test("past the hold, only an order of the current gateway is released", async () => {
     const old = new Date(Date.now() - 2 * 3_600_000)
-    const o = await order({ createdAt: old })
-    const demoOnly = { ...services, payments: new DemoProvider("https://web.test") } as Services
-    await releaseExpiredHolds(demoOnly, new Date(), { only: [o.id] })
-    expect(await statusOf(o.id)).toBe("pending_payment")
-    await releaseExpiredHolds(services, new Date(), { only: [o.id] })
-    expect(await statusOf(o.id)).toBe("cancelled")
-  })
-
-  test("a konnect order is never judged by the demo gateway when the keys are gone", async () => {
-    const o = await order()
-    const demoOnly = { ...services, payments: new DemoProvider("https://web.test") } as Services
-    await settleOrder(demoOnly, o.paymentRef!)
-    expect(await statusOf(o.id)).toBe("pending_payment")
-  })
-
-  test("settleOrder asks the gateway built from the saved keys, not the env one", async () => {
-    const o = await order()
-    const { payment } = getPaymentResponse({ orderId: o.number, amount: 3_400, token: "EUR" })
-    const [admin] = await db.select({ id: admins.id }).from(admins).limit(1)
-    const withKeys = {
-      ...services,
-      payments: {
-        name: "demo",
-        mode: "test",
-        init: async () => ({ payUrl: "x", ref: "x" }),
-        check: async () => {
-          throw new Error("the env gateway must not be asked")
-        },
-      },
-      secrets: parseKeyring(`1:${Buffer.alloc(32, 5).toString("base64")}`),
-      http: (async () => Response.json({ payment })) as unknown as typeof fetch,
-    } as unknown as Services
-    try {
-      await saveIntegration(withKeys, admin!.id, "konnect", {
-        config: { walletId: "wallet-123456", mode: "test" },
-        secrets: { apiKey: "settle-test-key-0001" },
-      })
-      await settleOrder(withKeys, o.paymentRef!)
-      expect(await statusOf(o.id)).toBe("paid")
-    } finally {
-      await clearIntegration(db, "konnect", admin!.id, new Date())
-    }
+    const foreign = await order({ createdAt: old, paymentProvider: "konnect" })
+    const own = await order({ createdAt: old })
+    await releaseExpiredHolds(services, new Date(), { only: [foreign.id, own.id] })
+    expect(await statusOf(foreign.id)).toBe("pending_payment")
+    expect(await statusOf(own.id)).toBe("cancelled")
   })
 
   test("a matching paid answer pays once even with concurrent calls, and sends one email set", async () => {
     const o = await order()
-    answer = konnectAnswer({ orderId: o.number }, "paid")
+    answer = gatewayAnswer({ orderId: o.number }, "paid")
     sent.length = 0
     await Promise.all([settleOrder(services, o.paymentRef!), settleOrder(services, o.paymentRef!)])
     expect(await statusOf(o.id)).toBe("paid")
@@ -211,7 +158,7 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
 
   test("an amount off by one stays pending and leaves one gateway_mismatch row, however often it is asked", async () => {
     const o = await order()
-    answer = konnectAnswer({ orderId: o.number, amount: 3_399 }, "paid")
+    answer = gatewayAnswer({ orderId: o.number, amount: 3_399 }, "paid")
     await settleOrder(services, o.paymentRef!)
     await settleOrder(services, o.paymentRef!)
     expect(await statusOf(o.id)).toBe("pending_payment")
@@ -224,18 +171,18 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
 
   test("concurrent mismatch answers leave exactly one gateway_mismatch row", async () => {
     const o = await order()
-    answer = konnectAnswer({ orderId: o.number, amount: 100 }, "paid")
+    answer = gatewayAnswer({ orderId: o.number, amount: 100 }, "paid")
     await Promise.all(Array.from({ length: 6 }, () => settleOrder(services, o.paymentRef!)))
     expect(await audit(o.id)).toHaveLength(1)
   })
 
   test("a wrong amount first, then the right one, still settles with the mismatch row kept and one email", async () => {
     const o = await order()
-    answer = konnectAnswer({ orderId: o.number, amount: 3_000 }, "paid")
+    answer = gatewayAnswer({ orderId: o.number, amount: 3_000 }, "paid")
     await settleOrder(services, o.paymentRef!)
     expect(await statusOf(o.id)).toBe("pending_payment")
     sent.length = 0
-    answer = konnectAnswer({ orderId: o.number }, "paid")
+    answer = gatewayAnswer({ orderId: o.number }, "paid")
     await Promise.all([settleOrder(services, o.paymentRef!), settleOrder(services, o.paymentRef!)])
     expect(await statusOf(o.id)).toBe("paid")
     expect(await audit(o.id)).toHaveLength(1)
@@ -244,13 +191,13 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
 
   test("a wrong currency or a wrong order number is a mismatch too", async () => {
     const wrongCurrency = await order()
-    answer = konnectAnswer({ orderId: wrongCurrency.number, token: "TND" }, "paid")
+    answer = gatewayAnswer({ orderId: wrongCurrency.number, token: "TND" }, "paid")
     await settleOrder(services, wrongCurrency.paymentRef!)
     expect(await statusOf(wrongCurrency.id)).toBe("pending_payment")
     expect((await audit(wrongCurrency.id))[0]?.action).toBe("gateway_mismatch")
 
     const wrongNumber = await order()
-    answer = konnectAnswer({ orderId: "CER-OTHER" }, "paid")
+    answer = gatewayAnswer({ orderId: "CER-OTHER" }, "paid")
     await settleOrder(services, wrongNumber.paymentRef!)
     expect(await statusOf(wrongNumber.id)).toBe("pending_payment")
     expect((await audit(wrongNumber.id))[0]?.action).toBe("gateway_mismatch")
@@ -259,7 +206,7 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
   test("a failed answer cancels the order and puts the piece back", async () => {
     const o = await order()
     const [before] = await db.select().from(products).where(eq(products.id, productId))
-    answer = konnectAnswer({ orderId: o.number, status: "failed" }, "failed")
+    answer = gatewayAnswer({ orderId: o.number }, "failed")
     expect(await settleOrder(services, o.paymentRef!)).toMatchObject({ status: "cancelled" })
     const [after] = await db.select().from(products).where(eq(products.id, productId))
     expect(after!.stock).toBe(before!.stock + 1)
@@ -267,7 +214,7 @@ describe.skipIf(!url)("settleOrder against the gateway answer", () => {
 
   test("a paid answer for an order already cancelled records one late_payment row and keeps it cancelled", async () => {
     const o = await order({ status: "cancelled" })
-    answer = konnectAnswer({ orderId: o.number }, "paid")
+    answer = gatewayAnswer({ orderId: o.number }, "paid")
     await settleOrder(services, o.paymentRef!)
     const checksAfterFirst = checks
     await settleOrder(services, o.paymentRef!)

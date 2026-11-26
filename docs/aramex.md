@@ -155,7 +155,7 @@ Each step: do it on a preview with `ARAMEX_FAKE` unset, never on production.
 11. [ ] Compare the WCF dates and `LabelFileContents` with the fixtures in `packages/orpc/test` and replace them with anonymised real bodies.
 12. [ ] Go live in production only after the owner signs off: set `labelReportId`, `paymentType`, `deliveredCodes` and the product types explicitly, enable live mode, check the first parcel end to end.
 
-Test and live follow the same separation as Konnect: previews only ever use the test host, live exists only in production.
+Test and live follow the same separation as the other environment rules: previews only ever use the test host, live exists only in production.
 
 ## Questions for the Aramex rep (French, to send as is)
 

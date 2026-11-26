@@ -32,7 +32,7 @@ const emptyProfile: ShopProfileRow = {
   onboardedAt: null,
   updatedAt: new Date(),
 }
-const noIntegrations = { konnect: false, aramex: false, payoneer: false, groq: false, emailDomain: false }
+const noIntegrations = { aramex: false, payoneer: false, groq: false, emailDomain: false }
 const input = (profile: Partial<ShopProfileRow> = {}, owner?: SetupInput["owner"]): SetupInput => ({
   owner: owner ?? { name: "Sabri Ghit", nameConfirmedAt: null },
   profile: { ...emptyProfile, ...profile },
@@ -57,10 +57,10 @@ const filledProfile: Partial<ShopProfileRow> = {
 const confirmedOwner = { name: "Sabri Ghit", nameConfirmedAt: new Date() }
 
 describe("computeSetup", () => {
-  test("an empty profile has every required step open and 9 things remaining", () => {
+  test("an empty profile has every required step open and 8 things remaining", () => {
     const status = computeSetup(input())
     expect(status.steps.filter((s) => s.required && !s.done)).toHaveLength(4)
-    expect(status).toMatchObject({ remaining: 9, total: 9, done: 0, requiredDone: false, onboarded: false })
+    expect(status).toMatchObject({ remaining: 8, total: 8, done: 0, requiredDone: false, onboarded: false })
     expect(step(status, "profile").missing).toContain("taxId")
   })
 
@@ -79,13 +79,13 @@ describe("computeSetup", () => {
   test("a skipped optional step leaves the badge number", () => {
     const status = computeSetup(input({ skippedSteps: ["groq"] }))
     expect(step(status, "groq").skipped).toBe(true)
-    expect(status.remaining).toBe(8)
+    expect(status.remaining).toBe(7)
   })
 
   test("every required step done with no optional ones is requiredDone", () => {
     const status = computeSetup(input(filledProfile, confirmedOwner))
     expect(status.requiredDone).toBe(true)
-    expect(status.remaining).toBe(5)
+    expect(status.remaining).toBe(4)
   })
 
   test("the owner step needs the name confirmed, not just present", () => {

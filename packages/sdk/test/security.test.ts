@@ -15,7 +15,7 @@ test("web policy takes the bucket hosts from env and forbids framing", () => {
   expect(csp).toContain("connect-src 'self' https://s3.example.net;")
   expect(csp).toContain("frame-ancestors 'none'")
   expect(csp).toContain("frame-src 'none'")
-  expect(csp).toContain("form-action 'self' https://*.konnect.network")
+  expect(csp).toContain("form-action 'self';")
   expect(csp).toContain("upgrade-insecure-requests")
 })
 

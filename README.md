@@ -19,7 +19,7 @@ Every pull request also gets its own preview (storefront, dashboard, api, databa
 
 - **Two currencies, one product.** Every piece has a price in dinars and a price in euros, both set by the owner, never converted. Visitors in Tunisia see dinars, everyone else euros, detected from their country.
 - **Language** follows the visitor's device (French, English or Arabic, right to left), with a switch in the footer.
-- **Payment.** Tunisia pays cash on delivery. Other countries pay by bank transfer: the account is on the order page and in the confirmation email, and the owner marks the order paid when the money arrives. Card payment through Konnect is built but switched off (`ONLINE_PAYMENTS`), see [docs/payments.md](docs/payments.md).
+- **Payment.** Tunisia pays cash on delivery. Other countries pay by bank transfer: the account is on the order page and in the confirmation email, and the owner marks the order paid when the money arrives. There is no card payment in production, see [docs/payments.md](docs/payments.md).
 - **Photos.** The dashboard compresses every photo to WebP before it goes to Cloudflare R2, tracks storage against the 2.5 GB plan, and a daily job deletes photos nothing has used for 30 days.
 - **Social cards.** Every page and product has its own generated Open Graph image, in all three languages.
 

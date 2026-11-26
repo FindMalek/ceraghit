@@ -12,7 +12,7 @@ const schema = z
     PORT: z.coerce.number().default(3001),
     DATABASE_URL: z.string().min(1),
     DB_POOL_MAX: z.coerce.number().int().min(1).default(10),
-    /** Public origins, used for payment redirects and the webhook. */
+    /** Public origins, used for payment redirects and links. */
     WEB_URL: z.url().default("http://localhost:3000"),
     API_PUBLIC_URL: z.url().default("http://localhost:3001"),
     /** "production", "pr-<n>" or "local", shown in the dashboard and used as the S3 prefix of previews. */
@@ -27,12 +27,9 @@ const schema = z
       .string()
       .optional()
       .transform((v) => v === "1" || v === "true"),
-    KONNECT_API_KEY: z.string().optional(),
-    KONNECT_WALLET_ID: z.string().optional(),
-    KONNECT_MODE: z.enum(["test", "live"]).default("test"),
     /**
      * Default for card payment while the DB has no "payments" settings row. Once the owner saves the payments page in
-     * the dashboard, that row wins. Production still offers card only through live Konnect (gatewayReady).
+     * the dashboard, that row wins. Only the demo gateway exists, so production refuses true.
      */
     ONLINE_PAYMENTS: flag.default(false),
     /** Lets the daily Trigger.dev job delete files nothing uses any more, see docs/deploy.md (scheduled jobs). */
@@ -65,8 +62,6 @@ const schema = z
     ARAMEX_ACCOUNT_COUNTRY_CODE: z.string().optional(),
     /** Answers Aramex calls with canned replies (screenshots, demos). Refused in production. */
     ARAMEX_FAKE: flag.default(false),
-    /** Sends Konnect calls to this host instead of the real one (e2e stub). Refused in production. */
-    KONNECT_BASE_URL: z.url().optional(),
     /** Sends Groq calls to this host instead of api.groq.com (e2e stub). Refused in production. */
     GROQ_BASE_URL: z.url().optional(),
     S3_ENDPOINT: z.string().optional(),
@@ -117,13 +112,8 @@ const schema = z
     for (const issue of glitchtipIssues(env as unknown as Record<string, string | undefined>)) fail(issue)
     if (env.APP_ENV === "production") {
       if (env.ARAMEX_FAKE) fail("ARAMEX_FAKE is only allowed outside production")
-      if (env.KONNECT_BASE_URL) fail("KONNECT_BASE_URL is only allowed outside production")
       if (env.GROQ_BASE_URL) fail("GROQ_BASE_URL is only allowed outside production")
-      if (env.ONLINE_PAYMENTS) {
-        if (env.KONNECT_MODE !== "live") fail("production needs KONNECT_MODE=live")
-        if (!env.KONNECT_API_KEY || !env.KONNECT_WALLET_ID)
-          fail("production needs KONNECT_API_KEY and KONNECT_WALLET_ID")
-      }
+      if (env.ONLINE_PAYMENTS) fail("production has no card gateway: set ONLINE_PAYMENTS=false")
       if (!env.S3_ENDPOINT || !env.S3_BUCKET || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
         fail("production needs the R2 S3_* settings")
       }
@@ -139,7 +129,6 @@ const schema = z
       if (env.MAIL_REDIRECT_TO) fail("MAIL_REDIRECT_TO is not allowed in production")
       if (env.MAILPIT_URL) fail("MAILPIT_URL is not allowed in production")
     } else {
-      if (env.KONNECT_MODE === "live") fail("live payment keys are only allowed with APP_ENV=production")
       if (env.DEPLOY_ENV === "production") fail("DEPLOY_ENV=production is only allowed with APP_ENV=production")
       if (env.RESEND_API_KEY && !env.MAIL_REDIRECT_TO) fail("outside production, RESEND_API_KEY needs MAIL_REDIRECT_TO")
     }
